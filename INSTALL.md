@@ -127,10 +127,6 @@ Since by *default it is turned of! I always forget about that!*
 make depend && make ext_depend && make && make ext
 ```
 
-
-
-
-
 How I update Kaldi src code?
 ----------------------------
 I checkout the kaldi-trunk version.
@@ -138,3 +134,19 @@ I checkout the kaldi-trunk version.
 [Kaldi install instructions](http://kaldi.sourceforge.net/install.html)
 
 Note: If you checkout Kaldi before March 2013 you need to relocate svn. See the instructions in the link above!
+
+
+What setup do I use?
+--------------------
+In order to use Kaldi binaries everywhere I add them to `PATH`. 
+In addition, I needed to add `openfst` directory to `LD_LIBRARY_PATH`, I compiled Kaldi dynamically linked against `openfst`. To conclude, I added following lines to my `.bashrc`.
+```bash
+############# Kaldi ###########
+kaldisrc=/net/work/people/oplatek/kaldi/src
+export PATH="$PATH":$kaldisrc/bin:$kaldisrc/fgmmbin:$kaldisrc/gmmbin:$kaldisrc/nnetbin:$kaldisrc/sgmm2bin:$kaldisrc/tiedbin:$kaldisrc/featbin:$kaldisrc/fstbin:$kaldisrc/latbin:$kaldisrc/onlinebin:$kaldisrc/sgmmbin
+
+### Openfst ###
+openfst=/ha/home/oplatek/50GBmax/kaldi/tools/openfst
+export PATH="$PATH":$openfst/bin
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH":$openfst/lib 
+```

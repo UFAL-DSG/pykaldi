@@ -7,7 +7,7 @@ ABOUT
  * Recipe for training the models can be found at `egs/kaldi-vystadial-recipe`
  * Source code for python wrapper for online-decoder is at `src/python-kaldi-decoding` 
  * Remarks about new decoder are located at `src/vystadial-decoder`
- * I use the `Fake submodules` approach to merge 3 subprojects to this repository. More about `Fake submodules` [at this blog](http://debuggable.com/posts/git-fake-submodules:4b563ee4-f3cc-4061-967e-0e48cbdd56cb).
+ * I use the `Fake submodules` approach to merge the 3 subprojects to this repository. More about `Fake submodules` [at this blog](http://debuggable.com/posts/git-fake-submodules:4b563ee4-f3cc-4061-967e-0e48cbdd56cb).
  * I mirror the svn via `git svn`. [Nice intro to git svn](http://viget.com/extend/effectively-using-git-with-subversion)
 
 LICENSE
