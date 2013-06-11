@@ -6,6 +6,7 @@ ABOUT
  * The main purpose for mirroring is that I want to build my own decoder and train my models for decoding
  * The other "features" are located at `egs/kaldi-vystadial-recipe`, `src/python-kaldi-decoding` and at `src/vystadial-decoder`
  * I am using the `Fake submodules` approach described at [this blog](http://debuggable.com/posts/git-fake-submodules:4b563ee4-f3cc-4061-967e-0e48cbdd56cb)
+ * I am mirror the svn via git svn. [This is nice tutorial](http://viget.com/extend/effectively-using-git-with-subversion)
 
 LILCENSE
 --------
