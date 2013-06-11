@@ -1,5 +1,5 @@
 This is oficial Kaldi readme. You are now in Kaldi/trunk mirror.
-Read Kaldi.md first!
+Read Kaldi.md and INSTALL.md first!
 
 
 See http://kaldi.sourceforge.net/ for documentation 
