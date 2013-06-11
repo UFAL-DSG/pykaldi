@@ -111,7 +111,7 @@ How I build Kaldi?
 ./configure --openblas-root=`pwd`/../tools/OpenBLAS/install --fst-root=`pwd`/../tools/openfst --static-math=no
 ```
 
-Edit the kaldi.mk and add the `-fPIC` flag.
+Edit the `kaldi.mk` and add the `-fPIC` flag.
 TODO It would be nice to do something like
 ```bash
 EXTRA_CXXFLAGS=-fPIC make
@@ -119,11 +119,13 @@ EXTRA_CXXFLAGS=-fPIC make ext
 ```
 But the local makefiles overrides `EXTRA_CXXFLAGS`.
 
-If you updated from the svn repository do not forget to run 
-```
-make depend # Or just run it to be sure
-```
+If you updated from the svn repository do not forget to run `make depend`
 Since by *default it is turned of! I always forget about that!*
+```
+make depend # only if dependencies changed
+make ext_depend #  only if dependencies changed
+make && make ext
+```
 
 
 
