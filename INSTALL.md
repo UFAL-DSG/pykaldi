@@ -122,9 +122,9 @@ But the local makefiles overrides `EXTRA_CXXFLAGS`.
 If you updated from the svn repository do not forget to run `make depend`
 Since by *default it is turned of! I always forget about that!*
 ```
-make depend # only if dependencies changed
-make ext_depend #  only if dependencies changed
-make && make ext
+# DO NOT FORGET TO CHANGE kaldi.mk TODO SCRIPT IT!
+# make depend and make ext_depend are necessary only if dependencies changed
+make depend && make ext_depend && make && make ext
 ```
 
 
