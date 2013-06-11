@@ -1,0 +1,9 @@
+.valgrind
+*.o
+*.so
+valgrind.out
+.depend.mk
+data_voip_en
+decode
+mfcc
+utils
