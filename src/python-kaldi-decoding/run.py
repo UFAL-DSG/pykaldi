@@ -4,6 +4,7 @@ from collections import namedtuple
 # import sys
 import os
 import errno
+from ordereddefaultdict import DefaultOrderedDict
 from subprocess import check_output
 
 cwd = os.path.abspath(os.path.curdir)
@@ -128,7 +129,6 @@ def computeWer(ffi, werlib, werPar):
         retcode = werlib.compute_wer_like_main(len(wer_args), wer_argv)
         if retcode != 0:
             raise CffiKaldiError(retcode)
-        return bpPar.trans
     except Exception as e:
         print 'Failed running compute_wer!'
         print e
@@ -182,6 +182,18 @@ def run_online(ffi, onlinelib, onlinePar):
         print 'Failed running online!'
         print e
         raise
+
+
+def compactHyp(hyp_path, comp_hyp_path):
+    d = DefaultOrderedDict(list)
+    with open(hyp_path, 'r') as hyp:
+        for line in hyp:
+            name_, align_dec = line.strip().split('wav_')
+            name, dec = name_ + 'wav', align_dec.strip().split()[1:]
+            d[name].extend(dec)
+    with open(comp_hyp_path, 'w') as w:
+        for wav, dec_list in d.iteritems():
+            w.write('%s %s\n' % (wav, ' '.join(dec_list)))
 
 if __name__ == '__main__':
     ffi = FFI()
@@ -264,9 +276,10 @@ if __name__ == '__main__':
         print 'running WER for latgen finished'
 
         # # Evaluate online decoding
-        onl_trans_text = onlinePar.trans + '.txt'
-        int2txt(onlinePar.trans, onl_trans_text, onlinePar.wst)
-        onl_werPar = WerParams(hypothesis=onl_trans_text, reference=ref)
+        onl_transtxttmp, onl_transtxt = onlinePar.trans + '.tmp', onlinePar.trans + '.txt'
+        int2txt(onlinePar.trans, onl_transtxttmp, onlinePar.wst)
+        compactHyp(onl_transtxttmp, onl_transtxt)
+        onl_werPar = WerParams(hypothesis=onl_transtxt, reference=ref)
         computeWer(ffi, lib, onl_werPar)
         print 'running WER for online finished'
     except OSError as e:

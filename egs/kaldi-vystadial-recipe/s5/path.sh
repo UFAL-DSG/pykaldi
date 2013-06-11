@@ -1,6 +1,6 @@
 # The number of parallel jobs to be started for some parts of the recipe
 # Make sure you have enough resources(CPUs and RAM) to accomodate this number of jobs
-njobs=4
+njobs=10
 
 # Needed for "correct" sorting
 export LC_ALL=C

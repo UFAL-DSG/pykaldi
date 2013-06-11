@@ -7,3 +7,9 @@ data_voip_en
 decode
 mfcc
 utils
+data_voip_en
+compute-mfcc-feats-test
+gmm-latgen-faster-test
+online-wav-gmm-decode-faster-test
+compute-wer-test
+lattice-best-path-test
