@@ -13,9 +13,9 @@ ABOUT
 OTHER INFO
 ----------
  * Read `INSTALL.md` and `INSTALL` first!
- * For training models read <!--[vystadial recipe README.md](-->egs/kaldi-vystadial-recipe/s5/README.md<!--)-->
- * For building and developing decoder callable from python read <!--[python-kaldi-decoder Readme](-->src/python-kaldi-decoding/README.md<!--)-->
- * For information about new decoder read <!--[vystadial-decoder Readme](-->src/vystadial-decoder/README.md<!--)-->
+ * For training models read `egs/kaldi-vystadial-recipe/s5/README.md`
+ * For building and developing decoder callable from python read `src/python-kaldi-decoding/README.md`
+ * For information about new decoder read `src/vystadial-decoder/README.md`
 
 LICENSE
 --------
