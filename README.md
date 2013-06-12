@@ -10,7 +10,14 @@ ABOUT
  * I use the `Fake submodules` approach to merge the 3 subprojects to this repository. More about `Fake submodules` [at this blog](http://debuggable.com/posts/git-fake-submodules:4b563ee4-f3cc-4061-967e-0e48cbdd56cb).
  * I mirror the svn via `git svn`. [Nice intro to git svn](http://viget.com/extend/effectively-using-git-with-subversion)
 
+OTHER INFO
+----------
+ * Read `INSTALL.md` and `INSTALL` first!
+ * For training models read [vystadial recipe README.md](egs/kaldi-vystadial-recipe/s5/README.md)
+ * For building and developing decoder callable from python read [python-kaldi-decoder Readme](src/python-kaldi-decoding/README.md)
+ * For information about new decoder read [vystadial-decoder Readme](src/vystadial-decoder/README.md)
+
 LICENSE
 --------
  * One of our goals is to release all of the added features under `Apache license 2.0` (Kaldi uses the same license). However, we did not added any license statement to repository yet. If you see this README and do not know the licensing conditions, write us. We probably just forget to put the license under the repository.
- * We also want to publicly release the training data
+ * We also want to publicly release the training data in the autumn 2013.
