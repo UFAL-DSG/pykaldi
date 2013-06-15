@@ -1,0 +1,67 @@
+// doc/install.dox
+
+// Copyright 2009-2011 Microsoft Corporation
+
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//  http://www.apache.org/licenses/LICENSE-2.0
+
+// THIS CODE IS PROVIDED *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+// WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+// See the Apache 2 License for the specific language governing permissions and
+// limitations under the License.
+
+/**
+ \page install Downloading and installing Kaldi
+
+
+  \section install_warning Warning on recent Sourceforge update
+
+   This is a warning to all those who originally downloaded Kaldi before March 20, 2013.
+   The svn location where Kaldi's repository resides has changed.  In order to get the
+  latest updates you need to update your repository.  Go to the root of the directory where
+  you previously checked it out, and type:
+ \verbatim
+   svn switch --relocate  https://kaldi.svn.sourceforge.net/svnroot/kaldi svn://svn.code.sf.net/p/kaldi/code
+ \endverbatim
+  You can verify that it worked by typing "svn info".  You should see the new location.
+
+ \section install_download  Dowloading Kaldi
+
+  You first need to install Subversion (SVN).  The most current version of Kaldi,
+  possibly including unfinished and experimental features, can
+   be downloaded by typing into a shell:
+  \verbatim
+    svn co svn://svn.code.sf.net/p/kaldi/code/trunk kaldi-trunk
+  \endverbatim
+  You can check out the "stable" branch of Kaldi, which is mostly a subset of the
+  "trunk" with more stringent quality control, as follows (but note: right now, it is
+  a few months behind the trunk):
+  \verbatim
+    svn co svn://svn.code.sf.net/p/kaldi/code/stable kaldi-stable
+  \endverbatim
+   If you want to get updates and bug fixes you can go to some checked-out
+ directory, and type
+  \verbatim
+    svn update
+  \endverbatim
+ If "svn update" prints out scary looking messages about conflicts (caused by
+ you changing parts of files that were later modified centrally),
+ you may have to resolve the conflicts; for that, we recommend that you
+ read about how svn works.
+
+
+  \section install_install Installing Kaldi
+   
+  The top-level installation instructions are in the file INSTALL. 
+  For Windows, there are separate instructions in windows/INSTALL.
+  See also \ref build_setup which explains how the build process
+  works internally.
+
+  The example scripts are in egs/
+  
+*/

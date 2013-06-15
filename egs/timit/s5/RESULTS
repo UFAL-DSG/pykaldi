@@ -1,0 +1,28 @@
+ for x in exp/*/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done
+
+# Use caution when comparing these results with other published results.
+Training Set   : Timit training set (4620 sentences
+Test Set       : Timit test set (1680 sentences)
+Language Model : Bigram phoneme language model which is extracted from training set
+
+# monophone, deltas.
+%PER 28.94 [ 18201 / 62901, 1598 ins, 5644 del, 10959 sub ] exp/mono/decode_bg_test/wer_4
+
+# tri1 : first triphone system  (delta+delta-delta features)
+%PER 22.60 [ 14215 / 62901, 1796 ins, 3466 del, 8953 sub ] exp/tri1/decode_bg_test/wer_8
+
+#tri2 : an LDA+MLLT system. 
+%PER 20.36 [ 12807 / 62901, 1872 ins, 2914 del, 8021 sub ] exp/tri2/decode_bg_test/wer_7
+
+#tri3 : Speaker Adaptive Training (SAT) system
+%PER 18.27 [ 11489 / 62901, 1681 ins, 2810 del, 6998 sub ] exp/tri3/decode_bg_test/wer_6
+
+#SGMM2 Training
+%PER 16.17 [ 10171 / 62901, 1309 ins, 2708 del, 6154 sub ] exp/sgmm2_4/decode_bg_test/wer_6
+
+# SGMM2 + MMI Training
+%PER 16.14 [ 10154 / 62901, 1845 ins, 2074 del, 6235 sub ] exp/sgmm2_4_mmi_b0.1_z/decode_bg_test_it1/wer_6
+%PER 16.58 [ 10430 / 62901, 2032 ins, 2031 del, 6367 sub ] exp/sgmm2_4_mmi_b0.1_z/decode_bg_test_it2/wer_7
+%PER 16.80 [ 10570 / 62901, 2071 ins, 2096 del, 6403 sub ] exp/sgmm2_4_mmi_b0.1_z/decode_bg_test_it3/wer_8
+%PER 17.02 [ 10706 / 62901, 2154 ins, 2048 del, 6504 sub ] exp/sgmm2_4_mmi_b0.1_z/decode_bg_test_it4/wer_8
+
