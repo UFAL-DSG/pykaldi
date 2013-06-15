@@ -1,18 +1,33 @@
-TESTFILES = compute-wer-test gmm-latgen-faster-test compute-mfcc-feats-test lattice-best-path-test online-wav-gmm-decode-faster-test
-OBJFILES = compute-wer.o gmm-latgen-faster.o compute-mfcc-feats.o lattice-best-path.o online-wav-gmm-decode-faster.o
-LDLIBFILE = libcffi-kaldi.so
-LIBFILE = cffi-kaldi.a
+# We suppose that this Makefile sits in kaldi-trunk/src/ThisDirectory
+all:
+
 EXTRA_CXXFLAGS = -Wno-sign-compare -fPIC -I ../../tools/portaudio/install/include
+EXTRA_LDLIBS =
 
 include ../kaldi.mk
 CC = gcc
 
-# Check kaldi.mk for LDLIBS -> there are static libraries
+TESTFILES = compute-wer-test gmm-latgen-faster-test compute-mfcc-feats-test \
+			lattice-best-path-test online-wav-gmm-decode-faster-test
+OBJFILES = compute-wer.o gmm-latgen-faster.o compute-mfcc-feats.o \
+		   lattice-best-path.o online-wav-gmm-decode-faster.o 
+# pure_virtual dso error patch the symptoms:-/
+# pure_virtual.o
+# #ifdef __cplusplus
+# extern "C" {
+# #endif
+# void __cxa_pure_virtual(void) { while (1); }
+# #ifdef __cplusplus
+# }
+# #endif
+
+LDLIBFILE = libkaldi-cffi.so
+LIBFILE = kaldi-cffi.a
+
 # We need dynamic libraries
-# We suppose that this Makefile sits in kaldi-trunk/src/ThisDirectory
-OBLAS_LDD = $(PWD)/../../tools/OpenBLAS/
-FST_LDD = $(PWD)/../../tools/openfst-1.3.2/lib
-PA_LDD = $(PWD)/../../tools/portaudio/install/lib
+OBLAS_LDD = ../../tools/OpenBLAS/
+FST_LDD = ../../tools/openfst-1.3.2/lib
+PA_LDD = ../../tools/portaudio/install/lib
 LDLIBS = -L$(FST_LDD) -lfst -ldl -L$(OBLAS_LDD) -lopenblas -lm -lpthread 
 
 UNAME=$(shell uname)
@@ -29,20 +44,14 @@ endif
 
 all:  $(LIBFILE) $(LDLIBFILE)
 
-### Building the shared library
-# $(LDLIBFILE): $(OBJFILES) 
-# 	$(CXX) -fPIC -shared $(OBJFILES) -o $@
+# I can not use ../decoder/kaldi-decoder.a because there are two types of decoders for two types sgmm vs sgmm2
+$(LDLIBFILE): $(OBJFILES) \
+	../decoder/decodable-am-diag-gmm.o ../decoder/lattice-faster-decoder.o ../decoder/faster-decoder.o \
+	../online/kaldi-online.a ../thread/kaldi-thread.a ../lat/kaldi-lat.a ../hmm/kaldi-hmm.a \
+	../transform/kaldi-transform.a ../gmm/kaldi-gmm.a ../fstext/kaldi-fstext.a ../tree/kaldi-tree.a \
+	../matrix/kaldi-matrix.a ../feat/kaldi-feature.a ../util/kaldi-util.a ../base/kaldi-base.a
+	$(CC) -fPIC -shared -o $@ -Wl,-export-dynamic,--whole-archive $^ -Wl,--no-whole-archive $(LDLIBS)
 
-# still need to compile *.o with fPIC
-# $(LDLIBFILE): $(LIBFILE) 
-# 	$(CXX) -g -O0 -fPIC -rdynamic -shared -o $@ -Wl,--whole-archive $(LIBFILE) -Wl,--no-whole-archive $(LDLIBS)
-
-
-$(LDLIBFILE): $(OBJFILES) ../base/*.o ../util/*.o ../feat/*.o ../matrix/*.o ../tree/*.o \
-		../fstext/*.o ../gmm/*.o ../transform/*.o  ../hmm/*.o ../lat/*.o ../thread/*.o \
-		../decoder/decodable-am-diag-gmm.o ../decoder/lattice-faster-decoder.o ../decoder/faster-decoder.o \
-		../online/*.o
-	$(CXX) -fPIC -rdynamic -shared -Wl,-export-dynamic -o $@ $^ $(LDLIBS)
 
 $(LIBFILE): $(OBJFILES)
 	$(AR) -cru $(LIBFILE) $(OBJFILES)
@@ -53,14 +62,13 @@ $(LIBFILE): $(OBJFILES)
 # 	make -c ../base kaldi-base.a
 # -c option to make is same as changing directory.
 %.a:
-	EXTRA_CXXFLAGS=-fPIC $(MAKE) -C ${@D} ${@F}
+	$(MAKE) -C ${@D} ${@F}
 
 clean:
-	-rm -f *.o *.a tmp* *.tmp *.so .depend.mk $(TESTFILES)
+		-rm -f *.o *.a tmp* *.tmp *.so .depend.mk $(TESTFILES) valgrind.out
 
 depend:
 	-$(CXX) -M $(CXXFLAGS) *.cc > .depend.mk  
-	$(CXX) -MD $(CXXFLAGS) *.cc $(LDLIBS) > depend-test.mk  
 
 # removing automatic making of "depend" as it's quite slow.
 # .depend.mk: depend
@@ -76,8 +84,8 @@ test_dyn: $(LDLIBFILE) $(TESTFILES)
 	# Before running the binaries set the LD_LIBRARY_PATH variable as we do!
 	@result=0; for x in $(TESTFILES); do \
 		echo -n "Running $$x :  "; \
-		LD_LIBRARY_PATH=$(OBLAS_LDD):$(FST_LDD):$:`pwd` ./$$x --help > /dev/null 2>&1 ; \
-		if [ $$? -ne 0 ]; then echo "... FAIL"; result=1; else echo "... SUCCESS";  fi;  \
+		LD_LIBRARY_PATH=$(OBLAS_LDD):$(FST_LDD):$:`pwd` ./$$x --help ; \
+		if [ $$? -ne 0 ]; then echo "... FAIL"; result=1; else echo "... SUCCESS > /dev/null 2>&1";  fi;  \
 		done; exit $$result
 
 python_test: run.py $(LDLIBFILE) 

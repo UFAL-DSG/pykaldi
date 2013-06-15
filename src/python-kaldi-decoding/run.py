@@ -211,14 +211,16 @@ if __name__ == '__main__':
     int online_wav_gmm_decode_faster_like_main(int argc, char *argv[]);
     '''
     ffi.cdef(header)
-    exps5_dir = '../../egs/kaldi-vystadial-recipe/s5'
+    s5_dir = '../../egs/kaldi-vystadial-recipe/s5'
+    exp_dir = s5_dir + '/Results/exp_6_aa7263b3f5c151409a87e3d845d58e39335a4f0c'
+    data_dir = s5_dir + '/Results/data_6_aa7263b3f5c151409a87e3d845d58e39335a4f0c'
     decodedir = cwd + '/decode'
     try:
         lib = ffi.dlopen('libcffi-kaldi.so')
 
         mfccPar = MfccParams(
             mfcc_dir='mfcc',
-            mfcc_config=exps5_dir + '/conf/mfcc.conf',
+            mfcc_config=s5_dir + '/conf/mfcc.conf',
             wav_scp='little_wavs_data_void_en.scp',
             mfcc_ark='mfcc/raw_mfcc.ark',
             mfcc_scp='mfcc/raw_mfcc.scp')
@@ -231,11 +233,12 @@ if __name__ == '__main__':
             beam='13.0',
             latbeam='6.0',
             acoustic_scale='0.083333',
-            wst=exps5_dir + '/exp/tri2a/graph/words.txt',
-            model=exps5_dir + '/exp/tri2a/final.mdl',
-            hclg=exps5_dir + '/exp/tri2a/graph/HCLG.fst',
-            utt2spk=exps5_dir + '/data/test/utt2spk',
-            cmvn_scp=exps5_dir + '/data/test/cmvn.scp',
+            wst=exp_dir + '/tri2a/graph/words.txt',
+            model=exp_dir + '/tri2a/final.mdl',
+            hclg=exp_dir + '/tri2a/graph/HCLG.fst',
+            utt2spk=data_dir + '/test/utt2spk',
+            # TODO create the version of mfcc dir and change paths in cmvn!
+            cmvn_scp=data_dir + '/test/cmvn.scp',
             feats_scp=mfccPar.mfcc_scp,
             lattice_arch=decodedir + '/lat.gz')
         run_decode(ffi, lib, latgenPar)

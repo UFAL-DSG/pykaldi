@@ -1,6 +1,7 @@
 .valgrind
 *.o
 *.so
+*.a
 valgrind.out
 .depend.mk
 data_voip_en
@@ -13,3 +14,4 @@ gmm-latgen-faster-test
 online-wav-gmm-decode-faster-test
 compute-wer-test
 lattice-best-path-test
+*.d

@@ -20,7 +20,6 @@
 #include "util/common-utils.h"
 #include "feat/feature-mfcc.h"
 #include "feat/wave-reader.h"
-#include <iostream>
 
 #include "compute-mfcc-feats.h"
 
