@@ -13,43 +13,6 @@ Installing external dependencies
 See `kaldi-trunk/tools/INSTALL` for info.
 Basically it telss you to use `kaldi-trunk/tools/Makefile`, which I used also.
 
-How I installed Atlas
---------------------
-NOTE: I decided NOT to use Atlas, I USE try OpenBlas INSTEAD. It is open source and it allows me to compile both shared and static libraries at one run.
-
-Nevertheless how I install Atlas:
- * I installed version atlas3.10.1.tar.bz2 (available at sourceforge)
- * I unpackaged it under `kaldi-trunk/tools` which created `kaldi-trunk/tools/ATLAS`
- * The main problem with building ATLAS was for me disabling CPU throtling.
-    * I solved it by 
-```bash
-# running following command under root in my Ubuntu 12.10
-# It does not turn off CPU throttling in fact, but I do not need the things optimaze on my local machine
-# I ran it for all of my 4 cores
-# for n in 0 1 2 3 ; do echo 'performance' > /sys/devices/system/cpu/cpu${n}/cpufreq/scaling_governor ; done
-
- * Then I needed to install Fortran compiler (The error from configure was little bit covered by consequent errors) by 
-     ```bash
-     sudo apt-get install gfortran
-     ```
- * On Ubuntu 12.04 I had issue with 
-    ```bash
-    /usr/include/features.h:323:26: fatal error: bits/predefs.h
-    ```
-    Which I solved by
-    ```bash
-    sudo apt-get install --reinstall libc6-dev
-    ```
- * Finally, in `kaldi-trunk/tools/ATLAS` I run:
- ```bash
- mkdir build 
- mkdir ../atlas_install
- cd build
-../configure --shared --incdir=`pwd`/../../atlas_install
-make 
-make install
- ```
-
 How I install OpenBlas
 ----------------------
 Simple enough:
@@ -98,12 +61,6 @@ to
 ./configure --prefix=`pwd`/install --with-pic
 ```
 
-Which tool for building a Language Model (LM) have I used?
----------------------------------------------------------
-None. I got build LM in Arpa format.
-
-NOTE: Probably, I should build my own LM. 
-
 
 How I build Kaldi?
 ------------------
@@ -150,3 +107,47 @@ openfst=/ha/home/oplatek/50GBmax/kaldi/tools/openfst
 export PATH="$PATH":$openfst/bin
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH":$openfst/lib 
 ```
+
+Which tool for building a Language Model (LM) have I used?
+---------------------------------------------------------
+None. I got build LM in Arpa format.
+
+NOTE: Probably, I should build my own LM. 
+
+
+How I installed Atlas
+--------------------
+NOTE: I decided NOT to use Atlas, I USE OpenBlas INSTEAD. It is open source and it allows me to compile both shared and static libraries at one run.
+
+Nevertheless how I install Atlas:
+ * I installed version atlas3.10.1.tar.bz2 (available at sourceforge)
+ * I unpackaged it under `kaldi-trunk/tools` which created `kaldi-trunk/tools/ATLAS`
+ * The main problem with building ATLAS was for me disabling CPU throtling.
+    * I solved it by 
+```bash
+# running following command under root in my Ubuntu 12.10
+# It does not turn off CPU throttling in fact, but I do not need the things optimaze on my local machine
+# I ran it for all of my 4 cores
+# for n in 0 1 2 3 ; do echo 'performance' > /sys/devices/system/cpu/cpu${n}/cpufreq/scaling_governor ; done
+
+ * Then I needed to install Fortran compiler (The error from configure was little bit covered by consequent errors) by 
+     ```bash
+     sudo apt-get install gfortran
+     ```
+ * On Ubuntu 12.04 I had issue with 
+    ```bash
+    /usr/include/features.h:323:26: fatal error: bits/predefs.h
+    ```
+    Which I solved by
+    ```bash
+    sudo apt-get install --reinstall libc6-dev
+    ```
+ * Finally, in `kaldi-trunk/tools/ATLAS` I run:
+ ```bash
+ mkdir build 
+ mkdir ../atlas_install
+ cd build
+../configure --shared --incdir=`pwd`/../../atlas_install
+make 
+make install
+ ```
