@@ -1,4 +1,4 @@
-hInstallation TIPS for KALDI and installation INSTRUCTIONS for my additional repositories
+Installation TIPS for KALDI and installation INSTRUCTIONS for my additional repositories
 =================================================================================
 Intro
 -----
