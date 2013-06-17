@@ -77,3 +77,10 @@ class OnlineFasterDecoder : public FasterDecoder
   int32 frame() { return frame_; }
 
 ```
+
+
+Reading the wav source
+----------------------
+```cpp
+    SequentialTableReader<WaveHolder> reader(std::string wav_rspecifier);
+```
