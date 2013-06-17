@@ -537,11 +537,13 @@ fi
 
 if [ "`uname`" == "Linux" ]; then
   if  $static_fst ; then
-      OPENFSTLIBS = $FSTROOT/lib/libfst.a
+      OPENFSTLIBS="$FSTROOT/lib/libfst.a"
+      fst_type='a'
   else
-      OPENFSTLIBS = $FSTROOT/lib/libfst.so
+      OPENFSTLIBS="-L${FSTROOT} -l${FSTROOT}/lib/libfst.so"
+      fst_type='so'
   fi
-  if [ ! -f $OPENFSTLIBS ]; then
+  if [ ! -f "$FSTROOT/lib/libfst.${fst_type}" ]; then
     failure "Static=[$static_fst] OpenFST library not found:  See ../tools/INSTALL"
   fi
   echo OPENFSTLIBS = $OPENFSTLIBS >> kaldi.mk

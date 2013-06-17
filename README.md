@@ -21,5 +21,5 @@ OTHER INFO
 
 LICENSE
 --------
- * One of our goals is to release all of the added features under `Apache license 2.0` (Kaldi uses the same license). However, we did not added any license statement to repository yet. If you see this README and do not know the licensing conditions, write us. We probably just forget to put the license under the repository.
+ * We release all the changes at pyKaldi under `Apache license 2.0` license. Kaldi also uses `Apache 2.0` license). 
  * We also want to publicly release the training data in the autumn 2013.
