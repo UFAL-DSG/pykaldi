@@ -464,6 +464,7 @@ src/tree/cluster-utils-test
 src/tree/build-tree-test
 
 # /src/util/
+<<<<<<< HEAD
 src/util/.depend.mk
 src/util/hash-list-test
 src/util/stl-utils-test
@@ -474,6 +475,18 @@ src/util/edit-distance-test
 src/util/kaldi-io-test
 src/util/text-utils-test
 src/util/parse-options-test
+=======
+/src/util/.depend.mk
+/src/util/hash-list-test
+/src/util/stl-utils-test
+/src/util/timer-test
+/src/util/kaldi-table-test
+/src/util/const-integer-set-test
+/src/util/edit-distance-test
+/src/util/kaldi-io-test
+/src/util/text-utils-test
+/src/util/parse-options-test
+>>>>>>> updated gitignore
 
 # src/onlinebin
 src/onlinebin-python-source/
@@ -481,6 +494,7 @@ src/onlinebin/online-gmm-decode-faster
 src/onlinebin/online-net-client
 src/onlinebin/online-server-gmm-decode-faster
 src/onlinebin/online-wav-gmm-decode-faster
+<<<<<<< HEAD
 
 # onlinedemo ignored but has tracked files
 egs/voxforge/online_demo
@@ -574,3 +588,7 @@ src/nnetbin/nnet-train-mpe-sequential
 src/nnetbin/nnet-train-xent-hardlab-frmshuff-prior
 src/nnetbin/transf-to-nnet
 src/sgmm2bin/sgmm2-latgen-faster-parallel
+=======
+src/python-kaldi-decoding/
+no changes added to commit (use "git add" and/or "git commit -a")
+>>>>>>> updated gitignore
