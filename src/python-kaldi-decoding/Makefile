@@ -24,11 +24,6 @@ OBJFILES = compute-wer.o gmm-latgen-faster.o compute-mfcc-feats.o \
 LDLIBFILE = libkaldi-cffi.so
 LIBFILE = kaldi-cffi.a
 
-# We need dynamic libraries
-OBLAS_LDD = ../../tools/OpenBLAS/
-FST_LDD = ../../tools/openfst-1.3.2/lib
-PA_LDD = ../../tools/portaudio/install/lib
-LDLIBS = -L$(FST_LDD) -lfst -ldl -L$(OBLAS_LDD) -lopenblas -lm -lpthread 
 
 UNAME=$(shell uname)
 ifeq ($(UNAME), Linux)

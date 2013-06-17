@@ -11,7 +11,7 @@ CXXFLAGS = -msse -Wall -I.. \
       -g # -O0 -DKALDI_PARANOID 
 
 LDFLAGS = -rdynamic
-LDLIBS = $(EXTRA_LDLIBS) ../../tools/openfst/lib/libfst.a -ldl $(OPENBLASLIBS) -lm -lpthread
+LDLIBS = $(EXTRA_LDLIBS) $(OPENFSTLIBS) -ldl $(OPENBLASLIBS) -lm -lpthread
 CC = g++
 CXX = g++
 AR = ar

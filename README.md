@@ -9,7 +9,7 @@ ABOUT
  * Source code for python wrapper for online-decoder is at `src/python-kaldi-decoding` 
  * Remarks about new decoder are located at `src/vystadial-decoder`
  * I use the `Fake submodules` approach to merge the 3 subprojects to this repository. More about `Fake submodules` [at this blog](http://debuggable.com/posts/git-fake-submodules:4b563ee4-f3cc-4061-967e-0e48cbdd56cb).
- * I mirror the svn via `git svn`. [Nice intro to git svn](http://viget.com/extend/effectively-using-git-with-subversion) and [Walk through](http://blog.shinetech.com/2009/02/17/my-git-svn-workflow/)
+ * I mirror the svn via `git svn`. [Nice intro to git svn](http://viget.com/extend/effectively-using-git-with-subversion), [Walk through](http://blog.shinetech.com/2009/02/17/my-git-svn-workflow/) and [Multiple svn-remotes](http://blog.shuningbian.net/2011/05/git-with-multiple-svn-remotes.html)
 
 OTHER INFO
 ----------
