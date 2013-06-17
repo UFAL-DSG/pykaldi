@@ -2,7 +2,7 @@ ABOUT
 =====
  * This is a Git mirror of [Svn trunk of Kaldi project](http://sourceforge.net/projects/kaldi/)
    `svn://svn.code.sf.net/p/kaldi/code/trunk`
- * In the branch `master` I commit my work. In the branch `svn_mirror` I mirror `svn://svn.code.sf.net/p/kaldi/code/trunk`. In the branch `sandbox_oplatek` I am developing changes which I would like to check in back to Kaldi.
+ * In the branch `master` I commit my work. In the branch `svn_mirror` I mirror `svn://svn.code.sf.net/p/kaldi/code/trunk`. In the branch `sandbox-oplatek` I am developing changes which I would like to check in back to Kaldi.
  * Currently, I mirror the repository manually as often as I needed.
  * The main purpose for mirroring is that I want to build my own decoder and train my models for decoding based on up-to-date Kaldi version.
  * Recipe for training the models can be found at `egs/kaldi-vystadial-recipe`
