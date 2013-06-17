@@ -9,7 +9,7 @@ ABOUT
  * Source code for python wrapper for online-decoder is at `src/python-kaldi-decoding` 
  * Remarks about new decoder are located at `src/vystadial-decoder`
  * I use the `Fake submodules` approach to merge the 3 subprojects to this repository. More about `Fake submodules` [at this blog](http://debuggable.com/posts/git-fake-submodules:4b563ee4-f3cc-4061-967e-0e48cbdd56cb).
- * I mirror the svn via `git svn`. [Nice intro to git svn](http://viget.com/extend/effectively-using-git-with-subversion) and [Walk through](http://blog.shinetech.com/2009/02/17/my-git-svn-workflow/)
+ * I mirror the svn via `git svn`. [Nice intro to git svn](http://viget.com/extend/effectively-using-git-with-subversion), [Walk through](http://blog.shinetech.com/2009/02/17/my-git-svn-workflow/) and [Multiple svn-remotes](http://blog.shuningbian.net/2011/05/git-with-multiple-svn-remotes.html)
 
 OTHER INFO
 ----------
@@ -21,5 +21,5 @@ OTHER INFO
 
 LICENSE
 --------
- * One of our goals is to release all of the added features under `Apache license 2.0` (Kaldi uses the same license). However, we did not added any license statement to repository yet. If you see this README and do not know the licensing conditions, write us. We probably just forget to put the license under the repository.
+ * We release all the changes at pyKaldi under `Apache license 2.0` license. Kaldi also uses `Apache 2.0` license). 
  * We also want to publicly release the training data in the autumn 2013.
