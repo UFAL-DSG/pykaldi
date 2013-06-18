@@ -13,14 +13,14 @@ Installing external dependencies
 See `kaldi-trunk/tools/INSTALL` for info.
 Basically it telss you to use `kaldi-trunk/tools/Makefile`, which I used also.
 
-How I install OpenBlas
+How have I installed OpenBlas?
 ----------------------
 Simple enough:
 ```bash
 make openblas
 ```
 
-How I installed Openfst
+How have I installed Openfst?
 ----------------------
 In order to install also shared libraries
 I changed the line 37 in 
@@ -47,7 +47,7 @@ Than I ran
 make openfst_tgt
 ```
 
-How I installed PortAudio?
+How have I installed PortAudio?
 --------------------------
 NOTE: Necessary only for Kaldi online decoder
 
@@ -61,8 +61,13 @@ to
 ./configure --prefix=`pwd`/install --with-pic
 ```
 
+Then I ran
+```bash
+extras/install_portaudio.sh
+```
 
-How I build Kaldi?
+
+How have I built Kaldi?
 ------------------
 ```bash
 ./configure --openblas-root=`pwd`/../tools/OpenBLAS/install --fst-root=`pwd`/../tools/openfst --static-math=no
@@ -84,7 +89,7 @@ Since by *default it is turned of! I always forget about that!*
 make depend && make ext_depend && make && make ext
 ```
 
-How I update Kaldi src code?
+How have I updated Kaldi src code?
 ----------------------------
 I checkout the kaldi-trunk version.
 
@@ -93,7 +98,7 @@ I checkout the kaldi-trunk version.
 Note: If you checkout Kaldi before March 2013 you need to relocate svn. See the instructions in the link above!
 
 
-What setup do I use?
+What setup did I use?
 --------------------
 In order to use Kaldi binaries everywhere I add them to `PATH`. 
 In addition, I needed to add `openfst` directory to `LD_LIBRARY_PATH`, I compiled Kaldi dynamically linked against `openfst`. To conclude, I added following lines to my `.bashrc`.
@@ -110,12 +115,12 @@ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH":$openfst/lib
 
 Which tool for building a Language Model (LM) have I used?
 ---------------------------------------------------------
-None. I got build LM in Arpa format.
+None. I received built LM in Arpa format.
 
 NOTE: Probably, I should build my own LM. 
 
 
-How I installed Atlas
+How have I installed Atlas?
 --------------------
 NOTE: I decided NOT to use Atlas, I USE OpenBlas INSTEAD. It is open source and it allows me to compile both shared and static libraries at one run.
 
