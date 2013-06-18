@@ -540,7 +540,7 @@ if [ "`uname`" == "Linux" ]; then
       OPENFSTLIBS="$FSTROOT/lib/libfst.a"
       fst_type='a'
   else
-      OPENFSTLIBS="-L${FSTROOT} -l${FSTROOT}/lib/libfst.so"
+      OPENFSTLIBS="-L${FSTROOT}/lib -lfst -Wl,-rpath=${FSTROOT}/lib"
       fst_type='so'
   fi
   if [ ! -f "$FSTROOT/lib/libfst.${fst_type}" ]; then

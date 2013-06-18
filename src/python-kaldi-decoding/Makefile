@@ -1,7 +1,7 @@
 # We suppose that this Makefile sits in kaldi-trunk/src/ThisDirectory
 all:
 
-EXTRA_CXXFLAGS = -Wno-sign-compare -fPIC -I ../../tools/portaudio/install/include
+EXTRA_CXXFLAGS = -Wno-sign-compare -I ../../tools/portaudio/install/include
 EXTRA_LDLIBS =
 
 include ../kaldi.mk
@@ -11,15 +11,6 @@ TESTFILES = compute-wer-test gmm-latgen-faster-test compute-mfcc-feats-test \
 			lattice-best-path-test online-wav-gmm-decode-faster-test
 OBJFILES = compute-wer.o gmm-latgen-faster.o compute-mfcc-feats.o \
 		   lattice-best-path.o online-wav-gmm-decode-faster.o 
-# pure_virtual dso error patch the symptoms:-/
-# pure_virtual.o
-# #ifdef __cplusplus
-# extern "C" {
-# #endif
-# void __cxa_pure_virtual(void) { while (1); }
-# #ifdef __cplusplus
-# }
-# #endif
 
 LDLIBFILE = libkaldi-cffi.so
 LIBFILE = kaldi-cffi.a
@@ -27,14 +18,14 @@ LIBFILE = kaldi-cffi.a
 
 UNAME=$(shell uname)
 ifeq ($(UNAME), Linux)
-    LDLIBS += ../../tools/portaudio/install/lib/libportaudio.a
+    EXTRA_LDLIBS += ../../tools/portaudio/install/lib/libportaudio.a
 ifneq ($(wildcard ../../tools/portaudio/install/include/pa_linux_alsa.h),)
-    LDLIBS += -lasound
+    EXTRA_LDLIBS += -lasound
 else
-    LDLIBS += -lrt
+    EXTRA_LDLIBS += -lrt
 endif
 else
-    LDLIBS += -L $(PA_LDD) -lportaudio
+    EXTRA_LDLIBS += -L $(PA_LDD) -lportaudio
 endif
 
 all:  $(LIBFILE) $(LDLIBFILE)
@@ -79,12 +70,13 @@ test_dyn: $(LDLIBFILE) $(TESTFILES)
 	# Before running the binaries set the LD_LIBRARY_PATH variable as we do!
 	@result=0; for x in $(TESTFILES); do \
 		echo -n "Running $$x :  "; \
-		LD_LIBRARY_PATH=$(OBLAS_LDD):$(FST_LDD):$:`pwd` ./$$x --help ; \
-		if [ $$? -ne 0 ]; then echo "... FAIL"; result=1; else echo "... SUCCESS > /dev/null 2>&1";  fi;  \
+		LD_LIBRARY_PATH=$(OBLAS_LDD):$(FST_LDD):$:`pwd` ./$$x --help  > /dev/null 2>&1; \
+		if [ $$? -ne 0 ]; then echo "... FAIL"; result=1; else echo "... SUCCESS";  fi;  \
 		done; exit $$result
 
 python_test: run.py $(LDLIBFILE) 
 	LD_LIBRARY_PATH=$(OBLAS_LDD):$(FST_LDD):`pwd` python $<
 	echo $?
 
-test: test_dyn python_test
+# test: test_dyn python_test
+test: test_dyn
