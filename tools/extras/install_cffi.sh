@@ -96,7 +96,7 @@ tar -xovzf $pytesttar || exit 1
 # Installing
 prefix="$PWD/python"
 
-python_version=`python -c 'import sys; print "python%d.%d" % (sys.version_info.major, sys.version_info.minor)'`
+python_version=`python -c 'import sys; p1, p2, _, _ , _= sys.version_info;  print "python%d.%d" % (p1, p2)'`
 new_ppath="$prefix/lib/$python_version/site-packages"
 mkdir -p "$new_ppath"
 export PYTHONPATH="$PYTHONPATH:$new_ppath"
