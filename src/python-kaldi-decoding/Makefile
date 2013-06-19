@@ -33,13 +33,11 @@ LIBFILE = kaldi-cffi.a
 all:  $(LIBFILE) $(LDLIBFILE)
 
 # I can not use ../decoder/kaldi-decoder.a because there are two types of decoders for two types sgmm vs sgmm2
-#	../decoder/decodable-am-diag-gmm.o ../decoder/lattice-faster-decoder.o ../decoder/faster-decoder.o \
-
-$(LDLIBFILE): $(OBJFILES) ../decoder/kaldi-decoder.a \
+$(LDLIBFILE): $(OBJFILES) \
+	../decoder/decodable-am-diag-gmm.o ../decoder/lattice-faster-decoder.o ../decoder/faster-decoder.o \
 	../online/kaldi-online.a ../thread/kaldi-thread.a ../lat/kaldi-lat.a ../hmm/kaldi-hmm.a \
 	../transform/kaldi-transform.a ../gmm/kaldi-gmm.a ../fstext/kaldi-fstext.a ../tree/kaldi-tree.a \
-	../matrix/kaldi-matrix.a ../feat/kaldi-feature.a ../util/kaldi-util.a ../base/kaldi-base.a \
-    ../sgmm/kaldi-sgmm.a ../sgmm2/kaldi-sgmm.a
+	../matrix/kaldi-matrix.a ../feat/kaldi-feature.a ../util/kaldi-util.a ../base/kaldi-base.a
 	$(CC) -fPIC -shared -o $@ -Wl,-export-dynamic,--whole-archive $^ -Wl,--no-whole-archive $(LDLIBS)
 
 
@@ -74,7 +72,7 @@ test_dyn: $(LDLIBFILE) $(TESTFILES)
 	# Before running the binaries set the LD_LIBRARY_PATH variable as we do!
 	@result=0; for x in $(TESTFILES); do \
 		echo -n "Running $$x :  "; \
-		LD_LIBRARY_PATH=$(OPENBLASROOT)/lib:$(FSTROOT)/lib:$(PA_ROOT)/lib:`pwd` ./$$x --help /dev/null 2>&1 ; \
+		LD_LIBRARY_PATH=$(OPENBLASROOT)/lib:$(FSTROOT)/lib:$(PA_ROOT)/lib:`pwd` ./$$x --help > /dev/null 2>&1 ; \
 		if [ $$? -ne 0 ]; then echo "... FAIL"; result=1; else echo "... SUCCESS> ";  fi;  \
 		done; exit $$result
 
