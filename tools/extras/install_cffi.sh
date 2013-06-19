@@ -96,7 +96,8 @@ tar -xovzf $pytesttar || exit 1
 # Installing
 prefix="$PWD/python"
 
-new_ppath="$prefix/lib/python2.7/site-packages"
+python_version=`python -c 'import sys; print "python%d.%d" % (sys.version_info.major, sys.version_info.minor)'`
+new_ppath="$prefix/lib/$python_version/site-packages"
 mkdir -p "$new_ppath"
 export PYTHONPATH="$PYTHONPATH:$new_ppath"
 echo; echo "Adding the $new_ppath to PYTHONPATH"
