@@ -19,18 +19,20 @@ endif
 EXTRA_CXXFLAGS = -Wno-sign-compare -I $(PA_ROOT)/include
 
 include ../kaldi.mk
-# CC = gcc
+CC = g++
 
 TESTFILES = compute-wer-test gmm-latgen-faster-test compute-mfcc-feats-test \
-			lattice-best-path-test online-wav-gmm-decode-faster-test
+			lattice-best-path-test online-wav-gmm-decode-faster-test \
+			dummyio_test
 OBJFILES = compute-wer.o gmm-latgen-faster.o compute-mfcc-feats.o \
-		   lattice-best-path.o online-wav-gmm-decode-faster.o 
+		   lattice-best-path.o online-wav-gmm-decode-faster.o \
+		   dummyio.o
 
 LDLIBFILE = libkaldi-cffi.so
 LIBFILE = kaldi-cffi.a
 
 
-all:  $(LIBFILE) $(LDLIBFILE)
+all:  $(LIBFILE) $(LDLIBFILE) libdummyio.so
 
 # I can not use ../decoder/kaldi-decoder.a because there are two types of decoders for two types sgmm vs sgmm2
 $(LDLIBFILE): $(OBJFILES) \
@@ -65,20 +67,30 @@ depend:
 
 .valgrind: $(TESTFILES)
 
-.PHONY: test_dyn python_test test
+.PHONY: test_dyn python_online_test python_vystadial_test test 
+
+### PYTHON C api test ####
+#{{{
+kaldiDecoders.py: libdummyio.so
+python_vystadial_test: libdummyio.so test_kaldiDecoders.py kaldiDecoders.py
+	./test_kaldiDecoders.py  # using unit test
+
+libdummyio.so: dummyio.o
+	$(CC) -fPIC -shared -o $@ -Wl,-export-dynamic,--whole-archive $^ -Wl,--no-whole-archive $(LDLIBS)
+
+#}}}
 
 ### TESTS - launching command --help ### 
 test_dyn: $(LDLIBFILE) $(TESTFILES)
 	# Before running the binaries set the LD_LIBRARY_PATH variable as we do!
 	@result=0; for x in $(TESTFILES); do \
 		echo -n "Running $$x :  "; \
-		LD_LIBRARY_PATH=$(OPENBLASROOT)/lib:$(FSTROOT)/lib:$(PA_ROOT)/lib:`pwd` ./$$x --help > /dev/null 2>&1 ; \
-		if [ $$? -ne 0 ]; then echo "... FAIL"; result=1; else echo "... SUCCESS> ";  fi;  \
+		LD_LIBRARY_PATH=$(OPENBLASROOT)/lib:$(FSTROOT)/lib:$(PA_ROOT)/lib:`pwd` ./$$x --help  > /dev/null 2>&1 ; \
+		if [ $$? -ne 0 ]; then echo "... FAIL"; result=1; else echo "... SUCCESS";  fi;  \
 		done; exit $$result
 
-python_test: run.py $(LDLIBFILE) 
+python_online_test: run_online.py $(LDLIBFILE) 
 	LD_LIBRARY_PATH=$(OBLAS_LDD):$(FST_LDD):`pwd` python $<
 	echo $?
 
-# test: test_dyn python_test
-test: test_dyn
+test: test_dyn python_online_test python_vystadial_test

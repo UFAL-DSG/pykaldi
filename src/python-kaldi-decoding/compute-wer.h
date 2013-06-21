@@ -13,4 +13,4 @@ int compute_wer_like_main(int argc, char **argv);
 }
 #endif
 
-#endif  // #ifndef COMPUTE_MFCC_WER_H
+#endif  // #ifndef KALDI_PYTHON_KALDI_DECODING_COMPUTE_WER_H_
