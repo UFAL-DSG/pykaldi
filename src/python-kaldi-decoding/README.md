@@ -1,44 +1,21 @@
 Intro
 -----
 The goal of this project is to test
-Kaldi decoding pipeline called from Python
+Kaldi decoding pipeline called from Python using [cffi](http://cffi.readthedocs.org/en/release-0.6/).
 
 Prerequisities
 --------------
+UPDATE 2013 06 20
+Since I committed changes to `svn.code.sf.net/p/kaldi/sandbox/oplatek` you can easily setup `OpenBLAS` instead of `ATLAS` and compile `OpenFst`, `PortAudio` and `Kaldi` itself much easier with *shared library support*.
+ *Shared library support* is needed for `cffi`. 
+ 
+I hope the sandbox will be merged soon into kaldi/trunk.
 
- * Install *cffi*! See the docs
-[http://cffi.readthedocs.org/](http://cffi.readthedocs.org/) for more info.
- * Build kaldi with `OpenBlAS` support and `-fPIC` flags in `CXXFLAGS` or `EXTRA_CXXFLAGS` in the main Makefile
- * Before building Kaldi build `OpenBLAS` and openfst by 
+Apart the Kaldi stuff (OpenFST, OpenBLAS, PortAudio) you need to install obviously `cffi`.
+In the `sanbox/oplatek/tools/extras/` you can find `install_cffi.sh`.
 
- ```sh
- cd kaldi-trunk/tools
- make openblas
- ```
-
- and 
-
-```sh
- cd kaldi-trunk/tools
-# replace line in kaldi-trunk/tools/Makefile by following "patch" change line 37!
-# switching from disable-shared -> enable-shared
-*** Makefile 
-************
-*** 34,38 ****
-
-openfst-1.3.2/Makefile: openfst-1.3.2/.patched
-		cd openfst-1.3.2/; \
-!		./configure --prefix=`pwd` --enable-static --disable-shared --enable-far --enable-ngram-fsts
-
---- 34,38 ----
-
-openfst-1.3.2/Makefile: openfst-1.3.2/.patched
-		cd openfst-1.3.2/; \
-!		./configure --prefix=`pwd` --enable-static --enable-shared --enable-far --enable-ngram-fsts
-
-# and build it
-make openfst_tgt
-```
+I recommend to install `cffi` via you system instalater and use it for other stuff too,
+but you can install it by `install_cffi.sh` into `tools` directory.
 
 
 Running and building examples
@@ -48,11 +25,15 @@ In order to build shared libraries and run C test binaries
 ```sh
 $make all
 ```
-To run `run.py` set up specify where are the shared libraries. E.g. by running from `kaldi-trunk/src/python-kaldi-decoding`
-
+To run `run_online.py`, please, specify where are the shared libraries. E.g. by running from `kaldi-trunk/src/python-kaldi-decoding`.
 ```sh
-LD_LIBRARY_PATH=`pwd`/../../tools/OpenBLAS:`pwd`/../../tools/openfst/lib:`pwd` ./run.py
+LD_LIBRARY_PATH=`pwd`/../../tools/OpenBLAS:`pwd`/../../tools/openfst/lib:`pwd` ./run_online.py
 ```
+For details and running other commands run tests and check the `Makefile`
+```sh
+make test
+```
+
 
 
 Remarks on linking

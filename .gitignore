@@ -1,11 +1,6 @@
 *.o
 *.a
 
-# oplatek training recipe
-egs/kaldi-vystadial-recipe/
-# oplatek python-kaldi integration
-src/python-kaldi-decoding/
-
 # tools
 tools/ATLAS/
 tools/OpenBLAS/
