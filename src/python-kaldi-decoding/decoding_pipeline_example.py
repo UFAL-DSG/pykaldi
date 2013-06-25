@@ -29,7 +29,7 @@ class CffiKaldiError(Exception):
         return 'CffiKaldi with return code: %s' % repr(self.retcode)
 
 
-def mymkdir(path):
+def make_dir(path):
     try:
         os.makedirs(path)
     except OSError as exception:
@@ -40,7 +40,7 @@ def mymkdir(path):
 def run_mfcc(ffi, mfcclib, mfccPar):
     '''Settings and arguments based on /ha/work/people/oplatek/kaldi-trunk/egs/kaldi-
     vystadial-recipe/s5/steps/make_mfcc.sh'''
-    mymkdir(mfccPar.mfcc_dir)
+    make_dir(mfccPar.mfcc_dir)
     mfcc_args = ['mfcc_unused', '--verbose=2',
                  '--config=%s' % mfccPar.mfcc_config,
                  'scp:%s' % mfccPar.wav_scp,
@@ -63,7 +63,7 @@ def run_mfcc(ffi, mfcclib, mfccPar):
 def run_decode(ffi, decodelib, latgenPar):
     '''Settings and arguments based on /ha/work/people/oplatek/kaldi-trunk/egs/kaldi-
     vystadial-recipe/s5/steps/decode.sh'''
-    mymkdir(latgenPar.decode_dir)
+    make_dir(latgenPar.decode_dir)
     # feats for delta not lda
     decode_args = ['decode_unused', '--max-active=%s' % latgenPar.max_active,
                    '--beam=%s' % latgenPar.beam,
@@ -113,7 +113,7 @@ def run_bestpath(ffi, bestpathlib, bpPar):
         raise
 
 
-def computeWer(ffi, werlib, werPar):
+def compute_wer(ffi, werlib, werPar):
     '''Settings and arguments based on /ha/work/people/oplatek/kaldi-trunk/egs/kaldi-
     vystadial-recipe/s5/local/shore.sh
     | compute-wer --text --mode=present ark:exp/tri2a/decode/scoring/test_filt.txt ark,p:- >&
@@ -135,7 +135,7 @@ def computeWer(ffi, werlib, werPar):
         raise
 
 
-def buildReference(wav_scp, ref_path):
+def build_reference(wav_scp, ref_path):
     with open(ref_path, 'w') as w:
         with open(wav_scp, 'r') as scp:
             for line in scp:
@@ -145,7 +145,7 @@ def buildReference(wav_scp, ref_path):
                     w.write('%s %s\n' % (name, trans))
 
 
-def int2txt(trans_path, trans_path_txt, wst, sym_OOV='\<UNK\>'):
+def int_to_txt(trans_path, trans_path_txt, wst, sym_OOV='\<UNK\>'):
     ''' based on:  cat exp/tri2a/decode/scoring/15.tra | utils/int2sym.pl -f 2-
      exp/tri2a/graph/words.txt | sed s:\<UNK\>::g'''
     with open(trans_path, 'rb') as r:
@@ -157,7 +157,7 @@ def int2txt(trans_path, trans_path_txt, wst, sym_OOV='\<UNK\>'):
 
 def run_online(ffi, onlinelib, onlinePar):
     ''' Based on kaldi-trunk/egs/voxforge/online_demo/run.sh'''
-    mymkdir(onlinePar.decode_dir)
+    make_dir(onlinePar.decode_dir)
     online_args = ['online_unused',
                    '--verbose=1',
                    '--rt-min=%s' % onlinePar.rt_min,
@@ -184,7 +184,7 @@ def run_online(ffi, onlinelib, onlinePar):
         raise
 
 
-def compactHyp(hyp_path, comp_hyp_path):
+def compact_hyp(hyp_path, comp_hyp_path):
     d = DefaultOrderedDict(list)
     with open(hyp_path, 'r') as hyp:
         for line in hyp:
@@ -216,7 +216,7 @@ if __name__ == '__main__':
     data_dir = s5_dir + '/Results/data_6_aa7263b3f5c151409a87e3d845d58e39335a4f0c'
     decodedir = cwd + '/decode'
     try:
-        lib = ffi.dlopen('libcffi-kaldi.so')
+        lib = ffi.dlopen('libkaldi-cffi.so')
 
         mfccPar = MfccParams(
             mfcc_dir='mfcc',
@@ -269,21 +269,21 @@ if __name__ == '__main__':
 
         ### Evaluating experiments
         ref = decodedir + '/reference.txt'
-        buildReference(mfccPar.wav_scp, ref)
+        build_reference(mfccPar.wav_scp, ref)
 
         # Evaluate latgen decoding
         lat_trans_text = bpPar.trans + '.txt'
-        int2txt(bpPar.trans, lat_trans_text, latgenPar.wst)
+        int_to_txt(bpPar.trans, lat_trans_text, latgenPar.wst)
         lat_werPar = WerParams(hypothesis=lat_trans_text, reference=ref)
-        computeWer(ffi, lib, lat_werPar)
+        compute_wer(ffi, lib, lat_werPar)
         print 'running WER for latgen finished'
 
         # # Evaluate online decoding
         onl_transtxttmp, onl_transtxt = onlinePar.trans + '.tmp', onlinePar.trans + '.txt'
-        int2txt(onlinePar.trans, onl_transtxttmp, onlinePar.wst)
-        compactHyp(onl_transtxttmp, onl_transtxt)
+        int_to_txt(onlinePar.trans, onl_transtxttmp, onlinePar.wst)
+        compact_hyp(onl_transtxttmp, onl_transtxt)
         onl_werPar = WerParams(hypothesis=onl_transtxt, reference=ref)
-        computeWer(ffi, lib, onl_werPar)
+        compute_wer(ffi, lib, onl_werPar)
         print 'running WER for online finished'
     except OSError as e:
         print 'Maybe you forget to set LD_LIBRARY_PATH?'
