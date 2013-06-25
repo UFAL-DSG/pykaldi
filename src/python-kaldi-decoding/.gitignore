@@ -1,5 +1,4 @@
 .valgrind
-dummyio_test
 *.o
 *.so
 *.a
