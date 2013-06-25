@@ -15,4 +15,5 @@ gmm-latgen-faster-test
 online-wav-gmm-decode-faster-test
 compute-wer-test
 lattice-best-path-test
+dummyio-test
 *.d
