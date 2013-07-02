@@ -160,4 +160,4 @@ if [ ! -e $(python -c 'import cffi') ]; then
 fi
 
 echo; echo SUCCESS ; echo
-echo "ADD the"; echo "$new_ppath"; echo "to PYTHONPATH for using cffi regularly!"; echo
+ echo "USE: export PYTHONPATH=\"$new_ppath\""; echo "for using cffi system wide!"; echo
