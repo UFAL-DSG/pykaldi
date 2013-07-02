@@ -1,9 +1,6 @@
 #!/usr/bin/env python
-from cffi import FFI
-import os
 from decoding_pipeline_utils import parse_config_from_arguments, make_dir, build_reference, wst2dict, int_to_txt, compact_hyp, PyKaldiError
-
-cwd = os.path.abspath(os.path.curdir)
+from pykaldi.binutils import ffibin, libbin
 
 
 def run_mfcc(ffi, mfcclib, config):
@@ -120,29 +117,14 @@ if __name__ == '__main__':
     config = parse_config_from_arguments()
     make_dir(config['decode_dir'])
 
-    ffi = FFI()
-    header = '''
-    int compute_mfcc_feats_like_main(int argc, char **argv);
-    int gmm_latgen_faster_like_main(int argc, char **argv);
-    int lattice_best_path_like_main(int argc, char **argv);
-    int compute_wer_like_main(int argc, char **argv);
-    int online_wav_gmm_decode_faster_like_main(int argc, char *argv[]);
-    '''
-    ffi.cdef(header)
-    try:
-        lib = ffi.dlopen('libpykaldi.so')
-
-        run_mfcc(ffi, lib, config)
-        print 'running mfcc finished'
-        # run_decode(ffi, lib, config)
-        # print 'running mfcc finished'
-        # run_bestpath(ffi, lib, config)
-        # print 'running bestpath finished'
-        run_online(ffi, lib, config)
-        print 'running online finished'
-        ### Evaluating experiments
-        compute_wer(ffi, lib, config)
-        print 'running WER for online finished'
-    except OSError as e:
-        print 'Maybe you forget to set LD_LIBRARY_PATH?'
-        raise e
+    run_mfcc(ffibin, libbin, config)
+    print 'running mfcc finished'
+    # run_decode(ffibin, libbin, config)
+    # print 'running mfcc finished'
+    # run_bestpath(ffibin, libbin, config)
+    # print 'running bestpath finished'
+    run_online(ffibin, libbin, config)
+    print 'running online finished'
+    ### Evaluating experiments
+    compute_wer(ffibin, libbin, config)
+    print 'running WER for online finished'

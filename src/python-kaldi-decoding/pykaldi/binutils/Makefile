@@ -1,4 +1,5 @@
-include ../Makefile
+# include python-kaldi-decoding Makefile 
+# since we are dependent on the code there
 
 # PYTHON PIPELINE EXAMPLE settings 
 DATA_FILE = online-data
@@ -8,60 +9,39 @@ DATA_TAR = $(DATA_FILE).tar.bz2
 DECODE_DIR = work
 INPUT_SCP = $(DECODE_DIR)/input.scp
 UTT2SPK = $(DECODE_DIR)/spk2utt
-WAVS = $(wildcard $(DATA_FILE)/audio/*.wav)
-WAVS_TRN = ${WAVS:.wav=.wav.trn}
-PIPELINE_CONFIG=configs/decoding_pipeline_voxforge_config.json
+PIPELINE_CONFIG = configs/decoding_pipeline_voxforge_config.json
+BIGLIB = libpykaldi.so
 
+# Compiling the $(BIGLIB) in python-kaldi-decoding directory
+$(BIGLIB):
+	$(MAKE) -C ../..  $@
+	cp ../../$@ .
 
-test: run_pipeline_example kaldi_decoders_test.py
-
-
+test: run_pipeline_example
 
 # PYTHON PIPELINE EXAMPLE
-decoding_pipeline_example.py: $(BIGLIB) $(DATA_FILE) $(PIPELINE_CONFIG) $(WAVS_TRN) $(INPUT_SCP) $(UTT2SPK)
-	echo $(WAVS) $(WAVS_TRN)
-
-run_pipeline_example: decoding_pipeline_example.py
-ifneq ($(KALDI_FLAVOR), dynamic)
-	-echo "For C/Python interface we need shared library"
-	-echo "The following test will probably fail!"
-	-echo "Use configure with --shared flag!"
-endif
+run_pipeline_example: decoding_pipeline_example.py $(BIGLIB) $(DATA_TAR) $(PIPELINE_CONFIG)
 	python $< $(PIPELINE_CONFIG)
 
 
 $(DATA_TAR):
+	# generate helper files from the downloaded data
 	wget -T 10 -t 3 "$(DATA_URL)"
+	tar --keep-newer-files -xf $(DATA_TAR) > /dev/null 2> /dev/null
+	mkdir -p $(DECODE_DIR)
+	rm -f $(INPUT_SCP)  # reset the file do not append
+	for f in $(DATA_FILE)/audio/*.wav; do \
+		bf=`basename $$f`; bf=$${bf%.wav}; echo $$bf $$f >> $(INPUT_SCP); \
+		echo $$bf $$bf >> $(UTT2SPK); \
+		grep $$bf $(DATA_FILE)/audio/trans.txt | cut -d' ' -f 2- > $$f.trn; \
+	done
 
-
-$(DATA_FILE): $(DATA_TAR)
-	tar xf $@.tar.bz2
 
 $(DECODE_DIR):
-	mkdir -p $@
+	if [ ! -d $(DECODE_DIR) ]; then mkdir $(DECODE_DIR) ; fi
 	
-$(INPUT_SCP): $(DECODE_DIR) $(DATA_FILE)
-	rm -f $@  # reset the file do not append
-	for f in $(DATA_FILE)/audio/*.wav; do \
-		bf=`basename $$f`; bf=$${bf%.wav}; echo $$bf $$f >> $@; \
-	done
-
-$(UTT2SPK): $(DECODE_DIR) $(DATA_FILE)
-	rm -f $@  # reset the file do not append
-	for f in $(DATA_FILE)/audio/*.wav; do \
-		bf=`basename $$f`; bf=$${bf%.wav}; echo $$bf $$bf >> $@; \
-	done
-
-
-$(DATA_FILE)/audio/%.wav.trn: $(DATA_FILE)/audio/%.wav 
-		bf=`basename $<`; bf=$${bf%.wav}; \
-		grep $$bf $(DATA_FILE)/audio/trans.txt | cut -d' ' -f 2- > $@ 
-
-
-
 # HELPER functions
-pyclean: clean
-	rm -f *.pyc 
-	rm -rf $(DATA_TAR) $(DATA_FILE)
+clean:
+	rm -rf $(DATA_TAR) $(DATA_FILE) $(DECODE_DIR) $(BIGLIB) *.pyc 
 
-.PHONY: run_pipeline_example pytest
+.PHONY: run_pipeline_example test clean
