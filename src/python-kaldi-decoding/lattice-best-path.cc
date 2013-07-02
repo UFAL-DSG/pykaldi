@@ -55,7 +55,7 @@ int lattice_best_path_like_main(int argc, char *argv[]) {
 
     if (po.NumArgs() < 1 || po.NumArgs() > 3) {
       po.PrintUsage();
-      exit(1);
+      return 1;
     }
 
     std::string lats_rspecifier = po.GetArg(1),

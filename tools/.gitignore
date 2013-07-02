@@ -7,3 +7,6 @@ portaudio
 sctk-2.4.0
 sph2pipe_v2.5
 python
+*.gz
+*.bz2
+*.tgz

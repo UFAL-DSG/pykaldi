@@ -50,7 +50,7 @@ int compute_wer_like_main(int argc, char *argv[]) {
 
     if (po.NumArgs() != 2) {
       po.PrintUsage();
-      exit(1);
+      return 1;
     }
 
     std::string ref_rspecifier = po.GetArg(1);

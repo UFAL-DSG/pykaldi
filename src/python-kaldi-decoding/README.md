@@ -1,13 +1,21 @@
 Intro
 -----
 The goal of this project is to interface Kaldi decoders from Python. 
-At first I will test the Kaldi decoding pipeline called from Python using [cffi](http://cffi.readthedocs.org/en/release-0.6/).
-The second goal is to create online Python interface which can feed the decoder with audio data frame by frame.
+Subgoals:
+ * Build shared libraries for Kaldi
+ * Python/C interface for Kaldi using [cffi](http://cffi.readthedocs.org/en/release-0.6/).
+ * _Online_ interface to decoders which can be fed with audio data frame by frame. 
+ * Make the _Online_ iterface available also from Python
 
-Prerequisities
+Content
+-------
+ * C and C++ files for testing shared libraries compliation
+ * `pykaldi` directory containing C/Python interface to Kaldi
+
+Prerequisites
 --------------
-UPDATE 2013 06 20
-Since I committed changes to `svn.code.sf.net/p/kaldi/sandbox/oplatek` you can easily setup `OpenBLAS` instead of `ATLAS` and compile `OpenFst`, `PortAudio` and `Kaldi` itself much easier with *shared library support*.
+UPDATE 2013 07 02
+`Kaldi/sandbox/sharedlibs` now support compiling Kaldi with shared libraries.
  *Shared library support* is needed for `cffi`. 
  
 I hope the sandbox will be merged soon into kaldi/trunk.
@@ -16,7 +24,7 @@ Apart the Kaldi stuff (OpenFST, OpenBLAS, PortAudio) you need to install obvious
 In the `sanbox/oplatek/tools/extras/` you can find `install_cffi.sh` installation script.
 
 I recommend to install `cffi` via you system package manager and use it for other stuff too.
-Hoever, you can always install it by running `install_cffi.sh` from `tools` directory.
+However, you can always install it by running `install_cffi.sh` from `tools` directory.
 
 
 Running and building examples
@@ -25,10 +33,6 @@ Running and building examples
 In order to build shared libraries and run C test binaries run following commands from this directory.
 ```sh
 $make
-```
-To run `decoding_pipeline_example.py`, please, specify where are the shared libraries. E.g. by running from `kaldi-trunk/src/python-kaldi-decoding`.
-```sh
-LD_LIBRARY_PATH=`pwd`/../../tools/OpenBLAS:`pwd`/../../tools/openfst/lib:`pwd` ./decoding_pipeline_example.py
 ```
 For details and running other commands run tests and check the `Makefile`
 ```sh

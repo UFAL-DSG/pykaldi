@@ -62,7 +62,7 @@ int gmm_latgen_faster_like_main(int argc, char *argv[]) {
 
     if (po.NumArgs() < 4 || po.NumArgs() > 6) {
       po.PrintUsage();
-      exit(1);
+      return 1;
     }
 
     std::string model_in_filename = po.GetArg(1),
@@ -114,7 +114,7 @@ int gmm_latgen_faster_like_main(int argc, char *argv[]) {
         decode_fst =
             VectorFst<StdArc>::Read(is, fst::FstReadOptions(fst_in_str));
         if (decode_fst == NULL) // fst code will warn.
-          exit(1);
+          return 1;
       }
 
       {

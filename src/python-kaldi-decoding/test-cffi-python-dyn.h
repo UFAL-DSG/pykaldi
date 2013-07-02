@@ -14,7 +14,7 @@
 
 typedef int (*f_t)(int c, char **ar);
 
-int testSharedLib(const char *nameLib, const char *nameFce, int argc, char ** argv) {
+int testSharedLib(int argc, char ** argv, const char *nameFce, const char *nameLib) {
     void *lib = dlopen(nameLib, RTLD_NOW);
     if (!lib) {
         printf("Cannot open library: %s\n", dlerror());
@@ -35,5 +35,9 @@ int testSharedLib(const char *nameLib, const char *nameFce, int argc, char ** ar
     
     dlclose(lib);
     return retval;
+}
+
+int testSharedLibS(int argc, char ** argv, const char *nameFce) {
+    return testSharedLib(argc, argv, nameFce, "libpykaldi.so");
 }
 #endif // #ifndef KALDI_PYTHON_KALDI_DECODING_TEST_CFFI_PYTHON_DYN_H_

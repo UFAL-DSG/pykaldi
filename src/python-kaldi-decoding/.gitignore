@@ -16,3 +16,5 @@ compute-wer-test
 lattice-best-path-test
 dummyio-test
 *.d
+online-data*
+work

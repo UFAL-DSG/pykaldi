@@ -113,3 +113,8 @@ transform/tmp_regtree
 transform/tmp_stats
 transform/tmpfb
 sgmm2bin/sgmm2-latgen-faster-parallel
+kaldi.mk.bak
+sgmm2/am-sgmm2-test
+sgmm2/estimate-am-sgmm2-test
+online/online-feat-test
+featbin/extract-rows
