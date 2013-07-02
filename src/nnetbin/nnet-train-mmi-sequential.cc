@@ -38,6 +38,7 @@
 
 
 namespace kaldi {
+namespace nnet1 {
 
 void LatticeAcousticRescore(const Matrix<BaseFloat> &log_like,
                             const TransitionModel &trans_model,
@@ -75,11 +76,13 @@ void LatticeAcousticRescore(const Matrix<BaseFloat> &log_like,
   }
 }
 
+}  // namespace nnet1
 }  // namespace kaldi
 
 
 int main(int argc, char *argv[]) {
   using namespace kaldi;
+  using namespace kaldi::nnet1;
   typedef kaldi::int32 int32;
   try {
     const char *usage =
@@ -116,7 +119,9 @@ int main(int argc, char *argv[]) {
     po.Register("old-acoustic-scale", &old_acoustic_scale,
                 "Add in the scores in the input lattices with this scale, rather "
                 "than discarding them.");
-
+    kaldi::int32 max_frames = 6000; // Allow segments maximum of one minute by default
+    po.Register("max-frames",&max_frames, "Maximum number of frames a segment can have to be processed");
+    
     bool drop_frames = true;
     po.Register("drop-frames", &drop_frames, 
                 "Drop frames, where is zero den-posterior under numerator path "
@@ -147,6 +152,7 @@ int main(int argc, char *argv[]) {
 
      
     using namespace kaldi;
+    using namespace kaldi::nnet1;
     typedef kaldi::int32 int32;
 
     // Select the GPU
@@ -229,9 +235,20 @@ int main(int argc, char *argv[]) {
         num_other_error++;
         continue;
       }
+      if (mat.NumRows() > max_frames) {
+	KALDI_WARN << "Utterance " << utt << ": Skipped because it has " << mat.NumRows() << 
+	  " frames, which is more than " << max_frames << ".";
+	num_other_error++;
+	continue;
+      }
       
       // 2) get the denominator lattice, preprocess
       Lattice den_lat = den_lat_reader.Value(utt);
+      if (den_lat.Start() == -1) {
+        KALDI_WARN << "Empty lattice for utt " << utt;
+        num_other_error++;
+        continue;
+      }
       if (old_acoustic_scale != 1.0) {
         fst::ScaleLattice(fst::AcousticLatticeScale(old_acoustic_scale), &den_lat);
       }
@@ -251,10 +268,16 @@ int main(int argc, char *argv[]) {
         num_other_error++;
         continue;
       }
+     
+      // get actual dims for this utt and nnet
+      int32 num_frames = mat.NumRows(),
+          num_fea = mat.NumCols(),
+          num_pdfs = nnet.OutputDim();
       
       // 3) propagate the feature to get the log-posteriors (nnet w/o sofrmax)
       // push features to GPU
-      feats = mat;
+      feats.Resize(num_frames, num_fea, kUndefined);
+      feats.CopyFromMat(mat);
       // possibly apply transform
       nnet_transf.Feedforward(feats, &feats_transf);
       // propagate through the nnet (assuming w/o softmax)
@@ -264,10 +287,12 @@ int main(int argc, char *argv[]) {
         log_prior.SubtractOnLogpost(&nnet_out);
       }
       // transfer it back to the host
-      int32 num_frames = nnet_out.NumRows(),
-          num_pdfs = nnet_out.NumCols();
       nnet_out_h.Resize(num_frames,num_pdfs, kUndefined);
       nnet_out.CopyToMat(&nnet_out_h);
+      // release the buffers we don't need anymore
+      feats.Resize(0,0);
+      feats_transf.Resize(0,0);
+      nnet_out.Resize(0,0);
 
       // 4) rescore the latice
       LatticeAcousticRescore(nnet_out_h, trans_model, state_times, &den_lat);
@@ -372,8 +397,11 @@ int main(int argc, char *argv[]) {
       }
 
       // 10) backpropagate through the nnet
-      nnet_diff = nnet_diff_h;
+      nnet_diff.Resize(num_frames, num_pdfs, kUndefined);
+      nnet_diff.CopyFromMat(nnet_diff_h);
       nnet.Backpropagate(nnet_diff, NULL);
+      // relase the buffer, we don't need anymore
+      nnet_diff.Resize(0,0);
 
       // increase time counter
       total_mmi_obj += mmi_obj;

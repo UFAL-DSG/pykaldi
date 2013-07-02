@@ -1,0 +1,68 @@
+# Rules that enable valgrind debugging ("make valgrind")
+
+valgrind: .valgrind
+
+.valgrind:
+	echo -n > valgrind.out
+	for x in $(TESTFILES); do echo $$x>>valgrind.out; valgrind ./$$x >/dev/null 2>> valgrind.out; done
+	! ( grep 'ERROR SUMMARY' valgrind.out | grep -v '0 errors' )
+	! ( grep 'definitely lost' valgrind.out | grep -v -w 0 )
+	rm valgrind.out
+	touch .valgrind
+
+
+KALDI_FLAVOR = dynamic
+KALDILIBDIR = /home/ondra/school/diplomka/sharedlibs/src/lib
+OPENFSTLIBS = -L/home/ondra/school/diplomka/sharedlibs/tools/openfst/lib -lfst
+OPENFSTLDFLAGS = -Wl,-rpath=/home/ondra/school/diplomka/sharedlibs/tools/openfst/lib
+FSTROOT = /home/ondra/school/diplomka/sharedlibs/tools/openfst
+ATLASINC = /home/ondra/school/diplomka/sharedlibs/tools/ATLAS/include
+ATLASLIBS = /home/ondra/school/diplomka/sharedlibs/src/../tools/ATLAS/build/install/lib//liblapack.a /home/ondra/school/diplomka/sharedlibs/src/../tools/ATLAS/build/install/lib//libcblas.a /home/ondra/school/diplomka/sharedlibs/src/../tools/ATLAS/build/install/lib//libatlas.a /home/ondra/school/diplomka/sharedlibs/src/../tools/ATLAS/build/install/lib//libf77blas.a
+# You have to make sure ATLASLIBS is set...
+
+ifndef FSTROOT
+$(error FSTROOT not defined.)
+endif
+
+ifndef ATLASINC
+$(error ATLASINC not defined.)
+endif
+
+ifndef ATLASLIBS
+$(error ATLASLIBS not defined.)
+endif
+
+
+CXXFLAGS = -msse -msse2 -Wall -I.. \
+	  -fPIC \
+      -DKALDI_DOUBLEPRECISION=0 -DHAVE_POSIX_MEMALIGN \
+      -Wno-sign-compare -Winit-self \
+      -DHAVE_EXECINFO_H=1 -rdynamic -DHAVE_CXXABI_H \
+      -DHAVE_ATLAS -I$(ATLASINC) \
+      -I$(FSTROOT)/include \
+      $(EXTRA_CXXFLAGS) \
+      -g # -O0 -DKALDI_PARANOID 
+
+ifeq ($(KALDI_FLAVOR), dynamic)
+CXXFLAGS += -fPIC
+endif
+
+LDFLAGS = -rdynamic $(OPENFSTLDFLAGS)
+LDLIBS = $(EXTRA_LDLIBS) $(OPENFSTLIBS) $(ATLASLIBS) -lm -lpthread -ldl
+CC = g++
+CXX = g++
+AR = ar
+AS = as
+RANLIB = ranlib
+
+#Next section enables CUDA for compilation
+CUDA = true
+CUDATKDIR = /usr/
+
+CUDA_INCLUDE= -I$(CUDATKDIR)/include
+CUDA_FLAGS = -g -Xcompiler -fPIC --verbose --machine 64 -DHAVE_CUDA
+
+CXXFLAGS += -DHAVE_CUDA -I$(CUDATKDIR)/include 
+LDFLAGS += -L$(CUDATKDIR)/lib64 -Wl,-rpath,$(CUDATKDIR)/lib64
+LDLIBS += -lcublas -lcudart #LDLIBS : The libs are loaded later than static libs in implicit rule
+
