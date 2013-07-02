@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from kaldiDecoders import NbListDecoder
+from kaldi_decoders import NbListDecoder
 import unittest
 
 
