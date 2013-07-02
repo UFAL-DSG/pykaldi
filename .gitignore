@@ -1,5 +1,12 @@
 *.o
 *.a
+*.so
+*.tmp
+*.gz
+*.tar
+*.fst
+tmp*
+
 
 # tools
 tools/ATLAS/
@@ -18,8 +25,10 @@ src/base/.depend.mk
 src/base/kaldi-math-test
 src/base/io-funcs-test
 src/base/kaldi-error-test
+src/base/tmpf
 
 # /src/bin/
+src/bin/latgen-faster-mapped-parallel
 src/bin/.depend.mk
 src/bin/post-to-tacc
 src/bin/sum-matrices
@@ -87,6 +96,7 @@ src/cudamatrix/cuda-matrix-test
 src/decoder/.depend.mk
 
 # /src/feat/
+src/feat/tmp.test.wav.*
 src/feat/feature-mfcc-test
 src/feat/feature-plp-test
 src/feat/feature-fbank-test
@@ -471,6 +481,8 @@ src/util/text-utils-test
 src/util/parse-options-test
 
 # src/onlinebin
+src/onlinebin/online-audio-client
+src/onlinebin/online-audio-server-decode-faster
 src/onlinebin-python-source/
 src/onlinebin/online-gmm-decode-faster
 src/onlinebin/online-net-client
@@ -494,6 +506,7 @@ src/bin/pdf-to-counts
 src/bin/post-to-pdf-post
 src/bin/post-to-phone-post
 src/bin/prob-to-post
+src/featbin/extract-rows
 src/featbin/copy-feats-to-htk
 src/featbin/interpolate-pitch
 src/featbin/paste-feats
