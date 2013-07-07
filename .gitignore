@@ -1,5 +1,7 @@
 *.o
 *.a
+*.so
+*.tmp
 
 # oplatek training recipe
 egs/kaldi-vystadial-recipe/
@@ -17,6 +19,7 @@ tools/sph2pipe_v2.5/
 
 # /src/
 src/kaldi.mk
+src/lib/
 
 # /src/base/
 src/base/.depend.mk
@@ -574,3 +577,55 @@ src/nnetbin/nnet-train-mpe-sequential
 src/nnetbin/nnet-train-xent-hardlab-frmshuff-prior
 src/nnetbin/transf-to-nnet
 src/sgmm2bin/sgmm2-latgen-faster-parallel
+
+src/base/tmpf
+src/bin/latgen-faster-mapped-parallel
+src/feat/tmp.test.wav.fbank_kaldi.1
+src/feat/tmp.test.wav.fea_kaldi.1
+src/feat/tmp.test.wav.fea_kaldi.2
+src/feat/tmp.test.wav.fea_kaldi.3
+src/feat/tmp.test.wav.fea_kaldi.4
+src/feat/tmp.test.wav.fea_kaldi.5
+src/feat/tmp.test.wav.fea_kaldi.6
+src/feat/tmp.test.wav.plp_kaldi.1
+src/featbin/extract-rows
+src/fstext/push-special-test
+src/fstext/tmpf
+src/gmm/tmp_stats
+src/gmm/tmpf
+src/gmm/tmpfb
+src/gmm/tmpfeats
+src/kaldi.mk.bak
+src/lat/tmpf
+src/lm/composed.fst
+src/lm/output.fst
+src/matrix/tmpf
+src/nnet-cpu/nnet-precondition-test
+src/nnet-cpu/tmpf
+src/online/online-feat-test
+src/onlinebin/online-audio-client
+src/onlinebin/online-audio-server-decode-faster
+src/sgmm/estimate-am-sgmm-multi-test
+src/sgmm/tmpf
+src/sgmm/tmpfb
+src/sgmm2/am-sgmm2-test
+src/sgmm2/estimate-am-sgmm2-test
+src/sgmm2/fmllr-sgmm2-test
+src/sgmm2/tmpf
+src/sgmm2/tmpfb
+src/thread/kaldi-task-sequence-test
+src/thread/kaldi-thread-test
+src/tied/tmpf
+src/tied/tmpfb
+src/transform/fmllr-raw-test
+src/transform/tmp_regtree
+src/transform/tmp_stats
+src/transform/tmpf
+src/transform/tmpfb
+src/tree/tmpf
+src/util/tmp.scp
+src/util/tmpf
+src/util/tmpf.gz
+src/util/tmpf.scp
+tools/atlas3.10.0.tar.bz2
+tools/python/
