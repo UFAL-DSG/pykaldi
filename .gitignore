@@ -578,6 +578,7 @@ src/nnetbin/nnet-train-xent-hardlab-frmshuff-prior
 src/nnetbin/transf-to-nnet
 src/sgmm2bin/sgmm2-latgen-faster-parallel
 
+# added after svn rebase
 src/base/tmpf
 src/bin/latgen-faster-mapped-parallel
 src/feat/tmp.test.wav.fbank_kaldi.1
