@@ -46,6 +46,7 @@ endif
 
 
 ADDLIBS = ../matrix/kaldi-matrix.a ../base/kaldi-base.a  ../util/kaldi-util.a 
+<<<<<<< HEAD
 
 ifeq ($(KALDI_FLAVOR), dynamic)
 ifdef LIBNAME
@@ -109,4 +110,8 @@ depend:
 #.depend.mk: depend
 
 -include .depend.mk
+=======
+
+include ../makefiles/default_rules.mk
+>>>>>>> svn_mirror
 

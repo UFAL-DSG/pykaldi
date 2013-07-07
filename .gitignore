@@ -17,19 +17,9 @@ tools/portaudio/
 tools/sctk-2.4.0/
 tools/sph2pipe_v2.5/
 
-# /src/
-src/kaldi.mk
-
-# /src/base/
-src/base/.depend.mk
-src/base/kaldi-math-test
-src/base/io-funcs-test
-src/base/kaldi-error-test
-src/base/tmpf
 
 # /src/bin/
 src/bin/latgen-faster-mapped-parallel
-src/bin/.depend.mk
 src/bin/post-to-tacc
 src/bin/sum-matrices
 src/bin/align-mapped
@@ -88,22 +78,9 @@ src/bin/align-compiled-mapped
 src/bin/latgen-faster-mapped
 src/bin/analyze-counts
 
-# /src/cudamatrix/
-src/cudamatrix/.depend.mk
-src/cudamatrix/cuda-matrix-test
 
-# /src/decoder/
-src/decoder/.depend.mk
-
-# /src/feat/
-src/feat/tmp.test.wav.*
-src/feat/feature-mfcc-test
-src/feat/feature-plp-test
-src/feat/feature-fbank-test
-src/feat/.depend.mk
 
 # /src/featbin/
-src/featbin/.depend.mk
 src/featbin/compute-spectrogram-feats
 src/featbin/extract-feature-segments
 src/featbin/compute-mfcc-feats
@@ -133,7 +110,6 @@ src/featbin/reverse-feats
 src/featbin/compute-plp-feats
 
 # /src/fgmmbin/
-src/fgmmbin/.depend.mk
 src/fgmmbin/fgmm-global-acc-stats
 src/fgmmbin/fgmm-global-sum-accs
 src/fgmmbin/fgmm-global-est
@@ -146,7 +122,6 @@ src/fgmmbin/fgmm-global-copy
 src/fgmmbin/fgmm-global-mixdown
 
 # /src/fstbin/
-src/fstbin/.depend.mk
 src/fstbin/example
 src/fstbin/fstcopy
 src/fstbin/fstpush-kaldi
@@ -171,35 +146,9 @@ src/fstbin/fstdeterminizelog
 src/fstbin/fstphicompose
 src/fstbin/fstpropfinal
 
-# /src/fstext/
-src/fstext/.depend.mk
-src/fstext/lattice-utils-test
-src/fstext/deterministic-fst-test
-src/fstext/determinize-lattice-pruned-test
-src/fstext/determinize-star-test
-src/fstext/pre-determinize-test
-src/fstext/trivial-factor-weight-test
-src/fstext/context-fst-test
-src/fstext/factor-test
-src/fstext/table-matcher-test
-src/fstext/fstext-utils-test
-src/fstext/remove-eps-local-test
-src/fstext/rescale-test
-src/fstext/lattice-weight-test
-src/fstext/determinize-lattice-test
 
-# /src/gmm/
-src/gmm/.depend.mk
-src/gmm/diag-gmm-test
-src/gmm/mle-diag-gmm-test
-src/gmm/full-gmm-test
-src/gmm/mle-full-gmm-test
-src/gmm/am-diag-gmm-test
-src/gmm/mle-am-diag-gmm-test
-src/gmm/ebw-diag-gmm-test
 
 # /src/gmmbin/
-src/gmmbin/.depend.mk
 src/gmmbin/gmm-sum-accs
 src/gmmbin/gmm-acc-mllt
 src/gmmbin/gmm-mixup
@@ -276,17 +225,9 @@ src/gmmbin/gmm-global-acc-stats
 src/gmmbin/gmm-global-est
 src/gmmbin/gmm-global-acc-stats-twofeats
 
-# /src/hmm/
-src/hmm/.depend.mk
-src/hmm/hmm-topology-test
-src/hmm/hmm-utils-test
 
-# /src/lat/
-src/lat/.depend.mk
-src/lat/kaldi-lattice-test
 
 # /src/latbin/
-src/latbin/.depend.mk
 src/latbin/lattice-prune
 src/latbin/lattice-rmali
 src/latbin/lattice-compose
@@ -321,26 +262,13 @@ src/latbin/lattice-oracle
 src/latbin/lattice-align-words
 src/latbin/lattice-arcgraph
 
-# /src/lm/
-src/lm/.depend.mk
-src/lm/lm-lib-test
 
 # /src/matrix/
-src/matrix/.depend.mk
 src/matrix/Matrix.vcxproj
-src/matrix/matrix-lib-test
-src/matrix/kaldi-gpsr-test
 
-# /src/nnet/
-src/nnet/.depend.mk
-src/nnet/nnet-test
 
-# /src/nnet-cpu/
-src/nnet-cpu/.depend.mk
-src/nnet-cpu/nnet-component-test
 
 # /src/nnetbin/
-src/nnetbin/.depend.mk
 src/nnetbin/nnet-train-xent-hardlab-perutt
 src/nnetbin/nnet-train-xent-hardlab-frmshuff
 src/nnetbin/nnet-train-mse-tgtmat-frmshuff
@@ -351,20 +279,9 @@ src/nnetbin/rbm-convert-to-nnet
 src/nnetbin/nnet-trim-n-last-transforms
 src/nnetbin/nnet-train-mmi-sequential
 
-# /src/sgmm/
-src/sgmm/.depend.mk
-src/sgmm/am-sgmm-test
-src/sgmm/estimate-am-sgmm-test
-src/sgmm/fmllr-sgmm-test
 
-# /src/sgmm2/
-src/sgmm2/.depend.mk
-src/sgmm2/am-sgmm-test
-src/sgmm2/estimate-am-sgmm-test
-src/sgmm2/fmllr-sgmm-test
 
 # /src/sgmm2bin/
-src/sgmm2bin/.depend.mk
 src/sgmm2bin/sgmm2-init
 src/sgmm2bin/sgmm2-acc-stats
 src/sgmm2bin/sgmm2-align-compiled
@@ -386,7 +303,6 @@ src/sgmm2bin/sgmm2-acc-stats-gpost
 src/sgmm2bin/sgmm2-est-spkvecs-gpost
 
 # /src/sgmmbin/
-src/sgmmbin/.depend.mk
 src/sgmmbin/init-ubm
 src/sgmmbin/sgmm-init
 src/sgmmbin/sgmm-gselect
@@ -423,13 +339,8 @@ src/sgmmbin/sgmm-sum-accs
 src/sgmmbin/sgmm-est
 src/sgmmbin/sgmm-decode-faster
 
-# /src/tied/
-src/tied/.depend.mk
-src/tied/am-tied-diag-gmm-test
-src/tied/am-tied-full-gmm-test
 
 # /src/tiedbin/
-src/tiedbin/.depend.mk
 src/tiedbin/tied-diag-gmm-acc-stats-ali
 src/tiedbin/tied-diag-gmm-align-compiled
 src/tiedbin/tied-diag-gmm-decode-faster
@@ -449,36 +360,6 @@ src/tiedbin/tied-diag-gmm-init-mono
 src/tiedbin/tied-diag-gmm-est
 src/tiedbin/tied-diag-gmm-decode-simple
 src/tiedbin/tied-diag-gmm-init-model
-
-# /src/transform/
-src/transform/.depend.mk
-src/transform/regtree-mllr-diag-gmm-test
-src/transform/regtree-fmllr-diag-gmm-test
-src/transform/lda-estimate-test
-src/transform/regression-tree-test
-src/transform/fmllr-diag-gmm-test
-src/transform/exponential-transform-test
-src/transform/fmpe-test
-
-# /src/tree/
-src/tree/.depend.mk
-src/tree/event-map-test
-src/tree/context-dep-test
-src/tree/build-tree-utils-test
-src/tree/cluster-utils-test
-src/tree/build-tree-test
-
-# /src/util/
-src/util/.depend.mk
-src/util/hash-list-test
-src/util/stl-utils-test
-src/util/timer-test
-src/util/kaldi-table-test
-src/util/const-integer-set-test
-src/util/edit-distance-test
-src/util/kaldi-io-test
-src/util/text-utils-test
-src/util/parse-options-test
 
 # src/onlinebin
 src/onlinebin/online-audio-client
@@ -582,3 +463,12 @@ src/nnetbin/nnet-train-mpe-sequential
 src/nnetbin/nnet-train-xent-hardlab-frmshuff-prior
 src/nnetbin/transf-to-nnet
 src/sgmm2bin/sgmm2-latgen-faster-parallel
+
+# added after svn rebase
+src/bin/latgen-faster-mapped-parallel
+src/featbin/extract-rows
+src/onlinebin/online-audio-client
+src/onlinebin/online-audio-server-decode-faster
+src/transform/tmp_regtree
+src/transform/tmp_stats
+tools/python/

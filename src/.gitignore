@@ -1,4 +1,7 @@
 *.scp
 *test
 *tmpf
+*tmpfb
 kaldi.mk.bak
+.depend.mk
+lib
