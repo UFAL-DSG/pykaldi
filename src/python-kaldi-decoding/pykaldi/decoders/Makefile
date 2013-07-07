@@ -3,13 +3,14 @@ all:
 
 LIBNAME = dummyio
 LIBFILE = lib$(LIBNAME).so
-OBJFILES = dummyio.o
-LDLIBS =
+OBJFILES = dummyio.o frames.o debug.o
+LDLIBS = -lasound
 
-CC = g++
+CC = gcc
 CXX = g++
 
-CXXFLAGS = -msse -Wall -fPIC -Wno-sign-compare -g # -O0
+CFLAGS = -msse -Wall -fPIC -Wno-sign-compare -g # -O0
+# CXXFLAGS = $(CFLAGS)
 LDFLAGS = -rdynamic
 
 

@@ -1,10 +1,20 @@
+/*
+Author: Ondrej Platek, UFAL MFF UK
+Date: 2013
+License: Apache, Version 2.0  (Please keep this header)
+
+
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "dummyio.h"
-void return_answer(double * prob, char **ans, mysizet *size) {
-// void return_answer(double * prob) {
+#include "frames.h"
+#include "debug.h"
+
+
+void return_answer(double * prob, char **ans, size_t *size) {
     *prob = -5 ;
     char *tmp = "Dummy answer from C = Ondra testing";
     *size = strlen(tmp);
@@ -12,7 +22,7 @@ void return_answer(double * prob, char **ans, mysizet *size) {
     strcpy(*ans, tmp);
 }
 
-void frame_in(char *str_frame, mysizet size) {
+void frame_in(unsigned char *str_frame, size_t size) {
     FILE *fp;
 
     /* open the file for appending*/

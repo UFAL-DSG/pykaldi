@@ -1,3 +1,4 @@
+import os
 try:
     from cffi import FFI
 except ImportError as e:
@@ -19,9 +20,11 @@ int compute_wer_like_main(int argc, char **argv);
 int online_wav_gmm_decode_faster_like_main(int argc, char *argv[]);
 '''
 ffibin.cdef(binheader)
-bin_lib_path = 'libpykaldi.so'
+dir_path = os.path.dirname(os.path.realpath(__file__))
+lib_name = 'libpykaldi.so'
+shared_lib_path = os.path.join(dir_path, lib_name)
 try:
-    libbin = ffibin.dlopen(bin_lib_path)
+    libdec = ffibin.dlopen(shared_lib_path)
 except OSError as e:
-    print 'Could not find the C shared library %s' % bin_lib_path
+    print 'Could not find the C shared library %s' % shared_lib_path
     raise e

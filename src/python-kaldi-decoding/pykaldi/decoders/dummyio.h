@@ -5,11 +5,10 @@
 extern "C" {
 #endif
 
-typedef unsigned long mysizet;
-typedef void (*return_answer_t)(double * prob, char **ans, mysizet *size);
-typedef void (*frame_in_t)(char *str_frame, mysizet size);
-void return_answer(double * prob, char **ans, mysizet *size);
-void frame_in(char *str_frame, mysizet size);
+typedef void (*return_answer_t)(double * prob, char **ans, size_t *size);
+typedef void (*frame_in_t)(unsigned char *str_frame, size_t size);
+void return_answer(double * prob, char **ans, size_t *size);
+void frame_in(unsigned char *str_frame, size_t size);
 
 #ifdef __cplusplus
 }
