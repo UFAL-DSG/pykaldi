@@ -8,7 +8,7 @@ DATA_TAR = $(DATA_FILE).tar.bz2
 # MODEL_ML=$(DATA_FILE)/models/tri2a # MODEL_DT=$(DATA_FILE)/models/tri2b_mmi # AUDIO=$(DATA_FILE)/audio
 DECODE_DIR = work
 INPUT_SCP = $(DECODE_DIR)/input.scp
-UTT2SPK = $(DECODE_DIR)/spk2utt
+SPK2UTT = $(DECODE_DIR)/spk2utt
 PIPELINE_CONFIG = configs/decoding_pipeline_voxforge_config.json
 BIGLIB = libpykaldi.so
 
@@ -32,7 +32,7 @@ $(DATA_TAR):
 	rm -f $(INPUT_SCP)  # reset the file do not append
 	for f in $(DATA_FILE)/audio/*.wav; do \
 		bf=`basename $$f`; bf=$${bf%.wav}; echo $$bf $$f >> $(INPUT_SCP); \
-		echo $$bf $$bf >> $(UTT2SPK); \
+		echo $$bf $$bf >> $(SPK2UTT); \
 		grep $$bf $(DATA_FILE)/audio/trans.txt | cut -d' ' -f 2- > $$f.trn; \
 	done
 

@@ -21,6 +21,22 @@ def run_mfcc(ffi, mfcclib, config):
         raise e
 
 
+def run_cmvn(ffi, mfcclib, config):
+    c = config['cmvn']
+    mfcc_args = ['python-compute-cmvn-stats', '--spk2utt=%(spk2utt)s' % c,
+                 'scp:%s' % config['mfcc']['scp'], 'ark,scp:%(ark)s,%(scp)s' % c]
+    try:
+        mfcc_argkeepalive = [ffi.new("char[]", arg) for arg in mfcc_args]
+        mfcc_argv = ffi.new("char *[]", mfcc_argkeepalive)
+        retcode = mfcclib.compute_cmvn_stats_like_main(
+            len(mfcc_args), mfcc_argv)
+        if retcode != 0:
+            raise PyKaldiError(retcode)
+    except Exception as e:
+        print 'Failed running cmvn!'
+        raise e
+
+
 def run_decode(ffi, decodelib, config):
     '''Settings and arguments based on /ha/work/people/oplatek/kaldi-trunk/egs/kaldi-
     vystadial-recipe/s5/steps/decode.sh'''
@@ -119,6 +135,8 @@ if __name__ == '__main__':
 
     run_mfcc(ffibin, libbin, config)
     print 'running mfcc finished'
+    run_cmvn(ffibin, libbin, config)
+    print 'running cmvn finished'
     run_decode(ffibin, libbin, config)
     print 'running mfcc finished'
     run_bestpath(ffibin, libbin, config)

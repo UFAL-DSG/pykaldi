@@ -9,11 +9,16 @@
       "ark": {"prefix": "decode_dir", "value": "raw_mfcc.ark"},
       "scp": {"prefix": "decode_dir", "value": "raw_mfcc.scp"}
     },
+    "cmvn": {
+      "spk2utt": {"prefix": "decode_dir", "value": "spk2utt"},
+      "ark": {"prefix": "decode_dir", "value": "raw_cmvn.ark"},
+      "scp": {"prefix": "decode_dir", "value": "raw_cmvn.scp"}
+    },
     "latgen-decode": {
         "config": "configs/decode.config",
         "model": {"prefix": "exp_dir", "value": "model"},
         "hclg": {"prefix": "exp_dir", "value": "HCLG.fst"},
-        "utt2spk": {"prefix": "decode_dir", "value": "utt2spk"},
+        "utt2spk": {"prefix": "decode_dir", "value": "spk2utt"},
         "cmvn": {"prefix": "decode_dir", "value": "cmvn.scp"},
         "lattice": {"prefix": "decode_dir", "value": "lat.gz"}
     },

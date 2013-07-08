@@ -18,6 +18,7 @@ int gmm_latgen_faster_like_main(int argc, char **argv);
 int lattice_best_path_like_main(int argc, char **argv);
 int compute_wer_like_main(int argc, char **argv);
 int online_wav_gmm_decode_faster_like_main(int argc, char *argv[]);
+int compute_cmvn_stats_like_main(int argc, char *argv[]);
 '''
 ffibin.cdef(binheader)
 dir_path = os.path.dirname(os.path.realpath(__file__))
