@@ -1,3 +1,17 @@
+Known bugs
+==========
+ * The demo needs `Python 2.7.*`. For `Python 2.6.6` it crashes on:
+ 
+```python
+...ordereddefaultdict.py",
+line 6, in <module>
+    from collections import OrderedDict
+ImportError: cannot import name OrderedDict
+```
+
+I hope to fix it soon.
+
+
 How to run the demo
 ===================
 ```bash
