@@ -128,6 +128,33 @@ export PYTHONPATH="$PYTHONPATH:$new_ppath"
 echo; echo "Adding the $new_ppath to PYTHONPATH"
 echo "DO THE SAME IN YOUR PERMANENT SETTINGS TO USE THE CFFI REGULARLY!"; echo
 
+if [ "$python_version" == "python2.6" ] ; then 
+echo Downloading and extracting ordereddict 
+    # Ordered dict is installed by default on 2.7+
+    ordereddictname=ordereddict-1.1
+    ordereddicttar=ordereddict-1.1.tar.gz
+    ordereddicturl=https://pypi.python.org/packages/source/o/ordereddict/ordereddict-1.1.tar.gz
+    downloader $ordereddicttar $ordereddicturl
+    tar -xovzf $ordereddicttar || exit 1
+    echo "*******Installing $ordereddictname" 
+    pushd $ordereddictname
+    python setup.py install --prefix="$prefix" || exit 1
+    popd
+
+    echo Downloading and extracting argparse 
+    # Argparse is installed by default on 2.7+
+    argparsename=argparse-1.2.1
+    argparsetar=argparse-1.2.1.tar.gz
+    argparseurl=http://argparse.googlecode.com/files/argparse-1.2.1.tar.gz
+    downloader $argparsetar $argparseurl
+    tar -xovzf $argparsetar || exit 1
+    echo "*******Installing $argparsename" 
+    pushd $argparsename
+    python setup.py install --prefix="$prefix" || exit 1
+    popd
+fi
+
+
 
 echo "*******Installing $pytestname"
 pushd $pytestname
@@ -160,4 +187,4 @@ if [ ! -e $(python -c 'import cffi') ]; then
 fi
 
 echo; echo SUCCESS ; echo
- echo "USE: export PYTHONPATH=\"$new_ppath\""; echo "for using cffi system wide!"; echo
+ echo "USE: export PYTHONPATH=\"\$PYTHONPATH:$new_ppath\""; echo "for using cffi system wide!"; echo

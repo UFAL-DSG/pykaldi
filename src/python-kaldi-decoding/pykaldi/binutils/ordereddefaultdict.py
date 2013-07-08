@@ -3,7 +3,11 @@ Combine functionality from ordered and default dict.
 The implementation is taken from:
 http://stackoverflow.com/questions/6190331/can-i-do-an-ordered-default-dict-in-python
 """
-from collections import OrderedDict, Callable
+from collections import Callable
+try:
+    from collections import OrderedDict
+except:
+    from ordereddict import OrderedDict
 
 
 class DefaultOrderedDict(OrderedDict):

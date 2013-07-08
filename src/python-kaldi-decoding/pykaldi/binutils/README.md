@@ -34,22 +34,28 @@ cd oplatek2/tools; ./install_portaudio.sh
 # After a successful installation the script prompts you to add the installation directory to PYTHONPATH. 
 # Do it, it will be needed in step 7.
 
-# 3. 
+# 3. update PYTHONPATH
+# if using 2b) The installation script will give you statement like below so use it! 
+export PYTHONPATH="$PYTHONPATH:/ha/work/people/oplatek/kaldi/tools/python/lib/python2.6/site-packages"
+# add pykaldi python-kaldi-decoding itself to PYTHONPATH. Use absolute paths like this!
+export PYTHONPATH="$PYTHONPATH":/home/oplatek/50GBmax/oplatek2/src/python-kaldi-decoding/
+
+# 4. 
 cd oplatek2/src
 
-# 4. Configure it with --shared flag
+# 5. Configure it with --shared flag
  ./configure --fst-root=`pwd`/../tools/openfst --shared
 
-# 5. Build Kaldi. Clean it and tested to be sure that, it is not corrupted.
+# 6. Build Kaldi. Clean it and tested to be sure that, it is not corrupted.
 make clean; make depend && make ext_depend && make && make ext && make test && make ext_test
 
-# 6. change to the directory with the example
+# 7. change to the directory with the example
 cd python-kaldi-decoding/pykaldi/binutils/
 
-# 7. run make test, it should compile and downloaded everything needed
+# 8. run make test, it should compile and downloaded everything needed
 make test
 
-# 8. Check the results! My results for python-online-wav-gmm-decode-faster are:
+# 9. Check the results! My results for python-online-wav-gmm-decode-faster are:
 
 python-compute-wer --config=configs/wer.config ark:work/reference.txt ark:work/online.trans.compact 
 %WER 15.03 [ 55 / 366, 6 ins, 15 del, 34 sub ]
