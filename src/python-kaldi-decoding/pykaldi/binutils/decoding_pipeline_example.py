@@ -26,10 +26,10 @@ def run_decode(ffi, decodelib, config):
     vystadial-recipe/s5/steps/decode.sh'''
     c = config['latgen-decode']
     # feats for delta not lda
-    # feats = 'ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:%(utt2spk)s scp:%(cmvn)s' % c,
-    # feats = 'ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:%(utt2spk)s scp:%(cmvn)s' % c
-    feats = ''
-    feats += 'scp:%s ark:- | add-deltas ark:- ark:- |' % config['mfcc']['scp']
+    # feats = 'ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:%(utt2spk)s scp:%(cmvn)s ' % c
+    # feats += 'scp:%s ark:- | add-deltas ark:- ark:- |' % config['mfcc']['scp']
+    # or without CMVN
+    feats = 'ark,s,cs:add-deltas scp:%s ark:- |' % config['mfcc']['scp']
     decode_args = ['python-gmm-latgen-faster', '--config=%(config)s' % c,
                    '--word-symbol-table=%(wst)s' % config,
                    c['model'], c['hclg'], feats,
@@ -50,8 +50,8 @@ def run_decode(ffi, decodelib, config):
 def run_bestpath(ffi, bestpathlib, config):
     ''' Settings and arguments based on /ha/work/people/oplatek/kaldi-trunk/egs/kaldi-
     vystadial-recipe/s5/local/shore.sh'''
-    c = config['python-lattice-best-path']
-    bestpath_args = ['bestpath_unsed', '--config=%(config)s' % c, '--word-symbol-table=%(wst)' % config,
+    c = config['best-path']
+    bestpath_args = ['bestpath_unsed', '--config=%(config)s' % c, '--word-symbol-table=%(wst)s' % config,
                      'ark:gunzip -c %s|' % config['latgen-decode']['lattice'],
                      'ark,t:%(trans)s' % c]
     try:
@@ -119,10 +119,10 @@ if __name__ == '__main__':
 
     run_mfcc(ffibin, libbin, config)
     print 'running mfcc finished'
-    # run_decode(ffibin, libbin, config)
-    # print 'running mfcc finished'
-    # run_bestpath(ffibin, libbin, config)
-    # print 'running bestpath finished'
+    run_decode(ffibin, libbin, config)
+    print 'running mfcc finished'
+    run_bestpath(ffibin, libbin, config)
+    print 'running bestpath finished'
     run_online(ffibin, libbin, config)
     print 'running online finished'
     ### Evaluating experiments
