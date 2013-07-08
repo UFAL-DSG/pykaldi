@@ -127,4 +127,4 @@ if __name__ == '__main__':
     print 'running online finished'
     ### Evaluating experiments
     compute_wer(ffibin, libbin, config)
-    print 'running WER for online finished'
+    print 'running WER finished'
