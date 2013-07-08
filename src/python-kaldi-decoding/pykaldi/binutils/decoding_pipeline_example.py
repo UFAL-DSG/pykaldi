@@ -135,8 +135,8 @@ if __name__ == '__main__':
 
     run_mfcc(ffibin, libbin, config)
     print 'running mfcc finished'
-    run_cmvn(ffibin, libbin, config)
-    print 'running cmvn finished'
+    # run_cmvn(ffibin, libbin, config) # FIXME set up config
+    # print 'running cmvn finished'
     run_decode(ffibin, libbin, config)
     print 'running mfcc finished'
     run_bestpath(ffibin, libbin, config)
