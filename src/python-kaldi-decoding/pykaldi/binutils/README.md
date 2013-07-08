@@ -8,8 +8,9 @@ line 6, in <module>
     from collections import OrderedDict
 ImportError: cannot import name OrderedDict
 ```
+_UPDATE_ run `tools/install_cffi.sh` again. It should add missing modules for `Python 2.6`!
 
-I hope to fix it soon.
+
 Report the bugs at [https://github.com/oplatek/pykaldi/issues/](https://github.com/oplatek/pykaldi/issues/)
 or send the reports to me via email.
 
