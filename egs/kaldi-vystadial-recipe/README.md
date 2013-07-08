@@ -1,9 +1,9 @@
 SUMMARY
 -------
-KALDI recipe based on voxforge KALDI recipe 
-http://vpanayotov.blogspot.cz/2012/07/voxforge-scripts-for-kaldi.html .
-Requires KALDI installation and Linux environment. (Tested on Ubuntu 10.04 and 12.10.)
-Written in Bash an Python 2.7.3.
+ * KALDI recipe based on voxforge KALDI recipe http://vpanayotov.blogspot.cz/2012/07/voxforge-scripts-for-kaldi.html .
+ * Requires KALDI installation and Linux environment. (Tested on Ubuntu 10.04 and 12.10.)
+ * Written in Bash an Python 2.7.3.
+ * Check the results at [Ufal Redmine](https://redmine.ms.mff.cuni.cz/projects/vystadial/wiki/Acoustic_models)
 
 DESCRIPTION
 -----------
