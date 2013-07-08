@@ -4,6 +4,7 @@ ABOUT
    `svn://svn.code.sf.net/p/kaldi/code/trunk`
  * In the branch `master` I commit my work. In the branch `svn_mirror` I mirror `svn://svn.code.sf.net/p/kaldi/code/trunk`.
  * Currently, I mirror the repository manually as often as I needed.
+ * I am using [cffi](http://cffi.readthedocs.org/en/latest/) for interfacing C from Python
  * The main purpose for mirroring is that I want to build my own decoder and train my models for decoding based on up-to-date Kaldi version.
  * Recipe for training the models can be found at `egs/kaldi-vystadial-recipe`
  * Source code for python wrapper for decoders is at `src/python-kaldi-decoding` 
