@@ -24,7 +24,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 lib_name = 'libpykaldi.so'
 shared_lib_path = os.path.join(dir_path, lib_name)
 try:
-    libdec = ffibin.dlopen(shared_lib_path)
+    libbin = ffibin.dlopen(shared_lib_path)
 except OSError as e:
     print 'Could not find the C shared library %s' % shared_lib_path
     raise e
