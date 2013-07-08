@@ -14,8 +14,7 @@ OTHER INFO
 ----------
  * Read `INSTALL.md` and `INSTALL` first!
  * For training models read `egs/kaldi-vystadial-recipe/s5/README.md`
- * For building and developing decoder callable from python read `src/python-kaldi-decoding/README.md`
- * For information about new decoder read `src/vystadial-decoder/README.md`
+ * For building and developing decoder callable from Python read `src/python-kaldi-decoding/README.md`
  * This work is done under [Vystadial project](https://sites.google.com/site/filipjurcicek/projects/vystadial).
 
 LICENSE
