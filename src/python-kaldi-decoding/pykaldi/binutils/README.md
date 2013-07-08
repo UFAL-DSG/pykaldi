@@ -10,6 +10,10 @@ ImportError: cannot import name OrderedDict
 ```
 
 I hope to fix it soon.
+Report the bugs at [https://github.com/oplatek/pykaldi/issues/](https://github.com/oplatek/pykaldi/issues/)
+or send the reports to me via email.
+
+Thanks!
 
 
 How to run the demo
