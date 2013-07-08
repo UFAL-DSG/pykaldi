@@ -11,3 +11,8 @@
 # export decode_cmd="queue.pl -l mf=5g"
 export train_cmd=run.pl
 export decode_cmd=run.pl
+
+# The number of parallel jobs to be started for some parts of the recipe
+# Make sure you have enough resources(CPUs and RAM) to accomodate this number of jobs
+njobs=10
+

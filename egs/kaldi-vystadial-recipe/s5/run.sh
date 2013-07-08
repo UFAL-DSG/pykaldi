@@ -25,12 +25,10 @@ if [ ! "$(ls -A data 2>/dev/null)" ]; then
   
   # prepare an ARPA LM and wordlist
   mkdir -p data/local
-  # LEAVING it with OOV -> Allow train Kaldi for OOV model
-  # cp -f ${DATA_ROOT}/arpa_trigram data/local/lm.arpa  
   # NOT ALLOWING OOV WORDS training & also in decoding
-  grep -v -w OOV ${DATA_ROOT}/arpa_trigram > data/local/lm.arpa 
+  grep -v -w OOV ${ARPA_MODEL} > data/local/lm.arpa 
   echo '</s>' > data/local/vocab-full.txt
-  tail -n +3 ${DATA_ROOT}/classic.v3.dct | cut -d ' ' -f 1 |\
+  tail -n +3 ${DICTIONARY} | cut -d ' ' -f 1 |\
       sort | uniq >> data/local/vocab-full.txt 
   
   # Prepare the lexicon and various phone lists
