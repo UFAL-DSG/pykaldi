@@ -122,6 +122,20 @@ class OnlineVectorSource {
   KALDI_DISALLOW_COPY_AND_ASSIGN(OnlineVectorSource);
 };
 
+
+// OnlineAudioSource implementation which blocks on Read.
+// It expects to be fed with the audio data during its life.
+class OnlineBlockSource {
+ public:
+  OnlineBlockSource(void);
+  bool Read(Vector<BaseFloat> *data, int32 timeout);
+  bool Write(Vector<BaseFloat> *data);
+ private:
+  Vector<BaseFloat> src_;
+  uint32 pos_; // the index of the first element, not yet consumed
+  KALDI_DISALLOW_COPY_AND_ASSIGN(OnlineBlockSource);
+}
+
 } // namespace kaldi
 
 #endif // KALDI_ONLINE_ONLINE_AUDIO_SOURCE_H_

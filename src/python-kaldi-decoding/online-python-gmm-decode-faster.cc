@@ -27,8 +27,19 @@
 
 #include "online-python-gmm-decode-faster.h"
 
-// FIXME do not use the decoder via command line argumets
-int online_python_gmm_decode_faster_like_main(int argc, char *argv[]) {
+
+/**************************************************************************
+* TODO wrap the functions into decoder object                             *
+* TODO do the parsing in the object and not from "command arguments"      *
+* FIXME do not use the decoder via command line argumets                  *
+*  Do not forget to deallocate the out* parameters. They are pointers!    *
+***************************************************************************/
+int get_online_python_gmm_decode_faster(int argc, char *argv[], 
+      OnlineFasterDecoder * out_decoder, 
+      OnlineDecodableDiagGmmScaled * out_decodable, 
+      OnlineFeatInputItf *out_feat_transform, 
+      fst::SymbolTable *out_word_syms,
+      fst::Fst<fst::StdArc> *out_decode_fst) {
   try {
     using namespace kaldi;
     using namespace fst;
@@ -56,7 +67,7 @@ int online_python_gmm_decode_faster_like_main(int argc, char *argv[]) {
         "Example: online-gmm-decode-faster --rt-min=0.3 --rt-max=0.5 "
         "--max-active=4000 --beam=12.0 --acoustic-scale=0.0769 "
         "model HCLG.fst words.txt '1:2:3:4:5' lda-matrix";
-    ParseOptions po(usage);
+    ParseOptions po(usage); 
     BaseFloat acoustic_scale = 0.1;
     int32 cmn_window = 600, min_cmn_window = 100;
     int32 right_context = 4, left_context = 4;
@@ -64,8 +75,8 @@ int online_python_gmm_decode_faster_like_main(int argc, char *argv[]) {
     kaldi::DeltaFeaturesOptions delta_opts;
     delta_opts.Register(&po);
     OnlineFasterDecoderOpts decoder_opts;
-    OnlineFeatureMatrixOptions feature_reading_opts;
     decoder_opts.Register(&po, true);
+    OnlineFeatureMatrixOptions feature_reading_opts;
     feature_reading_opts.Register(&po);
     
     po.Register("left-context", &left_context, "Number of frames of left context");
@@ -78,11 +89,13 @@ int online_python_gmm_decode_faster_like_main(int argc, char *argv[]) {
                 "Minumum CMN window used at start of decoding (adds "
                 "latency only at start)");
 
+    // FIXME at some point get rid of ParseOptions
     po.Read(argc, argv);
     if (po.NumArgs() != 4 && po.NumArgs() != 5) {
       po.PrintUsage();
       return 1;
     }
+    // FIXME check this in Python
     if (po.NumArgs() == 4)
       if (left_context % kDeltaOrder != 0 || left_context != right_context)
         KALDI_ERR << "Invalid left/right context parameters!";
@@ -115,12 +128,13 @@ int online_python_gmm_decode_faster_like_main(int argc, char *argv[]) {
         am_gmm.Read(ki.Stream(), binary);
     }
 
-    fst::SymbolTable *word_syms = NULL;
-    if (!(word_syms = fst::SymbolTable::ReadText(word_syms_filename)))
+    // fst::SymbolTable *word_syms = NULL;
+    if (!(out_word_syms = fst::SymbolTable::ReadText(word_syms_filename)))
         KALDI_ERR << "Could not read symbol table from file "
                     << word_syms_filename;
 
-    fst::Fst<fst::StdArc> *decode_fst = ReadDecodeGraph(fst_rxfilename);
+    // fst::Fst<fst::StdArc> *decode_fst = ReadDecodeGraph(fst_rxfilename);
+    out_decode_fst = ReadDecodeGraph(fst_rxfilename);
 
     // We are not properly registering/exposing MFCC and frame extraction options,
     // because there are parts of the online decoding code, where some of these
@@ -132,18 +146,19 @@ int online_python_gmm_decode_faster_like_main(int argc, char *argv[]) {
 
     int32 window_size = right_context + left_context + 1;
     decoder_opts.batch_size = std::max(decoder_opts.batch_size, window_size);
-    OnlineFasterDecoder decoder(*decode_fst, decoder_opts,
+    // OnlineFasterDecoder decoder(*decode_fst, decoder_opts,
+    //                             silence_phones, trans_model);
+    out_decoder = new OnlineFasterDecoder(*decode_fst, decoder_opts,
                                 silence_phones, trans_model);
-    VectorFst<LatticeArc> out_fst;
     OnlinePaSource au_src(kSampleFreq, kPaRingSize, kPaReportInt);
     Mfcc mfcc(mfcc_opts);
     FeInput fe_input(&au_src, &mfcc,
                      frame_length * (kSampleFreq / 1000),
                      frame_shift * (kSampleFreq / 1000));
     OnlineCmnInput cmn_input(&fe_input, cmn_window, min_cmn_window);
-    OnlineFeatInputItf *feat_transform = 0;
+    // OnlineFeatInputItf *feat_transform = 0;
     if (lda_mat_rspecifier != "") {
-      feat_transform = new OnlineLdaInput(
+      out_feat_transform = new OnlineLdaInput(
                                &cmn_input, lda_transform,
                                left_context, right_context);
     } else {
@@ -153,20 +168,44 @@ int online_python_gmm_decode_faster_like_main(int argc, char *argv[]) {
       // but I don't think this is really the right way to set the window-size
       // in the delta computation: it should be a separate config.
       opts.window = left_context / 2;
-      feat_transform = new OnlineDeltaInput(opts, &cmn_input);
+      out_feat_transform = new OnlineDeltaInput(opts, &cmn_input);
     }
     
     // feature_reading_opts contains timeout, batch size.
     OnlineFeatureMatrix feature_matrix(feature_reading_opts,
                                        feat_transform);
 
-    OnlineDecodableDiagGmmScaled decodable(am_gmm, trans_model, acoustic_scale,
-                                           &feature_matrix);
+    // OnlineDecodableDiagGmmScaled decodable(am_gmm, trans_model, acoustic_scale,
+    //                                        &feature_matrix);
+    out_decodable = new OnlineDecodableDiagGmmScaled(am_gmm, trans_model, 
+            acoustic_scale, &feature_matrix); 
+  } catch(const std::exception& e) {
+    if (out_decoder) delete out_decoder;
+    if (out_decodable) delete out_decodable;
+    if (out_feat_transform) delete out_feat_transform;
+    if (out_word_syms) delete out_word_syms;
+    if (out_decode_fst) delete out_decode_fst;
+    std::cerr << e.what();
+    return -1;
+  }
+  return 0;
+} // get_online_python_gmm_decode_faster
+
+
+/************************************************
+ *  Decode suppose that decoder is initialized  *
+ ************************************************/
+int decode(OnlineFasterDecoder & decoder, 
+      OnlineDecodableDiagGmmScaled & decodable,
+      fst::SymbolTable *word_syms) {
+    using namespace kaldi;
+    using namespace fst;
+    VectorFst<LatticeArc> out_fst;
     bool partial_res = false;
     while (1) {
       OnlineFasterDecoder::DecodeState dstate = decoder.Decode(&decodable);
+      std::vector<int32> word_ids;
       if (dstate & (decoder.kEndFeats | decoder.kEndUtt)) {
-        std::vector<int32> word_ids;
         decoder.FinishTraceBack(&out_fst);
         fst::GetLinearSymbolSequence(out_fst,
                                      static_cast<vector<int32> *>(0),
@@ -175,7 +214,6 @@ int online_python_gmm_decode_faster_like_main(int argc, char *argv[]) {
         PrintPartialResult(word_ids, word_syms, partial_res || word_ids.size());
         partial_res = false;
       } else {
-        std::vector<int32> word_ids;
         if (decoder.PartialTraceback(&out_fst)) {
           fst::GetLinearSymbolSequence(out_fst,
                                        static_cast<vector<int32> *>(0),
@@ -187,13 +225,5 @@ int online_python_gmm_decode_faster_like_main(int argc, char *argv[]) {
         }
       }
     }
-
-    if (feat_transform) delete feat_transform;
-    if (word_syms) delete word_syms;
-    if (decode_fst) delete decode_fst;
     return 0;
-  } catch(const std::exception& e) {
-    std::cerr << e.what();
-    return -1;
-  }
-} // main()
+} //decode()
