@@ -25,8 +25,10 @@
 #include "online/online-faster-decoder.h"
 #include "online/onlinebin-util.h"
 
+#include "online-python-gmm-decode-faster.h"
 
-int main(int argc, char *argv[]) {
+// FIXME do not use the decoder via command line argumets
+int online_python_gmm_decode_faster_like_main(int argc, char *argv[]) {
   try {
     using namespace kaldi;
     using namespace fst;

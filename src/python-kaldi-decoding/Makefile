@@ -29,9 +29,9 @@ endif
 
 BINFILES =
 
-TESTFILES = compute-cmvn-stats-test compute-wer-test gmm-latgen-faster-test compute-mfcc-feats-test lattice-best-path-test online-wav-gmm-decode-faster-test
+TESTFILES = compute-cmvn-stats-test compute-wer-test gmm-latgen-faster-test compute-mfcc-feats-test lattice-best-path-test online-wav-gmm-decode-faster-test online-python-gmm-decode-faster-test
 
-OBJFILES = compute-wer.o gmm-latgen-faster.o compute-mfcc-feats.o lattice-best-path.o online-wav-gmm-decode-faster.o compute-cmvn-stats.o
+OBJFILES = compute-wer.o gmm-latgen-faster.o compute-mfcc-feats.o lattice-best-path.o online-python-gmm-decode-faster.o online-wav-gmm-decode-faster.o compute-cmvn-stats.o 
 
 LIBNAME = kaldi-python-kaldi-decoding
 
