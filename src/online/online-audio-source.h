@@ -134,7 +134,7 @@ class OnlineBlockSource {
   Vector<BaseFloat> src_;
   uint32 pos_; // the index of the first element, not yet consumed
   KALDI_DISALLOW_COPY_AND_ASSIGN(OnlineBlockSource);
-}
+};
 
 } // namespace kaldi
 

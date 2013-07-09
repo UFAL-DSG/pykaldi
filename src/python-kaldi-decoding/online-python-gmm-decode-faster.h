@@ -19,26 +19,26 @@ extern "C" {
 
 // FIXME rename
 typedef int (*get_decoder_t)(int c, char **ar, 
-      OnlineFasterDecoder * out_decoder, 
-      OnlineDecodableDiagGmmScaled * out_decodable, 
-      OnlineFeatInputItf *out_feat_transform, 
+      kaldi::OnlineFasterDecoder * out_decoder, 
+      kaldi::OnlineDecodableDiagGmmScaled * out_decodable, 
+      kaldi::OnlineFeatInputItf *out_feat_transform, 
       fst::SymbolTable *out_word_syms,
       fst::Fst<fst::StdArc> *out_decode_fst);
 // FIXME rename
-typedef int (*decode_t)(OnlineFasterDecoder & decoder, 
-      OnlineDecodableDiagGmmScaled & decodable, 
+typedef int (*decode_t)(kaldi::OnlineFasterDecoder & decoder, 
+      kaldi::OnlineDecodableDiagGmmScaled & decodable, 
       fst::SymbolTable *word_syms);
 
 
 int get_online_python_gmm_decode_faster(int argc, char *argv[], 
-      OnlineFasterDecoder * out_decoder, 
-      OnlineDecodableDiagGmmScaled * out_decodable, 
-      OnlineFeatInputItf *out_feat_transform, 
+      kaldi::OnlineFasterDecoder * out_decoder, 
+      kaldi::OnlineDecodableDiagGmmScaled * out_decodable, 
+      kaldi::OnlineFeatInputItf *out_feat_transform, 
       fst::SymbolTable *out_word_syms,
-      fst::Fst<fst::StdArc> *out_decode_fst) {
+      fst::Fst<fst::StdArc> *out_decode_fst);
 
-int decode(OnlineFasterDecoder & decoder, 
-      OnlineDecodableDiagGmmScaled & decodable, 
+int decode(kaldi::OnlineFasterDecoder & decoder, 
+      kaldi::OnlineDecodableDiagGmmScaled & decodable, 
       fst::SymbolTable *word_syms);
 
 #ifdef __cplusplus

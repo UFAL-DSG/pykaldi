@@ -27,6 +27,8 @@
 
 #include "online-python-gmm-decode-faster.h"
 
+using namespace kaldi;
+using namespace fst;
 
 /**************************************************************************
 * TODO wrap the functions into decoder object                             *
@@ -41,9 +43,6 @@ int get_online_python_gmm_decode_faster(int argc, char *argv[],
       fst::SymbolTable *out_word_syms,
       fst::Fst<fst::StdArc> *out_decode_fst) {
   try {
-    using namespace kaldi;
-    using namespace fst;
-
     typedef kaldi::int32 int32;
     typedef OnlineFeInput<OnlinePaSource, Mfcc> FeInput;
 
@@ -148,7 +147,7 @@ int get_online_python_gmm_decode_faster(int argc, char *argv[],
     decoder_opts.batch_size = std::max(decoder_opts.batch_size, window_size);
     // OnlineFasterDecoder decoder(*decode_fst, decoder_opts,
     //                             silence_phones, trans_model);
-    out_decoder = new OnlineFasterDecoder(*decode_fst, decoder_opts,
+    out_decoder = new OnlineFasterDecoder(*out_decode_fst, decoder_opts,
                                 silence_phones, trans_model);
     OnlinePaSource au_src(kSampleFreq, kPaRingSize, kPaReportInt);
     Mfcc mfcc(mfcc_opts);
@@ -173,7 +172,7 @@ int get_online_python_gmm_decode_faster(int argc, char *argv[],
     
     // feature_reading_opts contains timeout, batch size.
     OnlineFeatureMatrix feature_matrix(feature_reading_opts,
-                                       feat_transform);
+                                       out_feat_transform);
 
     // OnlineDecodableDiagGmmScaled decodable(am_gmm, trans_model, acoustic_scale,
     //                                        &feature_matrix);
@@ -198,8 +197,6 @@ int get_online_python_gmm_decode_faster(int argc, char *argv[],
 int decode(OnlineFasterDecoder & decoder, 
       OnlineDecodableDiagGmmScaled & decodable,
       fst::SymbolTable *word_syms) {
-    using namespace kaldi;
-    using namespace fst;
     VectorFst<LatticeArc> out_fst;
     bool partial_res = false;
     while (1) {
