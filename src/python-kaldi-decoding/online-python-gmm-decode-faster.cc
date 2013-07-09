@@ -194,16 +194,16 @@ int get_online_python_gmm_decode_faster(int argc, char *argv[],
 /************************************************
  *  Decode suppose that decoder is initialized  *
  ************************************************/
-int decode(OnlineFasterDecoder & decoder, 
-      OnlineDecodableDiagGmmScaled & decodable,
+int decode(OnlineFasterDecoder * decoder, 
+      OnlineDecodableDiagGmmScaled * decodable,
       fst::SymbolTable *word_syms) {
     VectorFst<LatticeArc> out_fst;
     bool partial_res = false;
     while (1) {
-      OnlineFasterDecoder::DecodeState dstate = decoder.Decode(&decodable);
+      OnlineFasterDecoder::DecodeState dstate = decoder->Decode(decodable);
       std::vector<int32> word_ids;
-      if (dstate & (decoder.kEndFeats | decoder.kEndUtt)) {
-        decoder.FinishTraceBack(&out_fst);
+      if (dstate & (decoder->kEndFeats | decoder->kEndUtt)) {
+        decoder->FinishTraceBack(&out_fst);
         fst::GetLinearSymbolSequence(out_fst,
                                      static_cast<vector<int32> *>(0),
                                      &word_ids,
@@ -211,7 +211,7 @@ int decode(OnlineFasterDecoder & decoder,
         PrintPartialResult(word_ids, word_syms, partial_res || word_ids.size());
         partial_res = false;
       } else {
-        if (decoder.PartialTraceback(&out_fst)) {
+        if (decoder->PartialTraceback(&out_fst)) {
           fst::GetLinearSymbolSequence(out_fst,
                                        static_cast<vector<int32> *>(0),
                                        &word_ids,

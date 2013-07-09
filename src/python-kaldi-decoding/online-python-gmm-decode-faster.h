@@ -25,8 +25,8 @@ typedef int (*get_decoder_t)(int c, char **ar,
       fst::SymbolTable *out_word_syms,
       fst::Fst<fst::StdArc> *out_decode_fst);
 // FIXME rename
-typedef int (*decode_t)(kaldi::OnlineFasterDecoder & decoder, 
-      kaldi::OnlineDecodableDiagGmmScaled & decodable, 
+typedef int (*decode_t)(kaldi::OnlineFasterDecoder * decoder, 
+      kaldi::OnlineDecodableDiagGmmScaled * decodable, 
       fst::SymbolTable *word_syms);
 
 
@@ -37,8 +37,8 @@ int get_online_python_gmm_decode_faster(int argc, char *argv[],
       fst::SymbolTable *out_word_syms,
       fst::Fst<fst::StdArc> *out_decode_fst);
 
-int decode(kaldi::OnlineFasterDecoder & decoder, 
-      kaldi::OnlineDecodableDiagGmmScaled & decodable, 
+int decode(kaldi::OnlineFasterDecoder * decoder, 
+      kaldi::OnlineDecodableDiagGmmScaled * decodable, 
       fst::SymbolTable *word_syms);
 
 #ifdef __cplusplus
