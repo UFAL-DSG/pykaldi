@@ -37,14 +37,20 @@ using namespace fst;
 *  Do not forget to deallocate the out* parameters. They are pointers!    *
 ***************************************************************************/
 int get_online_python_gmm_decode_faster(int argc, char *argv[], 
-      OnlineFasterDecoder * out_decoder, 
-      OnlineDecodableDiagGmmScaled * out_decodable, 
-      OnlineFeatInputItf *out_feat_transform, 
-      fst::SymbolTable *out_word_syms,
-      fst::Fst<fst::StdArc> *out_decode_fst) {
+      OnlineFasterDecoder ** out_decoder, 
+      OnlineDecodableDiagGmmScaled ** out_decodable, 
+      OnlineFeatInputItf **out_feat_transform, 
+      fst::SymbolTable **out_word_syms,
+      fst::Fst<fst::StdArc> **out_decode_fst) {
+
+  // init
+  *out_decoder = NULL; *out_decodable = NULL; *out_feat_transform = NULL; 
+  *out_word_syms = NULL; *out_decode_fst = NULL;
+
   try {
     typedef kaldi::int32 int32;
     typedef OnlineFeInput<OnlinePaSource, Mfcc> FeInput;
+
 
     // Up to delta-delta derivative features are calculated (unless LDA is used)
     const int32 kDeltaOrder = 2;
@@ -128,12 +134,12 @@ int get_online_python_gmm_decode_faster(int argc, char *argv[],
     }
 
     // fst::SymbolTable *word_syms = NULL;
-    if (!(out_word_syms = fst::SymbolTable::ReadText(word_syms_filename)))
+    if (!(*out_word_syms = fst::SymbolTable::ReadText(word_syms_filename)))
         KALDI_ERR << "Could not read symbol table from file "
                     << word_syms_filename;
 
     // fst::Fst<fst::StdArc> *decode_fst = ReadDecodeGraph(fst_rxfilename);
-    out_decode_fst = ReadDecodeGraph(fst_rxfilename);
+    *out_decode_fst = ReadDecodeGraph(fst_rxfilename);
 
     // We are not properly registering/exposing MFCC and frame extraction options,
     // because there are parts of the online decoding code, where some of these
@@ -147,7 +153,7 @@ int get_online_python_gmm_decode_faster(int argc, char *argv[],
     decoder_opts.batch_size = std::max(decoder_opts.batch_size, window_size);
     // OnlineFasterDecoder decoder(*decode_fst, decoder_opts,
     //                             silence_phones, trans_model);
-    out_decoder = new OnlineFasterDecoder(*out_decode_fst, decoder_opts,
+    *out_decoder = new OnlineFasterDecoder(**out_decode_fst, decoder_opts,
                                 silence_phones, trans_model);
     OnlinePaSource au_src(kSampleFreq, kPaRingSize, kPaReportInt);
     Mfcc mfcc(mfcc_opts);
@@ -157,7 +163,7 @@ int get_online_python_gmm_decode_faster(int argc, char *argv[],
     OnlineCmnInput cmn_input(&fe_input, cmn_window, min_cmn_window);
     // OnlineFeatInputItf *feat_transform = 0;
     if (lda_mat_rspecifier != "") {
-      out_feat_transform = new OnlineLdaInput(
+      *out_feat_transform = new OnlineLdaInput(
                                &cmn_input, lda_transform,
                                left_context, right_context);
     } else {
@@ -167,23 +173,23 @@ int get_online_python_gmm_decode_faster(int argc, char *argv[],
       // but I don't think this is really the right way to set the window-size
       // in the delta computation: it should be a separate config.
       opts.window = left_context / 2;
-      out_feat_transform = new OnlineDeltaInput(opts, &cmn_input);
+      *out_feat_transform = new OnlineDeltaInput(opts, &cmn_input);
     }
     
     // feature_reading_opts contains timeout, batch size.
     OnlineFeatureMatrix feature_matrix(feature_reading_opts,
-                                       out_feat_transform);
+                                       *out_feat_transform);
 
     // OnlineDecodableDiagGmmScaled decodable(am_gmm, trans_model, acoustic_scale,
     //                                        &feature_matrix);
-    out_decodable = new OnlineDecodableDiagGmmScaled(am_gmm, trans_model, 
+    *out_decodable = new OnlineDecodableDiagGmmScaled(am_gmm, trans_model, 
             acoustic_scale, &feature_matrix); 
   } catch(const std::exception& e) {
-    if (out_decoder) delete out_decoder;
-    if (out_decodable) delete out_decodable;
-    if (out_feat_transform) delete out_feat_transform;
-    if (out_word_syms) delete out_word_syms;
-    if (out_decode_fst) delete out_decode_fst;
+    if (*out_decoder) delete *out_decoder;
+    if (*out_decodable) delete *out_decodable;
+    if (*out_feat_transform) delete *out_feat_transform;
+    if (*out_word_syms) delete *out_word_syms;
+    if (*out_decode_fst) delete *out_decode_fst;
     std::cerr << e.what();
     return -1;
   }
@@ -197,30 +203,34 @@ int get_online_python_gmm_decode_faster(int argc, char *argv[],
 int decode(OnlineFasterDecoder * decoder, 
       OnlineDecodableDiagGmmScaled * decodable,
       fst::SymbolTable *word_syms) {
-    VectorFst<LatticeArc> out_fst;
-    bool partial_res = false;
-    while (1) {
-      OnlineFasterDecoder::DecodeState dstate = decoder->Decode(decodable);
+  VectorFst<LatticeArc> out_fst;
+  bool partial_res = false;
+  while (1) {
+  KALDI_WARN << "ONDRA DEBUG A\n";
+    OnlineFasterDecoder::DecodeState dstate = decoder->Decode(decodable);
+  KALDI_WARN << "ONDRA DEBUG B\n";
+    if (dstate & (decoder->kEndFeats | decoder->kEndUtt)) {
       std::vector<int32> word_ids;
-      if (dstate & (decoder->kEndFeats | decoder->kEndUtt)) {
-        decoder->FinishTraceBack(&out_fst);
+  KALDI_ERR << "ONDRA DEBUG C\n";
+      decoder->FinishTraceBack(&out_fst);
+      fst::GetLinearSymbolSequence(out_fst,
+                                   static_cast<vector<int32> *>(0),
+                                   &word_ids,
+                                   static_cast<LatticeArc::Weight*>(0));
+      PrintPartialResult(word_ids, word_syms, partial_res || word_ids.size());
+      partial_res = false;
+    } else {
+      if (decoder->PartialTraceback(&out_fst)) {
+        std::vector<int32> word_ids;
         fst::GetLinearSymbolSequence(out_fst,
                                      static_cast<vector<int32> *>(0),
                                      &word_ids,
                                      static_cast<LatticeArc::Weight*>(0));
-        PrintPartialResult(word_ids, word_syms, partial_res || word_ids.size());
-        partial_res = false;
-      } else {
-        if (decoder->PartialTraceback(&out_fst)) {
-          fst::GetLinearSymbolSequence(out_fst,
-                                       static_cast<vector<int32> *>(0),
-                                       &word_ids,
-                                       static_cast<LatticeArc::Weight*>(0));
-          PrintPartialResult(word_ids, word_syms, false);
-          if (!partial_res)
-            partial_res = (word_ids.size() > 0);
-        }
+        PrintPartialResult(word_ids, word_syms, false);
+        if (!partial_res)
+          partial_res = (word_ids.size() > 0);
       }
     }
-    return 0;
+  }
+  return 0;
 } //decode()
