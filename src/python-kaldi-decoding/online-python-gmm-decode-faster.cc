@@ -27,6 +27,34 @@
 
 #include "online-python-gmm-decode-faster.h"
 
+
+/*****************
+ *  C interface  *
+ *****************/
+
+// explicit constructor and destructor
+CKaldiDecoderWrapper new_KaldiDecoderWrapper() {
+  return reinterpret_cast<void*>(new KaldiDecoderWrapper());
+}
+void del_KaldiDecoderWrapper(CKaldiDecoderWrapper unallocate_pointer) {
+  delete reinterpret_cast<KaldiDecoderWrapper*>(unallocate_pointer);
+}
+
+// methods
+void build(CKaldiDecoderWrapper d, int argc, char * argv[]) {
+  reinterpret_cast<KaldiDecoderWrapper*>(d)->build(argc, argv);
+} 
+void set_up(CKaldiDecoderWrapper d) {
+  reinterpret_cast<KaldiDecoderWrapper*>(d)->set_up();
+} 
+void disconnect(CKaldiDecoderWrapper d) {
+  reinterpret_cast<KaldiDecoderWrapper*>(d)->disconnect();
+}
+void decode(CKaldiDecoderWrapper d, char * out_str) {
+  reinterpret_cast<KaldiDecoderWrapper*>(d)->decode();
+}
+
+
 using namespace kaldi;
 using namespace fst;
 
