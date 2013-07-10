@@ -125,7 +125,7 @@ class OnlineVectorSource {
 
 // OnlineAudioSource implementation which blocks on Read.
 // It expects to be fed with the audio data during its life.
-class OnlineBlockSource {
+classOnlineBlockSource {
  public:
   OnlineBlockSource(void);
   bool Read(Vector<BaseFloat> *data, int32 timeout);

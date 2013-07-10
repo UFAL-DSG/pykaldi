@@ -27,11 +27,9 @@
 
 #include "online-python-gmm-decode-faster.h"
 
-
 /*****************
  *  C interface  *
  *****************/
-
 // explicit constructor and destructor
 CKaldiDecoderWrapper new_KaldiDecoderWrapper() {
   return reinterpret_cast<void*>(new KaldiDecoderWrapper());
@@ -41,127 +39,101 @@ void del_KaldiDecoderWrapper(CKaldiDecoderWrapper unallocate_pointer) {
 }
 
 // methods
-void build(CKaldiDecoderWrapper d, int argc, char * argv[]) {
-  reinterpret_cast<KaldiDecoderWrapper*>(d)->build(argc, argv);
-} 
-void set_up(CKaldiDecoderWrapper d) {
+void set_up(CKaldiDecoderWrapper d, int argc, char **argv) {
   reinterpret_cast<KaldiDecoderWrapper*>(d)->set_up();
 } 
-void disconnect(CKaldiDecoderWrapper d) {
+void reset(CKaldiDecoderWrapper d) {
   reinterpret_cast<KaldiDecoderWrapper*>(d)->disconnect();
 }
-void decode(CKaldiDecoderWrapper d, char * out_str) {
+void frame_in(CKaldiDecoderWrapper d, unsigned char *frame, size_t frame_len) {
+  reinterpret_cast<KaldiDecoderWrapper*>(d)->frame_in(frame, frame_len);
+}
+void decode(CKaldiDecoderWrapper d, char *out_str) {
   reinterpret_cast<KaldiDecoderWrapper*>(d)->decode();
 }
 
-
+/*******************
+ *  C++ interface  *
+ *******************/
 using namespace kaldi;
 using namespace fst;
+typedef kaldi::int32 int32;
 
-/**************************************************************************
-* TODO wrap the functions into decoder object                             *
-* TODO do the parsing in the object and not from "command arguments"      *
-* FIXME do not use the decoder via command line argumets                  *
-*  Do not forget to deallocate the out* parameters. They are pointers!    *
-***************************************************************************/
-int get_online_python_gmm_decode_faster(int argc, char *argv[], 
-      OnlineFasterDecoder * out_decoder, 
-      OnlineDecodableDiagGmmScaled * out_decodable, 
-      OnlineFeatInputItf *out_feat_transform, 
-      fst::SymbolTable *out_word_syms,
-      fst::Fst<fst::StdArc> *out_decode_fst) {
+KaldiDecoderWrapper::KaldiDecoderWrapper(int argc, char **argv) {
+  this->set_up(argc, argv);
+}
+
+~KaldiDecoderWrapper::KaldiDecoderWrapper() {
+  this->reset();
+}
+
+void KaldiDecoderWrapper::reset() {
+
+  delete this->mfcc_;
+  delete this->source_;
+  delete this->feat_in_;
+  delete this->cmn_input_;
+  delete this->trans_model_;
+  delete this->decode_fst_;
+  delete this->decoder_;
+  delete this->out_fst_;
+  delete this->feat_transform_;
+  delete this->feature_matrix_;
+  delete this->decodable_;
+  this->silence_phones_.clear();
+
+  this->mfcc_ = 0;
+  this->source_ = 0;
+  this->feat_in_ = 0;
+  this->cmn_input_ = 0;
+  this->trans_model_ = 0;
+  this->decode_fst_ = 0;
+  this->decoder_ = 0;
+  this->out_fst_ = 0;
+  this->feat_transform_ = 0;
+  this->feature_matrix_ = 0;
+  this->decodable_ = 0;
+
+  // Up to delta-delta derivative features are calculated unless LDA is used
+  // default values: order & window
+  this->delta_feat_opts_ = DeltaFeaturesOptions(2, 2); 
+
+  this->acoustic_scale = 0.1;
+  this->cmn_window = 600, this->min_cmn_window = 100;
+  this->right_context = 4, this->left_context = 4;
+
+  decoder_opts_ = OnlineFasterDecoderOpts();
+  feature_reading_opts_ = OnlineFeatureMatrixOptions();
+  model_rxfilename_.clear();
+  fst_rxfilename_.clear();
+  word_syms_filename_.clear();
+  silence_phones_str_.clear();
+  lda_mat_rspecifier_.clear();
+
+  this-resetted_ = true; this->ready_ = false;
+}
+
+void KaldiDecoderWrapper::set_up(int argc, char **argv) {
+  this->ready_ = false; this->resetted_ = false;
+
   try {
-    typedef kaldi::int32 int32;
-    typedef OnlineFeInput<OnlinePaSource, Mfcc> FeInput;
 
-    // Up to delta-delta derivative features are calculated (unless LDA is used)
-    const int32 kDeltaOrder = 2;
-    // Input sampling frequency is fixed to 16KHz
-    const int32 kSampleFreq = 16000;
-    // PortAudio's internal ring buffer size in bytes
-    const int32 kPaRingSize = 32768;
-    // Report interval for PortAudio buffer overflows in number of feat. batches
-    const int32 kPaReportInt = 4;
-
-    const char *usage =
-        "Decode speech, using microphone input(PortAudio)\n\n"
-        "Utterance segmentation is done on-the-fly.\n"
-        "Feature splicing/LDA transform is used, if the optional(last) argument "
-        "is given.\n"
-        "Otherwise delta/delta-delta(2-nd order) features are produced.\n\n"
-        "Usage: online-gmm-decode-faster [options] <model-in>"
-        "<fst-in> <word-symbol-table> <silence-phones> [<lda-matrix-in>]\n\n"
-        "Example: online-gmm-decode-faster --rt-min=0.3 --rt-max=0.5 "
-        "--max-active=4000 --beam=12.0 --acoustic-scale=0.0769 "
-        "model HCLG.fst words.txt '1:2:3:4:5' lda-matrix";
-    ParseOptions po(usage); 
-    BaseFloat acoustic_scale = 0.1;
-    int32 cmn_window = 600, min_cmn_window = 100;
-    int32 right_context = 4, left_context = 4;
-
-    kaldi::DeltaFeaturesOptions delta_opts;
-    delta_opts.Register(&po);
-    OnlineFasterDecoderOpts decoder_opts;
-    decoder_opts.Register(&po, true);
-    OnlineFeatureMatrixOptions feature_reading_opts;
-    feature_reading_opts.Register(&po);
-    
-    po.Register("left-context", &left_context, "Number of frames of left context");
-    po.Register("right-context", &right_context, "Number of frames of right context");
-    po.Register("acoustic-scale", &acoustic_scale,
-                "Scaling factor for acoustic likelihoods");
-    po.Register("cmn-window", &cmn_window,
-        "Number of feat. vectors used in the running average CMN calculation");
-    po.Register("min-cmn-window", &min_cmn_window,
-                "Minumum CMN window used at start of decoding (adds "
-                "latency only at start)");
-
-    // FIXME at some point get rid of ParseOptions
-    po.Read(argc, argv);
-    if (po.NumArgs() != 4 && po.NumArgs() != 5) {
-      po.PrintUsage();
-      return 1;
+    if (this->parse_args(argc, argv) != 0) {
+      this->reset(); return;
     }
-    // FIXME check this in Python
-    if (po.NumArgs() == 4)
-      if (left_context % kDeltaOrder != 0 || left_context != right_context)
-        KALDI_ERR << "Invalid left/right context parameters!";
-
-    std::string model_rxfilename = po.GetArg(1),
-        fst_rxfilename = po.GetArg(2),
-        word_syms_filename = po.GetArg(3),
-        silence_phones_str = po.GetArg(4),
-        lda_mat_rspecifier = po.GetOptArg(5);
-
-    Matrix<BaseFloat> lda_transform;
-    if (lda_mat_rspecifier != "") {
-      bool binary_in;
-      Input ki(lda_mat_rspecifier, &binary_in);
-      lda_transform.Read(ki.Stream(), binary_in);
-    }
-
-    std::vector<int32> silence_phones;
-    if (!SplitStringToIntegers(silence_phones_str, ":", false, &silence_phones))
-        KALDI_ERR << "Invalid silence-phones string " << silence_phones_str;
-    if (silence_phones.empty())
-        KALDI_ERR << "No silence phones given!";
-
-    TransitionModel trans_model;
-    AmDiagGmm am_gmm;
     {
         bool binary;
-        Input ki(model_rxfilename, &binary);
-        trans_model.Read(ki.Stream(), binary);
-        am_gmm.Read(ki.Stream(), binary);
+        Input ki(this->model_rxfilename_, &binary);
+        this->trans_model_->Read(ki.Stream(), binary);
+        this->am_gmm.Read(ki.Stream(), binary);
     }
 
-    // fst::SymbolTable *word_syms = NULL;
-    if (!(out_word_syms = fst::SymbolTable::ReadText(word_syms_filename)))
-        KALDI_ERR << "Could not read symbol table from file "
-                    << word_syms_filename;
+    this->decode_fst_ = ReadDecodeGraph(this->fst_rxfilename_);
+    this-> decoder_ = new OnlineFasterDecoder(*decode_fst_, this->decoder_opts_,
+                                    this->silence_phones_, this->trans_model_);
 
-    // fst::Fst<fst::StdArc> *decode_fst = ReadDecodeGraph(fst_rxfilename);
-    out_decode_fst = ReadDecodeGraph(fst_rxfilename);
+    // Fixed 16 bit audio
+    this->source_ = new OnlineBlockSource(); 
 
     // We are not properly registering/exposing MFCC and frame extraction options,
     // because there are parts of the online decoding code, where some of these
@@ -170,85 +142,118 @@ int get_online_python_gmm_decode_faster(int argc, char *argv[],
     mfcc_opts.use_energy = false;
     int32 frame_length = mfcc_opts.frame_opts.frame_length_ms = 25;
     int32 frame_shift = mfcc_opts.frame_opts.frame_shift_ms = 10;
+    this->mfcc_ = new Mfcc(mfcc_opts);
 
-    int32 window_size = right_context + left_context + 1;
-    decoder_opts.batch_size = std::max(decoder_opts.batch_size, window_size);
-    // OnlineFasterDecoder decoder(*decode_fst, decoder_opts,
-    //                             silence_phones, trans_model);
-    out_decoder = new OnlineFasterDecoder(*out_decode_fst, decoder_opts,
-                                silence_phones, trans_model);
-    OnlinePaSource au_src(kSampleFreq, kPaRingSize, kPaReportInt);
-    Mfcc mfcc(mfcc_opts);
-    FeInput fe_input(&au_src, &mfcc,
-                     frame_length * (kSampleFreq / 1000),
-                     frame_shift * (kSampleFreq / 1000));
-    OnlineCmnInput cmn_input(&fe_input, cmn_window, min_cmn_window);
-    // OnlineFeatInputItf *feat_transform = 0;
-    if (lda_mat_rspecifier != "") {
-      out_feat_transform = new OnlineLdaInput(
-                               &cmn_input, lda_transform,
-                               left_context, right_context);
+    this->fe_input_ = new BlockFeatInput (this->source_, this->mfcc_,
+                               frame_length * (this->kSampleFreq / 1000),
+                               frame_shift * (this->kSampleFreq / 1000));
+    this->cmn_input_ = new OnlineCmnInput(&fe_input, this->cmn_window, 
+                                                  this->min_cmn_window);
+
+    if (this->lda_mat_rspecifier_ != "") {
+      bool binary_in;
+      Matrix<BaseFloat> lda_transform; 
+      Input ki(this->lda_mat_rspecifier_, &binary_in);
+      lda_transform.Read(ki.Stream(), binary_in);
+      // lda_transform is copied to OnlineLdaInput
+      this->feat_transform_ = new OnlineLdaInput(this->cmn_input_, 
+                                lda_transform,
+                                this->left_context, this->right_context);
     } else {
-      DeltaFeaturesOptions opts;
-      opts.order = kDeltaOrder;
       // Note from Dan: keeping the next statement for back-compatibility,
       // but I don't think this is really the right way to set the window-size
       // in the delta computation: it should be a separate config.
-      opts.window = left_context / 2;
-      out_feat_transform = new OnlineDeltaInput(opts, &cmn_input);
+      this->delta_feat_opts_.window = this->left_context / 2;
+      this->feat_transform_ = new OnlineDeltaInput(this->delta_feat_opts_, 
+                                                        this->cmn_input_);
     }
-    
-    // feature_reading_opts contains timeout, batch size.
-    OnlineFeatureMatrix feature_matrix(feature_reading_opts,
-                                       out_feat_transform);
 
-    // OnlineDecodableDiagGmmScaled decodable(am_gmm, trans_model, acoustic_scale,
-    //                                        &feature_matrix);
-    out_decodable = new OnlineDecodableDiagGmmScaled(am_gmm, trans_model, 
-            acoustic_scale, &feature_matrix); 
+    // this->feature_reading_opts_ contains timeout, batch size.
+    this->feature_matrix_ = new OnlineFeatureMatrix(this->feature_reading_opts_,
+                                       this->feat_transform_);
+    this->decodable_ = new OnlineDecodableDiagGmmScaled(this->am_gmm, 
+                                            this->trans_model_, 
+                                            acoustic_scale, &feature_matrix);
+    this->out_fst_ = new VectorFst<LatticeArc>();
+
+    this->partial_res_ = false;
+    this->resetted_ = false; this->ready_ = true;
+
   } catch(const std::exception& e) {
-    if (out_decoder) delete out_decoder;
-    if (out_decodable) delete out_decodable;
-    if (out_feat_transform) delete out_feat_transform;
-    if (out_word_syms) delete out_word_syms;
-    if (out_decode_fst) delete out_decode_fst;
     std::cerr << e.what();
     return -1;
   }
-  return 0;
-} // get_online_python_gmm_decode_faster
+} // KaldiDecoderWrapper::set_up()
 
 
-/************************************************
- *  Decode suppose that decoder is initialized  *
- ************************************************/
-int decode(OnlineFasterDecoder * decoder, 
-      OnlineDecodableDiagGmmScaled * decodable,
-      fst::SymbolTable *word_syms) {
-    VectorFst<LatticeArc> out_fst;
-    bool partial_res = false;
-    while (1) {
-      OnlineFasterDecoder::DecodeState dstate = decoder->Decode(decodable);
-      std::vector<int32> word_ids;
-      if (dstate & (decoder->kEndFeats | decoder->kEndUtt)) {
-        decoder->FinishTraceBack(&out_fst);
-        fst::GetLinearSymbolSequence(out_fst,
-                                     static_cast<vector<int32> *>(0),
-                                     &word_ids,
-                                     static_cast<LatticeArc::Weight*>(0));
-        PrintPartialResult(word_ids, word_syms, partial_res || word_ids.size());
-        partial_res = false;
-      } else {
-        if (decoder->PartialTraceback(&out_fst)) {
-          fst::GetLinearSymbolSequence(out_fst,
-                                       static_cast<vector<int32> *>(0),
-                                       &word_ids,
-                                       static_cast<LatticeArc::Weight*>(0));
-          PrintPartialResult(word_ids, word_syms, false);
-          if (!partial_res)
-            partial_res = (word_ids.size() > 0);
-        }
-      }
+int KaldiDecoderWrapper::parse_args(int argc, char ** argv) {
+  try {
+
+    ParseOptions po("ParseOptions for decoder "
+      "works like command line options!)\n\n"
+      "Utterance segmentation is done on-the-fly.\n"
+      "Feature splicing/LDA transform is used, if the optional(last) " 
+      "argument is given.\n"
+      "Otherwise delta/delta-delta(2-nd order) features are produced.\n\n"
+      "Usage: online-gmm-decode-faster [options] <model-in>"
+      "<fst-in> <word-symbol-table> <silence-phones> [<lda-matrix-in>]\n\n"
+      "Example: online-gmm-decode-faster --rt-min=0.3 --rt-max=0.5 "
+      "--max-active=4000 --beam=12.0 --acoustic-scale=0.0769 "
+      "model HCLG.fst words.txt '1:2:3:4:5' lda-matrix";
+
+    // NOT USED
+    // kaldi::DeltaFeaturesOptions delta_opts;
+    // delta_opts.Register(&po);
+
+    this->decoder_opts_.Register(&po, true);
+    this->feature_reading_opts_.Register(&po);
+    
+    po.Register("left-context", &this->left_context, "Number of frames of left context");
+    po.Register("right-context", &this->right_context, "Number of frames of right context");
+    po.Register("acoustic-scale", &this->acoustic_scale,
+                "Scaling factor for acoustic likelihoods");
+    po.Register("cmn-window", &this->cmn_window,
+        "Number of feat. vectors used in the running average CMN calculation");
+    po.Register("min-cmn-window", &this->min_cmn_window,
+                "Minumum CMN window used at start of decoding (adds "
+                "latency only at start)");
+
+    po.Read(argc, argv);
+    if (po.NumArgs() != 4 && po.NumArgs() != 5) {
+      po.PrintUsage();
+      return 1;
     }
-    return 0;
-} //decode()
+    if (po.NumArgs() == 4)
+      if (this->left_context % this->delta_feat_opts_.order != 0 || 
+          this->left_context != this->right_context)
+        KALDI_ERR << "Invalid left/right context parameters!";
+
+    int32 window_size = this->right_context + thi->left_context + 1;
+    this->decoder_opts_.batch_size = std::max(this->decoder_opts_.batch_size, window_size);
+
+    this->model_rxfilename_ = po.GetArg(1),
+        this->fst_rxfilename_ = po.GetArg(2),
+        this->word_syms_filename_ = po.GetArg(3),
+        this->silence_phones_str_ = po.GetArg(4),
+        this->lda_mat_rspecifier_ = po.GetOptArg(5);
+
+    if (!SplitStringToIntegers(this->silence_phones_str_, ":", false, &this->silence_phones_))
+        KALDI_ERR << "Invalid silence-phones string " << this->silence_phones_str_;
+    if (this->silence_phones_.empty())
+        KALDI_ERR << "No silence phones given!";
+
+  } catch(const std::exception& e) {
+    std::cerr << e.what();
+    return -1;
+  }
+
+} // KaldiDecoderWrapper::parse_args()
+
+
+void frame_in(unsigned char *frame, size_t frame_len) {
+  KALDI_ERR << "NOT IMPLEMENTED!";
+}
+
+void decode(kaldi::int32 char *out_str) {
+  KALDI_ERR << "NOT IMPLEMENTED!";
+}

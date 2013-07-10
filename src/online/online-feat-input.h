@@ -104,7 +104,7 @@ class OnlineCmnInput: public OnlineFeatInputItf {
             // the circular buffer.
   Vector<double> sum_; // Sum of the last std::min(t_, cmn_window_)
                        // frames.
-  KALDI_DISALLOW_COPY_AND_ASSIGN(OnlineCmnInput);
+  KALD_I_DISALLOW_COPY_AND_ASSIGN(OnlineCmnInput);
 };
 
 
@@ -205,7 +205,7 @@ class OnlineLdaInput: public OnlineFeatInputItf {
 // Does the time-derivative computation (e.g., adding deltas and delta-deltas).
 // This is standard in more "old-fashioned" feature extraction.  Like an online
 // version of the function ComputeDeltas in feat/feature-functions.h, where the
-// class DeltaFeaturesOptions is also defined.
+// struct DeltaFeaturesOptions is also defined.
 class OnlineDeltaInput: public OnlineFeatInputItf {
  public:
   OnlineDeltaInput(const DeltaFeaturesOptions &delta_opts,
