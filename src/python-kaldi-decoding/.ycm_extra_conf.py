@@ -37,20 +37,20 @@ import ycm_core
 
 # I compile Kaldi with openblas and atlas-> change flags approprietly
 kaldi_flags = [
-    '-DHAVE_OPENBLAS', '-I$(OPENBLASROOT)/include',
-    '-fPIC',
+    '-I../../tools/OpenBLAS/install/include',
+    '-I../../tools/openfst/include',
     '-I..',
+    '-I.',
+    '-fPIC',
+    '-rdynamic',
+    '-DHAVE_OPENBLAS',
     '-DKALDI_DOUBLEPRECISION=0',
     '-msse2',
     '-DHAVE_POSIX_MEMALIGN',
     '-Wno-sign-compare',
     '-DHAVE_EXECINFO_H=1',
-    '-rdynamic',
     '-DHAVE_CXXABI_H',
     '-DUSE_KALDI_SVD',
-    '-I$(FSTROOT)/include',
-    '$(EXTRA_CXXFLAGS)',
-    '-g',
 ]
 
 python_kaldi_flags = ['-I../../tools/portaudio/install/include']

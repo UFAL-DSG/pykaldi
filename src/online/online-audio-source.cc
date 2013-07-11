@@ -158,4 +158,22 @@ bool OnlineVectorSource::Read(Vector<BaseFloat> *data, int32 timeout) {
   return (pos_ < src_.Dim());
 }
 
+
+void OnlineBlockSource::Write(unsigned char * data, size_t data_size) {
+  src_.insert(src_.end(), data, data + data_size);
+}
+
+bool OnlineBlockSource::Read(Vector<BaseFloat> *data, int32 timeout) {
+  // KALDI_ASSERT(data->Dim() > 0);
+
+  // TODO check: static_cast<size_t> from data->Dim() works on all architectures
+  size_t n = std::min(src_.size(), static_cast<size_t>(data->Dim()));
+  for (size_t i = 0; i < n ; ++i) {
+    (*data)(i) = src_[i];
+  }
+  // remove the already read elements
+  std::vector<BaseFloat>(src_.begin() + n, src_.end()).swap(src_);
+  return (src_.size() > 0);
+}
+
 } // namespace kaldi

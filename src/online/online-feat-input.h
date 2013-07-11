@@ -104,7 +104,7 @@ class OnlineCmnInput: public OnlineFeatInputItf {
             // the circular buffer.
   Vector<double> sum_; // Sum of the last std::min(t_, cmn_window_)
                        // frames.
-  KALD_I_DISALLOW_COPY_AND_ASSIGN(OnlineCmnInput);
+  KALDI_DISALLOW_COPY_AND_ASSIGN(OnlineCmnInput);
 };
 
 

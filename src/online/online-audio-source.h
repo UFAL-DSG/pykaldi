@@ -123,19 +123,22 @@ class OnlineVectorSource {
 };
 
 
-// OnlineAudioSource implementation which blocks on Read.
-// It expects to be fed with the audio data during its life.
-classOnlineBlockSource {
+/** @brief Proxy Audio Input. Acts like a buffer.
+ *
+ * OnlineAudioSource implementation which blocks on Read.
+ * It expects to be fed with the audio frame by frame. */
+class OnlineBlockSource {
  public:
-  OnlineBlockSource(void);
+  OnlineBlockSource(void) {}
   bool Read(Vector<BaseFloat> *data, int32 timeout);
-  bool Write(Vector<BaseFloat> *data);
+  void Write(unsigned char *data, size_t data_size);
+
  private:
-  Vector<BaseFloat> src_;
-  uint32 pos_; // the index of the first element, not yet consumed
+  std::vector<BaseFloat> src_;
   KALDI_DISALLOW_COPY_AND_ASSIGN(OnlineBlockSource);
 };
 
 } // namespace kaldi
+
 
 #endif // KALDI_ONLINE_ONLINE_AUDIO_SOURCE_H_
