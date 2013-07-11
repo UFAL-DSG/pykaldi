@@ -37,18 +37,18 @@ int main(int argc, char **argv) {
     int retval;
 
     // get the decoder and other objects needed 
-    OnlineFasterDecoder *decoder; 
-    OnlineDecodableDiagGmmScaled *decodable;
-    OnlineFeatInputItf *feat_transform;
-    fst::SymbolTable *word_syms;
-    fst::Fst<fst::StdArc> *decode_fst;
+    OnlineFasterDecoder *decoder = NULL; 
+    OnlineDecodableDiagGmmScaled *decodable = NULL;
+    OnlineFeatInputItf *feat_transform = NULL;
+    fst::SymbolTable *word_syms = NULL;
+    fst::Fst<fst::StdArc> *decode_fst = NULL;
     
-    retval = get_online_python_gmm_decode_faster(argc, argv, decoder, decodable,
-                feat_transform, word_syms, decode_fst);
+    retval = get_online_python_gmm_decode_faster(argc, argv, &decoder, &decodable,
+                &feat_transform, &word_syms, &decode_fst);
     if(retval != 0) {
-        printf("Error in get_online_python_gmm_decode_faster. Return code %d", retval);
+        printf("Error in get_online_python_gmm_decode_faster. Return code %d\n", retval);
         if (retval == 1) {
-          printf("Just wrong commandline arguments. Return code %d", retval);
+          printf("Just wrong commandline arguments. Return code %d\n", retval);
           return 0;
         }
         return retval;
@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
     // start the decoding
     retval = decode(decoder, decodable, word_syms);
     if(retval != 0) {
-        printf("Error in decode. Return code %d", retval);
+        printf("Error in decode. Return code %d\n", retval);
         return retval;
     }
 

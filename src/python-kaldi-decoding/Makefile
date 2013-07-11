@@ -2,7 +2,7 @@
 
 all:
 
-EXTRA_CXXFLAGS = -Wno-sign-compare -I ../../tools/portaudio/install/include
+EXTRA_CXXFLAGS = -Wno-sign-compare -I ../../tools/portaudio/install/include # -pedantic
 EXTRA_LDLIBS =
 
 include ../kaldi.mk
