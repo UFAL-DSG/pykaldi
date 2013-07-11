@@ -1,8 +1,17 @@
 """
 Combine functionality from ordered and default dict.
-The implementation is taken from:
-http://stackoverflow.com/questions/6190331/can-i-do-an-ordered-default-dict-in-python
 """
+
+# ATTRIBUTION
+# The implementation is taken from:
+# http://stackoverflow.com/questions/6190331/can-i-do-an-ordered-default-dict-in-python
+# I consider Apache 2.0 shared alike to http://creativecommons.org/licenses/by-sa/2.5/
+# the license of stackoverflow questions
+#
+# However,
+# I did not change the code, so It should not effect the license of the project!
+
+
 from collections import Callable
 try:
     from collections import OrderedDict

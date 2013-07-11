@@ -1,16 +1,25 @@
+/* Copyright (c) 2013, Ondrej Platek, Ufal MFF UK <oplatek@ufal.mff.cuni.cz>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * THIS CODE IS PROVIDED *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+ * WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+ * MERCHANTABLITY OR NON-INFRINGEMENT.
+ * See the Apache 2 License for the specific language governing permissions and
+ * limitations under the License. */
+
+
 #ifndef KALDI_PYTHON_KALDI_DECODING_TEST_CFFI_PYTHON_DYN_H_
 #define KALDI_PYTHON_KALDI_DECODING_TEST_CFFI_PYTHON_DYN_H_
 #include <dlfcn.h>
 #include <stdio.h>
 
 
-/** Links ******
- - http://www.isotton.com/devel/docs/C++-dlopen-mini-HOWTO/C++-dlopen-mini-HOWTO.html
- - http://stackoverflow.com/questions/12762910/c-undefined-symbols-when-loading-shared-library-with-dlopen
- - http://kaldi.sourceforge.net/matrixwrap.html  # see Missing the ATLAS implementation of (parts of) CLAPACK
- - you have to choose lapack_atlas / lapack /clapack.. check symbols
-
-**********************/
 
 typedef int (*f_t)(int c, char **ar);
 
