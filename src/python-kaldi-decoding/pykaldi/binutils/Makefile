@@ -17,6 +17,8 @@ $(BIGLIB):
 	$(MAKE) -C ../..  $@
 	cp ../../$@ .
 
+all: $(BIGLIB)
+
 test: run_pipeline_example
 
 # PYTHON PIPELINE EXAMPLE
