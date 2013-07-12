@@ -73,22 +73,17 @@ def init_dummy():
 def init_dec():
     ffidec = FFI()
     ffidec.cdef('''
-    void return_answer(double * prob, char **ans, size_t *size);
-    void frame_in(char *str_frame, size_t size);
+    typedef ... CKaldiDecoderWrapper;
 
-    typedef ... snd_pcm_t;
-    int play(snd_pcm_t *handle, unsigned char * buffer, size_t size);
-    snd_pcm_t * play_setup(void);
-    void play_tear_down(snd_pcm_t *handle);
+    CKaldiDecoderWrapper new_KaldiDecoderWrapper(int argc, char **argv);
+    void del_KaldiDecoderWrapper(CKaldiDecoderWrapper unallocate_pointer);
 
-    typedef ... frame_list;
-    frame_list * create_frame_list(size_t block_size, size_t frame_size);
-    void delete_frame_list(frame_list * pfl);
-    int add_frame_to_list(frame_list * pfl, unsigned char * frame);
-    unsigned char ** frame_list_start(frame_list *pfl);
-    unsigned char ** frame_list_end(frame_list *pfl);
-
-    int play_list(snd_pcm_t *handle, frame_list * fl);
+    void Setup(CKaldiDecoderWrapper d, int argc, char **argv);
+    void Reset(CKaldiDecoderWrapper d);
+    void FrameIn(CKaldiDecoderWrapper d, unsigned char *frame, size_t frame_len);
+    bool Decode(CKaldiDecoderWrapper d);
+    size_t PrepareHypothesis(CKaldiDecoderWrapper d, int * is_full);
+    void GetHypothesis(CKaldiDecoderWrapper d, int * word_ids, size_t size);
     ''')
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
