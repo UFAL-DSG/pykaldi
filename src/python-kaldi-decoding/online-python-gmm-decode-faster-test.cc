@@ -78,25 +78,32 @@ int main(int argc, char **argv) {
 
   // use the loaded functions
   CKaldiDecoderWrapper d = new_Decoder(argc, argv);
+  // KALDI_WARN << "DEBUG";
   
   size_t test = 40;
   for(size_t i =0; i < test; ++i) {
     size_t frame_len = 256;
     unsigned char *frame = new unsigned char[frame_len];
     fill_frame(frame, frame_len);
+    // KALDI_WARN << "DEBUG";
     frame_in(d, frame, frame_len); 
+    // KALDI_WARN << "DEBUG";
     decode(d);
+    // KALDI_WARN << "DEBUG";
     if ( i % 2 == 0) {
-      int partial;
-      size_t num_words = prep_hyp(d, &partial);
-      if(partial) 
-        std::cout << "partial hypothesis";
-      else 
+      int full;
+      size_t num_words = prep_hyp(d, &full);
+      // KALDI_WARN << "DEBUG";
+      if(full) 
         std::cout << "full hypothesis";
+      else 
+        std::cout << "partial hypothesis";
       std::cout << ", decoded words: " << num_words << std::endl;
 
       int * word_ids = new int[num_words];
+      // KALDI_WARN << "DEBUG";
       get_hyp(d, word_ids, num_words);
+      // KALDI_WARN << "DEBUG";
       // print the words
       for(size_t j = 0; i < num_words; ++j)
         std::cout << word_ids[j] << " ";
@@ -105,8 +112,9 @@ int main(int argc, char **argv) {
       delete[] frame;
     }
   } // endfor
-
+  // KALDI_WARN << "DEBUG";
   del_Decoder(d);
+  // KALDI_WARN << "DEBUG";
 
   dlclose(lib);
   return 0;

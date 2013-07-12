@@ -43,7 +43,7 @@ void Setup(CKaldiDecoderWrapper d, int argc, char **argv);
 void Reset(CKaldiDecoderWrapper d);
 void FrameIn(CKaldiDecoderWrapper d, unsigned char *frame, size_t frame_len);
 bool Decode(CKaldiDecoderWrapper d);
-size_t PrepareHypothesis(CKaldiDecoderWrapper d, int * is_partial);
+size_t PrepareHypothesis(CKaldiDecoderWrapper d, int * is_full);
 void GetHypothesis(CKaldiDecoderWrapper d, int * word_ids, size_t size);
 
 // function types for loading functions from shared library

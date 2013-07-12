@@ -29,7 +29,7 @@
  *****************/
 // explicit constructor and destructor
 CKaldiDecoderWrapper new_KaldiDecoderWrapper(int argc, char **argv) {
-  return reinterpret_cast<void*>(new kaldi::KaldiDecoderWrapper(argc, argv));
+  return reinterpret_cast<CKaldiDecoderWrapper>(new kaldi::KaldiDecoderWrapper(argc, argv));
 }
 void del_KaldiDecoderWrapper(CKaldiDecoderWrapper unallocate_pointer) {
   delete reinterpret_cast<kaldi::KaldiDecoderWrapper*>(unallocate_pointer);
@@ -48,18 +48,18 @@ void FrameIn(CKaldiDecoderWrapper d, unsigned char *frame, size_t frame_len) {
 bool Decode(CKaldiDecoderWrapper d) {
   return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Decode();
 }
-size_t PrepareHypothesis(CKaldiDecoderWrapper d, int * is_partial) {
+size_t PrepareHypothesis(CKaldiDecoderWrapper d, int * is_full) {
   kaldi::KaldiDecoderWrapper *dp = reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d);
-  dp->GetHypothesis();
-  size_t words_len = dp->last_word_ids.size();
-  *is_partial = dp->UtteranceEnded();
-  return words_len;
+  *is_full = dp->GetHypothesis();
+  return dp->last_word_ids.size();
 }
 void GetHypothesis(CKaldiDecoderWrapper d, int * word_ids, size_t size) {
   kaldi::KaldiDecoderWrapper *dp = reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d);
+  // KALDI_WARN << "DEBUG";
   for(size_t i = 0; i < size; ++i) {
     word_ids[i] = dp->last_word_ids[i];
   }
+  // KALDI_WARN << "DEBUG";
 }
 
 /*******************
@@ -68,10 +68,14 @@ void GetHypothesis(CKaldiDecoderWrapper d, int * word_ids, size_t size) {
 
 namespace kaldi {
 
-/// Input sampling frequency is fixed to 16KHz
-KaldiDecoderWrapper::KaldiDecoderWrapper(int argc, char **argv):kSampleFreq_(16000)  {
+// /// Input sampling frequency is fixed to 16KHz
+KaldiDecoderWrapper::KaldiDecoderWrapper(int argc, char **argv):kSampleFreq_(16000) {
+  Reset();
+  // KALDI_WARN << "DEBUG";
   Setup(argc, argv);
+  // KALDI_WARN << "DEBUG";
 }
+
 
 KaldiDecoderWrapper::~KaldiDecoderWrapper() {
   Reset();
@@ -87,7 +91,6 @@ void KaldiDecoderWrapper::Reset() {
   delete decode_fst_;
   delete decoder_;
   delete out_fst_;
-  delete feat_transform_;
   delete feature_matrix_;
   delete decodable_;
   silence_phones_.clear();
@@ -121,16 +124,19 @@ void KaldiDecoderWrapper::Reset() {
   lda_mat_rspecifier_.clear();
 
   resetted_ = true; ready_ = false;
-}
+  // KALDI_WARN << "DEBUG";
+} // Reset ()
 
 void KaldiDecoderWrapper::Setup(int argc, char **argv) {
   ready_ = false; resetted_ = false;
   try {
-
+    // KALDI_WARN << "DEBUG";
     if (ParseArgs(argc, argv) != 0) {
       Reset(); return;
     }
+    // KALDI_WARN << "DEBUG";
 
+    trans_model_ = new TransitionModel();
     {
       bool binary;
       Input ki(model_rxfilename_, &binary);
@@ -138,6 +144,7 @@ void KaldiDecoderWrapper::Setup(int argc, char **argv) {
       am_gmm_.Read(ki.Stream(), binary);
     }
 
+    // KALDI_WARN << "DEBUG";
     decode_fst_ = ReadDecodeGraph(fst_rxfilename_);
     decoder_ = new OnlineFasterDecoder(*decode_fst_, decoder_opts_,
                                     silence_phones_, *trans_model_);
@@ -154,27 +161,35 @@ void KaldiDecoderWrapper::Setup(int argc, char **argv) {
     int32 frame_shift = mfcc_opts.frame_opts.frame_shift_ms = 10;
     mfcc_ = new Mfcc(mfcc_opts);
 
+    // KALDI_WARN << "DEBUG";
     fe_input_ = new BlockFeatInput (source_, mfcc_,
                                frame_length * (kSampleFreq_ / 1000),
                                frame_shift * (kSampleFreq_ / 1000));
+    // KALDI_WARN << "DEBUG";
     cmn_input_ = new OnlineCmnInput(fe_input_, cmn_window_, min_cmn_window_);
 
+    // KALDI_WARN << "DEBUG";
     if (lda_mat_rspecifier_ != "") {
       bool binary_in;
       Matrix<BaseFloat> lda_transform; 
       Input ki(lda_mat_rspecifier_, &binary_in);
       lda_transform.Read(ki.Stream(), binary_in);
+      // KALDI_WARN << "DEBUG";
       // lda_transform is copied to OnlineLdaInput
       feat_transform_ = new OnlineLdaInput(cmn_input_, 
                                 lda_transform,
                                 left_context_, right_context_);
+      // KALDI_WARN << "DEBUG";
     } else {
       // Note from Dan: keeping the next statement for back-compatibility,
       // but I don't think this is really the right way to set the window-size
       // in the delta computation: it should be a separate config.
       delta_feat_opts_.window = left_context_ / 2;
+      // KALDI_WARN << "DEBUG";
       feat_transform_ = new OnlineDeltaInput(delta_feat_opts_, cmn_input_);
+      // KALDI_WARN << "DEBUG";
     }
+    // KALDI_WARN << "DEBUG";
 
     // feature_reading_opts_ contains timeout, batch size.
     feature_matrix_ = new OnlineFeatureMatrix(feature_reading_opts_,
@@ -185,7 +200,7 @@ void KaldiDecoderWrapper::Setup(int argc, char **argv) {
     out_fst_ = new fst::VectorFst<LatticeArc>();
 
     resetted_ = false; ready_ = true;
-
+    // KALDI_WARN << "DEBUG";
   } catch(const std::exception& e) {
     std::cerr << e.what();
     throw e;
@@ -194,20 +209,22 @@ void KaldiDecoderWrapper::Setup(int argc, char **argv) {
 
 void KaldiDecoderWrapper::FrameIn(unsigned char *frame, size_t frame_len) {
   source_->Write(frame, frame_len);
+  // KALDI_WARN << "DEBUG";
 }
 
 bool KaldiDecoderWrapper::Decode(void) {
   dstate_ = decoder_->Decode(decodable_);
+  // KALDI_WARN << "DEBUG";
   // FIXME I should detect probably this myself
   return UtteranceEnded();
 }
 
+/// Return bool: True for full hypothesis, False for partial. 
+/// For empty hypothesis also returns True.
+/// Throw away previously decoded buffered hypothesis.
 bool KaldiDecoderWrapper::GetHypothesis() {
-  // Return if we get results for full hypothesis 
-  // or the partial results were filled by partial hypothesis
-  bool full_res = true;
-  // Throw away previously decoded hypothesis in buffer
   last_word_ids.clear();
+  // KALDI_WARN << "DEBUG";
   if (UtteranceEnded()) {
     // get the last chunk
     decoder_->FinishTraceBack(out_fst_);
@@ -215,6 +232,7 @@ bool KaldiDecoderWrapper::GetHypothesis() {
                                  static_cast<vector<int32> *>(0),
                                  &this->last_word_ids,
                                  static_cast<LatticeArc::Weight*>(0));
+    // KALDI_WARN << "DEBUG";
   } else {
     // get the hypothesis from currently active state
     if (decoder_->PartialTraceback(out_fst_)) {
@@ -222,16 +240,18 @@ bool KaldiDecoderWrapper::GetHypothesis() {
                                    static_cast<vector<int32> *>(0),
                                    &this->last_word_ids,
                                    static_cast<LatticeArc::Weight*>(0));
-      full_res = (this->last_word_ids.size() == 0);
+      // KALDI_WARN << "DEBUG";
     }
+    // KALDI_WARN << "DEBUG";
   }
-
-  return full_res;
+  // empty hypothesis is full hypothesis (not partial one)
+  return (UtteranceEnded() || last_word_ids.size() == 0) ;
 } 
 
 bool KaldiDecoderWrapper::GetHypothesis(std::vector<int32> & word_ids) {
   bool result = GetHypothesis();
   word_ids = this->last_word_ids;
+  // KALDI_WARN << "DEBUG";
   return result;
 }
 
@@ -286,6 +306,8 @@ int KaldiDecoderWrapper::ParseArgs(int argc, char ** argv) {
         KALDI_ERR << "Invalid silence-phones string " << silence_phones_str;
     if (this->silence_phones_.empty())
         KALDI_ERR << "No silence phones given!";
+
+    // KALDI_WARN << "DEBUG";
     return 0;
   } catch(const std::exception& e) {
     std::cerr << e.what();
@@ -295,6 +317,7 @@ int KaldiDecoderWrapper::ParseArgs(int argc, char ** argv) {
 
 bool KaldiDecoderWrapper::UtteranceEnded() {
   // FIXME I should detect probably this myself from the Dialog System
+  // KALDI_WARN << "DEBUG";
   return dstate_ & (decoder_->kEndFeats | decoder_->kEndUtt);
 }
 

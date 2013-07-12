@@ -160,19 +160,24 @@ bool OnlineVectorSource::Read(Vector<BaseFloat> *data, int32 timeout) {
 
 
 void OnlineBlockSource::Write(unsigned char * data, size_t data_size) {
+  // KALDI_WARN << "DEBUG";
   src_.insert(src_.end(), data, data + data_size);
+  // KALDI_WARN << "DEBUG";
 }
 
 bool OnlineBlockSource::Read(Vector<BaseFloat> *data, int32 timeout) {
-  // KALDI_ASSERT(data->Dim() > 0);
+  KALDI_ASSERT(data->Dim() > 0);
+  // KALDI_WARN << "DEBUG";
 
   // TODO check: static_cast<size_t> from data->Dim() works on all architectures
   size_t n = std::min(src_.size(), static_cast<size_t>(data->Dim()));
   for (size_t i = 0; i < n ; ++i) {
     (*data)(i) = src_[i];
   }
+  // KALDI_WARN << "DEBUG";
   // remove the already read elements
   std::vector<BaseFloat>(src_.begin() + n, src_.end()).swap(src_);
+  // KALDI_WARN << "DEBUG";
   return (src_.size() > 0);
 }
 
