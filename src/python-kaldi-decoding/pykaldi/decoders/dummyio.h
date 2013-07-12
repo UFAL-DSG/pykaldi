@@ -22,9 +22,9 @@ extern "C" {
 #endif
 
 typedef void (*return_answer_t)(double * prob, char **ans, size_t *size);
-typedef void (*frame_in_t)(unsigned char *str_frame, size_t size);
+typedef void (*frame_in_t)(char *dummydec, unsigned char *str_frame, size_t size);
 void return_answer(double * prob, char **ans, size_t *size);
-void frame_in(unsigned char *str_frame, size_t size);
+void frame_in(char *dummydec, unsigned char *str_frame, size_t size);
 
 #ifdef __cplusplus
 }

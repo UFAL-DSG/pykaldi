@@ -19,8 +19,9 @@ from kaldi_decoders import DummyDecoder, OnlineDecoder
 import unittest
 import audioop
 import wave
+import os
 # Just import this is a test ;-)
-from pykaldi.decoders import ffidec as ffi, libdec as lib
+from pykaldi.decoders import ffidummy, libdummy
 
 
 def teardown_pyaudio(p, stream):
@@ -74,32 +75,36 @@ def load_wav(file_name, def_sample_rate=16000):
 class TestOnlineDecoder(unittest.TestCase):
     def setUp(self):
         self.wav_path = 'test.wav'
-        # TODO fix arguments for online decoder
+        # TODO solve dependency on binutils/online-data
+        dir_path = os.path.realpath(os.path.dirname(__file__) + '/../binutils')
+        p = dir_path + '/online-data/models/tri2b_mmi'
         self.argv = [
-            '--rt-min=0.5', '--rt-max=0.7', '--max-active=4000', '--beam=12.0', '--acoustic-scale=0.0769', '~/50GBmax/kaldi/egs/voxforge/online_demo/online-data/models/tri2b_mmi/model', '~/50GBmax/kaldi/egs/voxforge/online_demo/online-data/models/tri2b_mmi/HCLG.fst',
-            '~/50GBmax/kaldi/egs/voxforge/online_demo/online-data/models/tri2b_mmi/words.txt', '1:2:3:4:5', '~/50GBmax/kaldi/egs/voxforge/online_demo/online-data/models/tri2b_mmi/matrix']
+            '--rt-min=0.5', '--rt-max=0.7', '--max-active=4000', '--beam=12.0',
+            '--acoustic-scale=0.0769', '%s/model' % p, '%s/HCLG.fst' % p,
+            '%s/words.txt' % p, '1:2:3:4:5', '%s/matrix' % p]
         self.samples_per_frame = 256
         self.pyaudio_loaded = False
         self.p, self.stream = setup_pyaudio(self.samples_per_frame)  # may throw Exception
         self.pyaudio_loaded = True
 
     def test_wav(self, decode_once=True, hyp_once=True):
-        with OnlineDecoder(self.argv) as d:
-            pcm = load_wav(self.wav_path)
-            play_len, frame_len = len(pcm), self.samples_per_frame
-            for i in range(play_len / frame_len):
-                frame = pcm[i * frame_len:(i + 1) * frame_len]
-                d.frame_in(frame)
-                if not decode_once:
-                    d.decode()
-                if not hyp_once:
-                    size, full_hyp = d.prepare_hyp()
-                    prop, hyp = d.get_hypothesis(size)
-                    print size, str(hyp)
-            d.decode()
-            size, full_hyp = d.prepare_hyp()
-            prop, hyp = d.get_hypothesis(size)
-            print size, str(hyp)
+        d = OnlineDecoder(self.argv)
+        pcm = load_wav(self.wav_path)
+        play_len, frame_len = len(pcm), self.samples_per_frame
+        for i in range(play_len / frame_len):
+            frame = pcm[i * frame_len:(i + 1) * frame_len]
+            d.frame_in(frame)
+            if not decode_once:
+                d.decode()
+            if not hyp_once:
+                size, full_hyp = d.prepare_hyp()
+                prop, hyp = d.get_hypothesis(size)
+                print 'TEST_WAV', size, str(hyp)
+        d.decode()
+        size, full_hyp = d.prepare_hyp()
+        prop, hyp = d.get_hypothesis(size)
+        print 'TEST_WAV', size, str(hyp)
+        d.close()
 
     def test_wav_decode_often(self):
         self.test_wav(decode_once=False)
@@ -111,18 +116,19 @@ class TestOnlineDecoder(unittest.TestCase):
         self.test_wav(decode_once=True, hyp_once=False)
 
     def test_live(self, duration=3):
-        with OnlineDecoder(self.argv) as d:
-            for i in xrange(duration * (16000 / self.samples_per_frame)):
-                frame = self.stream.read(self.samples_per_frame)
-                d.frame_in(frame)
-                d.decode()
-            size, full_hyp = d.prepare_hyp()
-            print 'Hypothesis is full %d' % full_hyp
-            prop, hyp = d.get_hypothesis(size)
-            print "probability: %d" % prop
-            self.assertEqual(prop, 1.0, 'Is probability measure implemented now?')
-            print 'Numpy word ids: %s' % str(hyp)
-            self.assertTrue(len(hyp) > 0, 'We should decode something if you speak!')
+        d = OnlineDecoder(self.argv)
+        for i in xrange(duration * (16000 / self.samples_per_frame)):
+            frame = self.stream.read(self.samples_per_frame)
+            d.frame_in(frame)
+            d.decode()
+        size, full_hyp = d.prepare_hyp()
+        print 'Hypothesis is full %d' % full_hyp
+        prop, hyp = d.get_hypothesis(size)
+        print "probability: %d" % prop
+        self.assertEqual(prop, 1.0, 'Is probability measure implemented now?')
+        print 'Numpy word ids: %s' % str(hyp)
+        self.assertTrue(len(hyp) > 0, 'We should decode something if you speak!')
+        d.close()
 
     def tearDown(self):
         if self.pyaudio_loaded:
@@ -138,32 +144,32 @@ class TestAudio(unittest.TestCase):
         pcm = load_wav(self.wav_path)
         play_len, frame_len = len(pcm), self.samples_per_frame
 
-        flp = lib.create_frame_list(2, frame_len)
+        flp = libdummy.create_frame_list(2, frame_len)
         keep_alive = []
         for i in range(play_len / frame_len):
             frame = pcm[i * frame_len:(i + 1) * frame_len]
             keep_alive.append(frame)
-            lib.add_frame_to_list(flp, frame)
-        handlep = lib.play_setup()
-        if handlep == ffi.NULL:
+            libdummy.add_frame_to_list(flp, frame)
+        handlep = libdummy.play_setup()
+        if handlep == ffidummy.NULL:
             raise OSError("Alsa not initialized")
         # using two chars for one sample of 16 bit audio is handled by play_list itself!
-        ret_code = lib.play_list(handlep, flp)
+        ret_code = libdummy.play_list(handlep, flp)
         self.assertEqual(
-            ret_code, 0, 'Function play from C library FAILED with exit status %s' % ret_code)
-        lib.play_tear_down(handlep)
-        lib.delete_frame_list(flp)
+            ret_code, 0, 'Function play from C libdummyrary FAILED with exit status %s' % ret_code)
+        libdummy.play_tear_down(handlep)
+        libdummy.delete_frame_list(flp)
 
     def test_play(self):
         pcm = load_wav(self.wav_path)
         play_len = len(pcm) / 2  # using two chars for one sample of 16 bit audio
-        handlep = lib.play_setup()
-        if handlep == ffi.NULL:
+        handlep = libdummy.play_setup()
+        if handlep == ffidummy.NULL:
             raise OSError("Alsa not initialized")
-        ret_code = lib.play(handlep, pcm, play_len)
+        ret_code = libdummy.play(handlep, pcm, play_len)
         self.assertEqual(
-            ret_code, 0, 'Function play from C library FAILED with exit status %s' % ret_code)
-        lib.play_tear_down(handlep)
+            ret_code, 0, 'Function play from C libdummyrary FAILED with exit status %s' % ret_code)
+        libdummy.play_tear_down(handlep)
 
 
 class TestDummyDecodder(unittest.TestCase):
@@ -188,25 +194,25 @@ class TestFrames(unittest.TestCase):
     def test_list(self):
         s = self.test_str
         # store strings of length 1
-        flp = lib.create_frame_list(2, 1)
+        flp = libdummy.create_frame_list(2, 1)
         for c in s:
             # pcm is stored like char array:  2 chars == one 16bit sample
-            lib.add_frame_to_list(flp, c)
+            libdummy.add_frame_to_list(flp, c)
 
         # C pointer magic: i is in range of (end_pointer - start_pointer)
-        start = lib.frame_list_start(flp)
-        for i in range(lib.frame_list_end(flp) - start):
+        start = libdummy.frame_list_start(flp)
+        for i in range(libdummy.frame_list_end(flp) - start):
             it = start + i
             # casting unsigned char** to char**
-            str_p = ffi.cast("char **", it)
-            # Dereferencing in cffi way p[0] instead of *p
-            c_str = ffi.string(str_p[0])
+            str_p = ffidummy.cast("char **", it)
+            # Dereferencing in cffidummy way p[0] instead of *p
+            c_str = ffidummy.string(str_p[0])
             python_str = s[i]
             self.assertEqual(c_str, python_str,
                              'Failed at %d th string: %s vs %s!'
                              % (i, c_str, python_str))
 
-        lib.delete_frame_list(flp)
+        libdummy.delete_frame_list(flp)
 
 
 if __name__ == '__main__':

@@ -34,7 +34,7 @@ kaldi_decoders_test.py:  kaldi_decoders.py $(LIBFILE) $(BIGLIB)
 
 
 test: $(LIBFILE) $(BIGLIB)
-	nosetests kaldi_decoders_test.py
+	nosetests -s kaldi_decoders_test.py  # -s let the output be printed
 
 clean:
 	rm -f $(OBJFILES) $(LIBFILE) $(BIGLIB) *.pyc test_frames.dat

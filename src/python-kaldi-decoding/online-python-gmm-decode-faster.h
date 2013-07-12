@@ -28,31 +28,31 @@
  *  C interface  *
  *****************/
 
-typedef void* CKaldiDecoderWrapper;
+typedef void CKaldiDecoderWrapper;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 // explicit constructor and destructor
-CKaldiDecoderWrapper new_KaldiDecoderWrapper(int argc, char **argv);
-void del_KaldiDecoderWrapper(CKaldiDecoderWrapper unallocate_pointer);
+CKaldiDecoderWrapper* new_KaldiDecoderWrapper(int argc, char **argv);
+void del_KaldiDecoderWrapper(CKaldiDecoderWrapper *d);
 
 // methods
-void Setup(CKaldiDecoderWrapper d, int argc, char **argv);
-void Reset(CKaldiDecoderWrapper d);
-void FrameIn(CKaldiDecoderWrapper d, unsigned char *frame, size_t frame_len);
-bool Decode(CKaldiDecoderWrapper d);
-size_t PrepareHypothesis(CKaldiDecoderWrapper d, int * is_full);
-void GetHypothesis(CKaldiDecoderWrapper d, int * word_ids, size_t size);
+void Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
+void Reset(CKaldiDecoderWrapper *d);
+void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len);
+bool Decode(CKaldiDecoderWrapper *d);
+size_t PrepareHypothesis(CKaldiDecoderWrapper *d, int * is_full);
+void GetHypothesis(CKaldiDecoderWrapper *d, int * word_ids, size_t size);
 
 // function types for loading functions from shared library
-typedef CKaldiDecoderWrapper (*CKDW_constructor_t)(int, char **);
-typedef void (*CKDW_void_t)(CKaldiDecoderWrapper);
-typedef void (*CKDW_setup_t)(CKaldiDecoderWrapper, int, char **);
-typedef void (*CKDW_frame_in_t)(CKaldiDecoderWrapper, unsigned char *, size_t);
-typedef size_t (*CKDW_prep_hyp_t)(CKaldiDecoderWrapper, int *);
-typedef void (*CKDW_get_hyp_t)(CKaldiDecoderWrapper, int *, size_t);
+typedef CKaldiDecoderWrapper* (*CKDW_constructor_t)(int, char **);
+typedef void (*CKDW_void_t)(CKaldiDecoderWrapper*);
+typedef void (*CKDW_setup_t)(CKaldiDecoderWrapper*, int, char **);
+typedef void (*CKDW_frame_in_t)(CKaldiDecoderWrapper*, unsigned char *, size_t);
+typedef size_t (*CKDW_prep_hyp_t)(CKaldiDecoderWrapper*, int *);
+typedef void (*CKDW_get_hyp_t)(CKaldiDecoderWrapper*, int *, size_t);
 
 
 #ifdef __cplusplus

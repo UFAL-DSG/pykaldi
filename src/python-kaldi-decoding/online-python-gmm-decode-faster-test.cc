@@ -76,8 +76,9 @@ int main(int argc, char **argv) {
   CKDW_get_hyp_t get_hyp = load_function<CKDW_get_hyp_t>("GetHypothesis", lib);
   if (!get_hyp) return 9;
 
+  // KALDI_WARN << "DEBUG";
   // use the loaded functions
-  CKaldiDecoderWrapper d = new_Decoder(argc, argv);
+  CKaldiDecoderWrapper *d = new_Decoder(argc, argv);
   // KALDI_WARN << "DEBUG";
   
   size_t test = 40;

@@ -28,32 +28,32 @@
  *  C interface  *
  *****************/
 // explicit constructor and destructor
-CKaldiDecoderWrapper new_KaldiDecoderWrapper(int argc, char **argv) {
-  return reinterpret_cast<CKaldiDecoderWrapper>(new kaldi::KaldiDecoderWrapper(argc, argv));
+CKaldiDecoderWrapper *new_KaldiDecoderWrapper(int argc, char **argv) {
+  return reinterpret_cast<CKaldiDecoderWrapper*>(new kaldi::KaldiDecoderWrapper(argc, argv));
 }
-void del_KaldiDecoderWrapper(CKaldiDecoderWrapper unallocate_pointer) {
+void del_KaldiDecoderWrapper(CKaldiDecoderWrapper* unallocate_pointer) {
   delete reinterpret_cast<kaldi::KaldiDecoderWrapper*>(unallocate_pointer);
 }
 
 // methods from C
-void Setup(CKaldiDecoderWrapper d, int argc, char **argv) {
+void Setup(CKaldiDecoderWrapper *d, int argc, char **argv) {
   reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Setup(argc, argv);
 } 
-void Reset(CKaldiDecoderWrapper d) {
+void Reset(CKaldiDecoderWrapper *d) {
   reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Reset();
 }
-void FrameIn(CKaldiDecoderWrapper d, unsigned char *frame, size_t frame_len) {
+void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len) {
   reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->FrameIn(frame, frame_len);
 }
-bool Decode(CKaldiDecoderWrapper d) {
+bool Decode(CKaldiDecoderWrapper *d) {
   return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Decode();
 }
-size_t PrepareHypothesis(CKaldiDecoderWrapper d, int * is_full) {
+size_t PrepareHypothesis(CKaldiDecoderWrapper *d, int * is_full) {
   kaldi::KaldiDecoderWrapper *dp = reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d);
   *is_full = dp->GetHypothesis();
   return dp->last_word_ids.size();
 }
-void GetHypothesis(CKaldiDecoderWrapper d, int * word_ids, size_t size) {
+void GetHypothesis(CKaldiDecoderWrapper *d, int * word_ids, size_t size) {
   kaldi::KaldiDecoderWrapper *dp = reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d);
   // KALDI_WARN << "DEBUG";
   for(size_t i = 0; i < size; ++i) {
@@ -69,11 +69,11 @@ void GetHypothesis(CKaldiDecoderWrapper d, int * word_ids, size_t size) {
 namespace kaldi {
 
 // /// Input sampling frequency is fixed to 16KHz
-KaldiDecoderWrapper::KaldiDecoderWrapper(int argc, char **argv):kSampleFreq_(16000) {
+KaldiDecoderWrapper::KaldiDecoderWrapper(int argc, char **argv):kSampleFreq_(16000) ,mfcc_(0) ,source_(0) ,fe_input_(0) ,cmn_input_(0) ,trans_model_(0) ,decode_fst_(0) ,decoder_(0) ,out_fst_(0) ,feat_transform_(0) ,feature_matrix_(0) ,decodable_(0) {
+  // KALDI_WARN << "DEBUG";
   Reset();
   // KALDI_WARN << "DEBUG";
   Setup(argc, argv);
-  // KALDI_WARN << "DEBUG";
 }
 
 
@@ -91,7 +91,6 @@ void KaldiDecoderWrapper::Reset() {
   delete decode_fst_;
   delete decoder_;
   delete out_fst_;
-  delete feature_matrix_;
   delete decodable_;
   silence_phones_.clear();
   last_word_ids.clear();
@@ -104,7 +103,6 @@ void KaldiDecoderWrapper::Reset() {
   decode_fst_ = 0;
   decoder_ = 0;
   out_fst_ = 0;
-  feat_transform_ = 0;
   feature_matrix_ = 0;
   decodable_ = 0;
 

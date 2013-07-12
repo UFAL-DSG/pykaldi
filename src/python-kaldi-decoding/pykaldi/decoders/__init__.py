@@ -42,7 +42,7 @@ def init_dummy():
     ffidummy = FFI()
     ffidummy.cdef('''
     void return_answer(double * prob, char **ans, size_t *size);
-    void frame_in(char *str_frame, size_t size);
+    void frame_in(char *dummydec, char *str_frame, size_t size);
 
     typedef ... snd_pcm_t;
     int play(snd_pcm_t *handle, unsigned char * buffer, size_t size);
@@ -75,15 +75,15 @@ def init_dec():
     ffidec.cdef('''
     typedef ... CKaldiDecoderWrapper;
 
-    CKaldiDecoderWrapper new_KaldiDecoderWrapper(int argc, char **argv);
-    void del_KaldiDecoderWrapper(CKaldiDecoderWrapper unallocate_pointer);
+    CKaldiDecoderWrapper* new_KaldiDecoderWrapper(int argc, char **argv);
+    void del_KaldiDecoderWrapper(CKaldiDecoderWrapper *d);
 
-    void Setup(CKaldiDecoderWrapper d, int argc, char **argv);
-    void Reset(CKaldiDecoderWrapper d);
-    void FrameIn(CKaldiDecoderWrapper d, unsigned char *frame, size_t frame_len);
-    bool Decode(CKaldiDecoderWrapper d);
-    size_t PrepareHypothesis(CKaldiDecoderWrapper d, int * is_full);
-    void GetHypothesis(CKaldiDecoderWrapper d, int * word_ids, size_t size);
+    void Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
+    void Reset(CKaldiDecoderWrapper *d);
+    void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len);
+    bool Decode(CKaldiDecoderWrapper *d);
+    size_t PrepareHypothesis(CKaldiDecoderWrapper *d, int * is_full);
+    void GetHypothesis(CKaldiDecoderWrapper *d, int * word_ids, size_t size);
     ''')
 
     dir_path = os.path.dirname(os.path.realpath(__file__))

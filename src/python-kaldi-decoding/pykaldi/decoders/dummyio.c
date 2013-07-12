@@ -31,7 +31,7 @@ void return_answer(double * prob, char **ans, size_t *size) {
     strcpy(*ans, tmp);
 }
 
-void frame_in(unsigned char *str_frame, size_t size) {
+void frame_in(char * dummydec, unsigned char *str_frame, size_t size) {
     FILE *fp;
 
     /* open the file for appending*/
