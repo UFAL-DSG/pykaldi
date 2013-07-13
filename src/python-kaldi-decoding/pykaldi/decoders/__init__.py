@@ -75,14 +75,14 @@ def init_dec():
     ffidec.cdef('''
     typedef ... CKaldiDecoderWrapper;
 
-    CKaldiDecoderWrapper* new_KaldiDecoderWrapper(int argc, char **argv);
+    CKaldiDecoderWrapper* new_KaldiDecoderWrapper();
     void del_KaldiDecoderWrapper(CKaldiDecoderWrapper *d);
 
-    void Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
+    int Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
     void Reset(CKaldiDecoderWrapper *d);
     void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len);
     bool Decode(CKaldiDecoderWrapper *d);
-    void InputFinished(CKaldiDecoderWrapper *d);
+    void FinishInput(CKaldiDecoderWrapper *d);
     size_t PrepareHypothesis(CKaldiDecoderWrapper *d, int * is_full);
     void GetHypothesis(CKaldiDecoderWrapper *d, int * word_ids, size_t size);
     ''')

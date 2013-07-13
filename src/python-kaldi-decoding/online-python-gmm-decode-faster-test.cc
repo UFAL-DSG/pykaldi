@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
   if (!frame_in) return 6;
   CKDW_decode_t decode = load_function<CKDW_decode_t>("Decode", lib);
   if (!decode) return 7;
-  CKDW_void_t input_finished = load_function<CKDW_void_t>("InputFinished", lib);
+  CKDW_void_t finish_input = load_function<CKDW_void_t>("FinishInput", lib);
   if (!input_finished) return 8;
   CKDW_prep_hyp_t prep_hyp = load_function<CKDW_prep_hyp_t>("PrepareHypothesis", lib);
   if (!prep_hyp) return 9;
@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
   }
 
   // tell the decoder that features input ended
-  input_finished(d);
+  finish_input(d);
 
   // decode() returns false if there are no more features for decoder
   while(decode(d)) {

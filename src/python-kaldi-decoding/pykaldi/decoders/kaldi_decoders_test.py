@@ -100,10 +100,11 @@ class TestOnlineDecoder(unittest.TestCase):
                 size, full_hyp = d.prepare_hyp()
                 prop, hyp = d.get_hypothesis(size)
                 print 'TEST_WAV', size, str(hyp)
-        d.decode()
-        size, full_hyp = d.prepare_hyp()
-        prop, hyp = d.get_hypothesis(size)
-        print 'TEST_WAV', size, str(hyp)
+        d.finish_input()
+        while d.decode():
+            size, full_hyp = d.prepare_hyp()
+            prop, hyp = d.get_hypothesis(size)
+            print 'TEST_WAV', size, str(hyp)
         d.close()
 
     def test_wav_decode_often(self):

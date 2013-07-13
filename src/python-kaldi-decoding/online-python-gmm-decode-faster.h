@@ -41,7 +41,7 @@ void del_KaldiDecoderWrapper(CKaldiDecoderWrapper *d);
 // methods
 int Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
 void Reset(CKaldiDecoderWrapper *d);
-void InputFinished(CKaldiDecoderWrapper *d);
+void FinishInput(CKaldiDecoderWrapper *d);
 void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len);
 bool Decode(CKaldiDecoderWrapper *d);
 size_t PrepareHypothesis(CKaldiDecoderWrapper *d, int * is_full);
@@ -86,7 +86,7 @@ class KaldiDecoderWrapper {
   void Reset(void);
   void FrameIn(unsigned char *frame, size_t frame_len);
   bool Decode(void);
-  void InputFinished();
+  void FinishInput();
   bool GetHypothesis();
   bool GetHypothesis(std::vector<int32> & word_ids);
   virtual ~KaldiDecoderWrapper();

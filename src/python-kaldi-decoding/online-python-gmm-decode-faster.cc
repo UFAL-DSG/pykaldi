@@ -48,8 +48,8 @@ void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len) {
 bool Decode(CKaldiDecoderWrapper *d) {
   return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Decode();
 }
-void InputFinished(CKaldiDecoderWrapper *d) {
-  reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->InputFinished();
+void FinishInput(CKaldiDecoderWrapper *d) {
+  reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->FinishInput();
 }
 size_t PrepareHypothesis(CKaldiDecoderWrapper *d, int * is_full) {
   kaldi::KaldiDecoderWrapper *dp = reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d);
@@ -87,6 +87,7 @@ void KaldiDecoderWrapper::Reset() {
   delete decoder_;
   delete decodable_;
   silence_phones_.clear();
+  word_syms_filename_.clear(); // FIXME remove it from options
   last_word_ids.clear();
 
   mfcc_ = 0;
@@ -207,7 +208,7 @@ bool KaldiDecoderWrapper::Decode(void) {
   return  state != OnlineFasterDecoder::kEndFeats;
 }
 
-void KaldiDecoderWrapper::InputFinished(void) {
+void KaldiDecoderWrapper::FinishInput(void) {
   source_->EndInput();
 }
 

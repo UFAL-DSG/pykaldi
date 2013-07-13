@@ -80,7 +80,8 @@ class OnlineDecoder(KaldiDecoder):
 
     def __enter__(self):
         argc, argp = len(self.argv), self.ffi.new("char *[]", self.argv)
-        dec_pointer = self.lib.new_KaldiDecoderWrapper(argc, argp)
+        dec_pointer = self.lib.new_KaldiDecoderWrapper()
+        self.lib.Setup(dec_pointer, argc, argp)
         return dec_pointer
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -92,11 +93,15 @@ class OnlineDecoder(KaldiDecoder):
     def frame_in(self, frame_str):
         self.lib.FrameIn(self.dec, frame_str, len(frame_str))
 
+    def finish_input(self):
+        """Tell the decoder that no more input is coming """
+        return self.lib.FinishInput(self.dec)
+
     def decode(self):
-        """Ask the dec to process the buffered data.
+        """Ask the decoder to process the buffered data.
         Does not return any output.
         """
-        self.lib.Decode(self.dec)
+        return self.lib.Decode(self.dec)
 
     def prepare_hyp(self):
         full_hyp_p = self.ffi.new("int *")
