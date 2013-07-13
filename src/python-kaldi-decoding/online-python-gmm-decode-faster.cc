@@ -211,8 +211,8 @@ void KaldiDecoderWrapper::FrameIn(unsigned char *frame, size_t frame_len) {
 
 bool KaldiDecoderWrapper::Decode(void) {
   dstate_ = decoder_->Decode(decodable_);
-  KALDI_WARN << "DEBUG";
-  return dstate_ == decoder_->kEndFeats;
+  // KALDI_WARN << "DEBUG";
+  return decoder_->state() != decoder_->kEndFeats;
 }
 
 void KaldiDecoderWrapper::InputFinished(void) {
@@ -321,7 +321,7 @@ int KaldiDecoderWrapper::ParseArgs(int argc, char ** argv) {
 bool KaldiDecoderWrapper::UtteranceEnded() {
   // FIXME I should detect probably this myself from the Dialog System
   // KALDI_WARN << "DEBUG";
-  return dstate_ & (decoder_->kEndFeats | decoder_->kEndUtt);
+  return decoder_->state() & (decoder_->kEndFeats | decoder_->kEndUtt);
 }
 
 } // namespace kaldi

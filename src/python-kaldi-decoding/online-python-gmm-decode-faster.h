@@ -99,7 +99,6 @@ class KaldiDecoderWrapper {
 
   bool resetted_;
   bool ready_;
-  OnlineFasterDecoder::DecodeState dstate_;
 
   const int32 kSampleFreq_;
   BaseFloat acoustic_scale_;

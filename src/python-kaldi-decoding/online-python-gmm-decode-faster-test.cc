@@ -26,10 +26,7 @@ int main(int argc, char **argv);
 void printHyp(int *word_ids, size_t num_words, int full);
 
 
-
-
 int main(int argc, char **argv) {
-
   // open the library
   char nameLib[] = "libpykaldi.so";
   void *lib = dlopen(nameLib, RTLD_NOW);
@@ -140,4 +137,5 @@ void fill_frame(unsigned char *frame, size_t size) {
     // TODO something better
     frame[i] = random() & 0xff;
   }
+  frame[0] = 0x06; // DEBUG
 }

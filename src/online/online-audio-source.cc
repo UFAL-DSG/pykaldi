@@ -164,13 +164,14 @@ bool OnlineVectorSource::Read(Vector<BaseFloat> *data, int32 timeout) {
 
 
 void OnlineBlockSource::Write(unsigned char * data, size_t data_size) {
-  KALDI_WARN << "DEBUG frame_in len" << data_size;
+  // KALDI_WARN << "DEBUG frame_in len" << data_size;
   src_.insert(src_.end(), data, data + data_size);
   // std::copy(src_.begin(), src_.end(), std::ostream_iterator<BaseFloat>(KALDI_WARN, " ")); // DEBUG
 }
 
 /// Return true if some still data available after Reading
 bool OnlineBlockSource::Read(Vector<BaseFloat> *data, int32 timeout) {
+  // FIXME implement timeout!
   KALDI_ASSERT(data->Dim() > 0);
   KALDI_WARN << "Requested: " << data->Dim(); // DEBUG
 
