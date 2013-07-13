@@ -41,6 +41,7 @@ void del_KaldiDecoderWrapper(CKaldiDecoderWrapper *d);
 // methods
 void Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
 void Reset(CKaldiDecoderWrapper *d);
+void InputFinished(CKaldiDecoderWrapper *d);
 void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len);
 bool Decode(CKaldiDecoderWrapper *d);
 size_t PrepareHypothesis(CKaldiDecoderWrapper *d, int * is_full);
@@ -49,6 +50,7 @@ void GetHypothesis(CKaldiDecoderWrapper *d, int * word_ids, size_t size);
 // function types for loading functions from shared library
 typedef CKaldiDecoderWrapper* (*CKDW_constructor_t)(int, char **);
 typedef void (*CKDW_void_t)(CKaldiDecoderWrapper*);
+typedef bool (*CKDW_decode_t)(CKaldiDecoderWrapper*);
 typedef void (*CKDW_setup_t)(CKaldiDecoderWrapper*, int, char **);
 typedef void (*CKDW_frame_in_t)(CKaldiDecoderWrapper*, unsigned char *, size_t);
 typedef size_t (*CKDW_prep_hyp_t)(CKaldiDecoderWrapper*, int *);
@@ -84,6 +86,7 @@ class KaldiDecoderWrapper {
   void Reset(void);
   void FrameIn(unsigned char *frame, size_t frame_len);
   bool Decode(void);
+  void InputFinished();
   bool GetHypothesis();
   bool GetHypothesis(std::vector<int32> & word_ids);
   virtual ~KaldiDecoderWrapper();
@@ -124,7 +127,6 @@ class KaldiDecoderWrapper {
   // I need to handle start (and end of utterance) of utterance myself!
   // OnlineFasterDecoder.Reset should be called mostly by KaldiDecoderWrapper 
   OnlineFasterDecoder *decoder_;
-  fst::VectorFst<LatticeArc> *out_fst_;
   OnlineFeatInputItf *feat_transform_;
   OnlineFeatureMatrix *feature_matrix_;
   OnlineDecodableDiagGmmScaled *decodable_;

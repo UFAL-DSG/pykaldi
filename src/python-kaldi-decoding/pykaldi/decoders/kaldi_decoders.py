@@ -74,6 +74,7 @@ class OnlineDecoder(KaldiDecoder):
         KaldiDecoder.__init__(self, **kwargs)
         self.lib, self.ffi = libdec, ffidec
         # necessary to keep it alive long enough -> member field-> ok
+        argv.insert(0, 'OnlineDecoder')  # set name of the "program"
         self.argv = [self.ffi.new("char[]", arg) for arg in argv]
         self.dec = self.__enter__()
 

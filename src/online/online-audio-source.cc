@@ -19,6 +19,8 @@
 // limitations under the License.
 
 #include <cmath>
+#include <algorithm> // DEBUGGING for copy
+#include <iterator> // DEBUGGING for ostream_iterator
 
 #include "util/timer.h"
 #include "online-audio-source.h"
@@ -116,6 +118,7 @@ bool OnlinePaSource::Read(Vector<BaseFloat> *data, int32 timeout) {
                << "; Received: " << nsamples_rcv << " samples";
     // This would be a PortAudio error.
   }
+  KALDI_WARN << "Requested: " << nsamples_req << "; Received: " << nsamples_rcv << " samples"; // DEBUG
   data->Resize(nsamples_rcv);
   for (int i = 0; i < nsamples_rcv; ++i)
     (*data)(i) = static_cast<BaseFloat>(buf[i]);
@@ -143,6 +146,7 @@ int OnlinePaSource::Callback(const void *input, void *output,
 
 
 bool OnlineVectorSource::Read(Vector<BaseFloat> *data, int32 timeout) {
+  KALDI_WARN << "Requested: " << data->Dim(); // DEBUG
   KALDI_ASSERT(data->Dim() > 0);
   int32 n_elem = std::min(src_.Dim() - pos_,
                           static_cast<uint32>(data->Dim()));
@@ -160,25 +164,31 @@ bool OnlineVectorSource::Read(Vector<BaseFloat> *data, int32 timeout) {
 
 
 void OnlineBlockSource::Write(unsigned char * data, size_t data_size) {
-  // KALDI_WARN << "DEBUG";
+  KALDI_WARN << "DEBUG frame_in len" << data_size;
   src_.insert(src_.end(), data, data + data_size);
-  // KALDI_WARN << "DEBUG";
+  // std::copy(src_.begin(), src_.end(), std::ostream_iterator<BaseFloat>(KALDI_WARN, " ")); // DEBUG
 }
 
+/// Return true if some still data available after Reading
 bool OnlineBlockSource::Read(Vector<BaseFloat> *data, int32 timeout) {
   KALDI_ASSERT(data->Dim() > 0);
-  // KALDI_WARN << "DEBUG";
+  KALDI_WARN << "Requested: " << data->Dim(); // DEBUG
 
   // TODO check: static_cast<size_t> from data->Dim() works on all architectures
   size_t n = std::min(src_.size(), static_cast<size_t>(data->Dim()));
+  KALDI_WARN << "DEBUG size before remove: "  << n;
+  KALDI_WARN << "DEBUG outgoing data Dim(): "  << data->Dim();
   for (size_t i = 0; i < n ; ++i) {
     (*data)(i) = src_[i];
   }
-  // KALDI_WARN << "DEBUG";
   // remove the already read elements
   std::vector<BaseFloat>(src_.begin() + n, src_.end()).swap(src_);
-  // KALDI_WARN << "DEBUG";
-  return (src_.size() > 0);
+  KALDI_WARN << "DEBUG size after remove: "  << src_.size();
+  return ((!no_more_input_) || (src_.size() > 0));
+}
+
+void OnlineBlockSource::EndInput() {
+  this->no_more_input_ = true;
 }
 
 } // namespace kaldi

@@ -82,6 +82,7 @@ def init_dec():
     void Reset(CKaldiDecoderWrapper *d);
     void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len);
     bool Decode(CKaldiDecoderWrapper *d);
+    void InputFinished(CKaldiDecoderWrapper *d);
     size_t PrepareHypothesis(CKaldiDecoderWrapper *d, int * is_full);
     void GetHypothesis(CKaldiDecoderWrapper *d, int * word_ids, size_t size);
     ''')

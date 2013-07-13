@@ -129,13 +129,13 @@ class OnlineVectorSource {
  * It expects to be fed with the audio frame by frame. */
 class OnlineBlockSource {
  public:
-  OnlineBlockSource(void) { 
-    // KALDI_WARN << "DEBUG"; 
-  }
+  OnlineBlockSource(void):no_more_input_(false) { }
   bool Read(Vector<BaseFloat> *data, int32 timeout);
   void Write(unsigned char *data, size_t data_size);
+  void EndInput(void);
 
  private:
+  bool no_more_input_;
   std::vector<BaseFloat> src_;
   KALDI_DISALLOW_COPY_AND_ASSIGN(OnlineBlockSource);
 };

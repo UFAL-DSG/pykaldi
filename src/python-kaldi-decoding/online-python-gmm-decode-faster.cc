@@ -48,6 +48,9 @@ void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len) {
 bool Decode(CKaldiDecoderWrapper *d) {
   return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Decode();
 }
+void InputFinished(CKaldiDecoderWrapper *d) {
+  reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->InputFinished();
+}
 size_t PrepareHypothesis(CKaldiDecoderWrapper *d, int * is_full) {
   kaldi::KaldiDecoderWrapper *dp = reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d);
   *is_full = dp->GetHypothesis();
@@ -69,7 +72,7 @@ void GetHypothesis(CKaldiDecoderWrapper *d, int * word_ids, size_t size) {
 namespace kaldi {
 
 // /// Input sampling frequency is fixed to 16KHz
-KaldiDecoderWrapper::KaldiDecoderWrapper(int argc, char **argv):kSampleFreq_(16000) ,mfcc_(0) ,source_(0) ,fe_input_(0) ,cmn_input_(0) ,trans_model_(0) ,decode_fst_(0) ,decoder_(0) ,out_fst_(0) ,feat_transform_(0) ,feature_matrix_(0) ,decodable_(0) {
+KaldiDecoderWrapper::KaldiDecoderWrapper(int argc, char **argv):kSampleFreq_(16000) ,mfcc_(0) ,source_(0) ,fe_input_(0) ,cmn_input_(0) ,trans_model_(0) ,decode_fst_(0) ,decoder_(0) ,feat_transform_(0) ,feature_matrix_(0) ,decodable_(0) {
   // KALDI_WARN << "DEBUG";
   Reset();
   // KALDI_WARN << "DEBUG";
@@ -90,7 +93,6 @@ void KaldiDecoderWrapper::Reset() {
   delete trans_model_;
   delete decode_fst_;
   delete decoder_;
-  delete out_fst_;
   delete decodable_;
   silence_phones_.clear();
   last_word_ids.clear();
@@ -102,7 +104,6 @@ void KaldiDecoderWrapper::Reset() {
   trans_model_ = 0;
   decode_fst_ = 0;
   decoder_ = 0;
-  out_fst_ = 0;
   feature_matrix_ = 0;
   decodable_ = 0;
 
@@ -159,11 +160,11 @@ void KaldiDecoderWrapper::Setup(int argc, char **argv) {
     int32 frame_shift = mfcc_opts.frame_opts.frame_shift_ms = 10;
     mfcc_ = new Mfcc(mfcc_opts);
 
-    // KALDI_WARN << "DEBUG";
+    KALDI_WARN << "DEBUG";
     fe_input_ = new BlockFeatInput (source_, mfcc_,
                                frame_length * (kSampleFreq_ / 1000),
                                frame_shift * (kSampleFreq_ / 1000));
-    // KALDI_WARN << "DEBUG";
+    KALDI_WARN << "DEBUG";
     cmn_input_ = new OnlineCmnInput(fe_input_, cmn_window_, min_cmn_window_);
 
     // KALDI_WARN << "DEBUG";
@@ -192,13 +193,12 @@ void KaldiDecoderWrapper::Setup(int argc, char **argv) {
     // feature_reading_opts_ contains timeout, batch size.
     feature_matrix_ = new OnlineFeatureMatrix(feature_reading_opts_,
                                        feat_transform_);
+    KALDI_WARN << "DEBUG";
     decodable_ = new OnlineDecodableDiagGmmScaled(am_gmm_, 
                                             *trans_model_, 
                                             acoustic_scale_, feature_matrix_);
-    out_fst_ = new fst::VectorFst<LatticeArc>();
-
     resetted_ = false; ready_ = true;
-    // KALDI_WARN << "DEBUG";
+    KALDI_WARN << "DEBUG";
   } catch(const std::exception& e) {
     std::cerr << e.what();
     throw e;
@@ -207,14 +207,16 @@ void KaldiDecoderWrapper::Setup(int argc, char **argv) {
 
 void KaldiDecoderWrapper::FrameIn(unsigned char *frame, size_t frame_len) {
   source_->Write(frame, frame_len);
-  // KALDI_WARN << "DEBUG";
 }
 
 bool KaldiDecoderWrapper::Decode(void) {
   dstate_ = decoder_->Decode(decodable_);
-  // KALDI_WARN << "DEBUG";
-  // FIXME I should detect probably this myself
-  return UtteranceEnded();
+  KALDI_WARN << "DEBUG";
+  return dstate_ == decoder_->kEndFeats;
+}
+
+void KaldiDecoderWrapper::InputFinished(void) {
+  source_->EndInput();
 }
 
 /// Return bool: True for full hypothesis, False for partial. 
@@ -222,19 +224,20 @@ bool KaldiDecoderWrapper::Decode(void) {
 /// Throw away previously decoded buffered hypothesis.
 bool KaldiDecoderWrapper::GetHypothesis() {
   last_word_ids.clear();
+  fst::VectorFst<LatticeArc> out_fst;
   // KALDI_WARN << "DEBUG";
   if (UtteranceEnded()) {
     // get the last chunk
-    decoder_->FinishTraceBack(out_fst_);
-    fst::GetLinearSymbolSequence(*out_fst_,
+    decoder_->FinishTraceBack(&out_fst);
+    fst::GetLinearSymbolSequence(out_fst,
                                  static_cast<vector<int32> *>(0),
                                  &this->last_word_ids,
                                  static_cast<LatticeArc::Weight*>(0));
     // KALDI_WARN << "DEBUG";
   } else {
     // get the hypothesis from currently active state
-    if (decoder_->PartialTraceback(out_fst_)) {
-      fst::GetLinearSymbolSequence(*out_fst_,
+    if (decoder_->PartialTraceback(&out_fst)) {
+      fst::GetLinearSymbolSequence(out_fst,
                                    static_cast<vector<int32> *>(0),
                                    &this->last_word_ids,
                                    static_cast<LatticeArc::Weight*>(0));
@@ -242,6 +245,8 @@ bool KaldiDecoderWrapper::GetHypothesis() {
     }
     // KALDI_WARN << "DEBUG";
   }
+  std::copy(this->last_word_ids.begin(), this->last_word_ids.end(), 
+                  std::ostream_iterator<char>(KALDI_WARN, " ")); // DEBUG
   // empty hypothesis is full hypothesis (not partial one)
   return (UtteranceEnded() || last_word_ids.size() == 0) ;
 } 
