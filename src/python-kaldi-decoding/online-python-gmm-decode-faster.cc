@@ -28,16 +28,16 @@
  *  C interface  *
  *****************/
 // explicit constructor and destructor
-CKaldiDecoderWrapper *new_KaldiDecoderWrapper(int argc, char **argv) {
-  return reinterpret_cast<CKaldiDecoderWrapper*>(new kaldi::KaldiDecoderWrapper(argc, argv));
+CKaldiDecoderWrapper *new_KaldiDecoderWrapper() {
+  return reinterpret_cast<CKaldiDecoderWrapper*>(new kaldi::KaldiDecoderWrapper());
 }
 void del_KaldiDecoderWrapper(CKaldiDecoderWrapper* unallocate_pointer) {
   delete reinterpret_cast<kaldi::KaldiDecoderWrapper*>(unallocate_pointer);
 }
 
 // methods from C
-void Setup(CKaldiDecoderWrapper *d, int argc, char **argv) {
-  reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Setup(argc, argv);
+int Setup(CKaldiDecoderWrapper *d, int argc, char **argv) {
+  return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Setup(argc, argv);
 } 
 void Reset(CKaldiDecoderWrapper *d) {
   reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Reset();
@@ -70,14 +70,6 @@ void GetHypothesis(CKaldiDecoderWrapper *d, int * word_ids, size_t size) {
  *******************/
 
 namespace kaldi {
-
-// /// Input sampling frequency is fixed to 16KHz
-KaldiDecoderWrapper::KaldiDecoderWrapper(int argc, char **argv):kSampleFreq_(16000) ,mfcc_(0) ,source_(0) ,fe_input_(0) ,cmn_input_(0) ,trans_model_(0) ,decode_fst_(0) ,decoder_(0) ,feat_transform_(0) ,feature_matrix_(0) ,decodable_(0) {
-  // KALDI_WARN << "DEBUG";
-  Reset();
-  // KALDI_WARN << "DEBUG";
-  Setup(argc, argv);
-}
 
 
 KaldiDecoderWrapper::~KaldiDecoderWrapper() {
@@ -126,12 +118,13 @@ void KaldiDecoderWrapper::Reset() {
   // KALDI_WARN << "DEBUG";
 } // Reset ()
 
-void KaldiDecoderWrapper::Setup(int argc, char **argv) {
+int KaldiDecoderWrapper::Setup(int argc, char **argv) {
   ready_ = false; resetted_ = false;
   try {
     // KALDI_WARN << "DEBUG";
     if (ParseArgs(argc, argv) != 0) {
-      Reset(); return;
+      Reset(); 
+      return 1;
     }
     // KALDI_WARN << "DEBUG";
 
@@ -193,15 +186,15 @@ void KaldiDecoderWrapper::Setup(int argc, char **argv) {
     // feature_reading_opts_ contains timeout, batch size.
     feature_matrix_ = new OnlineFeatureMatrix(feature_reading_opts_,
                                        feat_transform_);
-    KALDI_WARN << "DEBUG";
     decodable_ = new OnlineDecodableDiagGmmScaled(am_gmm_, 
                                             *trans_model_, 
                                             acoustic_scale_, feature_matrix_);
     resetted_ = false; ready_ = true;
-    KALDI_WARN << "DEBUG";
+    return 0;
   } catch(const std::exception& e) {
     std::cerr << e.what();
-    throw e;
+    Reset();
+    return 2;
   }
 } // KaldiDecoderWrapper::Setup()
 
@@ -210,9 +203,9 @@ void KaldiDecoderWrapper::FrameIn(unsigned char *frame, size_t frame_len) {
 }
 
 bool KaldiDecoderWrapper::Decode(void) {
-  dstate_ = decoder_->Decode(decodable_);
+  OnlineFasterDecoder::DecodeState state = decoder_->Decode(decodable_);
   // KALDI_WARN << "DEBUG";
-  return decoder_->state() != decoder_->kEndFeats;
+  return  state != OnlineFasterDecoder::kEndFeats;
 }
 
 void KaldiDecoderWrapper::InputFinished(void) {
@@ -261,8 +254,7 @@ bool KaldiDecoderWrapper::GetHypothesis(std::vector<int32> & word_ids) {
 int KaldiDecoderWrapper::ParseArgs(int argc, char ** argv) {
   try {
 
-    ParseOptions po("ParseOptions for Decoder "
-      "works like command line options!)\n\n"
+    ParseOptions po(
       "Utterance segmentation is done on-the-fly.\n"
       "Feature splicing/LDA transform is used, if the optional(last) " 
       "argument is given.\n"
@@ -321,7 +313,8 @@ int KaldiDecoderWrapper::ParseArgs(int argc, char ** argv) {
 bool KaldiDecoderWrapper::UtteranceEnded() {
   // FIXME I should detect probably this myself from the Dialog System
   // KALDI_WARN << "DEBUG";
-  return decoder_->state() & (decoder_->kEndFeats | decoder_->kEndUtt);
+  return decoder_->state() & (OnlineFasterDecoder::kEndFeats | 
+      OnlineFasterDecoder::kEndUtt);
 }
 
 } // namespace kaldi

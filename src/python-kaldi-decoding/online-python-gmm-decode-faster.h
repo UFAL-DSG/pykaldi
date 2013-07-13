@@ -35,11 +35,11 @@ extern "C" {
 #endif
 
 // explicit constructor and destructor
-CKaldiDecoderWrapper* new_KaldiDecoderWrapper(int argc, char **argv);
+CKaldiDecoderWrapper* new_KaldiDecoderWrapper();
 void del_KaldiDecoderWrapper(CKaldiDecoderWrapper *d);
 
 // methods
-void Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
+int Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
 void Reset(CKaldiDecoderWrapper *d);
 void InputFinished(CKaldiDecoderWrapper *d);
 void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len);
@@ -48,10 +48,10 @@ size_t PrepareHypothesis(CKaldiDecoderWrapper *d, int * is_full);
 void GetHypothesis(CKaldiDecoderWrapper *d, int * word_ids, size_t size);
 
 // function types for loading functions from shared library
-typedef CKaldiDecoderWrapper* (*CKDW_constructor_t)(int, char **);
+typedef CKaldiDecoderWrapper* (*CKDW_constructor_t)(void);
 typedef void (*CKDW_void_t)(CKaldiDecoderWrapper*);
 typedef bool (*CKDW_decode_t)(CKaldiDecoderWrapper*);
-typedef void (*CKDW_setup_t)(CKaldiDecoderWrapper*, int, char **);
+typedef int (*CKDW_setup_t)(CKaldiDecoderWrapper*, int, char **);
 typedef void (*CKDW_frame_in_t)(CKaldiDecoderWrapper*, unsigned char *, size_t);
 typedef size_t (*CKDW_prep_hyp_t)(CKaldiDecoderWrapper*, int *);
 typedef void (*CKDW_get_hyp_t)(CKaldiDecoderWrapper*, int *, size_t);
@@ -80,9 +80,9 @@ typedef OnlineFeInput<OnlineBlockSource, Mfcc> BlockFeatInput;
  *  It is absolutelly thread unsafe! */
 class KaldiDecoderWrapper {
  public:
-  // methods designed also for calls from C
-  KaldiDecoderWrapper(int argc, char **argv);  
-  void Setup(int argc, char **argv);
+  /// Input sampling frequency is fixed to 16KHz
+  KaldiDecoderWrapper():kSampleFreq_(16000) ,mfcc_(0) ,source_(0) ,fe_input_(0) ,cmn_input_(0) ,trans_model_(0) ,decode_fst_(0) ,decoder_(0) ,feat_transform_(0) ,feature_matrix_(0) ,decodable_(0) { }
+  int Setup(int argc, char **argv);
   void Reset(void);
   void FrameIn(unsigned char *frame, size_t frame_len);
   bool Decode(void);
@@ -99,6 +99,7 @@ class KaldiDecoderWrapper {
 
   bool resetted_;
   bool ready_;
+  
 
   const int32 kSampleFreq_;
   BaseFloat acoustic_scale_;
