@@ -3,6 +3,7 @@
 all:
 
 EXTRA_CXXFLAGS = -Wno-sign-compare -I ../../tools/portaudio/install/include # -pedantic
+EXTRA_CXXFLAGS += -ggdb -O0  # for gdb debugging
 EXTRA_LDLIBS =
 
 include ../kaldi.mk
