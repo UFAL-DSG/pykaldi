@@ -81,7 +81,7 @@ typedef OnlineFeInput<OnlineBlockSource, Mfcc> BlockFeatInput;
 class KaldiDecoderWrapper {
  public:
   /// Input sampling frequency is fixed to 16KHz
-  KaldiDecoderWrapper():kSampleFreq_(16000) ,mfcc_(0) ,source_(0) ,fe_input_(0) ,cmn_input_(0) ,trans_model_(0) ,decode_fst_(0) ,decoder_(0) ,feat_transform_(0) ,feature_matrix_(0) ,decodable_(0) { }
+  KaldiDecoderWrapper():kSampleFreq_(16000) ,mfcc_(0) ,source_(0) ,fe_input_(0) ,cmn_input_(0) ,trans_model_(0) ,decode_fst_(0) ,decoder_(0) ,feat_transform_(0) ,feature_matrix_(0) ,decodable_(0) { Reset(); }
   int Setup(int argc, char **argv);
   void Reset(void);
   void FrameIn(unsigned char *frame, size_t frame_len);
@@ -113,7 +113,7 @@ class KaldiDecoderWrapper {
   DeltaFeaturesOptions delta_feat_opts_;
   std::string model_rxfilename_;
   std::string fst_rxfilename_;
-  std::string word_syms_filename_;
+  std::string word_syms_filename_; // FIXME remove it from po options
   std::string lda_mat_rspecifier_;
 
 
@@ -132,6 +132,7 @@ class KaldiDecoderWrapper {
   OnlineDecodableDiagGmmScaled *decodable_;
   std::vector<int32> silence_phones_;
   AmDiagGmm am_gmm_;
+  fst::VectorFst<LatticeArc> out_fst_;  // FIXME try it local
 
   KALDI_DISALLOW_COPY_AND_ASSIGN(KaldiDecoderWrapper);
 };

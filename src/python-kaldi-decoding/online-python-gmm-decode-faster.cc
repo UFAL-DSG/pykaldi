@@ -111,7 +111,6 @@ void KaldiDecoderWrapper::Reset() {
   feature_reading_opts_ = OnlineFeatureMatrixOptions();
   model_rxfilename_.clear();
   fst_rxfilename_.clear();
-  word_syms_filename_.clear();
   lda_mat_rspecifier_.clear();
 
   resetted_ = true; ready_ = false;
@@ -217,29 +216,24 @@ void KaldiDecoderWrapper::InputFinished(void) {
 /// Throw away previously decoded buffered hypothesis.
 bool KaldiDecoderWrapper::GetHypothesis() {
   last_word_ids.clear();
-  fst::VectorFst<LatticeArc> out_fst;
-  // KALDI_WARN << "DEBUG";
+  // fst::VectorFst<LatticeArc> out_fst;  // FIXME try it local
   if (UtteranceEnded()) {
     // get the last chunk
-    decoder_->FinishTraceBack(&out_fst);
-    fst::GetLinearSymbolSequence(out_fst,
+    decoder_->FinishTraceBack(&out_fst_);
+    fst::GetLinearSymbolSequence(out_fst_,
                                  static_cast<vector<int32> *>(0),
-                                 &this->last_word_ids,
+                                 &last_word_ids,
                                  static_cast<LatticeArc::Weight*>(0));
-    // KALDI_WARN << "DEBUG";
   } else {
     // get the hypothesis from currently active state
-    if (decoder_->PartialTraceback(&out_fst)) {
-      fst::GetLinearSymbolSequence(out_fst,
+    if (decoder_->PartialTraceback(&out_fst_)) {
+      fst::GetLinearSymbolSequence(out_fst_,
                                    static_cast<vector<int32> *>(0),
-                                   &this->last_word_ids,
+                                   &last_word_ids,
                                    static_cast<LatticeArc::Weight*>(0));
-      // KALDI_WARN << "DEBUG";
     }
-    // KALDI_WARN << "DEBUG";
   }
-  std::copy(this->last_word_ids.begin(), this->last_word_ids.end(), 
-                  std::ostream_iterator<char>(KALDI_WARN, " ")); // DEBUG
+  // std::copy(last_word_ids.begin(), last_word_ids.end(), std::ostream_iterator<char>(KALDI_WARN, " ")); // DEBUG
   // empty hypothesis is full hypothesis (not partial one)
   return (UtteranceEnded() || last_word_ids.size() == 0) ;
 } 
@@ -254,8 +248,7 @@ bool KaldiDecoderWrapper::GetHypothesis(std::vector<int32> & word_ids) {
 int KaldiDecoderWrapper::ParseArgs(int argc, char ** argv) {
   try {
 
-    ParseOptions po(
-      "Utterance segmentation is done on-the-fly.\n"
+    ParseOptions po("Utterance segmentation is done on-the-fly.\n"
       "Feature splicing/LDA transform is used, if the optional(last) " 
       "argument is given.\n"
       "Otherwise delta/delta-delta(2-nd order) features are produced.\n\n"
