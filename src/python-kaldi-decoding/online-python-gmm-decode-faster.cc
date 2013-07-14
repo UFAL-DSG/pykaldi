@@ -126,7 +126,6 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
       Reset(); 
       return 1;
     }
-    // KALDI_WARN << "DEBUG";
 
     trans_model_ = new TransitionModel();
     {
@@ -232,8 +231,11 @@ bool KaldiDecoderWrapper::GetHypothesis() {
                                  &last_word_ids,
                                  static_cast<LatticeArc::Weight*>(0));
     // TODO DEBUG
-    std::copy(last_word_ids.begin(), last_word_ids.end(), std::ostream_iterator<int32>(KALDI_WARN, " "));
-    std::copy(tids.begin(), tids.end(), std::ostream_iterator<int32>(KALDI_WARN, " "));
+    std::stringstream res_key;
+    res_key << "test.wav_" << "<?>" << '-' << decoder_->frame();
+    if (!last_word_ids.empty())
+      words_writer_.Write(res_key.str(), last_word_ids);
+    alignment_writer_.Write(res_key.str(), tids);
   } else {
     // get the hypothesis from currently active state
     if (decoder_->PartialTraceback(&out_fst_)) {

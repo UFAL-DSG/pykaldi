@@ -81,7 +81,7 @@ typedef OnlineFeInput<OnlineBlockSource, Mfcc> BlockFeatInput;
 class KaldiDecoderWrapper {
  public:
   /// Input sampling frequency is fixed to 16KHz
-  KaldiDecoderWrapper():kSampleFreq_(16000) ,mfcc_(0) ,source_(0) ,fe_input_(0) ,cmn_input_(0) ,trans_model_(0) ,decode_fst_(0) ,decoder_(0) ,feat_transform_(0) ,feature_matrix_(0) ,decodable_(0) { Reset(); }
+  KaldiDecoderWrapper():kSampleFreq_(16000) ,mfcc_(0) ,source_(0) ,fe_input_(0) ,cmn_input_(0) ,trans_model_(0) ,decode_fst_(0) ,decoder_(0) ,feat_transform_(0) ,feature_matrix_(0) ,decodable_(0), words_writer_("ark,t:/home/ondra/school/diplomka/kaldi/src/python-kaldi-decoding/DEBUG_word_ids.txt"), alignment_writer_("ark,t:/home/ondra/school/diplomka/kaldi/src/python-kaldi-decoding/DEBUG_align_ids.txt") { Reset(); }
   int Setup(int argc, char **argv);
   void Reset(void);
   void FrameIn(unsigned char *frame, size_t frame_len);
@@ -100,6 +100,9 @@ class KaldiDecoderWrapper {
   bool resetted_;
   bool ready_;
   
+  // FIXME DEBUG only
+  Int32VectorWriter words_writer_;
+  Int32VectorWriter alignment_writer_;
 
   const int32 kSampleFreq_;
   BaseFloat acoustic_scale_;

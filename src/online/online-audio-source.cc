@@ -146,7 +146,7 @@ int OnlinePaSource::Callback(const void *input, void *output,
 
 
 bool OnlineVectorSource::Read(Vector<BaseFloat> *data, int32 timeout) {
-  KALDI_WARN << "Requested: " << data->Dim(); // DEBUG
+  // KALDI_WARN << "Requested: " << data->Dim(); // DEBUG
   KALDI_ASSERT(data->Dim() > 0);
   int32 n_elem = std::min(src_.Dim() - pos_,
                           static_cast<uint32>(data->Dim()));
