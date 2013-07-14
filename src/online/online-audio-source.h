@@ -125,16 +125,28 @@ class OnlineVectorSource {
 
 /** @brief Proxy Audio Input. Acts like a buffer.
  *
- * OnlineAudioSource implementation which blocks on Read.
- * It expects to be fed with the audio frame by frame. */
+ *  OnlineAudioSource implementation which blocks on Read.
+ *  It expects to be fed with the audio frame by frame.
+ *  Supports only one channel. */
 class OnlineBlockSource {
  public:
-  OnlineBlockSource(void):no_more_input_(false) { }
+  /// Creates the OnlineBlockSource empty "buffer"
+  /// @param bits_per_sample [in]  By default we expect 16-bit audio
+  OnlineBlockSource(uint32 bits_per_sample=16):
+    bits_per_sample_(bits_per_sample),
+    no_more_input_(false) { }
+  /// Implements OnlineAudioSource API
   bool Read(Vector<BaseFloat> *data, int32 timeout);
-  void Write(unsigned char *data, size_t data_size);
-  void EndInput(void);
+  /// Converts and buffers  the data 
+  /// based on bits_per_sample specified in constructor
+  /// @param data [in] the single channel pcm audio data
+  /// @param num_samples [in] number of samples in data array
+  void Write(unsigned char *data, size_t num_samples);
+  /// Call it, if no more data will be written in. 
+  void NoMoreInput(void);
 
  private:
+  uint32 bits_per_sample_;
   bool no_more_input_;
   std::vector<BaseFloat> src_;
   KALDI_DISALLOW_COPY_AND_ASSIGN(OnlineBlockSource);

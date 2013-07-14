@@ -163,10 +163,42 @@ bool OnlineVectorSource::Read(Vector<BaseFloat> *data, int32 timeout) {
 }
 
 
-void OnlineBlockSource::Write(unsigned char * data, size_t data_size) {
-  // KALDI_WARN << "DEBUG frame_in len" << data_size;
-  src_.insert(src_.end(), data, data + data_size);
-  // std::copy(src_.begin(), src_.end(), std::ostream_iterator<BaseFloat>(KALDI_WARN, " ")); // DEBUG
+/// Buffers internally the given data
+void OnlineBlockSource::Write(unsigned char * data, size_t num_samples) {
+  // allocate the space at once -> should be faster
+  src_.reserve(src_.size() + num_samples);
+  // copy and convert the data to the buffer
+  for (size_t i = 0; i < num_samples; ++i) {
+      switch (bits_per_sample_) {
+        case 8:
+          src_.push_back(*data);
+          data++;
+          break;
+        case 16:
+          {
+            int16 k = *reinterpret_cast<uint16*>(data);
+#ifdef __BIG_ENDIAN__
+            KALDI_SWAP2(k);
+#endif
+            src_.push_back(k);
+            data += 2;
+            break;
+          }
+        case 32:
+          {
+            int32 k = *reinterpret_cast<uint32*>(data);
+#ifdef __BIG_ENDIAN__
+            KALDI_SWAP4(k);
+#endif
+            src_.push_back(k);
+            data += 4;
+            break;
+          }
+        default:
+          KALDI_ERR << "bits per sample is " << bits_per_sample_;  // already checked this.
+      }
+  }
+
 }
 
 /// Return true if some still data available after Reading
@@ -188,7 +220,7 @@ bool OnlineBlockSource::Read(Vector<BaseFloat> *data, int32 timeout) {
   return ((!no_more_input_) || (src_.size() > 0));
 }
 
-void OnlineBlockSource::EndInput() {
+void OnlineBlockSource::NoMoreInput() {
   this->no_more_input_ = true;
 }
 

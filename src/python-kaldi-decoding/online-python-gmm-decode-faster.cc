@@ -207,7 +207,8 @@ bool KaldiDecoderWrapper::Decode(void) {
 }
 
 void KaldiDecoderWrapper::FinishInput(void) {
-  source_->EndInput();
+  // FIXME maybe also grab the last hypothesis here
+  source_->NoMoreInput();
 }
 
 /// Return bool: True for full hypothesis, False for partial. 

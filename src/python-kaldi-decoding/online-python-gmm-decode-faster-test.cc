@@ -25,8 +25,8 @@ using namespace kaldi;
 
 template<class FT> FT load_function(const char *nameFce, void *lib);
 void fill_frame_random(unsigned char *frame, size_t size);
-size_t next_frame(unsigned char * frame, size_t frame_len,
-                  unsigned char *pcm, size_t pcm_position);
+size_t next_frame(unsigned char * data_target, size_t target_size,
+                  unsigned char *src, size_t src_position);
 int main(int argc, char **argv);
 void printHyp(int *word_ids, size_t num_words, int full);
 size_t read_16bitpcm_file(const std::string & filename, unsigned char **pcm);
@@ -67,14 +67,16 @@ int main(int argc, char **argv) {
     return retval;
 
   unsigned char * pcm;
-  std::string filename("pykaldi/decoders/test.wav");
+  std::string filename("pykaldi/binutils/online-data/audio/test1.wav");
   size_t pcm_size = read_16bitpcm_file(filename, &pcm);
   
   // send data in at once, use the buffering capabilities
   size_t frame_len = 2120, pcm_position = 0;
-  unsigned char *frame = new unsigned char[frame_len];
-  while(pcm_position + frame_len < pcm_size) {
-    pcm_position = next_frame(frame, frame_len, pcm, pcm_position);
+  // reading 16bit audio into char array -> 1 sample == 2 chars
+  size_t frame_size = frame_len * 2; 
+  unsigned char *frame = new unsigned char[frame_size];
+  while(pcm_position + frame_size < pcm_size) {
+    pcm_position = next_frame(frame, frame_size, pcm, pcm_position);
     frame_in(d, frame, frame_len);
   }
   delete[] frame;
@@ -162,10 +164,10 @@ size_t read_16bitpcm_file(const std::string & filename, unsigned char **pcm) {
   return size;
 }
 
-size_t next_frame(unsigned char * frame, size_t frame_len,
-                  unsigned char *pcm, size_t pcm_position) {
-  for(size_t i=0; i < frame_len; ++i) {
-    frame[i] = pcm[pcm_position + i];
+size_t next_frame(unsigned char * data_target, size_t target_size,
+                  unsigned char *src, size_t src_position) {
+  for(size_t i=0; i < target_size; ++i) {
+    data_target[i] = src[src_position + i];
   }
-  return pcm_position + frame_len;
+  return src_position + target_size;
 }
