@@ -34,7 +34,7 @@ $(DATA_TAR):
 	mkdir -p $(DECODE_DIR)
 	rm -f $(INPUT_SCP)  # reset the file do not append
 	for f in $(DATA_FILE)/audio/*.wav; do \
-		bf=`basename $$f`; bf=$${bf%.wav}; echo $$bf $$f >> $(INPUT_SCP); \
+		bf=`basename $$f`; bf=$${bf%.wav}; echo $$bf "$$PWD/$$f" >> $(INPUT_SCP); \
 		echo $$bf $$bf >> $(SPK2UTT); \
 		grep $$bf $(DATA_FILE)/audio/trans.txt | cut -d' ' -f 2- > $$f.trn; \
 	done
