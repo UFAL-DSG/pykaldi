@@ -66,12 +66,9 @@ int main(int argc, char **argv) {
   if(retval != 0)
     return retval;
 
-  // read the saved pcm with headers like data
   unsigned char * pcm;
   std::string filename("pykaldi/decoders/test.wav");
-  KALDI_WARN << "DEBUG";
   size_t pcm_size = read_16bitpcm_file(filename, &pcm);
-  KALDI_WARN << "DEBUG";
   
   // send data in at once, use the buffering capabilities
   size_t frame_len = 2120, pcm_position = 0;
@@ -85,15 +82,13 @@ int main(int argc, char **argv) {
   // tell the decoder that features input ended
   finish_input(d);
 
-  KALDI_WARN << "DEBUG";
-
   // decode() returns false if there are no more features for decoder
   while(decode(d)) {
       int full; 
       size_t num_words = prep_hyp(d, &full);
       int * word_ids = new int[num_words];
       get_hyp(d, word_ids, num_words);
-      printHyp(word_ids, num_words, full);
+      // printHyp(word_ids, num_words, full);
       delete[] word_ids;
   } 
   // Obtain last hypothesis
@@ -105,9 +100,7 @@ int main(int argc, char **argv) {
       printHyp(word_ids, num_words, full);
       delete[] word_ids;
   }
-  // KALDI_WARN << "DEBUG";
   del_Decoder(d);
-  // KALDI_WARN << "DEBUG";
 
   dlclose(lib);
   return 0;
@@ -153,6 +146,7 @@ void fill_frame_random(unsigned char *frame, size_t size) {
   }
 }
 
+/// Read the file like it is 16bit raw pcm
 size_t read_16bitpcm_file(const std::string & filename, unsigned char **pcm) {
   size_t size = 0;
   *pcm = NULL;

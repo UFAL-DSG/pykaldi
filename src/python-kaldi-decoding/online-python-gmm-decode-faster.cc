@@ -153,11 +153,9 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
     int32 frame_shift = mfcc_opts.frame_opts.frame_shift_ms = 10;
     mfcc_ = new Mfcc(mfcc_opts);
 
-    KALDI_WARN << "DEBUG";
     fe_input_ = new BlockFeatInput (source_, mfcc_,
                                frame_length * (kSampleFreq_ / 1000),
                                frame_shift * (kSampleFreq_ / 1000));
-    KALDI_WARN << "DEBUG";
     cmn_input_ = new OnlineCmnInput(fe_input_, cmn_window_, min_cmn_window_);
 
     // KALDI_WARN << "DEBUG";
@@ -226,6 +224,16 @@ bool KaldiDecoderWrapper::GetHypothesis() {
                                  static_cast<vector<int32> *>(0),
                                  &last_word_ids,
                                  static_cast<LatticeArc::Weight*>(0));
+    // TODO DEBUG
+    decoder_->GetBestPath(&out_fst_);
+    std::vector<int32> tids;
+    fst::GetLinearSymbolSequence(out_fst_,
+                                 &tids,
+                                 &last_word_ids,
+                                 static_cast<LatticeArc::Weight*>(0));
+    // TODO DEBUG
+    std::copy(last_word_ids.begin(), last_word_ids.end(), std::ostream_iterator<int32>(KALDI_WARN, " "));
+    std::copy(tids.begin(), tids.end(), std::ostream_iterator<int32>(KALDI_WARN, " "));
   } else {
     // get the hypothesis from currently active state
     if (decoder_->PartialTraceback(&out_fst_)) {
@@ -235,7 +243,6 @@ bool KaldiDecoderWrapper::GetHypothesis() {
                                    static_cast<LatticeArc::Weight*>(0));
     }
   }
-  // std::copy(last_word_ids.begin(), last_word_ids.end(), std::ostream_iterator<char>(KALDI_WARN, " ")); // DEBUG
   // empty hypothesis is full hypothesis (not partial one)
   return (UtteranceEnded() || last_word_ids.size() == 0) ;
 } 

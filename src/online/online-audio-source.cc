@@ -173,18 +173,18 @@ void OnlineBlockSource::Write(unsigned char * data, size_t data_size) {
 bool OnlineBlockSource::Read(Vector<BaseFloat> *data, int32 timeout) {
   // FIXME implement timeout!
   KALDI_ASSERT(data->Dim() > 0);
-  KALDI_WARN << "Requested: " << data->Dim(); // DEBUG
+  // KALDI_WARN << "Requested: " << data->Dim(); // DEBUG
 
   // TODO check: static_cast<size_t> from data->Dim() works on all architectures
   size_t n = std::min(src_.size(), static_cast<size_t>(data->Dim()));
-  KALDI_WARN << "DEBUG size before remove: "  << n;
-  KALDI_WARN << "DEBUG outgoing data Dim(): "  << data->Dim();
+  // KALDI_WARN << "DEBUG size before remove: "  << n;
+  // KALDI_WARN << "DEBUG outgoing data Dim(): "  << data->Dim();
   for (size_t i = 0; i < n ; ++i) {
     (*data)(i) = src_[i];
   }
   // remove the already read elements
   std::vector<BaseFloat>(src_.begin() + n, src_.end()).swap(src_);
-  KALDI_WARN << "DEBUG size after remove: "  << src_.size();
+  // KALDI_WARN << "DEBUG size after remove: "  << src_.size();
   return ((!no_more_input_) || (src_.size() > 0));
 }
 
