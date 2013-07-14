@@ -13,6 +13,9 @@
  * MERCHANTABLITY OR NON-INFRINGEMENT.
  * See the Apache 2 License for the specific language governing permissions and
  * limitations under the License. */
+#include <iostream>
+#include <fstream>
+#include <string>
 #include <vector>
 #include <stdlib.h>
 #include <iostream>
@@ -21,9 +24,12 @@
 using namespace kaldi;
 
 template<class FT> FT load_function(const char *nameFce, void *lib);
-void fill_frame(unsigned char *frame, size_t size);
+void fill_frame_random(unsigned char *frame, size_t size);
+size_t next_frame(unsigned char * frame, size_t frame_len,
+                  unsigned char *pcm, size_t pcm_position);
 int main(int argc, char **argv);
 void printHyp(int *word_ids, size_t num_words, int full);
+size_t read_16bitpcm_file(const std::string & filename, unsigned char **pcm);
 
 
 int main(int argc, char **argv) {
@@ -48,7 +54,7 @@ int main(int argc, char **argv) {
   CKDW_decode_t decode = load_function<CKDW_decode_t>("Decode", lib);
   if (!decode) return 7;
   CKDW_void_t finish_input = load_function<CKDW_void_t>("FinishInput", lib);
-  if (!input_finished) return 8;
+  if (!finish_input) return 8;
   CKDW_prep_hyp_t prep_hyp = load_function<CKDW_prep_hyp_t>("PrepareHypothesis", lib);
   if (!prep_hyp) return 9;
   CKDW_get_hyp_t get_hyp = load_function<CKDW_get_hyp_t>("GetHypothesis", lib);
@@ -59,19 +65,27 @@ int main(int argc, char **argv) {
   int retval = setup(d, argc, argv);
   if(retval != 0)
     return retval;
+
+  // read the saved pcm with headers like data
+  unsigned char * pcm;
+  std::string filename("pykaldi/decoders/test.wav");
+  KALDI_WARN << "DEBUG";
+  size_t pcm_size = read_16bitpcm_file(filename, &pcm);
+  KALDI_WARN << "DEBUG";
   
-  size_t test = 40;
   // send data in at once, use the buffering capabilities
-  for(size_t i =0; i < test; ++i) {
-    size_t frame_len = 2120;
-    unsigned char *frame = new unsigned char[frame_len];
-    fill_frame(frame, frame_len);
-    frame_in(d, frame, frame_len); 
-    delete[] frame;
+  size_t frame_len = 2120, pcm_position = 0;
+  unsigned char *frame = new unsigned char[frame_len];
+  while(pcm_position + frame_len < pcm_size) {
+    pcm_position = next_frame(frame, frame_len, pcm, pcm_position);
+    frame_in(d, frame, frame_len);
   }
+  delete[] frame;
 
   // tell the decoder that features input ended
   finish_input(d);
+
+  KALDI_WARN << "DEBUG";
 
   // decode() returns false if there are no more features for decoder
   while(decode(d)) {
@@ -133,10 +147,31 @@ template<class FT> FT load_function(const char *nameFce, void *lib) {
   return f;
 }
 
-void fill_frame(unsigned char *frame, size_t size) {
+void fill_frame_random(unsigned char *frame, size_t size) {
   for(size_t i=0; i<size; ++i) {
-    // TODO something better
     frame[i] = random() & 0xff;
   }
-  frame[0] = 0x06; // DEBUG
+}
+
+size_t read_16bitpcm_file(const std::string & filename, unsigned char **pcm) {
+  size_t size = 0;
+  *pcm = NULL;
+
+  std::ifstream file(filename.c_str(), std::ios::in|std::ios::binary|std::ios::ate);
+  if (file.is_open()) {
+    size = file.tellg();
+    *pcm = new unsigned char [size];
+    file.seekg(0, std::ios::beg);
+    file.read((char *)*pcm, size);
+    file.close();
+  }
+  return size;
+}
+
+size_t next_frame(unsigned char * frame, size_t frame_len,
+                  unsigned char *pcm, size_t pcm_position) {
+  for(size_t i=0; i < frame_len; ++i) {
+    frame[i] = pcm[pcm_position + i];
+  }
+  return pcm_position + frame_len;
 }

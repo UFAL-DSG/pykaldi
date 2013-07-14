@@ -183,6 +183,7 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
     }
     // KALDI_WARN << "DEBUG";
 
+    feature_reading_opts_.timeout = 1000 * 60 * 60;  // DEBUG 1 hour timeout
     // feature_reading_opts_ contains timeout, batch size.
     feature_matrix_ = new OnlineFeatureMatrix(feature_reading_opts_,
                                        feat_transform_);
