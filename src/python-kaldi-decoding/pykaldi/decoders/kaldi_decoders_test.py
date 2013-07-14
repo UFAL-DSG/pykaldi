@@ -20,6 +20,7 @@ import unittest
 import audioop
 import wave
 import os
+import time
 # Just import this is a test ;-)
 from pykaldi.decoders import ffidummy, libdummy
 
@@ -74,47 +75,45 @@ def load_wav(file_name, def_sample_rate=16000):
 
 class TestOnlineDecoder(unittest.TestCase):
     def setUp(self):
-        self.wav_path = 'test.wav'
         # TODO solve dependency on binutils/online-data
         dir_path = os.path.realpath(os.path.dirname(__file__) + '/../binutils')
+        self.wav_path = dir_path + '/online-data/audio/test1.wav'
+        # self.wav_path = 'test.wav'
         p = dir_path + '/online-data/models/tri2b_mmi'
         self.argv = [
-            '--rt-min=0.5', '--rt-max=0.7', '--max-active=4000', '--beam=12.0',
+            '--rt-min=0.5', '--rt-max=99.0', '--max-active=4000', '--beam=12.0',
             '--acoustic-scale=0.0769', '%s/model' % p, '%s/HCLG.fst' % p,
             '%s/words.txt' % p, '1:2:3:4:5', '%s/matrix' % p]
-        self.samples_per_frame = 256
+        self.samples_per_frame = 2120
         self.pyaudio_loaded = False
-        self.p, self.stream = setup_pyaudio(self.samples_per_frame)  # may throw Exception
-        self.pyaudio_loaded = True
+        # self.p, self.stream = setup_pyaudio(self.samples_per_frame)  # may throw Exception
+        # self.pyaudio_loaded = True
 
     def test_wav(self, decode_once=True, hyp_once=True):
         d = OnlineDecoder(self.argv)
         pcm = load_wav(self.wav_path)
-        play_len, frame_len = len(pcm), self.samples_per_frame
+        play_len, total_words = len(pcm), 0
+        # using 16-bit audio so 1 sample = 2 chars
+        frame_len = (2 * self.samples_per_frame)
         for i in range(play_len / frame_len):
             frame = pcm[i * frame_len:(i + 1) * frame_len]
-            d.frame_in(frame)
-            if not decode_once:
-                d.decode()
-            if not hyp_once:
-                size, full_hyp = d.prepare_hyp()
-                prop, hyp = d.get_hypothesis(size)
-                print 'TEST_WAV', size, str(hyp)
+            d.frame_in(frame, self.samples_per_frame)
+
         d.finish_input()
         while d.decode():
-            size, full_hyp = d.prepare_hyp()
-            prop, hyp = d.get_hypothesis(size)
-            print 'TEST_WAV', size, str(hyp)
+            num_words, full_hyp = d.prepare_hyp()
+            prop, word_ids = d.get_hypothesis(num_words)
+            print 'full: %r, num_words %d, ids: %s' % (full_hyp, num_words, str(word_ids))
+            total_words += num_words
+        print 'Decode last hypothesis'
+        num_words, full_hyp = d.prepare_hyp()
+        prop, word_ids = d.get_hypothesis(num_words)
+        print 'full: %r, num_words %d, ids: %s' % (full_hyp, num_words, str(word_ids))
+        total_words += num_words
+        print 'Total words: ', total_words
+        # DO NOT FORGET TO CLOSE THE DECODER!
         d.close()
-
-    def test_wav_decode_often(self):
-        self.test_wav(decode_once=False)
-
-    def test_wav_hyp_often(self):
-        self.test_wav(decode_once=False, hyp_once=True)
-
-    def test_wav_hyp_too_often(self):
-        self.test_wav(decode_once=True, hyp_once=False)
+        time.sleep(2)
 
     def test_live(self, duration=3):
         d = OnlineDecoder(self.argv)

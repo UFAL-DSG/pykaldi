@@ -85,13 +85,16 @@ int main(int argc, char **argv) {
   finish_input(d);
 
   // decode() returns false if there are no more features for decoder
+  size_t total_words = 0;
   while(decode(d)) {
       int full; 
       size_t num_words = prep_hyp(d, &full);
       int * word_ids = new int[num_words];
       get_hyp(d, word_ids, num_words);
-      // printHyp(word_ids, num_words, full);
+      printHyp(word_ids, num_words, full);
       delete[] word_ids;
+
+      total_words += num_words;
   } 
   // Obtain last hypothesis
   {
@@ -101,9 +104,12 @@ int main(int argc, char **argv) {
       get_hyp(d, word_ids, num_words);
       printHyp(word_ids, num_words, full);
       delete[] word_ids;
+
+      total_words += num_words;
   }
   del_Decoder(d);
 
+  std::cout << "Totally decoded words: " << total_words << std::endl;
   dlclose(lib);
   return 0;
 }

@@ -66,6 +66,8 @@ class DummyDecoder(KaldiDecoder):
         return [(prob, ans)]
 
 
+# FIXME write wrapper class, decorator, with using __enter__ , __exit__
+
 class OnlineDecoder(KaldiDecoder):
     """NbListDecoder returns nblist
     it has the same input as other decs."""
@@ -76,22 +78,27 @@ class OnlineDecoder(KaldiDecoder):
         # necessary to keep it alive long enough -> member field-> ok
         argv.insert(0, 'OnlineDecoder')  # set name of the "program"
         self.argv = [self.ffi.new("char[]", arg) for arg in argv]
-        self.dec = self.__enter__()
-
-    def __enter__(self):
         argc, argp = len(self.argv), self.ffi.new("char *[]", self.argv)
-        dec_pointer = self.lib.new_KaldiDecoderWrapper()
-        self.lib.Setup(dec_pointer, argc, argp)
-        return dec_pointer
+        self.dec = self.lib.new_KaldiDecoderWrapper()
+        self.lib.Setup(self.dec, argc, argp)
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.lib.del_KaldiDecoderWrapper(self.dec)
+    def _deallocate(self):
+        if self.dec:
+            self.lib.del_KaldiDecoderWrapper(self.dec)
+            self.dec = None
+
+    def __del__(self):
+        self._deallocate()
 
     def close(self):
-        self.__exit__(None, None, None)
+        '''Deallocates the underlaying C module.
+        Do not use the object after calling close!'''
+        self._deallocate()
 
-    def frame_in(self, frame_str):
-        self.lib.FrameIn(self.dec, frame_str, len(frame_str))
+    def frame_in(self, frame_str, num_samples):
+        assert len(frame_str) == (2 * num_samples), "We support only 16bit audio"
+        "-> 1 sample == 2 chars -> len(frame_str) = 2 * num_samples"
+        self.lib.FrameIn(self.dec, frame_str, num_samples)
 
     def finish_input(self):
         """Tell the decoder that no more input is coming """
@@ -106,7 +113,7 @@ class OnlineDecoder(KaldiDecoder):
     def prepare_hyp(self):
         full_hyp_p = self.ffi.new("int *")
         size = self.lib.PrepareHypothesis(self.dec, full_hyp_p)
-        # TODO should I convert size?
+        print "Python size from PrepareHypothesis", size  # FIXME DEBUG
         return (size, full_hyp_p[0])
 
     def get_hypothesis(self, size):
@@ -114,8 +121,9 @@ class OnlineDecoder(KaldiDecoder):
         # prob_p = self.ffi.new('double *')
         hyp = numpy.zeros(size).astype('int32')
         hyp_p = self.ffi.cast("int *", hyp.ctypes.data)
+        # 
         self.lib.GetHypothesis(self.dec, hyp_p, size)
-        prob = 1.0  # TODO prob = prob_p[0]  # TODO
+        prob = 1.0  # FIXME in feature dereference the returned prob: prob = prob_p[0]
         return (prob, hyp)
 
 

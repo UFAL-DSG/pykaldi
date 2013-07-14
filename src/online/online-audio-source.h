@@ -133,8 +133,8 @@ class OnlineBlockSource {
   /// Creates the OnlineBlockSource empty "buffer"
   /// @param bits_per_sample [in]  By default we expect 16-bit audio
   OnlineBlockSource(uint32 bits_per_sample=16):
-    bits_per_sample_(bits_per_sample),
-    no_more_input_(false) { }
+      bits_per_sample_(bits_per_sample),
+      no_more_input_(false) { }
   /// Implements OnlineAudioSource API
   bool Read(Vector<BaseFloat> *data, int32 timeout);
   /// Converts and buffers  the data 
