@@ -79,6 +79,8 @@ static_fst=false
 use_cuda=true
 dynamic_kaldi=false
 
+cmd_line="$0 $@"  # Save the command line to include in kaldi.mk
+
 while [ $# -gt 0 ];
 do
   case "$1" in
@@ -501,7 +503,10 @@ if [ -f kaldi.mk ]; then
   cp kaldi.mk kaldi.mk.bak
 fi
 
-cp makefiles/common.mk kaldi.mk
+printf "# This file was generated using the following command:\n# $cmd_line\n\n" > kaldi.mk
+#echo "# $cmd_line" >> kaldi.mk
+#echo >> kaldi.mk
+cat makefiles/common.mk >> kaldi.mk
 if $dynamic_kaldi ; then
 KALDILIBDIR=`pwd`/lib
 echo "KALDI_FLAVOR := dynamic" >> kaldi.mk
@@ -594,11 +599,21 @@ if [ "`uname`" == "Linux" ]; then
     # containing {liblapack.a,libblas.a}, and linking against just these two 
     # libraries worked.  
 
-    linux_configure_static || \
+    if $static_math; then
+      # Prefer static to dynamic math.
+      linux_configure_static || \
+        linux_configure_dynamic || \
+        linux_configure_debian_ubuntu 64 || \
+        linux_configure_debian_ubuntu || \
+        linux_atlas_failure "Failed to configure ATLAS lbiraries";
+    else
+      # Prefer dynamic to static math.
       linux_configure_dynamic || \
-      linux_configure_debian_ubuntu 64 || \
-      linux_configure_debian_ubuntu || \
-      linux_atlas_failure "Failed to configure ATLAS lbiraries";
+        linux_configure_static || \
+        linux_configure_debian_ubuntu 64 || \
+        linux_configure_debian_ubuntu || \
+        linux_atlas_failure "Failed to configure ATLAS lbiraries";
+    fi
 
   elif [ "$MATHLIB" == "MKL" ]; then
     if [ "`uname -m`" != "x86_64" ]; then
