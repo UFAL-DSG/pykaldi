@@ -7,7 +7,7 @@ Description
  * I am using [cffi](http://cffi.readthedocs.org/en/latest/) for interfacing C from Python.
  * I also trained several acoustic models.  
  * The recipe for training the models can be found at `egs/kaldi-vystadial-recipe`. Read `egs/kaldi-vystadial-recipe/s5/README.md`!
- * The python wrapper is at `src/python-kaldi-decoding`. Read `src/python-kaldi-decoding/README.md`!
+ * The python wrapper is at `src/pykaldi`. Read `src/pykaldi/README.md`!
 
 
 Install
