@@ -43,12 +43,12 @@ ADDLIBS = ../decoder/kaldi-decoder.a ../online/kaldi-online.a ../thread/kaldi-th
 		  ../feat/kaldi-feat.a ../util/kaldi-util.a ../base/kaldi-base.a
 
 # FIXME LINUX ONLY
-$(PYTHON_LIB): $(OBJFILES) $(ADDLIBS)
+$(PYTHON_LIB): $(OBJFILES) $(ADDLIBS) lib$(LIBNAME).so
 ifneq ($(KALDI_FLAVOR), dynamic)
 	$(warning The following command will probably fail, in that run configure with --shared flag and remake all.)
 endif
 	# Building shared library from static one. The static one was compiled with -fPIC.
-	$(CXX) -shared -o $@ -Wl,-soname=$@,--whole-archive $^ -Wl,--no-whole-archive $(EXTRA_LDLIBS) $(OPENFSTLIBS) $(ATLASLIBS) -lm -lpthread -ldl -lcublas -lcudart   
+	$(CXX) -shared -o $@ -Wl,-soname=$@,--whole-archive $^ -Wl,--no-whole-archive $(EXTRA_LDLIBS) $(LDFLAGS) $(LDLIBS)
 
 
 include ../makefiles/default_rules.mk
