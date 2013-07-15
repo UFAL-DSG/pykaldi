@@ -1,13 +1,11 @@
 
-# extracts testing data
-DECODE_DIR = work
-include ../online-data.mk
-
 LIBNAME = dummyio
 LIBFILE = lib$(LIBNAME).so
 OBJFILES = dummyio.o frames.o debug.o
 LDLIBS = -lasound
 BIGLIB = libpykaldi.so
+
+all: $(LIBFILE) $(BIGLIB)
 
 CC = gcc
 CXX = g++
@@ -16,9 +14,9 @@ CFLAGS = -msse -Wall -fPIC -Wno-sign-compare -g # -O0
 # CXXFLAGS = $(CFLAGS)
 LDFLAGS = -rdynamic
 
-
-all: $(LIBFILE) $(BIGLIB)
-
+# extracts testing data
+DECODE_DIR = work
+include ../online-data.mk
 
 $(LIBFILE): $(OBJFILES)
 	$(CXX) -shared -o $@ -Wl,-soname=$@,--whole-archive $^ -Wl,--no-whole-archive $(LDFLAGS) $(LDLIBS)

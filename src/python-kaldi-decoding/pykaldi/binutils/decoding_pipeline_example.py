@@ -197,16 +197,16 @@ if __name__ == '__main__':
     config = parse_config_from_arguments()
     make_dir(config['decode_dir'])
 
-    # run_mfcc(ffibin, libbin, config)
-    # print 'running mfcc finished'
-    # # run_cmvn(ffibin, libbin, config) # FIXME set up config
-    # # print 'running cmvn finished'
-    # run_decode(ffibin, libbin, config)
-    # print 'running mfcc finished'
-    # run_bestpath(ffibin, libbin, config)
-    # print 'running bestpath finished'
-    # run_online(ffibin, libbin, config)
-    # print 'running online finished'
+    run_mfcc(ffibin, libbin, config)
+    print 'running mfcc finished'
+    # run_cmvn(ffibin, libbin, config) # FIXME set up config
+    # print 'running cmvn finished'
+    run_decode(ffibin, libbin, config)
+    print 'running mfcc finished'
+    run_bestpath(ffibin, libbin, config)
+    print 'running bestpath finished'
+    run_online(ffibin, libbin, config)
+    print 'running online finished'
     run_python_online(config)
     print 'running PYTHON ONLINE finished'
     ### Evaluating experiments
