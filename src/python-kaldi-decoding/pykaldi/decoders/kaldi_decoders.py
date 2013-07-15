@@ -51,11 +51,12 @@ class OnlineDecoder(KaldiDecoder):
     """NbListDecoder returns nblist
     it has the same input as other decs."""
 
-    def __init__(self, argv, **kwargs):
+    def __init__(self, args, **kwargs):
         KaldiDecoder.__init__(self, **kwargs)
         self.lib, self.ffi = libdec, ffidec
+        # first argument is the name of the "program" like in C
+        argv = ['OnlineDecoder'] + args
         # necessary to keep it alive long enough -> member field-> ok
-        argv.insert(0, 'OnlineDecoder')  # set name of the "program"
         self.argv = [self.ffi.new("char[]", arg) for arg in argv]
         argc, argp = len(self.argv), self.ffi.new("char *[]", self.argv)
         self.dec = self.lib.new_KaldiDecoderWrapper()

@@ -134,37 +134,37 @@ def run_python_online(config):
         lines = r.readlines()
         scp = [tuple(line.strip().split(' ', 1)) for line in lines]
 
-    for wav_name, wav_path in scp:
-        d = OnlineDecoder(argv)
-        print 'Processing recording %s.' % wav_name
-        pcm = load_wav(wav_path)
-        word_ids = np.array([], dtype=np.int32)
-        # using 16-bit audio so 1 sample = 2 chars
-        frame_len = (2 * samples_per_frame)
-        # Pass the audio data to decoder at once
-        for i in range(len(pcm) / frame_len):
-            frame = pcm[i * frame_len:(i + 1) * frame_len]
-            d.frame_in(frame, samples_per_frame)
-        d.finish_input()
-        # Extract the hypothesis in form of word ids
-        while d.decode():
+    with open(c['trans'], 'wb') as w:
+        for wav_name, wav_path in scp:
+            d = OnlineDecoder(argv)
+            print 'Processing utterance %s.' % wav_name
+            pcm = load_wav(wav_path)
+            word_ids = np.array([], dtype=np.int32)
+            # using 16-bit audio so 1 sample = 2 chars
+            frame_len = (2 * samples_per_frame)
+            # Pass the audio data to decoder at once
+            for i in range(len(pcm) / frame_len):
+                frame = pcm[i * frame_len:(i + 1) * frame_len]
+                d.frame_in(frame, samples_per_frame)
+            d.finish_input()
+            # Extract the hypothesis in form of word ids
+            while d.decode():
+                num_words, full_hyp = d.prepare_hyp()
+                if num_words > 0:
+                    prop, new_ids = d.get_hypothesis(num_words)
+                    word_ids = np.concatenate([word_ids, new_ids])
+            # Decode last hypothesis
             num_words, full_hyp = d.prepare_hyp()
             if num_words > 0:
                 prop, new_ids = d.get_hypothesis(num_words)
                 word_ids = np.concatenate([word_ids, new_ids])
-        # Decode last hypothesis
-        num_words, full_hyp = d.prepare_hyp()
-        if num_words > 0:
-            prop, new_ids = d.get_hypothesis(num_words)
-            word_ids = np.concatenate([word_ids, new_ids])
-        # Store the results to file
-        with open(c['trans'], 'wb') as w:
+            # Store the results to file
             line = [wav_name]
             line.extend([str(word_id) for word_id in word_ids])
             line.append('\n')
             w.write(' '.join(line))
-        print 'Result for %s written.' % wav_name
-        d.close()  # DO NOT FORGET TO CLOSE THE DECODER!
+            print 'Result for %s written.' % wav_name
+            d.close()  # DO NOT FORGET TO CLOSE THE DECODER!
 
 
 def compute_wer(ffi, werlib, config):
