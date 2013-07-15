@@ -152,7 +152,7 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
     int32 frame_shift = mfcc_opts.frame_opts.frame_shift_ms = 10;
     mfcc_ = new Mfcc(mfcc_opts);
 
-    fe_input_ = new BlockFeatInput (source_, mfcc_,
+    fe_input_ = new FeInput(source_, mfcc_,
                                frame_length * (kSampleFreq_ / 1000),
                                frame_shift * (kSampleFreq_ / 1000));
     cmn_input_ = new OnlineCmnInput(fe_input_, cmn_window_, min_cmn_window_);
@@ -180,7 +180,6 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
     }
     // KALDI_WARN << "DEBUG";
 
-    feature_reading_opts_.timeout = 1000 * 60 * 60;  // DEBUG 1 hour timeout
     // feature_reading_opts_ contains timeout, batch size.
     feature_matrix_ = new OnlineFeatureMatrix(feature_reading_opts_,
                                        feat_transform_);

@@ -70,7 +70,7 @@ typedef void (*CKDW_get_hyp_t)(CKaldiDecoderWrapper*, int *, size_t);
 
 namespace kaldi {
 
-typedef OnlineFeInput<OnlineBlockSource, Mfcc> BlockFeatInput;
+typedef OnlineFeInput<Mfcc> FeInput;
 
 /** @brief A class for setting up and using Online Decoder.
  *
@@ -123,7 +123,7 @@ class KaldiDecoderWrapper {
 
   Mfcc *mfcc_;
   OnlineBlockSource *source_;
-  BlockFeatInput *fe_input_;
+  FeInput *fe_input_;
   OnlineCmnInput *cmn_input_;
   TransitionModel *trans_model_;
   fst::Fst<fst::StdArc> *decode_fst_;

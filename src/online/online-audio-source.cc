@@ -204,7 +204,7 @@ void OnlineBlockSource::Write(unsigned char * data, size_t num_samples) {
 
 
 /// Return true if some still data available after Reading
-bool OnlineBlockSource::Read(Vector<BaseFloat> *data, int32 timeout) {
+bool OnlineBlockSource::Read(Vector<BaseFloat> *data) {
   // FIXME implement timeout!
   KALDI_ASSERT(data->Dim() > 0);
   // KALDI_WARN << "Requested: " << data->Dim(); // DEBUG

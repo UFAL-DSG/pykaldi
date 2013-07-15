@@ -149,7 +149,7 @@ class OnlineVectorSource: public OnlineAudioSourceItf {
  *  OnlineAudioSource implementation which blocks on Read.
  *  It expects to be fed with the audio frame by frame.
  *  Supports only one channel. */
-class OnlineBlockSource {
+class OnlineBlockSource: public OnlineAudioSourceItf{
  public:
   /// Creates the OnlineBlockSource empty "buffer"
   /// @param bits_per_sample [in]  By default we expect 16-bit audio
@@ -157,7 +157,7 @@ class OnlineBlockSource {
       bits_per_sample_(bits_per_sample),
       no_more_input_(false) { }
   /// Implements OnlineAudioSource API
-  bool Read(Vector<BaseFloat> *data, int32 timeout);
+  bool Read(Vector<BaseFloat> *data);
   /// Converts and buffers  the data 
   /// based on bits_per_sample specified in constructor
   /// @param data [in] the single channel pcm audio data

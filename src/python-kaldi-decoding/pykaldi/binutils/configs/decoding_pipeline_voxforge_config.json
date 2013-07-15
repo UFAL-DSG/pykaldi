@@ -39,9 +39,12 @@
     "wer-compute": {
         "config": "configs/wer.config",
         "reference": {"prefix": "decode_dir", "value": "reference.txt"},
-        "hypothesis": [ {"prefix": "decode_dir", "value": "online.trans"},
-                        {"prefix": "decode_dir", "value": "python.trans"},
+        "hypothesis": [ 
+                        {"prefix": "decode_dir", "value": "python.trans"}
+            ],
+        "unused_hypothesis" :[
+                        {"prefix": "decode_dir", "value": "online.trans"},
                         {"prefix": "decode_dir", "value": "best_path.trans"}
-                    ]
+            ]
     }
 }
