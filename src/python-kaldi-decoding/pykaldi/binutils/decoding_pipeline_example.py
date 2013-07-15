@@ -17,6 +17,7 @@
 
 from decoding_pipeline_utils import parse_config_from_arguments, make_dir, build_reference, wst2dict, int_to_txt, compact_hyp, PyKaldiError
 from pykaldi.binutils import ffibin, libbin
+import numpy as np
 
 
 def run_mfcc(ffi, mfcclib, config):
@@ -119,6 +120,53 @@ def run_online(ffi, onlinelib, config):
         raise e
 
 
+def run_python_online(config):
+    from pykaldi.decoders.kaldi_decoders import OnlineDecoder
+    from pykaldi.decoders.kaldi_decoders_test import load_wav
+
+    c, ldc = config['online-python'], config['latgen-decode']
+    argv = ['--config=%(config)s' % c,
+            ldc['model'], ldc['hclg'],
+            config['wst'], '1:2:3:4:5']
+    samples_per_frame = int(c['samples_per_frame'])
+
+    with open(config['wav_scp'], 'rb') as r:
+        lines = r.readlines()
+        scp = [tuple(line.strip().split(' ', 1)) for line in lines]
+
+    for wav_name, wav_path in scp:
+        d = OnlineDecoder(argv)
+        print 'Processing recording %s.' % wav_name
+        pcm = load_wav(wav_path)
+        word_ids = np.array([], dtype=np.int32)
+        # using 16-bit audio so 1 sample = 2 chars
+        frame_len = (2 * samples_per_frame)
+        # Pass the audio data to decoder at once
+        for i in range(len(pcm) / frame_len):
+            frame = pcm[i * frame_len:(i + 1) * frame_len]
+            d.frame_in(frame, samples_per_frame)
+        d.finish_input()
+        # Extract the hypothesis in form of word ids
+        while d.decode():
+            num_words, full_hyp = d.prepare_hyp()
+            if num_words > 0:
+                prop, new_ids = d.get_hypothesis(num_words)
+                word_ids = np.concatenate([word_ids, new_ids])
+        # Decode last hypothesis
+        num_words, full_hyp = d.prepare_hyp()
+        if num_words > 0:
+            prop, new_ids = d.get_hypothesis(num_words)
+            word_ids = np.concatenate([word_ids, new_ids])
+        # Store the results to file
+        with open(c['trans'], 'wb') as w:
+            line = [wav_name]
+            line.extend([str(word_id) for word_id in word_ids])
+            line.append('\n')
+            w.write(' '.join(line))
+        print 'Result for %s written.' % wav_name
+        d.close()  # DO NOT FORGET TO CLOSE THE DECODER!
+
+
 def compute_wer(ffi, werlib, config):
     '''Settings and arguments based on /ha/work/people/oplatek/kaldi-trunk/egs/kaldi-
     vystadial-recipe/s5/local/shore.sh
@@ -149,16 +197,18 @@ if __name__ == '__main__':
     config = parse_config_from_arguments()
     make_dir(config['decode_dir'])
 
-    run_mfcc(ffibin, libbin, config)
-    print 'running mfcc finished'
-    # run_cmvn(ffibin, libbin, config) # FIXME set up config
-    # print 'running cmvn finished'
-    run_decode(ffibin, libbin, config)
-    print 'running mfcc finished'
-    run_bestpath(ffibin, libbin, config)
-    print 'running bestpath finished'
-    run_online(ffibin, libbin, config)
-    print 'running online finished'
+    # run_mfcc(ffibin, libbin, config)
+    # print 'running mfcc finished'
+    # # run_cmvn(ffibin, libbin, config) # FIXME set up config
+    # # print 'running cmvn finished'
+    # run_decode(ffibin, libbin, config)
+    # print 'running mfcc finished'
+    # run_bestpath(ffibin, libbin, config)
+    # print 'running bestpath finished'
+    # run_online(ffibin, libbin, config)
+    # print 'running online finished'
+    run_python_online(config)
+    print 'running PYTHON ONLINE finished'
     ### Evaluating experiments
     compute_wer(ffibin, libbin, config)
     print 'running WER finished'

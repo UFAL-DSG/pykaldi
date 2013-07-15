@@ -24,6 +24,31 @@ import os
 from pykaldi.decoders import ffidummy, libdummy
 
 
+def run_online_dec(pcm, argv, samples_per_frame):
+    d = OnlineDecoder(argv)
+    play_len, total_words = len(pcm), 0
+    # using 16-bit audio so 1 sample = 2 chars
+    frame_len = (2 * samples_per_frame)
+    for i in range(play_len / frame_len):
+        frame = pcm[i * frame_len:(i + 1) * frame_len]
+        d.frame_in(frame, samples_per_frame)
+
+    d.finish_input()
+    while d.decode():
+        num_words, full_hyp = d.prepare_hyp()
+        prop, word_ids = d.get_hypothesis(num_words)
+        print 'full: %r, num_words %d, ids: %s' % (full_hyp, num_words, str(word_ids))
+        total_words += num_words
+    print 'Decode last hypothesis'
+    num_words, full_hyp = d.prepare_hyp()
+    prop, word_ids = d.get_hypothesis(num_words)
+    print 'full: %r, num_words %d, ids: %s' % (full_hyp, num_words, str(word_ids))
+    total_words += num_words
+    print 'Total words: ', total_words
+    # DO NOT FORGET TO CLOSE THE DECODER!
+    d.close()
+
+
 def teardown_pyaudio(p, stream):
     stream.stop_stream()
     stream.close()
@@ -87,36 +112,16 @@ class TestOnlineDecoder(unittest.TestCase):
         self.pyaudio_loaded = False
 
     def _setup_pyaudio(self):
-        self.p, self.stream = setup_pyaudio(self.samples_per_frame)  # may throw Exception
+        self.p, self.stream = setup_pyaudio(self.samples_per_frame)  # throw Exception
         self.pyaudio_loaded = True
 
-    def test_wav(self, decode_once=True, hyp_once=True):
-        d = OnlineDecoder(self.argv)
+    def test_wav(self):
         pcm = load_wav(self.wav_path)
-        play_len, total_words = len(pcm), 0
-        # using 16-bit audio so 1 sample = 2 chars
-        frame_len = (2 * self.samples_per_frame)
-        for i in range(play_len / frame_len):
-            frame = pcm[i * frame_len:(i + 1) * frame_len]
-            d.frame_in(frame, self.samples_per_frame)
-
-        d.finish_input()
-        while d.decode():
-            num_words, full_hyp = d.prepare_hyp()
-            prop, word_ids = d.get_hypothesis(num_words)
-            print 'full: %r, num_words %d, ids: %s' % (full_hyp, num_words, str(word_ids))
-            total_words += num_words
-        print 'Decode last hypothesis'
-        num_words, full_hyp = d.prepare_hyp()
-        prop, word_ids = d.get_hypothesis(num_words)
-        print 'full: %r, num_words %d, ids: %s' % (full_hyp, num_words, str(word_ids))
-        total_words += num_words
-        print 'Total words: ', total_words
-        # DO NOT FORGET TO CLOSE THE DECODER!
-        d.close()
+        run_online_dec(pcm, self.argv, self.samples_per_frame)
 
     @unittest.skip("Do not run live test by default")
     def test_live(self, duration=3):
+        # FIXME is broken
         self._setup_pyaudio()
         d = OnlineDecoder(self.argv)
         for i in xrange(duration * (16000 / self.samples_per_frame)):

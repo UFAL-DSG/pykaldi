@@ -46,28 +46,7 @@ class KaldiDecoder(object):
         self.lib.frame_in(self.dec, frame_p, len(frame))
 
 
-class DummyDecoder(KaldiDecoder):
-    """NbListDecoder returns nblist
-    it has the same input as other decs."""
-
-    def __init__(self, **kwargs):
-        KaldiDecoder.__init__(self, **kwargs)
-        self.lib, self.ffi = libdummy, ffidummy
-        self.dec = self.ffi.new('char []', 'unused')
-
-    def decode(self):
-        """Returns nblist
-        :returns: list of tuples (double-probability, string-sentence)
-        """
-        prob_p, ans_p = self.ffi.new('double *'), self.ffi.new('char **')
-        ans_size = self.ffi.new('size_t *')
-        self.lib.return_answer(prob_p, ans_p, ans_size)
-        ans, prob = self.ffi.string(ans_p[0], ans_size[0]), prob_p[0]
-        return [(prob, ans)]
-
-
 # FIXME write wrapper class, decorator, with using __enter__ , __exit__
-
 class OnlineDecoder(KaldiDecoder):
     """NbListDecoder returns nblist
     it has the same input as other decs."""
@@ -80,7 +59,9 @@ class OnlineDecoder(KaldiDecoder):
         self.argv = [self.ffi.new("char[]", arg) for arg in argv]
         argc, argp = len(self.argv), self.ffi.new("char *[]", self.argv)
         self.dec = self.lib.new_KaldiDecoderWrapper()
-        self.lib.Setup(self.dec, argc, argp)
+        if self.lib.Setup(self.dec, argc, argp) != 0:
+            # FIXME use custom exception class eg PykaldiOnlineDecoderArgsError
+            raise Exception("OnlineDecoder started with wrong parameters!")
 
     def _deallocate(self):
         if self.dec:
@@ -131,3 +112,23 @@ class ConfNetDecoder(KaldiDecoder):
     def __init__(self):
         """@todo: to be defined """
         pass
+
+
+class DummyDecoder(KaldiDecoder):
+    """NbListDecoder returns nblist
+    it has the same input as other decs."""
+
+    def __init__(self, **kwargs):
+        KaldiDecoder.__init__(self, **kwargs)
+        self.lib, self.ffi = libdummy, ffidummy
+        self.dec = self.ffi.new('char []', 'unused')
+
+    def decode(self):
+        """Returns nblist
+        :returns: list of tuples (double-probability, string-sentence)
+        """
+        prob_p, ans_p = self.ffi.new('double *'), self.ffi.new('char **')
+        ans_size = self.ffi.new('size_t *')
+        self.lib.return_answer(prob_p, ans_p, ans_size)
+        ans, prob = self.ffi.string(ans_p[0], ans_size[0]), prob_p[0]
+        return [(prob, ans)]

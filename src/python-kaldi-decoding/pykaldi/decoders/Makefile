@@ -1,10 +1,7 @@
 
-# it adds only one target: DATA_TAR for obtaining test data
-include ../online-data.mk
-# params for online-data.mk
+# extracts testing data
 DECODE_DIR = work
-INPUT_SCP = $(DECODE_DIR)/input.scp
-SPK2UTT = $(DECODE_DIR)/spk2utt
+include ../online-data.mk
 
 LIBNAME = dummyio
 LIBFILE = lib$(LIBNAME).so
