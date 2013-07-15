@@ -1,5 +1,10 @@
 
-all:
+# it adds only one target: DATA_TAR for obtaining test data
+include ../online-data.mk
+# params for online-data.mk
+DECODE_DIR = work
+INPUT_SCP = $(DECODE_DIR)/input.scp
+SPK2UTT = $(DECODE_DIR)/spk2utt
 
 LIBNAME = dummyio
 LIBFILE = lib$(LIBNAME).so
@@ -29,12 +34,11 @@ $(BIGLIB): ../../$(BIGLIB)
 
 kaldi_decoders.py: $(LIBFILE) $(BIGLIB)
 
-kaldi_decoders_test.py:  kaldi_decoders.py $(LIBFILE) $(BIGLIB)
-
+kaldi_decoders_test.py:  kaldi_decoders.py $(LIBFILE) $(BIGLIB) $(DATA_TAR)
 
 
 test: $(LIBFILE) $(BIGLIB)
 	nosetests -s kaldi_decoders_test.py  # -s let the output be printed
 
 clean:
-	rm -f $(OBJFILES) $(LIBFILE) $(BIGLIB) *.pyc test_frames.dat
+	rm -rf $(OBJFILES) $(LIBFILE) $(BIGLIB) $(DATA_TAR) $(DATA_FILE) $(DECODE_DIR) *.pyc test_frames.dat

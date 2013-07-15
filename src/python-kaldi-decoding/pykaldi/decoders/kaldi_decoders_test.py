@@ -74,8 +74,8 @@ def load_wav(file_name, def_sample_rate=16000):
 
 class TestOnlineDecoder(unittest.TestCase):
     def setUp(self):
-        # TODO solve dependency on binutils/online-data
-        dir_path = os.path.realpath(os.path.dirname(__file__) + '/../binutils')
+        dir_path = os.path.realpath(os.path.dirname(__file__))
+        # Should be extracted by makefile
         self.wav_path = dir_path + '/online-data/audio/test1.wav'
         # self.wav_path = 'test.wav'
         p = dir_path + '/online-data/models/tri2b_mmi'
