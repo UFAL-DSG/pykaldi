@@ -199,6 +199,7 @@ void OnlineBlockSource::Write(unsigned char * data, size_t num_samples) {
           KALDI_ERR << "bits per sample is " << bits_per_sample_;  // already checked this.
       }
   }
+}
 
 
 
