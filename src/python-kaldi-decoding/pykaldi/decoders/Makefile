@@ -34,10 +34,10 @@ $(BIGLIB): ../../$(BIGLIB)
 
 kaldi_decoders.py: $(LIBFILE) $(BIGLIB)
 
-kaldi_decoders_test.py:  kaldi_decoders.py $(LIBFILE) $(BIGLIB) $(DATA_TAR)
+kaldi_decoders_test.py:  kaldi_decoders.py $(LIBFILE) $(BIGLIB)
 
 
-test: $(LIBFILE) $(BIGLIB)
+test: $(LIBFILE) $(BIGLIB) $(DATA_TAR)
 	nosetests -s kaldi_decoders_test.py  # -s let the output be printed
 
 clean:

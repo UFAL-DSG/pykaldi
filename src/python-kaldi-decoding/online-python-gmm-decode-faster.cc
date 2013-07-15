@@ -224,19 +224,20 @@ bool KaldiDecoderWrapper::GetHypothesis() {
                                  static_cast<vector<int32> *>(0),
                                  &last_word_ids,
                                  static_cast<LatticeArc::Weight*>(0));
-    // TODO DEBUG
-    decoder_->GetBestPath(&out_fst_);
-    std::vector<int32> tids;
-    fst::GetLinearSymbolSequence(out_fst_,
-                                 &tids,
-                                 &last_word_ids,
-                                 static_cast<LatticeArc::Weight*>(0));
-    // TODO DEBUG
-    std::stringstream res_key;
-    res_key << "test.wav_" << "<?>" << '-' << decoder_->frame();
-    if (!last_word_ids.empty())
-      words_writer_.Write(res_key.str(), last_word_ids);
-    alignment_writer_.Write(res_key.str(), tids);
+
+    // // TODO DEBUG
+    // decoder_->GetBestPath(&out_fst_);
+    // std::vector<int32> tids;
+    // fst::GetLinearSymbolSequence(out_fst_,
+    //                              &tids,
+    //                              &last_word_ids,
+    //                              static_cast<LatticeArc::Weight*>(0));
+    // std::stringstream res_key;
+    // res_key << "test.wav_" << "<?>" << '-' << decoder_->frame();
+    // if (!last_word_ids.empty())
+    //   words_writer_.Write(res_key.str(), last_word_ids);
+    // alignment_writer_.Write(res_key.str(), tids);
+
   } else {
     // get the hypothesis from currently active state
     if (decoder_->PartialTraceback(&out_fst_)) {
