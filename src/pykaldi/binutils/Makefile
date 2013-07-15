@@ -12,9 +12,9 @@ DECODE_DIR = work
 include ../online-data.mk
 
 # Compiling the $(BIGLIB) in python-kaldi-decoding directory
-$(BIGLIB):
-	$(MAKE) -C ../..  $@
-	cp ../../$@ .
+$(BIGLIB): ../$(BIGLIB)
+	$(MAKE) -C ..  $@
+	cp ../$@ .
 
 decoders:
 	$(MAKE) -C ../$@
