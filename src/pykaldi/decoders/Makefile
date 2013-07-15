@@ -22,7 +22,7 @@ $(LIBFILE): $(OBJFILES)
 	$(CXX) -shared -o $@ -Wl,-soname=$@,--whole-archive $^ -Wl,--no-whole-archive $(LDFLAGS) $(LDLIBS)
 
 # Compiling the $(BIGLIB) in python-kaldi-decoding directory
-$(BIGLIB): ../$(BIGLIB)
+$(BIGLIB):
 	$(MAKE) -C ..  $@
 	cp ../$@ .
 
