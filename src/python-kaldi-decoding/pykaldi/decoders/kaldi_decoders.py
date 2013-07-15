@@ -113,7 +113,6 @@ class OnlineDecoder(KaldiDecoder):
     def prepare_hyp(self):
         full_hyp_p = self.ffi.new("int *")
         size = self.lib.PrepareHypothesis(self.dec, full_hyp_p)
-        print "Python size from PrepareHypothesis", size  # FIXME DEBUG
         return (size, full_hyp_p[0])
 
     def get_hypothesis(self, size):
@@ -121,7 +120,6 @@ class OnlineDecoder(KaldiDecoder):
         # prob_p = self.ffi.new('double *')
         hyp = numpy.zeros(size).astype('int32')
         hyp_p = self.ffi.cast("int *", hyp.ctypes.data)
-        # 
         self.lib.GetHypothesis(self.dec, hyp_p, size)
         prob = 1.0  # FIXME in feature dereference the returned prob: prob = prob_p[0]
         return (prob, hyp)

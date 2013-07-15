@@ -20,7 +20,6 @@ import unittest
 import audioop
 import wave
 import os
-import time
 # Just import this is a test ;-)
 from pykaldi.decoders import ffidummy, libdummy
 
@@ -86,8 +85,10 @@ class TestOnlineDecoder(unittest.TestCase):
             '%s/words.txt' % p, '1:2:3:4:5', '%s/matrix' % p]
         self.samples_per_frame = 2120
         self.pyaudio_loaded = False
-        # self.p, self.stream = setup_pyaudio(self.samples_per_frame)  # may throw Exception
-        # self.pyaudio_loaded = True
+
+    def _setup_pyaudio(self):
+        self.p, self.stream = setup_pyaudio(self.samples_per_frame)  # may throw Exception
+        self.pyaudio_loaded = True
 
     def test_wav(self, decode_once=True, hyp_once=True):
         d = OnlineDecoder(self.argv)
@@ -113,21 +114,23 @@ class TestOnlineDecoder(unittest.TestCase):
         print 'Total words: ', total_words
         # DO NOT FORGET TO CLOSE THE DECODER!
         d.close()
-        time.sleep(2)
 
+    @unittest.skip("Do not run live test by default")
     def test_live(self, duration=3):
+        self._setup_pyaudio()
         d = OnlineDecoder(self.argv)
         for i in xrange(duration * (16000 / self.samples_per_frame)):
-            frame = self.stream.read(self.samples_per_frame)
-            d.frame_in(frame)
-            d.decode()
-        size, full_hyp = d.prepare_hyp()
-        print 'Hypothesis is full %d' % full_hyp
-        prop, hyp = d.get_hypothesis(size)
-        print "probability: %d" % prop
+            frame = self.stream.read(2 * self.samples_per_frame)
+            d.frame_in(frame, len(frame) * 2)
+            while d.decode():
+                num_words, full_hyp = d.prepare_hyp()
+                prop, word_ids = d.get_hypothesis(num_words)
+                print 'full: %r, num_words %d, ids: %s' % (full_hyp, num_words, str(word_ids))
+        print 'Decode last hypothesis'
+        num_words, full_hyp = d.prepare_hyp()
+        prop, word_ids = d.get_hypothesis(num_words)
+        print 'full: %r, num_words %d, ids: %s' % (full_hyp, num_words, str(word_ids))
         self.assertEqual(prop, 1.0, 'Is probability measure implemented now?')
-        print 'Numpy word ids: %s' % str(hyp)
-        self.assertTrue(len(hyp) > 0, 'We should decode something if you speak!')
         d.close()
 
     def tearDown(self):
@@ -140,6 +143,7 @@ class TestAudio(unittest.TestCase):
         self.wav_path = 'test.wav'
         self.samples_per_frame = 256
 
+    @unittest.skip("Requires ALSA library (on Linux). Do not run live test by default")
     def test_play_list(self):
         pcm = load_wav(self.wav_path)
         play_len, frame_len = len(pcm), self.samples_per_frame
@@ -160,6 +164,7 @@ class TestAudio(unittest.TestCase):
         libdummy.play_tear_down(handlep)
         libdummy.delete_frame_list(flp)
 
+    @unittest.skip("Requires ALSA library (on Linux). Do not run live test by default")
     def test_play(self):
         pcm = load_wav(self.wav_path)
         play_len = len(pcm) / 2  # using two chars for one sample of 16 bit audio
