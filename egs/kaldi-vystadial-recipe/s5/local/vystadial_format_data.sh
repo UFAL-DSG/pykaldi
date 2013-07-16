@@ -12,17 +12,6 @@ tmpdir=data/local/lm_tmp
 lexicon=data/local/dict/lexicon.txt
 mkdir -p $tmpdir
 
-# README ALREADY implemented
-# for x in train test; do 
-#   mkdir -p data/$x
-#   cp $srcdir/${x}_wav.scp data/$x/wav.scp || exit 1;
-#   cp $srcdir/${x}_trans.txt data/$x/text || exit 1;
-#   cp $srcdir/$x.spk2utt data/$x/spk2utt || exit 1;
-#   cp $srcdir/$x.utt2spk data/$x/utt2spk || exit 1;
-#   utils/filter_scp.pl data/$x/spk2utt $srcdir/spk2gender > data/$x/spk2gender || exit 1;
-# done
-
-
 # Next, for each type of language model, create the corresponding FST
 # and the corresponding lang_test_* directory.
 

@@ -63,7 +63,7 @@ for d in test train ; do
     ls $DATA/$d/ | sed -n /.*wav$/p |\
     while read wav ; do
         ((i++)) # bash specific
-        if [ $i -ge $every_n ] ; then
+        if [[ $i -ge $every_n ]] ; then
             i=0
             pwav=$DATA/$d/$wav
             trn=`cat $DATA/$d/$wav.trn`
@@ -84,7 +84,6 @@ for d in test train ; do
        sort "${loctmp}/$u" -k1 > "${locdata}/$s"
     done # for unsorted
 
-    #### copy to data dir ###
     mkdir -p data/$d
     cp $locdata/${d}_wav.scp data/$d/wav.scp || exit 1;
     cp $locdata/${d}_trans.txt data/$d/text || exit 1;
@@ -92,6 +91,6 @@ for d in test train ; do
     cp $locdata/$d.utt2spk data/$d/utt2spk || exit 1;
 done # for in test train
 
-# should be set..OK for 1:1 spk2utt, spk from test AND train
+# set 1:1 relation for spk2utt: spk in test AND train
 sort "${loctmp}/spk2gender.unsorted" -k1 > "${locdata}/spk2gender" 
 utils/filter_scp.pl data/$d/spk2utt $locdata/spk2gender > data/$d/spk2gender || exit 1;

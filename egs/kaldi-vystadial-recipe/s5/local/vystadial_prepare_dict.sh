@@ -35,8 +35,6 @@ echo "=== Preparing the LM ..."
 echo debugging_${ARPA_MODEL}_
 
 if [[ ! -z "$ARPA_MODEL" ]] ; then
-    # prepare an ARPA LM and wordlist
-    # KEEPING the OOV -> Allow train Kaldi for OOV model
     cp -f $ARPA_MODEL $local_arpa_lm
     echo "Using predefined LM in arpa format: ${ARPA_MODEL}"
 else
@@ -46,25 +44,29 @@ else
         grep -v '_INHALE_\|_LAUGH_\|_EHM_HMM_\|_NOISE_' \
         > $locdata/lm_train.txt
 
-    # irstlm script see tools/INSTALL for installing irstlm
+    # Launching irstlm script; See tools/INSTALL for installing irstlm
     build-lm.sh -i "$locdata/lm_train.txt" -n ${LM_ORDER} -o "$locdata/lm_phone_${LM_ORDER}.ilm.gz"
-    # irstlm script see tools/INSTALL for installing irstlm
+    # Launching irstlm script; See tools/INSTALL for installing irstlm
     compile-lm "$locdata/lm_phone_${LM_ORDER}.ilm.gz" --text $local_arpa_lm
 fi
 
 echo "=== Preparing the dictionary ..."
 
-if [ -z "${DICTIONARY}" ]; then
+if [ ! -z "${DICTIONARY}" ]; then
     echo "Using predefined dictionary: ${DICTIONARY}"
+    echo '</s>' > $locdata/vocab-full.txt
+    tail -n +3 $DICTIONARY | cut -f 1 |\
+      sort | uniq >> $locdata/vocab-full.txt 
+else 
+    cut -d' ' -f2- data/train/text | tr ' ' '\n' | sort -u > $locdata/vocab-full.txt
 fi
 
 # # NOT ALLOWING OOV WORDS training & also in decoding
-# grep -v -w OOV ${ARPA_MODEL} > data/local/lm.arpa 
+# pushd data/local
+# grep -v -w OOV lm.arpa > lm.arpa_NO_OOV 
+# mv lm.arpa_NO_OOV lm.arpa
+# popd
 
-# FIXME check that we have setup DICTIONARY correctly
-echo '</s>' > data/local/vocab-full.txt
-tail -n +3 $DICTIONARY | cut -d ' ' -f 1 |\
-  sort | uniq >> data/local/vocab-full.txt 
 
 if [ ! -f $locdict/cmudict/cmudict.0.7a ]; then
   echo "--- Downloading CMU dictionary ..."
@@ -132,8 +134,8 @@ cat $locdict/lexicon-oov.txt $locdict/lexicon-iv.txt |\
 
 echo "--- Prepare phone lists ..."
 echo SIL > $locdict/silence_phones.txt
-echo _SIL_ >> $locdict/silence_phones.txt
 echo SIL > $locdict/optional_silence.txt
+
 grep -v -w sil $locdict/lexicon.txt | \
   awk '{for(n=2;n<=NF;n++) { p[$n]=1; }} END{for(x in p) {print x}}' |\
   sort > $locdict/nonsilence_phones.txt
@@ -145,3 +147,4 @@ echo -e "!SIL\tSIL" >> $locdict/lexicon.txt
 touch $locdict/extra_questions.txt
 
 echo "*** Dictionary preparation finished!"
+

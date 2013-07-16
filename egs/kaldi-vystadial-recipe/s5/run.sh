@@ -18,6 +18,7 @@ renice 20 $$
 # Copy the configuration files to exp directory.
 # Write into the exp WARNINGs if reusing settings from another experiment!
 local/save_check_conf.sh || exit 1;
+
 # With save_check_conf.sh it ask about rewriting the data directory
 if [ ! "$(ls -A data 2>/dev/null)" ]; then
 
@@ -47,7 +48,6 @@ if [ ! "$(ls -A ${MFCC_DIR} 2>/dev/null)" ]; then
       data/$x exp/make_mfcc/$x ${MFCC_DIR} || exit 1;
   steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x ${MFCC_DIR} || exit 1;
   done
-
 fi
 
 
