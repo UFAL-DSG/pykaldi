@@ -22,9 +22,9 @@ GST_LIBS = -pthread -lgstbase-1.0 -lgstcontroller-1.0 -lgstreamer-1.0 -lgobject-
 ADDLIBS=../online/kaldi-online.a ../lat/kaldi-lat.a ../decoder/kaldi-decoder.a \
  ../feat/kaldi-feat.a ../transform/kaldi-transform.a ../gmm/kaldi-gmm.a ../hmm/kaldi-hmm.a \
  ../tree/kaldi-tree.a ../matrix/kaldi-matrix.a  ../util/kaldi-util.a ../base/kaldi-base.a \
- ../../tools/portaudio/install/lib/libportaudio.a
+ ../../tools/portaudio/install/lib/libportaudio.a -lasound
 
-GSTKALDI_SO_LDFLAGS = -lasound $(LDFLAGS) $(LDLIBS) 
+GSTKALDI_SO_LDFLAGS = $(LDFLAGS) $(LDLIBS) 
 
 # MKL libs required for shared library
 ifdef MKLROOT
@@ -33,7 +33,10 @@ endif
 
 $(LIBFILE): $(OBJFILES)
 	$(CXX) -shared -DPIC -o $(LIBFILE) -Wl,-soname=$(LIBFILE) $(GST_LIBS) $(GSTKALDI_SO_LDFLAGS)  \
-	-Wl,-whole-archive $(ADDLIBS) -Wl,-no-whole-archive $(OBJFILES)
+	-Wl,-whole-archive $(ADDLIBS) \
+	$(OPENFSTLIBS) \
+	-Wl,-no-whole-archive $(OBJFILES) \
+	$(ATLASLIBS)
  
 kaldimarshal.h: kaldimarshal.list
 	glib-genmarshal --header --prefix=kaldi_marshal kaldimarshal.list > kaldimarshal.h.tmp

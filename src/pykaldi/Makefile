@@ -33,6 +33,7 @@ TESTFILES = compute-wer-test online-python-gmm-decode-faster-test
 OBJFILES = compute-wer.o online-python-gmm-decode-faster.o
 
 LIBNAME = kaldi-python-kaldi-decoding
+LIBFILE = lib$(LIBNAME).so
 
 PYTHON_LIB = libpykaldi.so
 
@@ -43,7 +44,7 @@ ADDLIBS = ../decoder/kaldi-decoder.a ../online/kaldi-online.a ../thread/kaldi-th
 		  ../feat/kaldi-feat.a ../util/kaldi-util.a ../base/kaldi-base.a
 
 # FIXME LINUX ONLY
-$(PYTHON_LIB): $(OBJFILES) $(ADDLIBS) lib$(LIBNAME).so
+$(PYTHON_LIB): $(OBJFILES) $(ADDLIBS) $(LIBFILE)
 ifneq ($(KALDI_FLAVOR), dynamic)
 	$(warning The following command will probably fail, in that run configure with --shared flag and remake all.)
 endif
