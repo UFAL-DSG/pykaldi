@@ -1,8 +1,18 @@
 #!/bin/bash
-# Author:   Ondrej Platek, Copyright 2012, code is without any warranty!
-# Created:  11:06:13 16/11/2012
-# Modified: 11:06:13 16/11/2012
+# Copyright (c) 2013, Ondrej Platek, Ufal MFF UK <oplatek@ufal.mff.cuni.cz>
 #
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# THIS CODE IS PROVIDED *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+# WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+# MERCHANTABLITY OR NON-INFRINGEMENT.
+# See the Apache 2 License for the specific language governing permissions and
+# limitations under the License. #
 #
 # Makes train/test splits
 # local/voxforge_data_prep.sh --nspk_test ${nspk_test} ${SELECTED} || exit 1
@@ -14,8 +24,26 @@
 #   e) $TYPE.spk2gender  all speakers are male
 # we have ID-recording = ID-speaker
 
+# The vystadial data are specific by having following marks in transcriptions
+# _INHALE_
+# _LAUGH_ 
+# _EHM_HMM_ 
+# _NOISE_
+# _EHM_HMM_
+# _SIL_     ... we filter it here! 
+
 renice 20 $$
 
+contains() {
+# source: http://stackoverflow.com/questions/2829613/how-do-you-tell-if-a-string-contains-another-string-in-unix-shell-scripting
+    string="$1"
+    substring="$2"
+    if test "${string#*$substring}" != "$string" ; then
+        return 0    # $substring is in $string
+    else
+        return 1    # $substring is not in $string
+    fi
+}
 
 every_n=1
 [ -f path.sh ] && . ./path.sh # source the path.
@@ -46,6 +74,9 @@ for d in test train ; do
     ls $DATA/$d/ | sed -n /.*wav$/p |\
     while read wav ; do
         # echo "DEBUGGING wav: $wav"
+        trn=`cat $DATA/$d/$wav.trn`
+        # skip the wavs with silence -> mostly just silence!
+        contains "$trn" "_SIL_" && continue  
         ((i++)) # bash specific
         if [ $i -ge $every_n ] ; then
             i=0
@@ -53,9 +84,6 @@ for d in test train ; do
             echo "$wav $pwav" >> ${loctmp}/${d}_wav.scp.unsorted
             echo "$wav $wav" >> ${loctmp}/${d}.utt2spk.unsorted
             echo "$wav $wav" >> ${loctmp}/${d}.spk2utt.unsorted
-            # transcribtion of $wav
-            trn=`cat $DATA/$d/$wav.trn`
-            # echo "DEBUGGING trn: $trn"
             echo "$wav $trn" >> ${loctmp}/${d}_trans.txt.unsorted
             echo "$wav M" >> ${loctmp}/spk2gender.unsorted
         fi

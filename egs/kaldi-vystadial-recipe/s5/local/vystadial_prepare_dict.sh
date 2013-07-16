@@ -1,14 +1,69 @@
 #!/bin/bash
+# Copyright (c) 2013, Ondrej Platek, Ufal MFF UK <oplatek@ufal.mff.cuni.cz>
+# based on egs/voxforge script created by  Vassil Panayotov Copyright 2012, Apache 2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# THIS CODE IS PROVIDED *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+# WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+# MERCHANTABLITY OR NON-INFRINGEMENT.
+# See the Apache 2 License for the specific language governing permissions and
+# limitations under the License. #
 
-# Copyright 2012 Vassil Panayotov
-# Apache 2.0
+# The vystadial data are specific by having following marks in transcriptions
+# _INHALE_
+# _LAUGH_ 
+# _EHM_HMM_ 
+# _NOISE_
+# _EHM_HMM_
+# _SIL_     ... we filter this already
 
 renice 20 $$
 
 locdata=data/local
 locdict=$locdata/dict
+local_arpa_lm=data/local/lm.arpa
+
+mkdir -p $locdata
+
+echo "=== Preparing the LM ..."
+
+if [ -z "${ARPA_MODEL}" ]; then
+    # prepare an ARPA LM and wordlist
+    # KEEPING the OOV -> Allow train Kaldi for OOV model
+    cp -f $ARPA_MODEL $local_arpa_lm
+    echo "Using predefined LM in arpa format: ${ARPA_MODEL}"
+else
+    echo "=== Building LM of order ${lm_order}..."
+    cut -d' ' -f2- data/train/text | sed -e 's:^:<s> :' -e 's:$: </s>:' | \
+        grep -v '_INHALE_\|_LAUGH_\|_EHM_HMM_\|_NOISE_'  | \
+        > $locdata/lm_train.txt
+    # FIXME move it up after echo Building
+    [ -z "$IRSTLM" ] && echo "Set IRSTLM env variable for building LM" && exit 1;
+    build-lm.sh -i $locdata/lm_train.txt -n ${lm_order} -o $locdata/lm_phone_${lm_order}.ilm.gz
+
+    compile-lm $locdata/lm_phone_${lm_order}.ilm.gz --text yes /dev/stdout | \
+    grep -v unk | gzip -c > $local_arpa_lm 
+fi
 
 echo "=== Preparing the dictionary ..."
+
+if [ -z "${DICTIONARY}" ]; then
+    echo "Using predefined dictionary: ${DICTIONARY}"
+fi
+
+# # NOT ALLOWING OOV WORDS training & also in decoding
+# grep -v -w OOV ${ARPA_MODEL} > data/local/lm.arpa 
+
+# FIXME check that we have setup DICTIONARY correctly
+echo '</s>' > data/local/vocab-full.txt
+tail -n +3 $DICTIONARY | cut -d ' ' -f 1 |\
+  sort | uniq >> data/local/vocab-full.txt 
 
 if [ ! -f $locdict/cmudict/cmudict.0.7a ]; then
   echo "--- Downloading CMU dictionary ..."

@@ -23,18 +23,10 @@ if [ ! "$(ls -A data 2>/dev/null)" ]; then
   # local/voxforge_data_prep.sh --nspk_test ${nspk_test} ${SELECTED} || exit 1
   local/vystadial_data_prep.sh --every_n $everyN ${DATA_ROOT} || exit 1
   
-  # prepare an ARPA LM and wordlist
-  mkdir -p data/local
-  # KEEPING the OOV -> Allow train Kaldi for OOV model
-  cp -f ${ARPA_MODEL} data/local/lm.arpa  
-  # # NOT ALLOWING OOV WORDS training & also in decoding
-  # grep -v -w OOV ${ARPA_MODEL} > data/local/lm.arpa 
-  echo '</s>' > data/local/vocab-full.txt
-  tail -n +3 ${DICTIONARY} | cut -d ' ' -f 1 |\
-      sort | uniq >> data/local/vocab-full.txt 
   
-  # Prepare the lexicon and various phone lists
-  # DISABLED Sequitor model: Pronunciations for OOV words are obtained using a pre-trained Sequitur model
+  # Prepare the lexicon, language model and various phone lists
+  # DISABLED because of swig: Sequitor model: 
+  # Pronunciations for OOV words are obtained using a pre-trained Sequitur model
   local/vystadial_prepare_dict.sh || exit 1 
   
   # Prepare data/lang and data/local/lang directories read it IO param describtion
@@ -48,12 +40,14 @@ fi
   
 # With save_check_conf.sh it ask about rewriting the ${MFCC_DIR} directory
 if [ ! "$(ls -A ${MFCC_DIR} 2>/dev/null)" ]; then
+
   # Creating MFCC features and storing at ${MFCC_DIR} (Could be large).
   for x in train test ; do 
   steps/make_mfcc.sh --cmd "$train_cmd" --nj $njobs \
       data/$x exp/make_mfcc/$x ${MFCC_DIR} || exit 1;
   steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x ${MFCC_DIR} || exit 1;
   done
+
 fi
 
 
