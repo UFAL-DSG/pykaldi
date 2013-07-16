@@ -105,6 +105,8 @@ class OnlineFasterDecoder : public FasterDecoder {
 
   int32 frame() { return frame_; }
 
+  DecodeState state() { return state_; }
+
  private:
   void ResetDecoder(bool full);
 

@@ -1,0 +1,5 @@
+This code is released under the APACHE 2.0 license. The full wording of 
+the license can be found in the LICENSE-APACHE-2.0.TXT.
+
+2013-07-09 Ondrej Platek
+

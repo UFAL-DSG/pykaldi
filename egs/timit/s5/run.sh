@@ -33,7 +33,7 @@ for x in test train; do
  steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x $mfccdir || exit 1;
 done
 
-vecho ============================================================================
+echo ============================================================================
 echo "                     MonoPhone Training & Decoding                        "
 echo ============================================================================
 

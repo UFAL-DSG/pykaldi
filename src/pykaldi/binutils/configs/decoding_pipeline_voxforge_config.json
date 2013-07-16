@@ -1,0 +1,50 @@
+{
+    "decode_dir": "work",
+    "exp_dir": "online-data/models/tri2a",
+    "data_dir": "unused",
+    "wav_scp": {"prefix": "decode_dir", "value": "input.scp"},
+    "wst": {"prefix": "exp_dir", "value": "words.txt"},
+    "mfcc": {
+      "config": "configs/mfcc.config",
+      "ark": {"prefix": "decode_dir", "value": "raw_mfcc.ark"},
+      "scp": {"prefix": "decode_dir", "value": "raw_mfcc.scp"}
+    },
+    "cmvn": {
+      "spk2utt": {"prefix": "decode_dir", "value": "spk2utt"},
+      "ark": {"prefix": "decode_dir", "value": "raw_cmvn.ark"},
+      "scp": {"prefix": "decode_dir", "value": "raw_cmvn.scp"}
+    },
+    "latgen-decode": {
+        "config": "configs/decode.config",
+        "model": {"prefix": "exp_dir", "value": "model"},
+        "hclg": {"prefix": "exp_dir", "value": "HCLG.fst"},
+        "utt2spk": {"prefix": "decode_dir", "value": "spk2utt"},
+        "cmvn": {"prefix": "decode_dir", "value": "cmvn.scp"},
+        "lattice": {"prefix": "decode_dir", "value": "lat.gz"}
+    },
+    "best-path": {
+        "config":"configs/bestpath.config",
+        "trans":{"prefix": "decode_dir", "value": "best_path.trans"}
+    },
+    "online-decode": {
+        "config": "configs/online_decode.config",
+        "trans":{"prefix": "decode_dir", "value": "online.trans"},
+        "align":{"prefix": "decode_dir", "value": "online.align"}
+    },
+    "online-python": {
+        "config": "configs/online_python.config",
+        "trans":{"prefix": "decode_dir", "value": "python.trans"},
+        "samples_per_frame":"2120"
+    },
+    "wer-compute": {
+        "config": "configs/wer.config",
+        "reference": {"prefix": "decode_dir", "value": "reference.txt"},
+        "hypothesis": [ 
+                        {"prefix": "decode_dir", "value": "python.trans"}
+            ],
+        "unused_hypothesis" :[
+                        {"prefix": "decode_dir", "value": "online.trans"},
+                        {"prefix": "decode_dir", "value": "best_path.trans"}
+            ]
+    }
+}
