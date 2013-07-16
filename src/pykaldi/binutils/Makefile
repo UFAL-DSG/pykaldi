@@ -2,7 +2,8 @@
 # since we are dependent on the code there
 
 # PYTHON PIPELINE EXAMPLE settings 
-PIPELINE_CONFIG = configs/decoding_pipeline_voxforge_config.json
+VOXFORGE_CONFIG = configs/decoding_pipeline_voxforge_config.json
+VYSTADIAL_CONFIG = configs/decoding_pipeline_vystadial_config.json
 BIGLIB = libpykaldi.so
 
 all: $(BIGLIB)
@@ -22,10 +23,13 @@ decoders:
 test: run_pipeline_example
 
 # PYTHON PIPELINE EXAMPLE
-run_pipeline_example: decoding_pipeline_example.py decoders $(BIGLIB) $(DATA_TAR) $(PIPELINE_CONFIG) 
-	python $< $(PIPELINE_CONFIG)
+run_pipeline_example: decoding_pipeline_example.py decoders $(BIGLIB) $(DATA_TAR) $(VOXFORGE_CONFIG) 
+	python $< $(VOXFORGE_CONFIG)
 
 
+
+recipe_test: decoding_pipeline_example.py decoders $(BIGLIB) $(DATA_TAR) $(VYSTADIAL_CONFIG)
+	python $< $(VYSTADIAL_CONFIG)
 	
 clean:
 	rm -rf $(DATA_TAR) $(DATA_FILE) $(DECODE_DIR) $(BIGLIB) *.pyc 

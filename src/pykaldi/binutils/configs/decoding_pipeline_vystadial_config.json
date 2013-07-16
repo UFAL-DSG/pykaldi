@@ -1,0 +1,36 @@
+{
+    "decode_dir": "work",
+    "exp_dir": "../../../egs/kaldi-vystadial-recipe/s5/Results/tagged_experiment1.0_exp/tri2a",
+    "data_dir": "unused",
+    "wav_scp": {"prefix": "decode_dir", "value": "input.scp"},
+    "wst": {"prefix": "exp_dir", "value": "/graph/words.txt"},
+    "mfcc": {
+      "config": "configs/mfcc.config",
+      "ark": {"prefix": "decode_dir", "value": "raw_mfcc.ark"},
+      "scp": {"prefix": "decode_dir", "value": "raw_mfcc.scp"}
+    },
+    "latgen-decode": {
+        "config": "configs/decode.config",
+        "model": {"prefix": "exp_dir", "value": "/final.mdl"},
+        "hclg": {"prefix": "exp_dir", "value": "/graph/HCLG.fst"},
+        "utt2spk": {"prefix": "data_dir", "value": "/test/utt2spk"},
+        "cmvn": {"prefix": "data_dir", "value": "/test/cmvn.scp"},
+        "lattice": {"prefix": "decode_dir", "value": "/lat.gz"}
+    },
+    "online-python": {
+        "config": "configs/online_python.config",
+        "trans":{"prefix": "decode_dir", "value": "python.trans"},
+        "samples_per_frame":"2120"
+    },
+    "wer-compute": {
+        "config": "configs/wer.config",
+        "reference": {"prefix": "decode_dir", "value": "reference.txt"},
+        "hypothesis": [ 
+                        {"prefix": "decode_dir", "value": "python.trans"}
+            ],
+        "unused_hypothesis" :[
+                        {"prefix": "decode_dir", "value": "online.trans"},
+                        {"prefix": "decode_dir", "value": "best_path.trans"}
+            ]
+    }
+}
