@@ -13,8 +13,9 @@
  * MERCHANTABLITY OR NON-INFRINGEMENT.
  * See the Apache 2 License for the specific language governing permissions and
  * limitations under the License. */
-#ifndef KALDI_ONLINE_PYTHON_GMM_DECODE_FASTER_H_
-#define KALDI_ONLINE_PYTHON_GMM_DECODE_FASTER_H_
+
+#ifndef KALDI_PYKALDI_GMM_DECODE_FASTER_H_
+#define KALDI_PYKALDI_GMM_DECODE_FASTER_H_
 
 #include <string>
 #include <vector>
@@ -23,6 +24,7 @@
 #include "online/online-feat-input.h"
 #include "online/online-decodable.h"
 #include "online/online-faster-decoder.h"
+#include "pykaldi/pykaldi-audio-source.h"
 
 /*****************
  *  C interface  *
@@ -145,4 +147,4 @@ class KaldiDecoderWrapper {
 
 #endif  // __cplusplus
 
-#endif  // #ifndef KALDI_ONLINE_PYTHON_GMM_DECODE_FASTER_H_
+#endif  // #ifndef KALDI_PYKALDI_GMM_DECODE_FASTER_H_

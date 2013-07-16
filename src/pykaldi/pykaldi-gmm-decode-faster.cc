@@ -13,7 +13,6 @@
  * MERCHANTABLITY OR NON-INFRINGEMENT.
  * See the Apache 2 License for the specific language governing permissions and
  * limitations under the License. */
-// FIXME make the OnlineFasterDecoder does not act like VAD 
 
 #include "feat/feature-mfcc.h"
 #include "online/online-audio-source.h"
@@ -22,7 +21,7 @@
 #include "online/online-faster-decoder.h"
 #include "online/onlinebin-util.h"
 
-#include "online-python-gmm-decode-faster.h"
+#include "pykaldi-gmm-decode-faster.h"
 
 /*****************
  *  C interface  *
@@ -58,11 +57,9 @@ size_t PrepareHypothesis(CKaldiDecoderWrapper *d, int * is_full) {
 }
 void GetHypothesis(CKaldiDecoderWrapper *d, int * word_ids, size_t size) {
   kaldi::KaldiDecoderWrapper *dp = reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d);
-  // KALDI_WARN << "DEBUG";
   for(size_t i = 0; i < size; ++i) {
     word_ids[i] = dp->last_word_ids[i];
   }
-  // KALDI_WARN << "DEBUG";
 }
 
 /*******************
@@ -115,13 +112,11 @@ void KaldiDecoderWrapper::Reset() {
   lda_mat_rspecifier_.clear();
 
   resetted_ = true; ready_ = false;
-  // KALDI_WARN << "DEBUG";
 } // Reset ()
 
 int KaldiDecoderWrapper::Setup(int argc, char **argv) {
   ready_ = false; resetted_ = false;
   try {
-    // KALDI_WARN << "DEBUG";
     if (ParseArgs(argc, argv) != 0) {
       Reset(); 
       return 1;
@@ -135,7 +130,6 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
       am_gmm_.Read(ki.Stream(), binary);
     }
 
-    // KALDI_WARN << "DEBUG";
     decode_fst_ = ReadDecodeGraph(fst_rxfilename_);
     decoder_ = new OnlineFasterDecoder(*decode_fst_, decoder_opts_,
                                     silence_phones_, *trans_model_);
@@ -157,28 +151,22 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
                                frame_shift * (kSampleFreq_ / 1000));
     cmn_input_ = new OnlineCmnInput(fe_input_, cmn_window_, min_cmn_window_);
 
-    // KALDI_WARN << "DEBUG";
     if (lda_mat_rspecifier_ != "") {
       bool binary_in;
       Matrix<BaseFloat> lda_transform; 
       Input ki(lda_mat_rspecifier_, &binary_in);
       lda_transform.Read(ki.Stream(), binary_in);
-      // KALDI_WARN << "DEBUG";
       // lda_transform is copied to OnlineLdaInput
       feat_transform_ = new OnlineLdaInput(cmn_input_, 
                                 lda_transform,
                                 left_context_, right_context_);
-      // KALDI_WARN << "DEBUG";
     } else {
       // Note from Dan: keeping the next statement for back-compatibility,
       // but I don't think this is really the right way to set the window-size
       // in the delta computation: it should be a separate config.
       delta_feat_opts_.window = left_context_ / 2;
-      // KALDI_WARN << "DEBUG";
       feat_transform_ = new OnlineDeltaInput(delta_feat_opts_, cmn_input_);
-      // KALDI_WARN << "DEBUG";
     }
-    // KALDI_WARN << "DEBUG";
 
     // feature_reading_opts_ contains timeout, batch size.
     feature_matrix_ = new OnlineFeatureMatrix(feature_reading_opts_,
@@ -201,7 +189,6 @@ void KaldiDecoderWrapper::FrameIn(unsigned char *frame, size_t frame_len) {
 
 bool KaldiDecoderWrapper::Decode(void) {
   OnlineFasterDecoder::DecodeState state = decoder_->Decode(decodable_);
-  // KALDI_WARN << "DEBUG";
   return  state != OnlineFasterDecoder::kEndFeats;
 }
 
@@ -225,6 +212,7 @@ bool KaldiDecoderWrapper::GetHypothesis() {
                                  static_cast<LatticeArc::Weight*>(0));
 
     // // TODO DEBUG
+    // KALDI_WARN << "DEBUG";
     // decoder_->GetBestPath(&out_fst_);
     // std::vector<int32> tids;
     // fst::GetLinearSymbolSequence(out_fst_,
@@ -253,7 +241,6 @@ bool KaldiDecoderWrapper::GetHypothesis() {
 bool KaldiDecoderWrapper::GetHypothesis(std::vector<int32> & word_ids) {
   bool result = GetHypothesis();
   word_ids = this->last_word_ids;
-  // KALDI_WARN << "DEBUG";
   return result;
 }
 
@@ -307,7 +294,6 @@ int KaldiDecoderWrapper::ParseArgs(int argc, char ** argv) {
     if (this->silence_phones_.empty())
         KALDI_ERR << "No silence phones given!";
 
-    // KALDI_WARN << "DEBUG";
     return 0;
   } catch(const std::exception& e) {
     std::cerr << e.what();
@@ -317,7 +303,6 @@ int KaldiDecoderWrapper::ParseArgs(int argc, char ** argv) {
 
 bool KaldiDecoderWrapper::UtteranceEnded() {
   // FIXME I should detect probably this myself from the Dialog System
-  // KALDI_WARN << "DEBUG";
   return decoder_->state() & (OnlineFasterDecoder::kEndFeats | 
       OnlineFasterDecoder::kEndUtt);
 }
