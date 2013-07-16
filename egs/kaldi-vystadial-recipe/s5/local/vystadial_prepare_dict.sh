@@ -32,23 +32,24 @@ local_arpa_lm=data/local/lm.arpa
 mkdir -p $locdata
 
 echo "=== Preparing the LM ..."
+echo debugging_${ARPA_MODEL}_
 
-if [ -z "${ARPA_MODEL}" ]; then
+if [[ ! -z "$ARPA_MODEL" ]] ; then
     # prepare an ARPA LM and wordlist
     # KEEPING the OOV -> Allow train Kaldi for OOV model
     cp -f $ARPA_MODEL $local_arpa_lm
     echo "Using predefined LM in arpa format: ${ARPA_MODEL}"
 else
-    echo "=== Building LM of order ${lm_order}..."
-    cut -d' ' -f2- data/train/text | sed -e 's:^:<s> :' -e 's:$: </s>:' | \
-        grep -v '_INHALE_\|_LAUGH_\|_EHM_HMM_\|_NOISE_'  | \
-        > $locdata/lm_train.txt
-    # FIXME move it up after echo Building
+    echo "=== Building LM of order ${LM_ORDER}..."
     [ -z "$IRSTLM" ] && echo "Set IRSTLM env variable for building LM" && exit 1;
-    build-lm.sh -i $locdata/lm_train.txt -n ${lm_order} -o $locdata/lm_phone_${lm_order}.ilm.gz
+    cut -d' ' -f2- data/train/text | sed -e 's:^:<s> :' -e 's:$: </s>:' | \
+        grep -v '_INHALE_\|_LAUGH_\|_EHM_HMM_\|_NOISE_' \
+        > $locdata/lm_train.txt
 
-    compile-lm $locdata/lm_phone_${lm_order}.ilm.gz --text yes /dev/stdout | \
-    grep -v unk | gzip -c > $local_arpa_lm 
+    # irstlm script see tools/INSTALL for installing irstlm
+    build-lm.sh -i "$locdata/lm_train.txt" -n ${LM_ORDER} -o "$locdata/lm_phone_${LM_ORDER}.ilm.gz"
+    # irstlm script see tools/INSTALL for installing irstlm
+    compile-lm "$locdata/lm_phone_${LM_ORDER}.ilm.gz" --text $local_arpa_lm
 fi
 
 echo "=== Preparing the dictionary ..."

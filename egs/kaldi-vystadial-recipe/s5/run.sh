@@ -14,6 +14,7 @@ renice 20 $$
 # Load few variables for changing the parameters of the training
 . ./conf/train_conf.sh
 
+
 # Copy the configuration files to exp directory.
 # Write into the exp WARNINGs if reusing settings from another experiment!
 local/save_check_conf.sh || exit 1;
@@ -22,7 +23,6 @@ if [ ! "$(ls -A data 2>/dev/null)" ]; then
 
   # local/voxforge_data_prep.sh --nspk_test ${nspk_test} ${SELECTED} || exit 1
   local/vystadial_data_prep.sh --every_n $everyN ${DATA_ROOT} || exit 1
-  
   
   # Prepare the lexicon, language model and various phone lists
   # DISABLED because of swig: Sequitor model: 

@@ -4,15 +4,19 @@
 export DATA_ROOT="/ha/projects/vystadial/data/asr/en/voip/"
 
 # Test-time language model order
-# We are just copying the arpa LM (3-order)
-lm_order=3 
-export ARPA_MODEL="/ha/projects/vystadial/git/alex/resources/lm/caminfo/arpa_trigram"
+# The script just copies the arpa LM 
+# export LM_ORDER=3 
+# export ARPA_MODEL="/ha/projects/vystadial/git/alex/resources/lm/caminfo/arpa_trigram"
+
+export LM_ORDER=3
+# Unset or empty ARPA_MODEL variable means 
+# that the script should build the LM itself
+unset ARPA_MODEL 
 
 export DICTIONARY="/ha/projects/vystadial/git/alex/resources/lm/caminfo/dict"
 
 # Storage dir for MFCC. Need a lot of space. 
 export MFCC_DIR="./mfcc"
-
 
 # How big portion of available data to use
 # everyN=3    ->   we use one third of data
