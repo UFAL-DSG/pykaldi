@@ -2,7 +2,7 @@
 renice 20 $$
 
 # Copyright Ondrej Platek Apache 2.0
-# based on copyrighted 2012 Vassil Panayotov recipe 
+# based heavily on copyrighted 2012 Vassil Panayotov recipe 
 # at egs/voxforge/s5/run.sh(Apache 2.0)
 
 . ./path.sh
@@ -17,7 +17,7 @@ renice 20 $$
 # Copy the configuration files to exp directory.
 # Write into the exp WARNINGs if reusing settings from another experiment!
 local/save_check_conf.sh || exit 1;
-
+# With save_check_conf.sh it ask about rewriting the data directory
 if [ ! "$(ls -A data 2>/dev/null)" ]; then
 
   # local/voxforge_data_prep.sh --nspk_test ${nspk_test} ${SELECTED} || exit 1
@@ -46,14 +46,12 @@ fi
 # end of generating data directory
   
   
-###### TRAINING SETTINGS #######
-
-# if ${MFCC_DIR} is empty then generate the content
+# With save_check_conf.sh it ask about rewriting the ${MFCC_DIR} directory
 if [ ! "$(ls -A ${MFCC_DIR} 2>/dev/null)" ]; then
   # Creating MFCC features and storing at ${MFCC_DIR} (Could be large).
   for x in train test ; do 
   steps/make_mfcc.sh --cmd "$train_cmd" --nj $njobs \
-  data/$x exp/make_mfcc/$x ${MFCC_DIR} || exit 1;
+      data/$x exp/make_mfcc/$x ${MFCC_DIR} || exit 1;
   steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x ${MFCC_DIR} || exit 1;
   done
 fi
