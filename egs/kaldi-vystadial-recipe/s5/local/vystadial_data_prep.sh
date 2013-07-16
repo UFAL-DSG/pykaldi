@@ -34,17 +34,6 @@
 
 renice 20 $$
 
-contains() {
-# source: http://stackoverflow.com/questions/2829613/how-do-you-tell-if-a-string-contains-another-string-in-unix-shell-scripting
-    string="$1"
-    substring="$2"
-    if test "${string#*$substring}" != "$string" ; then
-        return 0    # $substring is in $string
-    else
-        return 1    # $substring is not in $string
-    fi
-}
-
 every_n=1
 [ -f path.sh ] && . ./path.sh # source the path.
 . utils/parse_options.sh || exit 1;
@@ -73,14 +62,11 @@ i=0
 for d in test train ; do
     ls $DATA/$d/ | sed -n /.*wav$/p |\
     while read wav ; do
-        # echo "DEBUGGING wav: $wav"
-        trn=`cat $DATA/$d/$wav.trn`
-        # skip the wavs with silence -> mostly just silence!
-        contains "$trn" "_SIL_" && continue  
         ((i++)) # bash specific
         if [ $i -ge $every_n ] ; then
             i=0
             pwav=$DATA/$d/$wav
+            trn=`cat $DATA/$d/$wav.trn`
             echo "$wav $pwav" >> ${loctmp}/${d}_wav.scp.unsorted
             echo "$wav $wav" >> ${loctmp}/${d}.utt2spk.unsorted
             echo "$wav $wav" >> ${loctmp}/${d}.spk2utt.unsorted
