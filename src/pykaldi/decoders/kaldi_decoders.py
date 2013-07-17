@@ -16,7 +16,6 @@
 
 from pykaldi.decoders import ffidec, libdec
 from pykaldi.decoders import ffidummy, libdummy
-import numpy
 
 
 class KaldiDecoder(object):
@@ -100,10 +99,34 @@ class OnlineDecoder(KaldiDecoder):
     def get_hypothesis(self, size):
         # TODO our dec does not return any measure of quality for the decoded hypothesis
         # prob_p = self.ffi.new('double *')
+        hyp_p = self.ffi.new("int []", size)
+        self.lib.GetHypothesis(self.dec, hyp_p, size)
+        hyp = []
+        for i in xrange(size):
+            hyp.append(hyp_p[i])
+        prob = 1.0  # TODO get real prob from C in feature and dereference it: prob = prob_p[0]
+        return (prob, hyp)
+
+
+class OnlineDecoderNumpy(OnlineDecoder):
+    '''Inherits all interface from OnlineDecoder and overrides
+    the get_hypothesis method to return Numpy array'''
+
+    def __init__(self, args, **kwargs):
+        try:
+            import numpy
+        except:
+            # FIXME use custom exception class eg PykaldiOnlineDecoderArgsError
+            raise Exception("Install numpy for OnlineDecoderNumpy!")
+        OnlineDecoder.__init__(self, args, **kwargs)
+
+    def get_hypothesis(self, size):
+        # TODO our dec does not return any measure of quality for the decoded hypothesis
+        # prob_p = self.ffi.new('double *')
         hyp = numpy.zeros(size).astype('int32')
         hyp_p = self.ffi.cast("int *", hyp.ctypes.data)
         self.lib.GetHypothesis(self.dec, hyp_p, size)
-        prob = 1.0  # FIXME in feature dereference the returned prob: prob = prob_p[0]
+        prob = 1.0  # TODO get real prob from C in feature and dereference it: prob = prob_p[0]
         return (prob, hyp)
 
 
