@@ -9,11 +9,6 @@
       "ark": {"prefix": "decode_dir", "value": "raw_mfcc.ark"},
       "scp": {"prefix": "decode_dir", "value": "raw_mfcc.scp"}
     },
-    "cmvn": {
-      "spk2utt": {"prefix": "decode_dir", "value": "spk2utt"},
-      "ark": {"prefix": "decode_dir", "value": "raw_cmvn.ark"},
-      "scp": {"prefix": "decode_dir", "value": "raw_cmvn.scp"}
-    },
     "latgen-decode": {
         "config": "configs/decode.config",
         "model": {"prefix": "exp_dir", "value": "model"},
@@ -22,19 +17,11 @@
         "cmvn": {"prefix": "decode_dir", "value": "cmvn.scp"},
         "lattice": {"prefix": "decode_dir", "value": "lat.gz"}
     },
-    "best-path": {
-        "config":"configs/bestpath.config",
-        "trans":{"prefix": "decode_dir", "value": "best_path.trans"}
-    },
-    "online-decode": {
-        "config": "configs/online_decode.config",
-        "trans":{"prefix": "decode_dir", "value": "online.trans"},
-        "align":{"prefix": "decode_dir", "value": "online.align"}
-    },
     "online-python": {
         "config": "configs/online_python.config",
         "trans":{"prefix": "decode_dir", "value": "python.trans"},
-        "samples_per_frame":"2120"
+        "samples_per_frame":"2120",
+        "silent_phones":"1:2:3:4:5"
     },
     "wer-compute": {
         "config": "configs/wer.config",

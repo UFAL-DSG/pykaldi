@@ -20,106 +20,6 @@ from pykaldi.binutils import ffibin, libbin
 import numpy as np
 
 
-def run_mfcc(ffi, mfcclib, config):
-    '''Settings and arguments based on /ha/work/people/oplatek/kaldi-trunk/egs/kaldi-
-    vystadial-recipe/s5/steps/make_mfcc.sh'''
-    c = config['mfcc']
-    mfcc_args = ['python-compute-mfcc-feat', '--config=%(config)s' % c,
-                 'scp:%(wav_scp)s' % config, 'ark,scp:%(ark)s,%(scp)s' % c]
-    try:
-        mfcc_argkeepalive = [ffi.new("char[]", arg) for arg in mfcc_args]
-        mfcc_argv = ffi.new("char *[]", mfcc_argkeepalive)
-        retcode = mfcclib.compute_mfcc_feats_like_main(
-            len(mfcc_args), mfcc_argv)
-        if retcode != 0:
-            raise PyKaldiError(retcode)
-    except Exception as e:
-        print 'Failed running mfcc!'
-        raise e
-
-
-def run_cmvn(ffi, mfcclib, config):
-    c = config['cmvn']
-    mfcc_args = ['python-compute-cmvn-stats', '--spk2utt=%(spk2utt)s' % c,
-                 'scp:%s' % config['mfcc']['scp'], 'ark,scp:%(ark)s,%(scp)s' % c]
-    try:
-        mfcc_argkeepalive = [ffi.new("char[]", arg) for arg in mfcc_args]
-        mfcc_argv = ffi.new("char *[]", mfcc_argkeepalive)
-        retcode = mfcclib.compute_cmvn_stats_like_main(
-            len(mfcc_args), mfcc_argv)
-        if retcode != 0:
-            raise PyKaldiError(retcode)
-    except Exception as e:
-        print 'Failed running cmvn!'
-        raise e
-
-
-def run_decode(ffi, decodelib, config):
-    '''Settings and arguments based on /ha/work/people/oplatek/kaldi-trunk/egs/kaldi-
-    vystadial-recipe/s5/steps/decode.sh'''
-    c = config['latgen-decode']
-    # feats for delta not lda
-    # feats = 'ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:%(utt2spk)s scp:%(cmvn)s ' % c
-    # feats += 'scp:%s ark:- | add-deltas ark:- ark:- |' % config['mfcc']['scp']
-    # or without CMVN
-    feats = 'ark,s,cs:add-deltas scp:%s ark:- |' % config['mfcc']['scp']
-    decode_args = ['python-gmm-latgen-faster', '--config=%(config)s' % c,
-                   '--word-symbol-table=%(wst)s' % config,
-                   c['model'], c['hclg'], feats,
-                   'ark:|gzip -c > %(lattice)s' % c]
-    try:
-        decode_argkeepalive = [ffi.new("char[]", arg) for arg in decode_args]
-        decode_argv = ffi.new("char *[]", decode_argkeepalive)
-        retcode = decodelib.gmm_latgen_faster_like_main(
-            len(decode_args), decode_argv)
-        if retcode != 0:
-            raise PyKaldiError(retcode)
-        print 'Running decode finished!'
-    except Exception as e:
-        print 'Failed running decode!'
-        raise e
-
-
-def run_bestpath(ffi, bestpathlib, config):
-    ''' Settings and arguments based on /ha/work/people/oplatek/kaldi-trunk/egs/kaldi-
-    vystadial-recipe/s5/local/shore.sh'''
-    c = config['best-path']
-    bestpath_args = ['bestpath_unsed', '--config=%(config)s' % c, '--word-symbol-table=%(wst)s' % config,
-                     'ark:gunzip -c %s|' % config['latgen-decode']['lattice'],
-                     'ark,t:%(trans)s' % c]
-    try:
-        bestpath_argkeepalive = [ffi.new("char[]", arg)
-                                 for arg in bestpath_args]
-        bestpath_argv = ffi.new("char *[]", bestpath_argkeepalive)
-        retcode = bestpathlib.lattice_best_path_like_main(
-            len(bestpath_args), bestpath_argv)
-        if retcode != 0:
-            raise PyKaldiError(retcode)
-    except Exception as e:
-        print 'Failed running bestpath!'
-        raise e
-
-
-def run_online(ffi, onlinelib, config):
-    ''' Based on kaldi-trunk/egs/voxforge/online_demo/run.sh'''
-    c = config['online-decode']
-    ldc = config['latgen-decode']
-    online_args = ['python-online-wav-gmm-decode-faster',
-                   '--config=%(config)s' % c, 'scp:%(wav_scp)s' % config,
-                   ldc['model'], ldc['hclg'], config['wst'], '1:2:3:4:5',
-                   'ark,t:%(trans)s' % c, 'ark,t:%(align)s' % c]
-    try:
-        online_argkeepalive = [ffi.new("char[]", arg) for arg in online_args]
-        online_argv = ffi.new("char *[]", online_argkeepalive)
-        retcode = onlinelib.online_wav_gmm_decode_faster_like_main(
-            len(online_args), online_argv)
-        if retcode != 0:
-            raise PyKaldiError(retcode)
-    except Exception as e:
-        print 'Failed running online!'
-        raise e
-
-
 def run_python_online(config):
     from pykaldi.decoders.kaldi_decoders import OnlineDecoder
     from pykaldi.decoders.kaldi_decoders_test import load_wav
@@ -127,7 +27,7 @@ def run_python_online(config):
     c, ldc = config['online-python'], config['latgen-decode']
     argv = ['--config=%(config)s' % c,
             ldc['model'], ldc['hclg'],
-            config['wst'], '1:2:3:4:5']
+            config['wst'], '%(silent_phones)s' % c]
     samples_per_frame = int(c['samples_per_frame'])
 
     with open(config['wav_scp'], 'rb') as r:

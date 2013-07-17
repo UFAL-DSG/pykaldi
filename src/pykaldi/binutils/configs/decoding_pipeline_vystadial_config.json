@@ -20,7 +20,8 @@
     "online-python": {
         "config": "configs/online_python.config",
         "trans":{"prefix": "decode_dir", "value": "python.trans"},
-        "samples_per_frame":"2120"
+        "samples_per_frame":"2120",
+        "silent_phones":"1:2:3:4:5"
     },
     "wer-compute": {
         "config": "configs/wer.config",
