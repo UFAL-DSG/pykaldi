@@ -22,7 +22,6 @@
 
 namespace kaldi {
 
-/// Buffers internally the given data
 void OnlineBlockSource::Write(unsigned char * data, size_t num_samples) {
   // allocate the space at once -> should be faster
   src_.reserve(src_.size() + num_samples);
@@ -60,7 +59,6 @@ void OnlineBlockSource::Write(unsigned char * data, size_t num_samples) {
 }
 
 
-/// Return true if some still data available after Reading
 bool OnlineBlockSource::Read(Vector<BaseFloat> *data) {
   KALDI_ASSERT(data->Dim() > 0);
 

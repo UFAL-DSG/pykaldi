@@ -19,6 +19,37 @@ from ordereddefaultdict import DefaultOrderedDict
 import argparse
 import errno
 import json
+import wave
+import audioop
+
+
+def load_wav(file_name, def_sample_rate=16000):
+    """ Source: from Alex/utils/audio.py
+    Reads all audio data from the file and returns it in a string.
+
+    The content is re-sampled into the default sample rate."""
+    try:
+        wf = wave.open(file_name, 'r')
+        if wf.getnchannels() != 1:
+            raise Exception('Input wave is not in mono')
+        if wf.getsampwidth() != 2:
+            raise Exception('Input wave is not in 16bit')
+        sample_rate = wf.getframerate()
+        # read all the samples
+        chunk, pcm = 1024, b''
+        pcmPart = wf.readframes(chunk)
+        while pcmPart:
+            pcm += str(pcmPart)
+            pcmPart = wf.readframes(chunk)
+    except EOFError:
+        raise Exception('Input PCM is corrupted: End of file.')
+    else:
+        wf.close()
+    # resample audio if not compatible
+    if sample_rate != def_sample_rate:
+        pcm, state = audioop.ratecv(pcm, 2, 1, sample_rate, def_sample_rate, None)
+
+    return pcm
 
 
 def config_is_yes(config, keystr):
@@ -37,14 +68,6 @@ def parse_config_from_arguments():
     # Replace {'prefix':'key_to_path', 'value':'suffix_of_path'} with correct path
     config = expand_prefix(config, config)
     return config
-
-
-class PyKaldiError(Exception):
-    def __init__(self, retcode):
-        self.retcode = retcode
-
-    def __str__(self):
-        return 'Failed with return code: %s' % repr(self.retcode)
 
 
 def make_dir(path):

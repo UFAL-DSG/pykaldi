@@ -41,22 +41,23 @@ CKaldiDecoderWrapper* new_KaldiDecoderWrapper();
 void del_KaldiDecoderWrapper(CKaldiDecoderWrapper *d);
 
 // methods
-int Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
-void Reset(CKaldiDecoderWrapper *d);
-void FinishInput(CKaldiDecoderWrapper *d);
-void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len);
 bool Decode(CKaldiDecoderWrapper *d);
-size_t PrepareHypothesis(CKaldiDecoderWrapper *d, int * is_full);
+size_t FinishDecoding(CKaldiDecoderWrapper *d);
+void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len);
 void GetHypothesis(CKaldiDecoderWrapper *d, int * word_ids, size_t size);
+size_t PrepareHypothesis(CKaldiDecoderWrapper *d, int * is_full);
+void Reset(CKaldiDecoderWrapper *d);
+int Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
 
 // function types for loading functions from shared library
 typedef CKaldiDecoderWrapper* (*CKDW_constructor_t)(void);
 typedef void (*CKDW_void_t)(CKaldiDecoderWrapper*);
 typedef bool (*CKDW_decode_t)(CKaldiDecoderWrapper*);
-typedef int (*CKDW_setup_t)(CKaldiDecoderWrapper*, int, char **);
+typedef size_t (*CKDW_fin_dec_t)(CKaldiDecoderWrapper*);
 typedef void (*CKDW_frame_in_t)(CKaldiDecoderWrapper*, unsigned char *, size_t);
-typedef size_t (*CKDW_prep_hyp_t)(CKaldiDecoderWrapper*, int *);
 typedef void (*CKDW_get_hyp_t)(CKaldiDecoderWrapper*, int *, size_t);
+typedef size_t (*CKDW_prep_hyp_t)(CKaldiDecoderWrapper*, int *);
+typedef int (*CKDW_setup_t)(CKaldiDecoderWrapper*, int, char **);
 
 
 #ifdef __cplusplus
@@ -83,17 +84,27 @@ typedef OnlineFeInput<Mfcc> FeInput;
 class KaldiDecoderWrapper {
  public:
   /// Input sampling frequency is fixed to 16KHz
-  /* KaldiDecoderWrapper():kSampleFreq_(16000) ,mfcc_(0) ,source_(0) ,fe_input_(0) ,cmn_input_(0) ,trans_model_(0) ,decode_fst_(0) ,decoder_(0) ,feat_transform_(0) ,feature_matrix_(0) ,decodable_(0), words_writer_("ark,t:/home/ondra/school/diplomka/kaldi/src/python-kaldi-decoding/DEBUG_word_ids.txt"), alignment_writer_("ark,t:/home/ondra/school/diplomka/kaldi/src/python-kaldi-decoding/DEBUG_align_ids.txt") { Reset(); } */
-   KaldiDecoderWrapper():kSampleFreq_(16000) ,mfcc_(0) ,source_(0) ,fe_input_(0) ,cmn_input_(0) ,trans_model_(0) ,decode_fst_(0) ,decoder_(0) ,feat_transform_(0) ,feature_matrix_(0) ,decodable_(0) { Reset(); }
-  int Setup(int argc, char **argv);
-  void Reset(void);
-  void FrameIn(unsigned char *frame, size_t frame_len);
+   KaldiDecoderWrapper():kSampleFreq_(16000), mfcc_(0), source_(0), 
+    fe_input_(0), cmn_input_(0), trans_model_(0), decode_fst_(0), decoder_(0),
+    feat_transform_(0), feature_matrix_(0), decodable_(0) { Reset(); }
+
   bool Decode(void);
-  void FinishInput();
+  void FrameIn(unsigned char *frame, size_t frame_len);
+
+  /// May take a longer time, timeout in milisecond[not implemented yet]
+  size_t FinishDecoding(size_t timeout);
+
+  /// Return bool: True for full hypothesis, False for partial. 
+  /// For empty hypothesis also returns True.
+  /// Throw away previously decoded buffered hypothesis.
   bool GetHypothesis();
   bool GetHypothesis(std::vector<int32> & word_ids);
-  virtual ~KaldiDecoderWrapper();
+
+  void Reset(void);
+  int Setup(int argc, char **argv);
   bool UtteranceEnded();
+
+  virtual ~KaldiDecoderWrapper(){ Reset(); }
 
   std::vector<int32> last_word_ids;
 
@@ -107,12 +118,12 @@ class KaldiDecoderWrapper {
   // Int32VectorWriter words_writer_;
   // Int32VectorWriter alignment_writer_;
 
-  const int32 kSampleFreq_;
   BaseFloat acoustic_scale_;
   int32 cmn_window_;
+  const int32 kSampleFreq_;
   int32 min_cmn_window_;
-  int32 right_context_;
   int32 left_context_;
+  int32 right_context_;
 
   OnlineFasterDecoderOpts decoder_opts_;
   OnlineFeatureMatrixOptions feature_reading_opts_;

@@ -2,8 +2,8 @@
 # since we are dependent on the code there
 
 # PYTHON PIPELINE EXAMPLE settings 
-VOXFORGE_CONFIG = configs/decoding_pipeline_voxforge_config.json
-VYSTADIAL_CONFIG = configs/decoding_pipeline_vystadial_config.json
+VOXFORGE_CONFIG = configs/voxforge_config.json
+VYSTADIAL_CONFIG = configs/vystadial_config.json
 BIGLIB = libpykaldi.so
 
 all: $(BIGLIB)
@@ -23,7 +23,7 @@ decoders:
 test: run_pipeline_example
 
 # PYTHON PIPELINE EXAMPLE
-run_pipeline_example: decoding_pipeline_example.py decoders $(BIGLIB) $(DATA_TAR) $(VOXFORGE_CONFIG) 
+run_pipeline_example: online_decode.py decoders $(BIGLIB) $(DATA_TAR) $(VOXFORGE_CONFIG) 
 	python $< $(VOXFORGE_CONFIG)
 
 

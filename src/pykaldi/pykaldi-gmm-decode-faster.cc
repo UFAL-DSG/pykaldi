@@ -35,25 +35,14 @@ void del_KaldiDecoderWrapper(CKaldiDecoderWrapper* unallocate_pointer) {
 }
 
 // methods from C
-int Setup(CKaldiDecoderWrapper *d, int argc, char **argv) {
-  return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Setup(argc, argv);
-} 
-void Reset(CKaldiDecoderWrapper *d) {
-  reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Reset();
-}
-void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len) {
-  reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->FrameIn(frame, frame_len);
-}
 bool Decode(CKaldiDecoderWrapper *d) {
   return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Decode();
 }
-void FinishInput(CKaldiDecoderWrapper *d) {
-  reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->FinishInput();
+size_t FinishDecoding(CKaldiDecoderWrapper *d) {
+  return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->FinishDecoding(0);
 }
-size_t PrepareHypothesis(CKaldiDecoderWrapper *d, int * is_full) {
-  kaldi::KaldiDecoderWrapper *dp = reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d);
-  *is_full = dp->GetHypothesis();
-  return dp->last_word_ids.size();
+void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len) {
+  reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->FrameIn(frame, frame_len);
 }
 void GetHypothesis(CKaldiDecoderWrapper *d, int * word_ids, size_t size) {
   kaldi::KaldiDecoderWrapper *dp = reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d);
@@ -61,6 +50,17 @@ void GetHypothesis(CKaldiDecoderWrapper *d, int * word_ids, size_t size) {
     word_ids[i] = dp->last_word_ids[i];
   }
 }
+size_t PrepareHypothesis(CKaldiDecoderWrapper *d, int * is_full) {
+  kaldi::KaldiDecoderWrapper *dp = reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d);
+  *is_full = dp->GetHypothesis();
+  return dp->last_word_ids.size();
+}
+void Reset(CKaldiDecoderWrapper *d) {
+  reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Reset();
+}
+int Setup(CKaldiDecoderWrapper *d, int argc, char **argv) {
+  return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Setup(argc, argv);
+} 
 
 /*******************
  *  C++ interface  *
@@ -68,138 +68,33 @@ void GetHypothesis(CKaldiDecoderWrapper *d, int * word_ids, size_t size) {
 
 namespace kaldi {
 
-
-KaldiDecoderWrapper::~KaldiDecoderWrapper() {
-  Reset();
-}
-
-void KaldiDecoderWrapper::Reset() {
-
-  delete mfcc_;
-  delete source_;
-  delete feat_transform_;
-  delete cmn_input_;
-  delete trans_model_;
-  delete decode_fst_;
-  delete decoder_;
-  delete decodable_;
-  silence_phones_.clear();
-  word_syms_filename_.clear(); // FIXME remove it from options
-  last_word_ids.clear();
-
-  mfcc_ = 0;
-  source_ = 0;
-  feat_transform_ = 0;
-  cmn_input_ = 0;
-  trans_model_ = 0;
-  decode_fst_ = 0;
-  decoder_ = 0;
-  feature_matrix_ = 0;
-  decodable_ = 0;
-
-  // Up to delta-delta derivative features are calculated unless LDA is used
-  // default values: order & window
-  delta_feat_opts_ = DeltaFeaturesOptions(2, 2); 
-
-  acoustic_scale_ = 0.1;
-  cmn_window_ = 600; min_cmn_window_ = 100;
-  right_context_ = 4; left_context_ = 4;
-
-  decoder_opts_ = OnlineFasterDecoderOpts();
-  feature_reading_opts_ = OnlineFeatureMatrixOptions();
-  model_rxfilename_.clear();
-  fst_rxfilename_.clear();
-  lda_mat_rspecifier_.clear();
-
-  resetted_ = true; ready_ = false;
-} // Reset ()
-
-int KaldiDecoderWrapper::Setup(int argc, char **argv) {
-  ready_ = false; resetted_ = false;
-  try {
-    if (ParseArgs(argc, argv) != 0) {
-      Reset(); 
-      return 1;
-    }
-
-    trans_model_ = new TransitionModel();
-    {
-      bool binary;
-      Input ki(model_rxfilename_, &binary);
-      trans_model_->Read(ki.Stream(), binary);
-      am_gmm_.Read(ki.Stream(), binary);
-    }
-
-    decode_fst_ = ReadDecodeGraph(fst_rxfilename_);
-    decoder_ = new OnlineFasterDecoder(*decode_fst_, decoder_opts_,
-                                    silence_phones_, *trans_model_);
-
-    // Fixed 16 bit audio
-    source_ = new OnlineBlockSource(); 
-
-    // We are not properly registering/exposing MFCC and frame extraction options,
-    // because there are parts of the online decoding code, where some of these
-    // options are hardwired(ToDo: we should fix this at some point)
-    MfccOptions mfcc_opts;
-    mfcc_opts.use_energy = false;
-    int32 frame_length = mfcc_opts.frame_opts.frame_length_ms = 25;
-    int32 frame_shift = mfcc_opts.frame_opts.frame_shift_ms = 10;
-    mfcc_ = new Mfcc(mfcc_opts);
-
-    fe_input_ = new FeInput(source_, mfcc_,
-                               frame_length * (kSampleFreq_ / 1000),
-                               frame_shift * (kSampleFreq_ / 1000));
-    cmn_input_ = new OnlineCmnInput(fe_input_, cmn_window_, min_cmn_window_);
-
-    if (lda_mat_rspecifier_ != "") {
-      bool binary_in;
-      Matrix<BaseFloat> lda_transform; 
-      Input ki(lda_mat_rspecifier_, &binary_in);
-      lda_transform.Read(ki.Stream(), binary_in);
-      // lda_transform is copied to OnlineLdaInput
-      feat_transform_ = new OnlineLdaInput(cmn_input_, 
-                                lda_transform,
-                                left_context_, right_context_);
-    } else {
-      // Note from Dan: keeping the next statement for back-compatibility,
-      // but I don't think this is really the right way to set the window-size
-      // in the delta computation: it should be a separate config.
-      delta_feat_opts_.window = left_context_ / 2;
-      feat_transform_ = new OnlineDeltaInput(delta_feat_opts_, cmn_input_);
-    }
-
-    // feature_reading_opts_ contains timeout, batch size.
-    feature_matrix_ = new OnlineFeatureMatrix(feature_reading_opts_,
-                                       feat_transform_);
-    decodable_ = new OnlineDecodableDiagGmmScaled(am_gmm_, 
-                                            *trans_model_, 
-                                            acoustic_scale_, feature_matrix_);
-    resetted_ = false; ready_ = true;
-    return 0;
-  } catch(const std::exception& e) {
-    std::cerr << e.what();
-    Reset();
-    return 2;
-  }
-} // KaldiDecoderWrapper::Setup()
-
-void KaldiDecoderWrapper::FrameIn(unsigned char *frame, size_t frame_len) {
-  source_->Write(frame, frame_len);
-}
-
 bool KaldiDecoderWrapper::Decode(void) {
   OnlineFasterDecoder::DecodeState state = decoder_->Decode(decodable_);
   return  state != OnlineFasterDecoder::kEndFeats;
 }
 
-void KaldiDecoderWrapper::FinishInput(void) {
-  // FIXME maybe also grab the last hypothesis here
+size_t KaldiDecoderWrapper::FinishDecoding(size_t timeout=0) {
   source_->NoMoreInput();
+  // FIXME does no work
+  while(Decode()) {
+    // TODO unimplemented timeout
+    // With timeout call
+    // source_->DiscardAndFinish();
+    KALDI_WARN << "DEBUG";
+  }
+  // last hypothesis for the utterance if any
+  size_t size_last_hyp = GetHypothesis();
+
+  // Last action -> prepare the decoder for new data
+  source_->NewDataPromised();
+
+  return size_last_hyp;
 }
 
-/// Return bool: True for full hypothesis, False for partial. 
-/// For empty hypothesis also returns True.
-/// Throw away previously decoded buffered hypothesis.
+void KaldiDecoderWrapper::FrameIn(unsigned char *frame, size_t frame_len) {
+  source_->Write(frame, frame_len);
+}
+
 bool KaldiDecoderWrapper::GetHypothesis() {
   last_word_ids.clear();
   // fst::VectorFst<LatticeArc> out_fst;  // FIXME try it local
@@ -300,6 +195,116 @@ int KaldiDecoderWrapper::ParseArgs(int argc, char ** argv) {
     return -1;
   }
 }  // KaldiDecoderWrapper::ParseArgs()
+
+int KaldiDecoderWrapper::Setup(int argc, char **argv) {
+  ready_ = false; resetted_ = false;
+  try {
+    if (ParseArgs(argc, argv) != 0) {
+      Reset(); 
+      return 1;
+    }
+
+    trans_model_ = new TransitionModel();
+    {
+      bool binary;
+      Input ki(model_rxfilename_, &binary);
+      trans_model_->Read(ki.Stream(), binary);
+      am_gmm_.Read(ki.Stream(), binary);
+    }
+
+    decode_fst_ = ReadDecodeGraph(fst_rxfilename_);
+    decoder_ = new OnlineFasterDecoder(*decode_fst_, decoder_opts_,
+                                    silence_phones_, *trans_model_);
+
+    // Fixed 16 bit audio
+    source_ = new OnlineBlockSource(); 
+
+    // We are not properly registering/exposing MFCC and frame extraction options,
+    // because there are parts of the online decoding code, where some of these
+    // options are hardwired(ToDo: we should fix this at some point)
+    MfccOptions mfcc_opts;
+    mfcc_opts.use_energy = false;
+    int32 frame_length = mfcc_opts.frame_opts.frame_length_ms = 25;
+    int32 frame_shift = mfcc_opts.frame_opts.frame_shift_ms = 10;
+    mfcc_ = new Mfcc(mfcc_opts);
+
+    fe_input_ = new FeInput(source_, mfcc_,
+                               frame_length * (kSampleFreq_ / 1000),
+                               frame_shift * (kSampleFreq_ / 1000));
+    cmn_input_ = new OnlineCmnInput(fe_input_, cmn_window_, min_cmn_window_);
+
+    if (lda_mat_rspecifier_ != "") {
+      bool binary_in;
+      Matrix<BaseFloat> lda_transform; 
+      Input ki(lda_mat_rspecifier_, &binary_in);
+      lda_transform.Read(ki.Stream(), binary_in);
+      // lda_transform is copied to OnlineLdaInput
+      feat_transform_ = new OnlineLdaInput(cmn_input_, 
+                                lda_transform,
+                                left_context_, right_context_);
+    } else {
+      // Note from Dan: keeping the next statement for back-compatibility,
+      // but I don't think this is really the right way to set the window-size
+      // in the delta computation: it should be a separate config.
+      delta_feat_opts_.window = left_context_ / 2;
+      feat_transform_ = new OnlineDeltaInput(delta_feat_opts_, cmn_input_);
+    }
+
+    // feature_reading_opts_ contains timeout, batch size.
+    feature_matrix_ = new OnlineFeatureMatrix(feature_reading_opts_,
+                                       feat_transform_);
+    decodable_ = new OnlineDecodableDiagGmmScaled(am_gmm_, 
+                                            *trans_model_, 
+                                            acoustic_scale_, feature_matrix_);
+    resetted_ = false; ready_ = true;
+    return 0;
+  } catch(const std::exception& e) {
+    std::cerr << e.what();
+    Reset();
+    return 2;
+  }
+} // KaldiDecoderWrapper::Setup()
+
+void KaldiDecoderWrapper::Reset() {
+
+  delete mfcc_;
+  delete source_;
+  delete feat_transform_;
+  delete cmn_input_;
+  delete trans_model_;
+  delete decode_fst_;
+  delete decoder_;
+  delete decodable_;
+  silence_phones_.clear();
+  word_syms_filename_.clear(); // FIXME remove it from options
+  last_word_ids.clear();
+
+  mfcc_ = 0;
+  source_ = 0;
+  feat_transform_ = 0;
+  cmn_input_ = 0;
+  trans_model_ = 0;
+  decode_fst_ = 0;
+  decoder_ = 0;
+  feature_matrix_ = 0;
+  decodable_ = 0;
+
+  // Up to delta-delta derivative features are calculated unless LDA is used
+  // default values: order & window
+  delta_feat_opts_ = DeltaFeaturesOptions(2, 2); 
+
+  acoustic_scale_ = 0.1;
+  cmn_window_ = 600; min_cmn_window_ = 100;
+  right_context_ = 4; left_context_ = 4;
+
+  decoder_opts_ = OnlineFasterDecoderOpts();
+  feature_reading_opts_ = OnlineFeatureMatrixOptions();
+  model_rxfilename_.clear();
+  fst_rxfilename_.clear();
+  lda_mat_rspecifier_.clear();
+
+  resetted_ = true; ready_ = false;
+} // Reset ()
 
 bool KaldiDecoderWrapper::UtteranceEnded() {
   // FIXME I should detect probably this myself from the Dialog System

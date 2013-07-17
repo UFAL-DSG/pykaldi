@@ -27,11 +27,12 @@ namespace kaldi {
 
 /** @brief Proxy Audio Input. Acts like a buffer.
  *
- *  OnlineAudioSource implementation which blocks on Read.
+ *  OnlineAudioSource implementation.
  *  It expects to be fed with the audio frame by frame.
  *  Supports only one channel. */
 class OnlineBlockSource: public OnlineAudioSourceItf{
  public:
+
   /// Creates the OnlineBlockSource empty "buffer"
   /// @param bits_per_sample [in]  By default we expect 16-bit audio
   OnlineBlockSource(uint32 bits_per_sample=16):
@@ -39,6 +40,8 @@ class OnlineBlockSource: public OnlineAudioSourceItf{
       no_more_input_(false) { }
 
   /// Implements OnlineAudioSource API
+  /// Returns true if we have buffered data or 
+  /// we will get them soon.
   bool Read(Vector<BaseFloat> *data);
 
   /// Converts and buffers  the data 
@@ -46,15 +49,25 @@ class OnlineBlockSource: public OnlineAudioSourceItf{
   /// @param data [in] the single channel pcm audio data
   /// @param num_samples [in] number of samples in data array
   void Write(unsigned char *data, size_t num_samples);
+  
+  /// Discards the buffer data. 
+  /// It should be used with caution.
+  /// Read() will return false immediately
+  void DiscardAndFinish() { src_.clear(); no_more_input_ = true; }
 
-  /// Call it, if no more data will be written in. 
-  void NoMoreInput() { this->no_more_input_ = true; }
+  /// Call it, if no more data will be written 
+  /// Read() will return false after returning all the buffered data
+  void NoMoreInput() { no_more_input_ = true; }
+
+  // Promise of new data -> Read() will return true
+  void NewDataPromised() { no_more_input_ = false; }
 
 
  private:
   uint32 bits_per_sample_;
   bool no_more_input_;
   std::vector<BaseFloat> src_;
+
   KALDI_DISALLOW_COPY_AND_ASSIGN(OnlineBlockSource);
 };
 

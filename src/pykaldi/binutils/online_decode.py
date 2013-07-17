@@ -15,13 +15,62 @@
 # limitations under the License. #
 
 
-from decoding_pipeline_utils import parse_config_from_arguments, make_dir, build_reference, wst2dict, int_to_txt, compact_hyp, PyKaldiError, config_is_yes
+from pykaldi.binutils.utils import parse_config_from_arguments, make_dir, \
+    build_reference, wst2dict, int_to_txt, compact_hyp, \
+    config_is_yes, load_wav
+from pykaldi.exceptions import PyKaldiError
 from pykaldi.binutils import ffibin, libbin
+from pykaldi.decoders.kaldi_decoders import OnlineDecoder
+
+
+def run_online_dec(pcm, argv, samples_per_frame):
+    d = OnlineDecoder(argv)
+    # using 16-bit audio so 1 sample = 2 chars
+    frame_len = (2 * samples_per_frame)
+    # Pass the audio data to decoder at once
+    for i in range(len(pcm) / frame_len):
+        frame = pcm[i * frame_len:(i + 1) * frame_len]
+        d.frame_in(frame, samples_per_frame)
+    # Extract the hypothesis in form of word ids
+    word_ids, prob = d.finish_decoding()
+    d.close()  # DO NOT FORGET TO CLOSE THE DECODER!
+    return word_ids, prob
+
+
+def recreate_dec(argv, samples_per_frame, wav_paths, file_output):
+    for wav_name, wav_path in wav_paths:
+        pcm = load_wav(wav_path)
+        print 'Processing utterance %s.' % wav_name
+        word_ids, prob = run_online_dec(pcm, argv, samples_per_frame)
+
+        line = [wav_name] + [str(word_id) for word_id in word_ids] + ['\n']
+        file_output.write(' '.join(line))
+        print 'Result for %s written.' % wav_name
+
+
+def decode_once(argv, samples_per_frame, wav_paths, file_output):
+    d = OnlineDecoder(argv)
+
+    for wav_name, wav_path in wav_paths:
+        print 'Processing utterance %s.' % wav_name
+        pcm = load_wav(wav_path)
+        # using 16-bit audio so 1 sample = 2 chars
+        frame_len = (2 * samples_per_frame)
+        # Pass the audio data to decoder at once
+        for i in range(len(pcm) / frame_len):
+            frame = pcm[i * frame_len:(i + 1) * frame_len]
+            d.frame_in(frame, samples_per_frame)
+        # Extract the hypothesis at once in form of word ids
+        prob, word_ids = d.FinishDecoding()
+        # Store the results to file
+        line = [wav_name] + [str(word_id) for word_id in word_ids] + ['\n']
+        file_output.write(' '.join(line))
+        print 'Result for %s written.' % wav_name
+
+    d.close()  # DO NOT FORGET TO CLOSE THE DECODER!
 
 
 def run_python_online(config):
-    from pykaldi.decoders.kaldi_decoders import OnlineDecoder
-    from pykaldi.decoders.kaldi_decoders_test import load_wav
 
     c = config['online-python']
     if not config_is_yes(c, 'run'):
@@ -37,36 +86,12 @@ def run_python_online(config):
         scp = [tuple(line.strip().split(' ', 1)) for line in lines]
 
     with open(c['trans'], 'wb') as w:
-        for wav_name, wav_path in scp:
-            d = OnlineDecoder(argv)
-            print 'Processing utterance %s.' % wav_name
-            pcm = load_wav(wav_path)
-            word_ids = []
-            # using 16-bit audio so 1 sample = 2 chars
-            frame_len = (2 * samples_per_frame)
-            # Pass the audio data to decoder at once
-            for i in range(len(pcm) / frame_len):
-                frame = pcm[i * frame_len:(i + 1) * frame_len]
-                d.frame_in(frame, samples_per_frame)
-            d.finish_input()
-            # Extract the hypothesis in form of word ids
-            while d.decode():
-                num_words, full_hyp = d.prepare_hyp()
-                if num_words > 0:
-                    prop, new_ids = d.get_hypothesis(num_words)
-                    word_ids.extend(new_ids)
-            # Decode last hypothesis
-            num_words, full_hyp = d.prepare_hyp()
-            if num_words > 0:
-                prop, new_ids = d.get_hypothesis(num_words)
-                word_ids.extend(new_ids)
-            # Store the results to file
-            line = [wav_name]
-            line.extend([str(word_id) for word_id in word_ids])
-            line.append('\n')
-            w.write(' '.join(line))
-            print 'Result for %s written.' % wav_name
-            d.close()  # DO NOT FORGET TO CLOSE THE DECODER!
+        if c['type'] == 'recreate_dec':
+            recreate_dec(argv, samples_per_frame, scp, w)
+        elif c['type'] == 'decode_once':
+            decode_once(argv, samples_per_frame, scp, w)
+        else:
+            raise Exception('Unknown type of online-python decoding')
 
 
 def compute_wer(ffi, werlib, config):

@@ -15,86 +15,13 @@
 # limitations under the License. #
 
 
-from kaldi_decoders import DummyDecoder, OnlineDecoder
+from kaldi_decoders import DummyDecoder
 import unittest
-import audioop
-import wave
 import os
 # Just import this is a test ;-)
 from pykaldi.decoders import ffidummy, libdummy
-
-
-def run_online_dec(pcm, argv, samples_per_frame):
-    d = OnlineDecoder(argv)
-    play_len, total_words = len(pcm), 0
-    # using 16-bit audio so 1 sample = 2 chars
-    frame_len = (2 * samples_per_frame)
-    for i in range(play_len / frame_len):
-        frame = pcm[i * frame_len:(i + 1) * frame_len]
-        d.frame_in(frame, samples_per_frame)
-
-    d.finish_input()
-    while d.decode():
-        num_words, full_hyp = d.prepare_hyp()
-        prop, word_ids = d.get_hypothesis(num_words)
-        print 'full: %r, num_words %d, ids: %s' % (full_hyp, num_words, str(word_ids))
-        total_words += num_words
-    print 'Decode last hypothesis'
-    num_words, full_hyp = d.prepare_hyp()
-    prop, word_ids = d.get_hypothesis(num_words)
-    print 'full: %r, num_words %d, ids: %s' % (full_hyp, num_words, str(word_ids))
-    total_words += num_words
-    print 'Total words: ', total_words
-    # DO NOT FORGET TO CLOSE THE DECODER!
-    d.close()
-
-
-def teardown_pyaudio(p, stream):
-    stream.stop_stream()
-    stream.close()
-    p.terminate()
-    p, stream = None, None
-
-
-def setup_pyaudio(samples_per_frame):
-    import pyaudio
-    p = pyaudio.PyAudio()
-    stream = p.open(format=p.get_format_from_width(pyaudio.paInt32),
-                    channels=1,
-                    rate=16000,
-                    input=True,
-                    output=True,
-                    frames_per_buffer=samples_per_frame)
-    return (p, stream)
-
-
-def load_wav(file_name, def_sample_rate=16000):
-    """ Source: from Alex/utils/audio.py
-    Reads all audio data from the file and returns it in a string.
-
-    The content is re-sampled into the default sample rate."""
-    try:
-        wf = wave.open(file_name, 'r')
-        if wf.getnchannels() != 1:
-            raise Exception('Input wave is not in mono')
-        if wf.getsampwidth() != 2:
-            raise Exception('Input wave is not in 16bit')
-        sample_rate = wf.getframerate()
-        # read all the samples
-        chunk, pcm = 1024, b''
-        pcmPart = wf.readframes(chunk)
-        while pcmPart:
-            pcm += str(pcmPart)
-            pcmPart = wf.readframes(chunk)
-    except EOFError:
-        raise Exception('Input PCM is corrupted: End of file.')
-    else:
-        wf.close()
-    # resample audio if not compatible
-    if sample_rate != def_sample_rate:
-        pcm, state = audioop.ratecv(pcm, 2, 1, sample_rate, def_sample_rate, None)
-
-    return pcm
+from pykaldi.binutils.utils import load_wav
+from pykaldi.binutils.online_decode import run_online_dec
 
 
 class TestOnlineDecoder(unittest.TestCase):
@@ -109,38 +36,13 @@ class TestOnlineDecoder(unittest.TestCase):
             '--acoustic-scale=0.0769', '%s/model' % p, '%s/HCLG.fst' % p,
             '%s/words.txt' % p, '1:2:3:4:5', '%s/matrix' % p]
         self.samples_per_frame = 2120
-        self.pyaudio_loaded = False
-
-    def _setup_pyaudio(self):
-        self.p, self.stream = setup_pyaudio(self.samples_per_frame)  # throw Exception
-        self.pyaudio_loaded = True
 
     def test_wav(self):
         pcm = load_wav(self.wav_path)
-        run_online_dec(pcm, self.argv, self.samples_per_frame)
-
-    @unittest.skip("Do not run live test by default")
-    def test_live(self, duration=3):
-        # FIXME is broken
-        self._setup_pyaudio()
-        d = OnlineDecoder(self.argv)
-        for i in xrange(duration * (16000 / self.samples_per_frame)):
-            frame = self.stream.read(2 * self.samples_per_frame)
-            d.frame_in(frame, len(frame) * 2)
-            while d.decode():
-                num_words, full_hyp = d.prepare_hyp()
-                prop, word_ids = d.get_hypothesis(num_words)
-                print 'full: %r, num_words %d, ids: %s' % (full_hyp, num_words, str(word_ids))
-        print 'Decode last hypothesis'
-        num_words, full_hyp = d.prepare_hyp()
-        prop, word_ids = d.get_hypothesis(num_words)
-        print 'full: %r, num_words %d, ids: %s' % (full_hyp, num_words, str(word_ids))
-        self.assertEqual(prop, 1.0, 'Is probability measure implemented now?')
-        d.close()
-
-    def tearDown(self):
-        if self.pyaudio_loaded:
-            teardown_pyaudio(self.p, self.stream)
+        # Test OnlineDecoder
+        word_ids, prob = run_online_dec(pcm, self.argv, self.samples_per_frame)
+        print 'From %s decoded %d utt: %s' % (self.wav_path, len(word_ids), str(word_ids))
+        self.assertTrue(word_ids > 0, 'We have to decode at least something')
 
 
 class TestAudio(unittest.TestCase):

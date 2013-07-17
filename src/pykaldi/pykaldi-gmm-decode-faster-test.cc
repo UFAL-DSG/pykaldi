@@ -53,8 +53,8 @@ int main(int argc, char **argv) {
   if (!frame_in) return 6;
   CKDW_decode_t decode = load_function<CKDW_decode_t>("Decode", lib);
   if (!decode) return 7;
-  CKDW_void_t finish_input = load_function<CKDW_void_t>("FinishInput", lib);
-  if (!finish_input) return 8;
+  CKDW_fin_dec_t finish_decoding = load_function<CKDW_fin_dec_t>("FinishDecoding", lib);
+  if (!finish_decoding) return 8;
   CKDW_prep_hyp_t prep_hyp = load_function<CKDW_prep_hyp_t>("PrepareHypothesis", lib);
   if (!prep_hyp) return 9;
   CKDW_get_hyp_t get_hyp = load_function<CKDW_get_hyp_t>("GetHypothesis", lib);
@@ -83,12 +83,11 @@ int main(int argc, char **argv) {
   }
   delete[] frame;
 
-  // tell the decoder that features input ended
-  finish_input(d);
 
   // decode() returns false if there are no more features for decoder
   size_t total_words = 0;
-  while(decode(d)) {
+  for(size_t i = 0; i < 100; ++i) {
+      decode(d);
       int full; 
       size_t num_words = prep_hyp(d, &full);
       int * word_ids = new int[num_words];
@@ -101,7 +100,8 @@ int main(int argc, char **argv) {
   // Obtain last hypothesis
   {
       int full; 
-      size_t num_words = prep_hyp(d, &full);
+      // tell the decoder that features input ended
+      size_t num_words = finish_decoding(d);
       int * word_ids = new int[num_words];
       get_hyp(d, word_ids, num_words);
       printHyp(word_ids, num_words, full);

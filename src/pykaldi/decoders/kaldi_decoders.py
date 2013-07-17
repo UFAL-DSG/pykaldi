@@ -16,6 +16,7 @@
 
 from pykaldi.decoders import ffidec, libdec
 from pykaldi.decoders import ffidummy, libdummy
+from pykaldi.exceptions import PyKaldiError
 
 
 class KaldiDecoder(object):
@@ -27,9 +28,9 @@ class KaldiDecoder(object):
         :fs: Sampling frequency
         :nchan: Number of channels
         """
-        # FIXME send the settings to the Recorder or VERIFY them here
-        self.fs = fs
-        self.nchan = nchan
+        assert fs == 16000, 'Only 16000 audio is supported'
+        assert nchan == 1, 'Only 1 channel is supported'
+        self.fs, self.nchan = fs, nchan
         # This has to set in the derived classes
         self.lib, self.ffi, self.dec = None, None, None
 
@@ -45,7 +46,21 @@ class KaldiDecoder(object):
         self.lib.frame_in(self.dec, frame_p, len(frame))
 
 
-# FIXME write wrapper class, decorator, with using __enter__ , __exit__
+class DecoderCloser:
+    '''A context manager for KaldiDecoder'''
+
+    def __init__(self, dec):
+        if dec is KaldiDecoder:
+            raise PyKaldiError("Not a decoder")
+        self.dec = dec
+
+    def __enter_(self):
+        return self.dec
+
+    def __exit__(self, exception_type, exception_val, trace):
+        self.dec.close()
+
+
 class OnlineDecoder(KaldiDecoder):
     """NbListDecoder returns nblist
     it has the same input as other decs."""
@@ -63,8 +78,46 @@ class OnlineDecoder(KaldiDecoder):
             # FIXME use custom exception class eg PykaldiOnlineDecoderArgsError
             raise Exception("OnlineDecoder started with wrong parameters!")
 
+    def frame_in(self, frame_str, num_samples):
+        assert len(frame_str) == (2 * num_samples), "We support only 16bit audio"
+        "-> 1 sample == 2 chars -> len(frame_str) = 2 * num_samples"
+        self.lib.FrameIn(self.dec, frame_str, num_samples)
+
+    def finish_decoding(self):
+        """Tell the decoder that no more input is coming """
+        size = self.lib.FinishDecoding(self.dec)
+        print 'DEBUG size of finish decoding hyp', size
+        return self._get_hyp_from_c(size)
+
+    def decode(self):
+        """Ask the decoder to process the buffered data.
+        Does not return any output.
+        """
+        return self.lib.Decode(self.dec)
+
+    def _prepare_hyp(self):
+        full_hyp_p = self.ffi.new("int *")
+        size = self.lib.PrepareHypothesis(self.dec, full_hyp_p)
+        return (size, full_hyp_p[0])
+
+    def _get_hyp_from_c(self, size):
+        # TODO our dec does not return any measure of quality for the decoded hypothesis
+        # prob_p = self.ffi.new('double *')
+        hyp_p = self.ffi.new("int []", size)
+        self.lib.GetHypothesis(self.dec, hyp_p, size)
+        hyp = []
+        for i in xrange(size):
+            hyp.append(hyp_p[i])
+        prob = 1.0  # TODO get real prob from C in feature and dereference it: prob = prob_p[0]
+        return (hyp, prob)
+
+    def get_hypothesis(self):
+        size, is_full = self._prepare_hyp()
+        prob, hyp = self._get_hyp_from_c(size)
+        return (hyp, prob, is_full)
+
     def _deallocate(self):
-        if self.dec:
+        if self.dec is not None:
             self.lib.del_KaldiDecoderWrapper(self.dec)
             self.dec = None
 
@@ -75,37 +128,6 @@ class OnlineDecoder(KaldiDecoder):
         '''Deallocates the underlaying C module.
         Do not use the object after calling close!'''
         self._deallocate()
-
-    def frame_in(self, frame_str, num_samples):
-        assert len(frame_str) == (2 * num_samples), "We support only 16bit audio"
-        "-> 1 sample == 2 chars -> len(frame_str) = 2 * num_samples"
-        self.lib.FrameIn(self.dec, frame_str, num_samples)
-
-    def finish_input(self):
-        """Tell the decoder that no more input is coming """
-        return self.lib.FinishInput(self.dec)
-
-    def decode(self):
-        """Ask the decoder to process the buffered data.
-        Does not return any output.
-        """
-        return self.lib.Decode(self.dec)
-
-    def prepare_hyp(self):
-        full_hyp_p = self.ffi.new("int *")
-        size = self.lib.PrepareHypothesis(self.dec, full_hyp_p)
-        return (size, full_hyp_p[0])
-
-    def get_hypothesis(self, size):
-        # TODO our dec does not return any measure of quality for the decoded hypothesis
-        # prob_p = self.ffi.new('double *')
-        hyp_p = self.ffi.new("int []", size)
-        self.lib.GetHypothesis(self.dec, hyp_p, size)
-        hyp = []
-        for i in xrange(size):
-            hyp.append(hyp_p[i])
-        prob = 1.0  # TODO get real prob from C in feature and dereference it: prob = prob_p[0]
-        return (prob, hyp)
 
 
 class OnlineDecoderNumpy(OnlineDecoder):
