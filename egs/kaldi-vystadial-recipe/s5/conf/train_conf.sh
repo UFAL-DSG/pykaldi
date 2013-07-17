@@ -10,10 +10,14 @@ export DATA_ROOT="/ha/projects/vystadial/data/asr/en/voip/"
 
 export LM_ORDER=3
 # Unset or empty ARPA_MODEL variable means 
-# that the script should build the LM itself
+# that the script will build the LM itself
 unset ARPA_MODEL 
 
-export DICTIONARY="/ha/projects/vystadial/git/alex/resources/lm/caminfo/dict"
+# export DICTIONARY="/ha/projects/vystadial/git/alex/resources/lm/caminfo/dict"
+
+# Unset or empty DICTIONARY variable means 
+# that the script will build the DICTIONARY itself
+unset DICTIONARY
 
 # Storage dir for MFCC. Need a lot of space. 
 export MFCC_DIR="./mfcc"
