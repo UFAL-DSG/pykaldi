@@ -1,4 +1,5 @@
 #!/bin/bash
+
 renice 20 $$
 
 # Copyright Ondrej Platek Apache 2.0
@@ -191,3 +192,10 @@ done
 # local/run_sgmm.sh
 # local/run_sgmm2.sh
 # local/run_sgmm2x.sh
+
+echo "Successfully trained and tested all the experiments"
+
+if [ -f local/backup.sh ]; then 
+    local/backup.sh
+fi
+
