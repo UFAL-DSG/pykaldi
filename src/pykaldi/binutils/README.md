@@ -1,9 +1,6 @@
 Known bugs
 ==========
  * The demo was tested with `Python 2.7.*` and should run for `Python 2.6.6` as well
- * Currently the demo *NEEDS Numpy INSTALLED* ! That dependency will be removed very shortly however!
-    [Building and installing Numpy](http://docs.scipy.org/doc/numpy/user/install.html)
-
 
 Report the bugs at [https://github.com/oplatek/pykaldi/issues/](https://github.com/oplatek/pykaldi/issues/)
 or send the reports to me via email.

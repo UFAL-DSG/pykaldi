@@ -17,7 +17,6 @@
 
 from decoding_pipeline_utils import parse_config_from_arguments, make_dir, build_reference, wst2dict, int_to_txt, compact_hyp, PyKaldiError
 from pykaldi.binutils import ffibin, libbin
-import numpy as np
 
 
 def run_python_online(config):
@@ -39,7 +38,7 @@ def run_python_online(config):
             d = OnlineDecoder(argv)
             print 'Processing utterance %s.' % wav_name
             pcm = load_wav(wav_path)
-            word_ids = np.array([], dtype=np.int32)
+            word_ids = []
             # using 16-bit audio so 1 sample = 2 chars
             frame_len = (2 * samples_per_frame)
             # Pass the audio data to decoder at once
@@ -52,12 +51,12 @@ def run_python_online(config):
                 num_words, full_hyp = d.prepare_hyp()
                 if num_words > 0:
                     prop, new_ids = d.get_hypothesis(num_words)
-                    word_ids = np.concatenate([word_ids, new_ids])
+                    word_ids.extend(new_ids)
             # Decode last hypothesis
             num_words, full_hyp = d.prepare_hyp()
             if num_words > 0:
                 prop, new_ids = d.get_hypothesis(num_words)
-                word_ids = np.concatenate([word_ids, new_ids])
+                word_ids.extend(new_ids)
             # Store the results to file
             line = [wav_name]
             line.extend([str(word_id) for word_id in word_ids])
