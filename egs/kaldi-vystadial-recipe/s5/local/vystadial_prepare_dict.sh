@@ -21,7 +21,7 @@
 # _EHM_HMM_ 
 # _NOISE_
 # _EHM_HMM_
-# _SIL_     ... we filter this already
+# _SIL_
 
 renice 20 $$
 
@@ -123,11 +123,14 @@ wc -l $locdict/lexicon-iv.txt
 #   --model=conf/g2p_model --apply $locdict/vocab-oov.txt > $locdict/lexicon-oov.txt
 
 # HANDLING OOV WORDS: OOV   SPN    UNKnow has pronancuation SPoken Noise
+# Kaldi has special symbols SPN (Spoken Noise), NSN (Non Spoken Noise)
+# and LAU (LAUGHTER)
 echo "OOV SPN" > $locdict/lexicon-oov.txt
-echo "_INHALE_ SPN" >> $locdict/lexicon-oov.txt
-echo "_LAUGH_ SPN" >> $locdict/lexicon-oov.txt
-echo "_EHM_HMM_ SPN" >> $locdict/lexicon-oov.txt
-echo "_NOISE_ SPN" >> $locdict/lexicon-oov.txt
+echo "_SIL_ NPN" >> $locdict/lexicon-oov.txt
+echo "_INHALE_ NPN" >> $locdict/lexicon-oov.txt
+echo "_LAUGH_ LAU" >> $locdict/lexicon-oov.txt
+echo "_EHM_HMM_ NPN" >> $locdict/lexicon-oov.txt
+echo "_NOISE_ NPN" >> $locdict/lexicon-oov.txt
 
 cat $locdict/lexicon-oov.txt $locdict/lexicon-iv.txt |\
   sort > $locdict/lexicon.txt

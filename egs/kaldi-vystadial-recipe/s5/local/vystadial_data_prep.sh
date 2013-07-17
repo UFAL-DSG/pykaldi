@@ -30,7 +30,7 @@
 # _EHM_HMM_ 
 # _NOISE_
 # _EHM_HMM_
-# _SIL_     ... we filter it here! 
+# _SIL_
 
 renice 20 $$
 
