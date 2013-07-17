@@ -23,3 +23,8 @@ target_dir="Results/$name"
 # This is EXAMPLE SCRIPT you are ENCOURAGED TO CHANGE IT!
 mkdir -p "$target_dir"
 cp -rf exp  "$target_dir"
+
+echo "DATA successfully copied to $target_dir"
+
+echo "du -hs will tell you the size of stored settings"
+du -hs $target_dir
