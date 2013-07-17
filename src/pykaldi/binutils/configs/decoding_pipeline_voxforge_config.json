@@ -4,34 +4,23 @@
     "data_dir": "unused",
     "wav_scp": {"prefix": "decode_dir", "value": "input.scp"},
     "wst": {"prefix": "exp_dir", "value": "words.txt"},
-    "mfcc": {
-      "config": "configs/mfcc.config",
-      "ark": {"prefix": "decode_dir", "value": "raw_mfcc.ark"},
-      "scp": {"prefix": "decode_dir", "value": "raw_mfcc.scp"}
-    },
-    "latgen-decode": {
-        "config": "configs/decode.config",
+    "online-python": {
+        "run": "yes",
+        "config": "configs/online_python.config",
+        "trans":{"prefix": "decode_dir", "value": "python-vox.trans"},
         "model": {"prefix": "exp_dir", "value": "model"},
         "hclg": {"prefix": "exp_dir", "value": "HCLG.fst"},
-        "utt2spk": {"prefix": "decode_dir", "value": "spk2utt"},
-        "cmvn": {"prefix": "decode_dir", "value": "cmvn.scp"},
-        "lattice": {"prefix": "decode_dir", "value": "lat.gz"}
-    },
-    "online-python": {
-        "config": "configs/online_python.config",
-        "trans":{"prefix": "decode_dir", "value": "python.trans"},
         "samples_per_frame":"2120",
-        "silent_phones":"1:2:3:4:5"
+        "silent_phones":"1:2:3:4:5",
+        "lattice": {"prefixUNUSED": "decode_dir", "value": "UNUSEDlat.gz"}
     },
     "wer-compute": {
+        "run": "yes",
+        "build_ref": "yes",
         "config": "configs/wer.config",
-        "reference": {"prefix": "decode_dir", "value": "reference.txt"},
+        "reference": {"prefix": "decode_dir", "value": "reference-vox.txt"},
         "hypothesis": [ 
-                        {"prefix": "decode_dir", "value": "python.trans"}
-            ],
-        "unused_hypothesis" :[
-                        {"prefix": "decode_dir", "value": "online.trans"},
-                        {"prefix": "decode_dir", "value": "best_path.trans"}
+                        {"prefix": "decode_dir", "value": "python-vox.trans"}
             ]
     }
 }

@@ -21,6 +21,13 @@ import errno
 import json
 
 
+def config_is_yes(config, keystr):
+    try:
+        return config[keystr] == 'yes'
+    except:
+        return False
+
+
 def parse_config_from_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("config", help='The main config file')
@@ -103,9 +110,9 @@ def int_to_txt(inp_path, out_path, wst_dict, unknown_symbol=None):
         with open(out_path, 'w') as w:
             for line in r:
                 tmp = line.split()
-                name_align, dec = tmp[0], tmp[1:]
-                # For now we are throwing away align
-                name = name_align.split('_')[0]
+                name, dec = tmp[0], tmp[1:]
+                # For now we are throwing away align -> not working
+                # name = name.split('_')[0]
                 w.write('%s ' % name)
                 for iw in dec:
                     try:

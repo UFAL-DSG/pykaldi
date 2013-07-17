@@ -15,7 +15,7 @@
 # limitations under the License. #
 
 
-from decoding_pipeline_utils import parse_config_from_arguments, make_dir, build_reference, wst2dict, int_to_txt, compact_hyp, PyKaldiError
+from decoding_pipeline_utils import parse_config_from_arguments, make_dir, build_reference, wst2dict, int_to_txt, compact_hyp, PyKaldiError, config_is_yes
 from pykaldi.binutils import ffibin, libbin
 import numpy as np
 
@@ -24,9 +24,12 @@ def run_python_online(config):
     from pykaldi.decoders.kaldi_decoders import OnlineDecoder
     from pykaldi.decoders.kaldi_decoders_test import load_wav
 
-    c, ldc = config['online-python'], config['latgen-decode']
+    c = config['online-python']
+    if not config_is_yes(c, 'run'):
+        print 'Skipping running run_python_online'
+        return
     argv = ['--config=%(config)s' % c,
-            ldc['model'], ldc['hclg'],
+            c['model'], c['hclg'],
             config['wst'], '%(silent_phones)s' % c]
     samples_per_frame = int(c['samples_per_frame'])
 
@@ -72,11 +75,19 @@ def compute_wer(ffi, werlib, config):
     vystadial-recipe/s5/local/shore.sh
     | compute-wer --text --mode=present ark:exp/tri2a/decode/scoring/test_filt.txt ark,p:- >&
     exp/tri2a/decode/wer_15'''
-    c = config['wer-compute']
-    wst_dict = wst2dict(config['wst'])
-    wav_scp, refer = config['wav_scp'], c['reference']
 
-    build_reference(wav_scp, refer)
+    c = config['wer-compute']
+    if not config_is_yes(c, 'run'):
+        print 'Skipping running WER'
+        return
+
+    if config_is_yes(c, 'build_ref'):
+        build_ref_scp, refer = config['wav_scp'], c['reference']
+        build_reference(build_ref_scp, refer)
+    else:
+        print 'Not creating reference'
+
+    wst_dict = wst2dict(config['wst'])
 
     for hyp in c['hypothesis']:
         # preprocessing the hypothesis
@@ -98,7 +109,4 @@ if __name__ == '__main__':
     make_dir(config['decode_dir'])
 
     run_python_online(config)
-    print 'running PYTHON ONLINE finished'
-    ### Evaluating experiments
     compute_wer(ffibin, libbin, config)
-    print 'running WER finished'
