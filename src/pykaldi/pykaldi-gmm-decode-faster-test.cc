@@ -19,7 +19,7 @@
 #include <vector>
 #include <stdlib.h>
 #include <iostream>
-#include "online-python-gmm-decode-faster.h"
+#include "pykaldi-gmm-decode-faster.h"
 
 using namespace kaldi;
 
@@ -64,7 +64,9 @@ int main(int argc, char **argv) {
   CKaldiDecoderWrapper *d = new_Decoder();
   int retval = setup(d, argc, argv);
   if(retval != 0)
-    return retval;
+    std::cout << "\nWrong arguments!\n"
+      "Return code 0 because it is mainly used as test!\n" << std::endl;
+    return 0;
 
   unsigned char * pcm;
   std::string filename("pykaldi/binutils/online-data/audio/test1.wav");

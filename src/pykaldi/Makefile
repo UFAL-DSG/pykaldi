@@ -1,4 +1,4 @@
-all:
+all: $(LIBFILE) $(PYTHON_LIB)
 
 EXTRA_CXXFLAGS = -Wno-sign-compare -I ../../tools/portaudio/install/include # -pedantic
 EXTRA_CXXFLAGS += -ggdb -O0  # for gdb debugging
@@ -26,15 +26,23 @@ else
     EXTRA_LDLIBS = -L ../../tools/portaudio/install/lib/ -lportaudio
 endif
 
-BINFILES =
+BINFILES = 
 
-TESTFILES = compute-wer-test online-python-gmm-decode-faster-test
+TESTFILES = compute-wer-test pykaldi-gmm-decode-faster-test
 
-OBJFILES = compute-wer.o online-python-gmm-decode-faster.o
-
-LIBNAME = kaldi-python-kaldi-decoding
+OBJFILES = compute-wer.o pykaldi-gmm-decode-faster.o pykaldi-audio-source.o
 
 PYTHON_LIB = libpykaldi.so
+
+# HACK I want to create just the $(PYTHON_LIB) 
+LIBNAME = just_for_simple_linking_in_makefile_with_LDFLAGS_and_LDLIBS_FLAGS
+LIBFILE = lib$(LIBNAME).so
+
+# Consequency of HACK:
+# For PASSing the "make test" you need to run manually the make $(PYTHON_LIB) 
+# or run alternatively
+mytest: $(PYTHON_LIB) 
+	$(MAKE) test
 
 
 ADDLIBS = ../decoder/kaldi-decoder.a ../online/kaldi-online.a ../thread/kaldi-thread.a \
@@ -43,7 +51,7 @@ ADDLIBS = ../decoder/kaldi-decoder.a ../online/kaldi-online.a ../thread/kaldi-th
 		  ../feat/kaldi-feat.a ../util/kaldi-util.a ../base/kaldi-base.a
 
 # FIXME LINUX ONLY
-$(PYTHON_LIB): $(OBJFILES) $(ADDLIBS) lib$(LIBNAME).so
+$(PYTHON_LIB): $(OBJFILES) $(ADDLIBS) $(LIBFILE)
 ifneq ($(KALDI_FLAVOR), dynamic)
 	$(warning The following command will probably fail, in that run configure with --shared flag and remake all.)
 endif
