@@ -22,12 +22,12 @@
 
 namespace kaldi {
 
-void OnlineBlockSource::Write(unsigned char * data, size_t num_samples) {
+void OnlineBlockSource::Write(unsigned char * data, size_t num_samples, size_t bits_per_sample) {
   // allocate the space at once -> should be faster
   src_.reserve(src_.size() + num_samples);
   // copy and convert the data to the buffer
   for (size_t i = 0; i < num_samples; ++i) {
-      switch (bits_per_sample_) {
+      switch (bits_per_sample) {
         case 8:
           src_.push_back(*data);
           data++;
@@ -53,7 +53,7 @@ void OnlineBlockSource::Write(unsigned char * data, size_t num_samples) {
             break;
           }
         default:
-          KALDI_ERR << "bits per sample is " << bits_per_sample_;
+          KALDI_ERR << "bits per sample is " << bits_per_sample;
       }
   }
 }

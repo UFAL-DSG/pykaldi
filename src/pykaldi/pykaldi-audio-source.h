@@ -34,9 +34,7 @@ class OnlineBlockSource: public OnlineAudioSourceItf{
  public:
 
   /// Creates the OnlineBlockSource empty "buffer"
-  /// @param bits_per_sample [in]  By default we expect 16-bit audio
-  OnlineBlockSource(uint32 bits_per_sample=16):
-      bits_per_sample_(bits_per_sample),
+  OnlineBlockSource():
       no_more_input_(false) { }
 
   /// Implements OnlineAudioSource API
@@ -48,7 +46,8 @@ class OnlineBlockSource: public OnlineAudioSourceItf{
   /// based on bits_per_sample specified in constructor
   /// @param data [in] the single channel pcm audio data
   /// @param num_samples [in] number of samples in data array
-  void Write(unsigned char *data, size_t num_samples);
+  /// @param bits_per_sample [in] number of bits per sample 
+  void Write(unsigned char *data, size_t num_samples, size_t bits_per_sample=16);
   
   /// Discards the buffer data. 
   /// It should be used with caution.
@@ -64,7 +63,6 @@ class OnlineBlockSource: public OnlineAudioSourceItf{
 
 
  private:
-  uint32 bits_per_sample_;
   bool no_more_input_;
   std::vector<BaseFloat> src_;
 

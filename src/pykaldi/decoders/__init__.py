@@ -78,13 +78,16 @@ def init_dec():
     CKaldiDecoderWrapper* new_KaldiDecoderWrapper();
     void del_KaldiDecoderWrapper(CKaldiDecoderWrapper *d);
 
-    bool Decode(CKaldiDecoderWrapper *d);
+    size_t Decode(CKaldiDecoderWrapper *d);
+    size_t HypSize(void);
     size_t FinishDecoding(CKaldiDecoderWrapper *d);
+    bool Finished(void);
     void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len);
-    void GetHypothesis(CKaldiDecoderWrapper *d, int * word_ids, size_t size);
+    void PopHyp(CKaldiDecoderWrapper *d, int * word_ids, size_t size);
     size_t PrepareHypothesis(CKaldiDecoderWrapper *d, int * is_full);
     void Reset(CKaldiDecoderWrapper *d);
     int Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
+
     ''')
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
