@@ -53,7 +53,7 @@ void OnlineBlockSource::Write(unsigned char * data, size_t num_samples) {
             break;
           }
         default:
-          KALDI_ERR << "bits per sample is " << bits_per_sample_;  // already checked this.
+          KALDI_ERR << "bits per sample is " << bits_per_sample_;
       }
   }
 }
@@ -69,6 +69,9 @@ bool OnlineBlockSource::Read(Vector<BaseFloat> *data) {
   }
   // remove the already read elements
   std::vector<BaseFloat>(src_.begin() + n, src_.end()).swap(src_);
+  // KALDI_WARN << "src size: " << src_.size();
+  // KALDI_WARN << "no_more_input_: " << no_more_input_;
+
   return ((!no_more_input_) || (src_.size() > 0));
 }
 

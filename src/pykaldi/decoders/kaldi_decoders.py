@@ -86,7 +86,6 @@ class OnlineDecoder(KaldiDecoder):
     def finish_decoding(self):
         """Tell the decoder that no more input is coming """
         size = self.lib.FinishDecoding(self.dec)
-        print 'DEBUG size of finish decoding hyp', size
         return self._get_hyp_from_c(size)
 
     def decode(self):
@@ -113,7 +112,7 @@ class OnlineDecoder(KaldiDecoder):
 
     def get_hypothesis(self):
         size, is_full = self._prepare_hyp()
-        prob, hyp = self._get_hyp_from_c(size)
+        hyp, prob = self._get_hyp_from_c(size)
         return (hyp, prob, is_full)
 
     def _deallocate(self):

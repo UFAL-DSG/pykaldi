@@ -30,19 +30,20 @@ class TestOnlineDecoder(unittest.TestCase):
         # Should be extracted by makefile
         self.wav_path = dir_path + '/online-data/audio/test1.wav'
         # self.wav_path = 'test.wav'
-        p = dir_path + '/online-data/models/tri2b_mmi'
+        p = dir_path + '/online-data/models/tri2a'
         self.argv = [
             '--rt-min=0.5', '--rt-max=99.0', '--max-active=4000', '--beam=12.0',
             '--acoustic-scale=0.0769', '%s/model' % p, '%s/HCLG.fst' % p,
-            '%s/words.txt' % p, '1:2:3:4:5', '%s/matrix' % p]
+            '%s/words.txt' % p, '1:2:3:4:5']
         self.samples_per_frame = 2120
 
-    def test_wav(self):
+    def test_wav(self, words_to_dec=3):
         pcm = load_wav(self.wav_path)
         # Test OnlineDecoder
         word_ids, prob = run_online_dec(pcm, self.argv, self.samples_per_frame)
         print 'From %s decoded %d utt: %s' % (self.wav_path, len(word_ids), str(word_ids))
-        self.assertTrue(word_ids > 0, 'We have to decode at least something')
+        self.assertTrue(word_ids > words_to_dec,
+                        'We have to decode at least %d words' % words_to_dec)
 
 
 class TestAudio(unittest.TestCase):

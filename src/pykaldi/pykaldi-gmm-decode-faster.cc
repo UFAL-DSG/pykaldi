@@ -80,15 +80,14 @@ size_t KaldiDecoderWrapper::FinishDecoding(size_t timeout=0) {
     // TODO unimplemented timeout
     // With timeout call
     // source_->DiscardAndFinish();
-    KALDI_WARN << "DEBUG";
   }
   // last hypothesis for the utterance if any
-  size_t size_last_hyp = GetHypothesis();
+  GetHypothesis();
 
   // Last action -> prepare the decoder for new data
   source_->NewDataPromised();
 
-  return size_last_hyp;
+  return last_word_ids.size();
 }
 
 void KaldiDecoderWrapper::FrameIn(unsigned char *frame, size_t frame_len) {
@@ -135,7 +134,7 @@ bool KaldiDecoderWrapper::GetHypothesis() {
 
 bool KaldiDecoderWrapper::GetHypothesis(std::vector<int32> & word_ids) {
   bool result = GetHypothesis();
-  word_ids = this->last_word_ids;
+  word_ids = last_word_ids;
   return result;
 }
 

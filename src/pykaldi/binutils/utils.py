@@ -107,7 +107,7 @@ def build_reference(wav_scp, ref_path):
                     w.write('%s %s\n' % (name, trans))
 
 
-def wst2dict(wst_path):
+def wst2dict(wst_path, intdict=False):
     ''' Stores word symbol table (WST) like dictionary.
     The numbers are stored like string values
     Example line of WST looks like:
@@ -120,7 +120,10 @@ def wst2dict(wst_path):
         for arr in line_arr:
             assert len(arr) == 2, 'Word Symbol Table should have 2 records on each row'
             # WST format:  WORD  NUMBER  ...we store d[NUMBER] = WORD
-            d[arr[1]] = arr[0]
+            if intdict:
+                d[int(arr[1])] = arr[0]
+            else:
+                d[arr[1]] = arr[0]
         return d
 
 
