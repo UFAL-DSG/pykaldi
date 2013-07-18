@@ -28,8 +28,8 @@ class TestOnlineDecoder(unittest.TestCase):
     def setUp(self):
         dir_path = os.path.realpath(os.path.dirname(__file__))
         # Should be extracted by makefile
-        self.wav_path = dir_path + '/online-data/audio/test1.wav'
-        # self.wav_path = 'test.wav'
+        # self.wav_path = dir_path + '/online-data/audio/test1.wav'
+        self.wav_path = 'test.wav'
         p = dir_path + '/online-data/models/tri2a'
         self.argv = [
             '--rt-min=0.5', '--rt-max=99.0', '--max-active=4000', '--beam=12.0',
@@ -42,8 +42,9 @@ class TestOnlineDecoder(unittest.TestCase):
         # Test OnlineDecoder
         word_ids, prob = run_online_dec(pcm, self.argv, self.samples_per_frame)
         print 'From %s decoded %d utt: %s' % (self.wav_path, len(word_ids), str(word_ids))
-        self.assertTrue(word_ids > words_to_dec,
+        self.assertTrue(len(word_ids) > words_to_dec,
                         'We have to decode at least %d words' % words_to_dec)
+        self.assertAlmostEqual(prob, 1.0, 'Have we implemented the probability or sthing wrong returned')
 
 
 class TestAudio(unittest.TestCase):

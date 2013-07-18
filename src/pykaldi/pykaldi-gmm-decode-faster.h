@@ -91,7 +91,7 @@ class KaldiDecoderWrapper {
   /// May take a longer time, timeout in seconds
   size_t FinishDecoding(double timeout);
 
-  bool Finished(void) { return decoder_->state() == OnlineFasterDecoder::kEndFeats; }
+  bool Finished(void) { return (OnlineFasterDecoder::kEndFeats != decoder_->state()); }
 
   size_t HypSize(void) { return word_ids_.size(); }
 
@@ -102,7 +102,9 @@ class KaldiDecoderWrapper {
 
   int Setup(int argc, char **argv);
 
-  bool UtteranceEnded() { return (Finished() | OnlineFasterDecoder::kEndUtt); }
+  bool UtteranceEnded() { 
+    return (decoder_->state() & (decoder_->kEndFeats | decoder_->kEndUtt));
+  }
 
   virtual ~KaldiDecoderWrapper(){ Reset(); }
 

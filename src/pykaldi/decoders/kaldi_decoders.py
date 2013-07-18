@@ -88,7 +88,7 @@ class OnlineDecoder(KaldiDecoder):
     def finished(self):
         """ Returns bool indicating if decoder processed all features
         and does not wait for more features"""
-        return self.lib.Finished() != 0
+        return self.lib.Finished()
 
     def finish_decoding(self):
         """ Tell the decoder that no more input is coming and decode last hypothesis.
@@ -96,6 +96,7 @@ class OnlineDecoder(KaldiDecoder):
         Returns size of decoded hypotheses.
         """
         size = self.lib.FinishDecoding(self.dec)
+        print size
         return self._get_hyp_from_c(size)
 
     def frame_in(self, frame_str, num_samples):

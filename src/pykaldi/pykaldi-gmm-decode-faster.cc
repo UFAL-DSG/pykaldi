@@ -43,6 +43,8 @@ size_t DecodedWords(CKaldiDecoderWrapper *d) {
   return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->HypSize();
 }
 size_t FinishDecoding(CKaldiDecoderWrapper *d) {
+  // FIXME hardcoded timeout! 
+  // 0 - means no timeout
   return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->FinishDecoding(0);
 }
 void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len) {
@@ -71,62 +73,56 @@ namespace kaldi {
 size_t KaldiDecoderWrapper::Decode(void) {
 
   decoder_->Decode(decodable_);
+  // KALDI_WARN<< "HypSize before" << HypSize();
 
-  std::vector<int32> new_word_ids_;
-
+  std::vector<int32> new_word_ids;
   if (UtteranceEnded()) {
     // get the last chunk
     decoder_->FinishTraceBack(&out_fst_);
     fst::GetLinearSymbolSequence(out_fst_,
                                  static_cast<vector<int32> *>(0),
-                                 &new_word_ids_,
+                                 &new_word_ids,
                                  static_cast<LatticeArc::Weight*>(0));
   } else {
     // get the hypothesis from currently active state
     if (decoder_->PartialTraceback(&out_fst_)) {
       fst::GetLinearSymbolSequence(out_fst_,
                                    static_cast<vector<int32> *>(0),
-                                   &new_word_ids_,
+                                   &new_word_ids,
                                    static_cast<LatticeArc::Weight*>(0));
     }
   }
   // append the new ids to buffer
-  word_ids_.insert(word_ids_.end(), new_word_ids_.begin(), new_word_ids_.end());
+  word_ids_.insert(word_ids_.end(), new_word_ids.begin(), new_word_ids.end());
+  KALDI_WARN<< "HypSize after " << HypSize() << " new word size " << new_word_ids.size();
 
   return word_ids_.size();
 }
 
-size_t KaldiDecoderWrapper::FinishDecoding(double timeout=0.0f) {
+size_t KaldiDecoderWrapper::FinishDecoding(double timeout) {
   Timer timer;
-
   source_->NoMoreInput();
 
-  while(!Finished()) {
-
+  do {
     Decode();
+    // KALDI_WARN << "DEBUG " << word_ids_.size();
+    double elapsed = timer.Elapsed(); 
+    if ( (timeout > 0.001) && ( elapsed > timeout)) {
+      source_->DiscardAndFinish();
+      // The next decode should force the decoder to output 
+      // anything "buffered"
+      Decode(); 
 
-    if (timeout > 0.001) {
-      int32 elapsed = static_cast<int32>(timer.Elapsed() * 1000);
-      if (elapsed > timeout) {
-
-        source_->DiscardAndFinish();
-        // The next decode should force the decoder to output 
-        // anything "buffered"
-        Decode(); 
-
-        KALDI_VLOG(2) << "KaldiDecoderWrapper::FinishDecoding() timeout";
-        break;
-      }
-    }
-  }
-  // last hypothesis for the utterance if any
+      KALDI_VLOG(2) << "KaldiDecoderWrapper::FinishDecoding() timeout";
+      break;
+    } 
+  } while(Finished()) ;
 
   // Last action -> prepare the decoder for new data
   source_->NewDataPromised();
 
   return word_ids_.size();
 }
-
 
 int KaldiDecoderWrapper::ParseArgs(int argc, char ** argv) {
   try {
@@ -192,6 +188,7 @@ int KaldiDecoderWrapper::ParseArgs(int argc, char ** argv) {
 std::vector<int32> KaldiDecoderWrapper::PopHyp() { 
   std::vector<int32> tmp;
   std::swap(word_ids_, tmp); // clear the word_ids_
+  // KALDI_WARN << "tmp size" << tmp.size();
   return tmp; 
 }
 
