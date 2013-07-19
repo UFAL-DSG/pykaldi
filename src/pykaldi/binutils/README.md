@@ -28,7 +28,7 @@ cd oplatek2/tools; ./install_portaudio.sh
 
 # 3. Update PYTHONPATH
 # if using 2b) The installation script will give you statement like the one below! So use it! 
-export PYTHONPATH="$PYTHONPATH:/ha/work/people/oplatek/kaldi/tools/python/lib/python2.6/site-packages"
+export PYTHONPATH="$PYTHONPATH:/ha/work/people/oplatek/kaldi/tools/python/lib/python2.7/site-packages"
 # add src/pykaldi directory itself to PYTHONPATH. Use absolute paths like this!
 export PYTHONPATH="$PYTHONPATH":/home/oplatek/kaldi-svn/oplatek2/src
 

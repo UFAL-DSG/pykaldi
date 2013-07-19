@@ -94,7 +94,7 @@ size_t KaldiDecoderWrapper::Decode(void) {
   }
   // append the new ids to buffer
   word_ids_.insert(word_ids_.end(), new_word_ids.begin(), new_word_ids.end());
-  KALDI_WARN<< "HypSize after " << HypSize() << " new word size " << new_word_ids.size();
+  // KALDI_WARN<< "HypSize after " << HypSize() << " new word size " << new_word_ids.size();
 
   return word_ids_.size();
 }

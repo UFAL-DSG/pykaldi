@@ -20,7 +20,7 @@ from pykaldi.binutils.utils import parse_config_from_arguments, make_dir, \
     config_is_yes, load_wav
 from pykaldi.exceptions import PyKaldiError
 from pykaldi.binutils import ffibin, libbin
-from pykaldi.decoders.kaldi_decoders import OnlineDecoder
+from pykaldi.decoders import OnlineDecoder
 
 
 def run_online_dec(pcm, argv, samples_per_frame):

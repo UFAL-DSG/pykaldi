@@ -14,7 +14,9 @@
 # limitations under the License. #
 
 
+import pykaldi
 import os
+
 try:
     from cffi import FFI
 except ImportError as e:
@@ -32,7 +34,7 @@ binheader = '''
 int compute_wer_like_main(int argc, char **argv);
 '''
 ffibin.cdef(binheader)
-dir_path = os.path.dirname(os.path.realpath(__file__))
+dir_path = os.path.dirname(os.path.realpath(pykaldi.__file__))
 lib_name = 'libpykaldi.so'
 shared_lib_path = os.path.join(dir_path, lib_name)
 try:
