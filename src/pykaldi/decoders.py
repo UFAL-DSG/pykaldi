@@ -53,7 +53,7 @@ class DecoderCloser:
             raise PyKaldiError("Not a decoder")
         self.dec = dec
 
-    def __enter_(self):
+    def __enter__(self):
         return self.dec
 
     def __exit__(self, exception_type, exception_val, trace):

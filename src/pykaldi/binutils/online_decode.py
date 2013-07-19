@@ -20,21 +20,20 @@ from pykaldi.binutils.utils import parse_config_from_arguments, make_dir, \
     config_is_yes, load_wav
 from pykaldi.exceptions import PyKaldiError
 from pykaldi.binutils import ffibin, libbin
-from pykaldi.decoders import OnlineDecoder
+from pykaldi.decoders import OnlineDecoder, DecoderCloser
 
 
 def run_online_dec(pcm, argv, samples_per_frame):
-    d = OnlineDecoder(argv)
-    # using 16-bit audio so 1 sample = 2 chars
-    frame_len = (2 * samples_per_frame)
-    # Pass the audio data to decoder at once
-    for i in range(len(pcm) / frame_len):
-        frame = pcm[i * frame_len:(i + 1) * frame_len]
-        d.frame_in(frame, samples_per_frame)
-    # Extract the hypothesis in form of word ids
-    word_ids, prob = d.finish_decoding()
-    d.close()  # DO NOT FORGET TO CLOSE THE DECODER!
-    return word_ids, prob
+    with DecoderCloser(OnlineDecoder(argv)) as d:
+        # using 16-bit audio so 1 sample = 2 chars
+        frame_len = (2 * samples_per_frame)
+        # Pass the audio data to decoder at once
+        for i in range(len(pcm) / frame_len):
+            frame = pcm[i * frame_len:(i + 1) * frame_len]
+            d.frame_in(frame, samples_per_frame)
+        # Extract the hypothesis in form of word ids
+        word_ids, prob = d.finish_decoding()
+        return word_ids, prob
 
 
 def recreate_dec(argv, samples_per_frame, wav_paths, file_output):
@@ -49,25 +48,22 @@ def recreate_dec(argv, samples_per_frame, wav_paths, file_output):
 
 
 def decode_once(argv, samples_per_frame, wav_paths, file_output):
-    d = OnlineDecoder(argv)
-
-    for wav_name, wav_path in wav_paths:
-        print 'Processing utterance %s.' % wav_name
-        pcm = load_wav(wav_path)
-        # using 16-bit audio so 1 sample = 2 chars
-        frame_len = (2 * samples_per_frame)
-        # Pass the audio data to decoder at once
-        for i in range(len(pcm) / frame_len):
-            frame = pcm[i * frame_len:(i + 1) * frame_len]
-            d.frame_in(frame, samples_per_frame)
-        # Extract the hypothesis at once in form of word ids
-        prob, word_ids = d.FinishDecoding()
-        # Store the results to file
-        line = [wav_name] + [str(word_id) for word_id in word_ids] + ['\n']
-        file_output.write(' '.join(line))
-        print 'Result for %s written.' % wav_name
-
-    d.close()  # DO NOT FORGET TO CLOSE THE DECODER!
+    with DecoderCloser(OnlineDecoder(argv)) as d:
+        for wav_name, wav_path in wav_paths:
+            print 'Processing utterance %s.' % wav_name
+            pcm = load_wav(wav_path)
+            # using 16-bit audio so 1 sample = 2 chars
+            frame_len = (2 * samples_per_frame)
+            # Pass the audio data to decoder at once
+            for i in range(len(pcm) / frame_len):
+                frame = pcm[i * frame_len:(i + 1) * frame_len]
+                d.frame_in(frame, samples_per_frame)
+            # Extract the hypothesis at once in form of word ids
+            prob, word_ids = d.FinishDecoding()
+            # Store the results to file
+            line = [wav_name] + [str(word_id) for word_id in word_ids] + ['\n']
+            file_output.write(' '.join(line))
+            print 'Result for %s written.' % wav_name
 
 
 def run_python_online(config):
