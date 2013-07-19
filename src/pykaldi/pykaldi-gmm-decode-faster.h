@@ -1,5 +1,6 @@
 // -*- coding: utf-8 -*-
 /* Copyright (c) 2013, Ondrej Platek, Ufal MFF UK <oplatek@ufal.mff.cuni.cz>
+ *               2012-2013  Vassil Panayotov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -102,8 +103,9 @@ class KaldiDecoderWrapper {
 
   int Setup(int argc, char **argv);
 
-  bool UtteranceEnded() { 
-    return (decoder_->state() & (decoder_->kEndFeats | decoder_->kEndUtt));
+  bool UtteranceEnded() {
+    OnlineFasterDecoder::DecodeState s = decoder_->state();
+    return ((s  == OnlineFasterDecoder::kEndFeats) || (s == OnlineFasterDecoder::kEndUtt));
   }
 
   virtual ~KaldiDecoderWrapper(){ Reset(); }
@@ -115,9 +117,6 @@ class KaldiDecoderWrapper {
   bool resetted_;
   bool ready_;
   
-  // // FIXME DEBUG only
-  // Int32VectorWriter words_writer_;
-  // Int32VectorWriter alignment_writer_;
   std::vector<int32> word_ids_;
   BaseFloat acoustic_scale_;
   int32 cmn_window_;
@@ -141,9 +140,6 @@ class KaldiDecoderWrapper {
   OnlineCmnInput *cmn_input_;
   TransitionModel *trans_model_;
   fst::Fst<fst::StdArc> *decode_fst_;
-  // FIXME change to my own decoder
-  // I need to handle start (and end of utterance) of utterance myself!
-  // OnlineFasterDecoder.Reset should be called mostly by KaldiDecoderWrapper 
   OnlineFasterDecoder *decoder_;
   OnlineFeatInputItf *feat_transform_;
   OnlineFeatureMatrix *feature_matrix_;
@@ -153,6 +149,10 @@ class KaldiDecoderWrapper {
   fst::VectorFst<LatticeArc> out_fst_;  // FIXME try it local
 
   KALDI_DISALLOW_COPY_AND_ASSIGN(KaldiDecoderWrapper);
+};
+
+struct KaldiDecoderWrapperOptions  {
+  // FIXME not implemented. Hide the various settings from above into this class!");
 };
 
 } // namespace kaldi

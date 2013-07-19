@@ -62,7 +62,7 @@ include ../makefiles/default_rules.mk
 # or run alternatively
 mytest: $(PYTHON_LIB) 
 	$(MAKE) test
-	$(MAKE) pytest
+	# $(MAKE) pytest
 
 
 kaldi_decoders.py: $(PYTHON_LIB)

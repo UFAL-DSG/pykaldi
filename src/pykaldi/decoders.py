@@ -61,8 +61,8 @@ class DecoderCloser:
 
 
 class OnlineDecoder(KaldiDecoder):
-    """NbListDecoder returns nblist
-    it has the same input as other decs."""
+    """Online API means that the best hypothesis (or its part) can
+    be returned almost instantly also in the middle of the utterance."""
 
     def __init__(self, args, **kwargs):
         KaldiDecoder.__init__(self, **kwargs)
@@ -79,38 +79,32 @@ class OnlineDecoder(KaldiDecoder):
 
     def decode(self):
         """ Ask the decoder to process the buffered audio data.
-
-        Returns size of decoded hypotheses.
+        The decoder will return a part of hypothesis, if safe.
+        Returns: list. Possibly very short (or empty) list of word_ids.
         """
-        return self.lib.Decode(self.dec)
+        size = self.lib.Decode(self.dec)
+        return self._pop_hyp_from_c(size)
 
     def finished(self):
-        """ Returns bool indicating if decoder processed all features
-        and does not wait for more features"""
+        """ Returns: bool. Indicating if decoder processed all features
+        and does not wait for more features."""
         return self.lib.Finished()
 
     def finish_decoding(self):
-        """ Tell the decoder that no more input is coming and decode last hypothesis.
-
-        Returns size of decoded hypotheses.
-        """
+        """Tell the decoder that no more input is coming
+        and to decode last hypothesis.
+        Returns: int. The size of decoded hypotheses."""
         size = self.lib.FinishDecoding(self.dec)
-        print size
-        return self._get_hyp_from_c(size)
+        return self._pop_hyp_from_c(size)
 
     def frame_in(self, frame_str, num_samples):
         assert len(frame_str) == (2 * num_samples), "We support only 16bit audio"
         "-> 1 sample == 2 chars -> len(frame_str) = 2 * num_samples"
         self.lib.FrameIn(self.dec, frame_str, num_samples)
 
-    def get_hypothesis(self):
-        size, is_full = self._prepare_hyp()
-        hyp, prob = self._get_hyp_from_c(size)
-        return (hyp, prob, is_full)
-
     def close(self):
-        '''Deallocates the underlaying C module.
-        Do not use the object after calling close!'''
+        """Deallocates the underlaying C module.
+        Do not use the object after calling close!"""
         self._deallocate()
 
     def _deallocate(self):
@@ -121,7 +115,7 @@ class OnlineDecoder(KaldiDecoder):
     def __del__(self):
         self._deallocate()
 
-    def _get_hyp_from_c(self, size):
+    def _pop_hyp_from_c(self, size):
         # TODO our dec does not return any measure of quality for the decoded hypothesis
         # prob_p = self.ffi.new('double *')
         hyp_p = self.ffi.new("int []", size)
@@ -131,7 +125,6 @@ class OnlineDecoder(KaldiDecoder):
             hyp.append(hyp_p[i])
         prob = 1.0  # TODO get real prob from C in feature and dereference it: prob = prob_p[0]
         return (hyp, prob)
-        self._deallocate()
 
 
 class OnlineDecoderNumpy(OnlineDecoder):

@@ -1,5 +1,6 @@
 // -*- coding: utf-8 -*-
 /* Copyright (c) 2013, Ondrej Platek, Ufal MFF UK <oplatek@ufal.mff.cuni.cz>
+ *               2012-2013  Vassil Panayotov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +16,13 @@
  * limitations under the License. */
 
 #include "feat/feature-mfcc.h"
-#include "online/online-audio-source.h"
 #include "online/online-feat-input.h"
 #include "online/online-decodable.h"
 #include "online/online-faster-decoder.h"
 #include "online/onlinebin-util.h"
-
-#include "util/timer.h"
+#include "pykaldi-audio-source.h"
 #include "pykaldi-gmm-decode-faster.h"
+#include "util/timer.h"
 
 /*****************
  *  C interface  *
@@ -118,8 +118,11 @@ size_t KaldiDecoderWrapper::FinishDecoding(double timeout) {
     } 
   } while(Finished()) ;
 
+  KALDI_ASSERT(source_->BufferSize() == 0);
   // Last action -> prepare the decoder for new data
   source_->NewDataPromised();
+
+  // KALDI_WARN << "DEBUG " << word_ids_.size();
 
   return word_ids_.size();
 }
@@ -293,8 +296,8 @@ void KaldiDecoderWrapper::Reset() {
   cmn_window_ = 600; min_cmn_window_ = 100;
   right_context_ = 4; left_context_ = 4;
 
-  decoder_opts_ = OnlineFasterDecoderOpts();
-  feature_reading_opts_ = OnlineFeatureMatrixOptions();
+  feature_reading_opts_.batch_size = 1;
+
   model_rxfilename_.clear();
   fst_rxfilename_.clear();
   lda_mat_rspecifier_.clear();

@@ -55,15 +55,43 @@ def decode_once(argv, samples_per_frame, wav_paths, file_output):
             # using 16-bit audio so 1 sample = 2 chars
             frame_len = (2 * samples_per_frame)
             # Pass the audio data to decoder at once
-            for i in range(len(pcm) / frame_len):
+            for i in xrange(len(pcm) / frame_len):
                 frame = pcm[i * frame_len:(i + 1) * frame_len]
                 d.frame_in(frame, samples_per_frame)
             # Extract the hypothesis at once in form of word ids
-            prob, word_ids = d.FinishDecoding()
+            word_ids, prob = d.finish_decoding()
             # Store the results to file
             line = [wav_name] + [str(word_id) for word_id in word_ids] + ['\n']
             file_output.write(' '.join(line))
             print 'Result for %s written.' % wav_name
+
+
+def decode_zig_zag(argv, samples_per_frame, wav_paths, file_output):
+    with DecoderCloser(OnlineDecoder(argv)) as d:
+        for wav_name, wav_path in wav_paths:
+            print 'Processing utterance %s.' % wav_name
+            pcm = load_wav(wav_path)
+            # using 16-bit audio so 1 sample = 2 chars
+            frame_len = (2 * samples_per_frame)
+            # FIXME probably shoul use logarithm when using for real
+            tot_prob = 1  # total probability for whole recording
+            tot_ids = []
+            it = len(pcm) / frame_len
+            print 'NUMBER of iterations: %s' % it
+            for i in xrange(it):
+                frame = pcm[i * frame_len:(i + 1) * frame_len]
+                d.frame_in(frame, samples_per_frame)
+                if i % 2 == 0:  # FIXME fix the batch size of the decoder!
+                    word_ids, prob = d.decode()
+                    tot_ids.extend(word_ids)
+                    tot_prob = tot_prob * prob
+            word_ids, prob = d.finish_decoding()
+            tot_ids.extend(word_ids)
+            tot_prob = tot_prob * prob
+            # Store the results to file
+            line = [wav_name] + [str(word_id) for word_id in tot_ids] + ['\n']
+            file_output.write(' '.join(line))
+            print 'Result for %s written. Probability %.2f' % (wav_name, tot_prob)
 
 
 def run_python_online(config):
@@ -86,6 +114,8 @@ def run_python_online(config):
             recreate_dec(argv, samples_per_frame, scp, w)
         elif c['type'] == 'decode_once':
             decode_once(argv, samples_per_frame, scp, w)
+        elif c['type'] == 'decode_zig_zag':
+            decode_zig_zag(argv, samples_per_frame, scp, w)
         else:
             raise Exception('Unknown type of online-python decoding')
 

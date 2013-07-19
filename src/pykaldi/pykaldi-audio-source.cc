@@ -1,6 +1,7 @@
 // pykaldi/pykaldi-audio-source.cc
 
 /* Copyright (c) 2013, Ondrej Platek, Ufal MFF UK <oplatek@ufal.mff.cuni.cz>
+ *                     2012-2013  Vassil Panayotov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +22,22 @@
 #include "pykaldi-audio-source.h"
 
 namespace kaldi {
+
+bool OnlineBlockSource::Read(Vector<BaseFloat> *data) {
+  KALDI_ASSERT(data->Dim() > 0);
+
+  // TODO check: static_cast<size_t> from data->Dim() works on all architectures
+  size_t n = std::min(src_.size(), static_cast<size_t>(data->Dim()));
+  for (size_t i = 0; i < n ; ++i) {
+    (*data)(i) = src_[i];
+  }
+  // remove the already read elements
+  std::vector<BaseFloat>(src_.begin() + n, src_.end()).swap(src_);
+  // KALDI_WARN << "src size: " << src_.size();
+  // KALDI_WARN << "no_more_input_: " << no_more_input_;
+
+  return ((!no_more_input_) || (src_.size() > 0));
+}
 
 void OnlineBlockSource::Write(unsigned char * data, size_t num_samples, size_t bits_per_sample) {
   // allocate the space at once -> should be faster
@@ -57,23 +74,5 @@ void OnlineBlockSource::Write(unsigned char * data, size_t num_samples, size_t b
       }
   }
 }
-
-
-bool OnlineBlockSource::Read(Vector<BaseFloat> *data) {
-  KALDI_ASSERT(data->Dim() > 0);
-
-  // TODO check: static_cast<size_t> from data->Dim() works on all architectures
-  size_t n = std::min(src_.size(), static_cast<size_t>(data->Dim()));
-  for (size_t i = 0; i < n ; ++i) {
-    (*data)(i) = src_[i];
-  }
-  // remove the already read elements
-  std::vector<BaseFloat>(src_.begin() + n, src_.end()).swap(src_);
-  // KALDI_WARN << "src size: " << src_.size();
-  // KALDI_WARN << "no_more_input_: " << no_more_input_;
-
-  return ((!no_more_input_) || (src_.size() > 0));
-}
-
 
 } // namespace kaldi

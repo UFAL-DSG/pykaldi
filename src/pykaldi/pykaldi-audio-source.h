@@ -1,6 +1,7 @@
 // pykaldi/pykaldi-audio-source.cc
 
 /* Copyright (c) 2013, Ondrej Platek, Ufal MFF UK <oplatek@ufal.mff.cuni.cz>
+ *                     2012-2013  Vassil Panayotov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +38,20 @@ class OnlineBlockSource: public OnlineAudioSourceItf{
   OnlineBlockSource():
       no_more_input_(false) { }
 
+  size_t BufferSize() { return src_.size(); }
+  
+  /// Discards the buffer data. 
+  /// It should be used with caution.
+  /// Read() will return false immediately
+  void DiscardAndFinish() { src_.clear(); no_more_input_ = true; }
+
+  // Promise of new data -> Read() will return true
+  void NewDataPromised() { no_more_input_ = false; }
+
+  /// Call it, if no more data will be written 
+  /// Read() will return false after returning all the buffered data
+  void NoMoreInput() { no_more_input_ = true; }
+
   /// Implements OnlineAudioSource API
   /// Returns true if we have buffered data or 
   /// we will get them soon.
@@ -48,19 +63,6 @@ class OnlineBlockSource: public OnlineAudioSourceItf{
   /// @param num_samples [in] number of samples in data array
   /// @param bits_per_sample [in] number of bits per sample 
   void Write(unsigned char *data, size_t num_samples, size_t bits_per_sample=16);
-  
-  /// Discards the buffer data. 
-  /// It should be used with caution.
-  /// Read() will return false immediately
-  void DiscardAndFinish() { src_.clear(); no_more_input_ = true; }
-
-  /// Call it, if no more data will be written 
-  /// Read() will return false after returning all the buffered data
-  void NoMoreInput() { no_more_input_ = true; }
-
-  // Promise of new data -> Read() will return true
-  void NewDataPromised() { no_more_input_ = false; }
-
 
  private:
   bool no_more_input_;
