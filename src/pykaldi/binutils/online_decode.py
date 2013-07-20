@@ -47,6 +47,29 @@ def recreate_dec(argv, samples_per_frame, wav_paths, file_output):
         print 'Result for %s written.' % wav_name
 
 
+def no_finish(argv, samples_per_frame, wav_paths, file_output):
+    import time
+    with DecoderCloser(OnlineDecoder(argv)) as d:
+        for wav_name, wav_path in wav_paths:
+            print 'Processing utterance %s.' % wav_name
+            pcm = load_wav(wav_path)
+            # using 16-bit audio so 1 sample = 2 chars
+            frame_len = (2 * samples_per_frame)
+            # Pass the audio data to decoder at once
+            tot_ids = []
+            for i in xrange(len(pcm) / frame_len):
+                frame = pcm[i * frame_len:(i + 1) * frame_len]
+                d.frame_in(frame, samples_per_frame)
+            start = time.time()
+            while (time.time() - start) < 10:
+                    # let the backward search run for 10 sec max
+                    word_ids, prob = d.decode()
+                    tot_ids.extend(word_ids)
+            line = [wav_name] + [str(word_id) for word_id in tot_ids] + ['\n']
+            file_output.write(' '.join(line))
+            print 'Result for %s written.' % wav_name
+
+
 def decode_once(argv, samples_per_frame, wav_paths, file_output):
     with DecoderCloser(OnlineDecoder(argv)) as d:
         for wav_name, wav_path in wav_paths:
@@ -116,6 +139,8 @@ def run_python_online(config):
             decode_once(argv, samples_per_frame, scp, w)
         elif c['type'] == 'decode_zig_zag':
             decode_zig_zag(argv, samples_per_frame, scp, w)
+        elif c['type'] == 'no_finish':
+            no_finish(argv, samples_per_frame, scp, w)
         else:
             raise Exception('Unknown type of online-python decoding')
 
