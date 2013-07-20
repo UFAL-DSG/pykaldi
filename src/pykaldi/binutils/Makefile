@@ -2,7 +2,8 @@
 # since we are dependent on the code there
 
 # PYTHON PIPELINE EXAMPLE settings 
-VOXFORGE_CONFIG = configs/voxforge_config.json
+# CONFIG = configs/voxforge_config.json
+CONFIG = configs/vystadial_config.json
 
 # extracts testing data 
 DECODE_DIR = work
@@ -16,8 +17,8 @@ decoders:
 test: run_online 
 
 # PYTHON PIPELINE EXAMPLE
-run_online: online_decode.py decoders $(DATA_TAR) $(VOXFORGE_CONFIG) 
-	python $< $(VOXFORGE_CONFIG)
+run_online: online_decode.py decoders $(DATA_TAR) $(CONFIG) 
+	python $< $(CONFIG)
 
 run_live: decoders
 	echo "BROKEN!"
