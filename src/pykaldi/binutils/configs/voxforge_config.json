@@ -6,7 +6,8 @@
     "wst": {"prefix": "exp_dir", "value": "words.txt"},
     "online-python": {
         "run": "yes",
-        "type": "recreate_dec",
+        "typeUN": "decode_once",
+        "type": "decode_zig_zag",
         "config": "configs/online_python.config",
         "trans":{"prefix": "decode_dir", "value": "python-vox.trans"},
         "model": {"prefix": "exp_dir", "value": "model"},

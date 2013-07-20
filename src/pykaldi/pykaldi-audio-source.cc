@@ -1,6 +1,7 @@
 // pykaldi/pykaldi-audio-source.cc
 
 /* Copyright (c) 2013, Ondrej Platek, Ufal MFF UK <oplatek@ufal.mff.cuni.cz>
+ *                     2012-2013  Vassil Panayotov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +23,28 @@
 
 namespace kaldi {
 
-void OnlineBlockSource::Write(unsigned char * data, size_t num_samples) {
+bool OnlineBlockSource::Read(Vector<BaseFloat> *data) {
+  KALDI_ASSERT(data->Dim() > 0);
+
+  // TODO check: static_cast<size_t> from data->Dim() works on all architectures
+  size_t n = std::min(src_.size(), static_cast<size_t>(data->Dim()));
+  for (size_t i = 0; i < n ; ++i) {
+    (*data)(i) = src_[i];
+  }
+  // remove the already read elements
+  std::vector<BaseFloat>(src_.begin() + n, src_.end()).swap(src_);
+  // KALDI_WARN << "src size: " << src_.size();
+  // KALDI_WARN << "no_more_input_: " << no_more_input_;
+
+  return ((!no_more_input_) || (src_.size() > 0));
+}
+
+void OnlineBlockSource::Write(unsigned char * data, size_t num_samples, size_t bits_per_sample) {
   // allocate the space at once -> should be faster
   src_.reserve(src_.size() + num_samples);
   // copy and convert the data to the buffer
   for (size_t i = 0; i < num_samples; ++i) {
-      switch (bits_per_sample_) {
+      switch (bits_per_sample) {
         case 8:
           src_.push_back(*data);
           data++;
@@ -53,27 +70,9 @@ void OnlineBlockSource::Write(unsigned char * data, size_t num_samples) {
             break;
           }
         default:
-          KALDI_ERR << "bits per sample is " << bits_per_sample_;
+          KALDI_ERR << "bits per sample is " << bits_per_sample;
       }
   }
 }
-
-
-bool OnlineBlockSource::Read(Vector<BaseFloat> *data) {
-  KALDI_ASSERT(data->Dim() > 0);
-
-  // TODO check: static_cast<size_t> from data->Dim() works on all architectures
-  size_t n = std::min(src_.size(), static_cast<size_t>(data->Dim()));
-  for (size_t i = 0; i < n ; ++i) {
-    (*data)(i) = src_[i];
-  }
-  // remove the already read elements
-  std::vector<BaseFloat>(src_.begin() + n, src_.end()).swap(src_);
-  // KALDI_WARN << "src size: " << src_.size();
-  // KALDI_WARN << "no_more_input_: " << no_more_input_;
-
-  return ((!no_more_input_) || (src_.size() > 0));
-}
-
 
 } // namespace kaldi

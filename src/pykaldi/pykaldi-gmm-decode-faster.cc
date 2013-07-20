@@ -1,5 +1,6 @@
 // -*- coding: utf-8 -*-
 /* Copyright (c) 2013, Ondrej Platek, Ufal MFF UK <oplatek@ufal.mff.cuni.cz>
+ *               2012-2013  Vassil Panayotov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +16,13 @@
  * limitations under the License. */
 
 #include "feat/feature-mfcc.h"
-#include "online/online-audio-source.h"
 #include "online/online-feat-input.h"
 #include "online/online-decodable.h"
 #include "online/online-faster-decoder.h"
 #include "online/onlinebin-util.h"
-
+#include "pykaldi-audio-source.h"
 #include "pykaldi-gmm-decode-faster.h"
+#include "util/timer.h"
 
 /*****************
  *  C interface  *
@@ -35,25 +36,26 @@ void del_KaldiDecoderWrapper(CKaldiDecoderWrapper* unallocate_pointer) {
 }
 
 // methods from C
-bool Decode(CKaldiDecoderWrapper *d) {
+size_t Decode(CKaldiDecoderWrapper *d) {
   return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Decode();
 }
+size_t DecodedWords(CKaldiDecoderWrapper *d) {
+  return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->HypSize();
+}
 size_t FinishDecoding(CKaldiDecoderWrapper *d) {
+  // FIXME hardcoded timeout! 
+  // 0 - means no timeout
   return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->FinishDecoding(0);
 }
 void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len) {
   reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->FrameIn(frame, frame_len);
 }
-void GetHypothesis(CKaldiDecoderWrapper *d, int * word_ids, size_t size) {
+void PopHyp(CKaldiDecoderWrapper *d, int * word_ids, size_t size) {
   kaldi::KaldiDecoderWrapper *dp = reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d);
-  for(size_t i = 0; i < size; ++i) {
-    word_ids[i] = dp->last_word_ids[i];
-  }
-}
-size_t PrepareHypothesis(CKaldiDecoderWrapper *d, int * is_full) {
-  kaldi::KaldiDecoderWrapper *dp = reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d);
-  *is_full = dp->GetHypothesis();
-  return dp->last_word_ids.size();
+  std::vector<int32> tmp = dp->PopHyp();
+  KALDI_ASSERT(size <= tmp.size());
+  std::copy(tmp.begin(), tmp.begin()+size, word_ids);
+
 }
 void Reset(CKaldiDecoderWrapper *d) {
   reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Reset();
@@ -68,74 +70,61 @@ int Setup(CKaldiDecoderWrapper *d, int argc, char **argv) {
 
 namespace kaldi {
 
-bool KaldiDecoderWrapper::Decode(void) {
-  OnlineFasterDecoder::DecodeState state = decoder_->Decode(decodable_);
-  return  state != OnlineFasterDecoder::kEndFeats;
-}
+size_t KaldiDecoderWrapper::Decode(void) {
 
-size_t KaldiDecoderWrapper::FinishDecoding(size_t timeout=0) {
-  source_->NoMoreInput();
-  // FIXME does no work
-  while(Decode()) {
-    // TODO unimplemented timeout
-    // With timeout call
-    // source_->DiscardAndFinish();
-  }
-  // last hypothesis for the utterance if any
-  GetHypothesis();
+  decoder_->Decode(decodable_);
+  // KALDI_WARN<< "HypSize before" << HypSize();
 
-  // Last action -> prepare the decoder for new data
-  source_->NewDataPromised();
-
-  return last_word_ids.size();
-}
-
-void KaldiDecoderWrapper::FrameIn(unsigned char *frame, size_t frame_len) {
-  source_->Write(frame, frame_len);
-}
-
-bool KaldiDecoderWrapper::GetHypothesis() {
-  last_word_ids.clear();
-  // fst::VectorFst<LatticeArc> out_fst;  // FIXME try it local
+  std::vector<int32> new_word_ids;
   if (UtteranceEnded()) {
     // get the last chunk
     decoder_->FinishTraceBack(&out_fst_);
     fst::GetLinearSymbolSequence(out_fst_,
                                  static_cast<vector<int32> *>(0),
-                                 &last_word_ids,
+                                 &new_word_ids,
                                  static_cast<LatticeArc::Weight*>(0));
-
-    // // TODO DEBUG
-    // KALDI_WARN << "DEBUG";
-    // decoder_->GetBestPath(&out_fst_);
-    // std::vector<int32> tids;
-    // fst::GetLinearSymbolSequence(out_fst_,
-    //                              &tids,
-    //                              &last_word_ids,
-    //                              static_cast<LatticeArc::Weight*>(0));
-    // std::stringstream res_key;
-    // res_key << "test.wav_" << "<?>" << '-' << decoder_->frame();
-    // if (!last_word_ids.empty())
-    //   words_writer_.Write(res_key.str(), last_word_ids);
-    // alignment_writer_.Write(res_key.str(), tids);
-
   } else {
     // get the hypothesis from currently active state
     if (decoder_->PartialTraceback(&out_fst_)) {
       fst::GetLinearSymbolSequence(out_fst_,
                                    static_cast<vector<int32> *>(0),
-                                   &last_word_ids,
+                                   &new_word_ids,
                                    static_cast<LatticeArc::Weight*>(0));
     }
   }
-  // empty hypothesis is full hypothesis (not partial one)
-  return (UtteranceEnded() || last_word_ids.size() == 0) ;
-} 
+  // append the new ids to buffer
+  word_ids_.insert(word_ids_.end(), new_word_ids.begin(), new_word_ids.end());
+  // KALDI_WARN<< "HypSize after " << HypSize() << " new word size " << new_word_ids.size();
 
-bool KaldiDecoderWrapper::GetHypothesis(std::vector<int32> & word_ids) {
-  bool result = GetHypothesis();
-  word_ids = last_word_ids;
-  return result;
+  return word_ids_.size();
+}
+
+size_t KaldiDecoderWrapper::FinishDecoding(double timeout) {
+  Timer timer;
+  source_->NoMoreInput();
+
+  do {
+    Decode();
+    // KALDI_WARN << "DEBUG " << word_ids_.size();
+    double elapsed = timer.Elapsed(); 
+    if ( (timeout > 0.001) && ( elapsed > timeout)) {
+      source_->DiscardAndFinish();
+      // The next decode should force the decoder to output 
+      // anything "buffered"
+      Decode(); 
+
+      KALDI_VLOG(2) << "KaldiDecoderWrapper::FinishDecoding() timeout";
+      break;
+    } 
+  } while(Finished()) ;
+
+  KALDI_ASSERT(source_->BufferSize() == 0);
+  // Last action -> prepare the decoder for new data
+  source_->NewDataPromised();
+
+  // KALDI_WARN << "DEBUG " << word_ids_.size();
+
+  return word_ids_.size();
 }
 
 int KaldiDecoderWrapper::ParseArgs(int argc, char ** argv) {
@@ -194,6 +183,17 @@ int KaldiDecoderWrapper::ParseArgs(int argc, char ** argv) {
     return -1;
   }
 }  // KaldiDecoderWrapper::ParseArgs()
+
+
+// Looks unficcient but: c++11 move semantics 
+// and RVO: http://cpp-next.com/archive/2009/08/want-speed-pass-by-value/
+// justified it. It has nicer interface.
+std::vector<int32> KaldiDecoderWrapper::PopHyp() { 
+  std::vector<int32> tmp;
+  std::swap(word_ids_, tmp); // clear the word_ids_
+  // KALDI_WARN << "tmp size" << tmp.size();
+  return tmp; 
+}
 
 int KaldiDecoderWrapper::Setup(int argc, char **argv) {
   ready_ = false; resetted_ = false;
@@ -276,7 +276,7 @@ void KaldiDecoderWrapper::Reset() {
   delete decodable_;
   silence_phones_.clear();
   word_syms_filename_.clear(); // FIXME remove it from options
-  last_word_ids.clear();
+  word_ids_.clear();
 
   mfcc_ = 0;
   source_ = 0;
@@ -296,19 +296,13 @@ void KaldiDecoderWrapper::Reset() {
   cmn_window_ = 600; min_cmn_window_ = 100;
   right_context_ = 4; left_context_ = 4;
 
-  decoder_opts_ = OnlineFasterDecoderOpts();
-  feature_reading_opts_ = OnlineFeatureMatrixOptions();
+  feature_reading_opts_.batch_size = 1;
+
   model_rxfilename_.clear();
   fst_rxfilename_.clear();
   lda_mat_rspecifier_.clear();
 
   resetted_ = true; ready_ = false;
 } // Reset ()
-
-bool KaldiDecoderWrapper::UtteranceEnded() {
-  // FIXME I should detect probably this myself from the Dialog System
-  return decoder_->state() & (OnlineFasterDecoder::kEndFeats | 
-      OnlineFasterDecoder::kEndUtt);
-}
 
 } // namespace kaldi

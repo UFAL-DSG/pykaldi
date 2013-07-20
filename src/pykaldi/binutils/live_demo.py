@@ -17,7 +17,7 @@
 
 
 import pyaudio
-from pykaldi.decoders.kaldi_decoders import OnlineDecoder
+from pykaldi.decoders import OnlineDecoder
 from pykaldi.binutils.utils import wst2dict
 import sys
 

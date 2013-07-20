@@ -1,5 +1,6 @@
 // -*- coding: utf-8 -*-
 /* Copyright (c) 2013, Ondrej Platek, Ufal MFF UK <oplatek@ufal.mff.cuni.cz>
+ *               2012-2013  Vassil Panayotov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,24 +42,15 @@ CKaldiDecoderWrapper* new_KaldiDecoderWrapper();
 void del_KaldiDecoderWrapper(CKaldiDecoderWrapper *d);
 
 // methods
-bool Decode(CKaldiDecoderWrapper *d);
+size_t Decode(CKaldiDecoderWrapper *d);
+size_t HypSize(void);
 size_t FinishDecoding(CKaldiDecoderWrapper *d);
+bool Finished(void);
 void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len);
-void GetHypothesis(CKaldiDecoderWrapper *d, int * word_ids, size_t size);
+void PopHyp(CKaldiDecoderWrapper *d, int * word_ids, size_t size);
 size_t PrepareHypothesis(CKaldiDecoderWrapper *d, int * is_full);
 void Reset(CKaldiDecoderWrapper *d);
 int Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
-
-// function types for loading functions from shared library
-typedef CKaldiDecoderWrapper* (*CKDW_constructor_t)(void);
-typedef void (*CKDW_void_t)(CKaldiDecoderWrapper*);
-typedef bool (*CKDW_decode_t)(CKaldiDecoderWrapper*);
-typedef size_t (*CKDW_fin_dec_t)(CKaldiDecoderWrapper*);
-typedef void (*CKDW_frame_in_t)(CKaldiDecoderWrapper*, unsigned char *, size_t);
-typedef void (*CKDW_get_hyp_t)(CKaldiDecoderWrapper*, int *, size_t);
-typedef size_t (*CKDW_prep_hyp_t)(CKaldiDecoderWrapper*, int *);
-typedef int (*CKDW_setup_t)(CKaldiDecoderWrapper*, int, char **);
-
 
 #ifdef __cplusplus
 }
@@ -88,25 +80,36 @@ class KaldiDecoderWrapper {
     fe_input_(0), cmn_input_(0), trans_model_(0), decode_fst_(0), decoder_(0),
     feat_transform_(0), feature_matrix_(0), decodable_(0) { Reset(); }
 
-  bool Decode(void);
-  void FrameIn(unsigned char *frame, size_t frame_len);
+  size_t Decode(void);
 
-  /// May take a longer time, timeout in milisecond[not implemented yet]
-  size_t FinishDecoding(size_t timeout);
+  // @brief Pass the 16 bit audio data
+  /// @param data [in] the single channel pcm audio data
+  /// @param num_samples [in] number of samples in data array
+  void FrameIn(unsigned char *frame, size_t frame_len) {
+    source_->Write(frame, frame_len);
+  }
 
-  /// Return bool: True for full hypothesis, False for partial. 
-  /// For empty hypothesis also returns True.
-  /// Throw away previously decoded buffered hypothesis.
-  bool GetHypothesis();
-  bool GetHypothesis(std::vector<int32> & word_ids);
+  /// May take a longer time, timeout in seconds
+  size_t FinishDecoding(double timeout);
+
+  bool Finished(void) { return (OnlineFasterDecoder::kEndFeats != decoder_->state()); }
+
+  size_t HypSize(void) { return word_ids_.size(); }
+
+  /// Return the buffered words and clear the buffer
+  std::vector<int32> PopHyp();
 
   void Reset(void);
+
   int Setup(int argc, char **argv);
-  bool UtteranceEnded();
+
+  bool UtteranceEnded() {
+    OnlineFasterDecoder::DecodeState s = decoder_->state();
+    return ((s  == OnlineFasterDecoder::kEndFeats) || (s == OnlineFasterDecoder::kEndUtt));
+  }
 
   virtual ~KaldiDecoderWrapper(){ Reset(); }
 
-  std::vector<int32> last_word_ids;
 
  private:
   int ParseArgs(int argc, char **argv);
@@ -114,10 +117,7 @@ class KaldiDecoderWrapper {
   bool resetted_;
   bool ready_;
   
-  // // FIXME DEBUG only
-  // Int32VectorWriter words_writer_;
-  // Int32VectorWriter alignment_writer_;
-
+  std::vector<int32> word_ids_;
   BaseFloat acoustic_scale_;
   int32 cmn_window_;
   const int32 kSampleFreq_;
@@ -140,9 +140,6 @@ class KaldiDecoderWrapper {
   OnlineCmnInput *cmn_input_;
   TransitionModel *trans_model_;
   fst::Fst<fst::StdArc> *decode_fst_;
-  // FIXME change to my own decoder
-  // I need to handle start (and end of utterance) of utterance myself!
-  // OnlineFasterDecoder.Reset should be called mostly by KaldiDecoderWrapper 
   OnlineFasterDecoder *decoder_;
   OnlineFeatInputItf *feat_transform_;
   OnlineFeatureMatrix *feature_matrix_;
@@ -152,6 +149,10 @@ class KaldiDecoderWrapper {
   fst::VectorFst<LatticeArc> out_fst_;  // FIXME try it local
 
   KALDI_DISALLOW_COPY_AND_ASSIGN(KaldiDecoderWrapper);
+};
+
+struct KaldiDecoderWrapperOptions  {
+  // FIXME not implemented. Hide the various settings from above into this class!");
 };
 
 } // namespace kaldi

@@ -1,4 +1,4 @@
-all: $(LIBFILE) $(PYTHON_LIB)
+all:
 
 EXTRA_CXXFLAGS = -Wno-sign-compare -I ../../tools/portaudio/install/include # -pedantic
 EXTRA_CXXFLAGS += -ggdb -O0  # for gdb debugging
@@ -34,16 +34,11 @@ OBJFILES = compute-wer.o pykaldi-gmm-decode-faster.o pykaldi-audio-source.o
 
 PYTHON_LIB = libpykaldi.so
 
+all: $(LIBFILE) $(PYTHON_LIB)
+
 # HACK I want to create just the $(PYTHON_LIB) 
 LIBNAME = just_for_simple_linking_in_makefile_with_LDFLAGS_and_LDLIBS_FLAGS
 LIBFILE = lib$(LIBNAME).so
-
-# Consequency of HACK:
-# For PASSing the "make test" you need to run manually the make $(PYTHON_LIB) 
-# or run alternatively
-mytest: $(PYTHON_LIB) 
-	$(MAKE) test
-
 
 ADDLIBS = ../decoder/kaldi-decoder.a ../online/kaldi-online.a ../thread/kaldi-thread.a \
 		  ../lat/kaldi-lat.a ../hmm/kaldi-hmm.a ../transform/kaldi-transform.a ../gmm/kaldi-gmm.a \
@@ -60,3 +55,28 @@ endif
 
 
 include ../makefiles/default_rules.mk
+
+
+# Consequency of HACK:
+# For PASSing the "make test" you need to run manually the make $(PYTHON_LIB) 
+# or run alternatively
+mytest: $(PYTHON_LIB) 
+	$(MAKE) test
+	# $(MAKE) pytest
+
+
+kaldi_decoders.py: $(PYTHON_LIB)
+
+kaldi_decoders_test.py:  kaldi_decoders.py $(PYTHON_LIB)
+
+# extracts testing data
+DECODE_DIR = work
+include online-data.mk
+
+pytest: $(PYTHON_LIB) $(DATA_TAR)
+	nosetests -s kaldi_decoders_test.py  # -s let the output be printed
+
+
+cleanall:
+	$(MAKE) clean
+	rm -rf $(DATA_TAR) $(DATA_FILE) $(DECODE_DIR) *.pyc
