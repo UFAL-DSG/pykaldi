@@ -24,7 +24,7 @@ target_dir="Results/$name"
 mkdir -p "$target_dir"
 cp -rf exp  "$target_dir"
 
-echo "DATA successfully copied to $target_dir"
+echo; echo "DATA successfully copied to $target_dir"; echo
 
 echo "du -hs will tell you the size of stored settings"
 du -hs $target_dir
