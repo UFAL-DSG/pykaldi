@@ -165,7 +165,7 @@ steps/train_mmi_fmmi.sh --learning-rate 0.0025 \
 
 for iter in 3 4 5 6 7 8; do
  steps/decode_fmmi.sh --nj $njobs --config conf/decode.config --cmd "$decode_cmd" --iter $iter \
-   --transform-dir exp/tri3b/decode  exp/tri3b/graph data/test exp/_ri3b_fmmi_b/decode_it$iter &
+   --transform-dir exp/tri3b/decode  exp/tri3b/graph data/test exp/tri3b_fmmi_b/decode_it$iter &
 done
 
 steps/train_mmi_fmmi.sh --learning-rate 0.001 \
