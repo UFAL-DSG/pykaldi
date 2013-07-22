@@ -21,6 +21,10 @@ name="${EXP_NAME}_${DATE}"
 target_dir="Results/$name"
 
 # This is EXAMPLE SCRIPT you are ENCOURAGED TO CHANGE IT!
+
+# Collect the results
+local/results.py exp > exp/results.log
+
 mkdir -p "$target_dir"
 cp -rf exp  "$target_dir"
 
