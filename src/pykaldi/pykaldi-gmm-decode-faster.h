@@ -67,6 +67,47 @@ namespace kaldi {
 
 typedef OnlineFeInput<Mfcc> FeInput;
 
+
+struct KaldiDecoderWrapperOptions  {
+  /// Input sampling frequency is fixed to 16KHz
+  explicit KaldiDecoderWrapperOptions():kSampleFreq(16000), acoustic_scale(0.1),
+  left_context(4), right_context(4),
+  cmn_window(600), min_cmn_window(100)
+  {}
+  int32 kSampleFreq;
+  BaseFloat acoustic_scale;
+  int32 left_context;
+  int32 right_context;
+  int32 cmn_window;
+  int32 min_cmn_window;
+  std::string model_rxfilename;
+  std::string fst_rxfilename;
+  std::string word_syms_filename; // FIXME remove it from po options
+  std::string lda_mat_rspecifier;
+  std::vector<int32> silence_phones;
+  void set_silence_phones(const std::string & s) {
+    std::vector<int32> return_phones;
+    if (!SplitStringToIntegers(s, ":", false, &silence_phones))
+        KALDI_ERR << "Invalid silence-phones string " << s;
+    if (this->silence_phones.empty())
+        KALDI_ERR << "No silence phones given!";
+  }
+
+  void Register(OptionsItf *po) {
+    po->Register("left-context", &left_context, "Number of frames of left context");
+    po->Register("right-context", &right_context, "Number of frames of right context");
+    po->Register("acoustic-scale", &acoustic_scale,
+                "Scaling factor for acoustic likelihoods");
+    po->Register("cmn-window", &cmn_window,
+        "Number of feat. vectors used in the running average CMN calculation");
+    po->Register("min-cmn-window", &min_cmn_window,
+                "Minumum CMN window used at start of decoding (adds "
+                "latency only at start)");
+  }
+  // FIXME not implemented. Hide the various settings from above into this class!");
+};
+
+
 /** @brief A class for setting up and using Online Decoder.
  *
  *  This class provides an interface to Online Decoder.
@@ -75,8 +116,7 @@ typedef OnlineFeInput<Mfcc> FeInput;
  *  It is absolutelly thread unsafe! */
 class KaldiDecoderWrapper {
  public:
-  /// Input sampling frequency is fixed to 16KHz
-   KaldiDecoderWrapper():kSampleFreq_(16000), mfcc_(0), source_(0), 
+   KaldiDecoderWrapper():mfcc_(0), source_(0), 
     fe_input_(0), cmn_input_(0), trans_model_(0), decode_fst_(0), decoder_(0),
     feat_transform_(0), feature_matrix_(0), decodable_(0) { Reset(); }
 
@@ -118,42 +158,28 @@ class KaldiDecoderWrapper {
   bool ready_;
   
   std::vector<int32> word_ids_;
-  BaseFloat acoustic_scale_;
-  int32 cmn_window_;
-  const int32 kSampleFreq_;
-  int32 min_cmn_window_;
-  int32 left_context_;
-  int32 right_context_;
-
-  OnlineFasterDecoderOpts decoder_opts_;
-  OnlineFeatureMatrixOptions feature_reading_opts_;
-  DeltaFeaturesOptions delta_feat_opts_;
-  std::string model_rxfilename_;
-  std::string fst_rxfilename_;
-  std::string word_syms_filename_; // FIXME remove it from po options
-  std::string lda_mat_rspecifier_;
-
 
   Mfcc *mfcc_;
   OnlineBlockSource *source_;
   FeInput *fe_input_;
   OnlineCmnInput *cmn_input_;
   TransitionModel *trans_model_;
-  fst::Fst<fst::StdArc> *decode_fst_;
+  fst::Fst<fst::StdArc> *decode_fst_; // FIXME try  it local
   OnlineFasterDecoder *decoder_;
   OnlineFeatInputItf *feat_transform_;
   OnlineFeatureMatrix *feature_matrix_;
   OnlineDecodableDiagGmmScaled *decodable_;
-  std::vector<int32> silence_phones_;
   AmDiagGmm am_gmm_;
   fst::VectorFst<LatticeArc> out_fst_;  // FIXME try it local
+
+  KaldiDecoderWrapperOptions opts_;
+  OnlineFasterDecoderOpts decoder_opts_;
+  OnlineFeatureMatrixOptions feature_reading_opts_;
+  DeltaFeaturesOptions delta_feat_opts_;
 
   KALDI_DISALLOW_COPY_AND_ASSIGN(KaldiDecoderWrapper);
 };
 
-struct KaldiDecoderWrapperOptions  {
-  // FIXME not implemented. Hide the various settings from above into this class!");
-};
 
 } // namespace kaldi
 
