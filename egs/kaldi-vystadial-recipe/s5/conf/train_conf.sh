@@ -23,13 +23,13 @@ export DICTIONARY="/ha/projects/vystadial/git/alex/resources/lm/caminfo/dict"
 export MFCC_DIR="./mfcc"
 
 # Want to remove OOV from LM?
-set NOOOV
+export NOOOV="yes"  # nonempty string triggers it;)
 # unset NOOOV
 
 
 # How big portion of available data to use
 # everyN=3    ->   we use one third of data
-everyN=1000
+everyN=1
 
 # Train monophone models on a subset of the data of this size
 monoTrainData=1000
