@@ -45,14 +45,13 @@ def run_live(argv, stream, samples_per_frame, wst=None, duration=3):
     for i in xrange(duration * (16000 / samples_per_frame)):
         frame = stream.read(2 * samples_per_frame)
         d.frame_in(frame, len(frame) / 2)
-        # never ending loop
-        while d.decode():
-            word_ids, prob, full_hyp = d.get_hypothesis()
+        while True:
+            word_ids, prob = d.decode()
             if wst is None:
                 hyp = word_ids
             else:
                 hyp = [wst[word_id] for word_id in word_ids]
-            print 'full: %r, num_words %d, ids: %s' % (full_hyp, len(hyp), str(hyp))
+            print 'num_words %d, ids: %s' % (len(hyp), str(hyp))
             assert prob == 1.0, 'Is probability measure implemented now?'
     d.close()
 

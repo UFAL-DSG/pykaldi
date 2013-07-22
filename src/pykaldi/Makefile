@@ -65,16 +65,16 @@ mytest: $(PYTHON_LIB)
 	# $(MAKE) pytest
 
 
-kaldi_decoders.py: $(PYTHON_LIB)
+decoders.py: $(PYTHON_LIB)
 
-kaldi_decoders_test.py:  kaldi_decoders.py $(PYTHON_LIB)
+decoders_test.py:  decoders.py $(PYTHON_LIB)
 
 # extracts testing data
 DECODE_DIR = work
 include online-data.mk
 
 pytest: $(PYTHON_LIB) $(DATA_TAR)
-	nosetests -s kaldi_decoders_test.py  # -s let the output be printed
+	nosetests -s decoders_test.py  # -s let the output be printed
 
 
 cleanall:

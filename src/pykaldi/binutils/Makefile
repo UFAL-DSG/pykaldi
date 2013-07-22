@@ -2,8 +2,8 @@
 # since we are dependent on the code there
 
 # PYTHON PIPELINE EXAMPLE settings 
-# CONFIG = configs/voxforge_config.json
-CONFIG = configs/vystadial_config.json
+CONFIG = configs/voxforge_config.json
+# CONFIG = configs/vystadial_config.json
 
 # extracts testing data 
 DECODE_DIR = work
