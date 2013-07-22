@@ -22,9 +22,14 @@ export DICTIONARY="/ha/projects/vystadial/git/alex/resources/lm/caminfo/dict"
 # Storage dir for MFCC. Need a lot of space. 
 export MFCC_DIR="./mfcc"
 
+# Want to remove OOV from LM?
+set NOOOV
+# unset NOOOV
+
+
 # How big portion of available data to use
 # everyN=3    ->   we use one third of data
-everyN=1
+everyN=1000
 
 # Train monophone models on a subset of the data of this size
 monoTrainData=1000
