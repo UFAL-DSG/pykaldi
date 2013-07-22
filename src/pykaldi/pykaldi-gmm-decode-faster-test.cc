@@ -23,12 +23,21 @@
 
 using namespace kaldi;
 
+// function types for loading functions from shared library
+typedef CKaldiDecoderWrapper* (*CKDW_constructor_t)(void);
+typedef void (*CKDW_void_t)(CKaldiDecoderWrapper*);
+typedef bool (*CKDW_bool_t)(CKaldiDecoderWrapper*);
+typedef size_t (*CKDW_size_t)(CKaldiDecoderWrapper*);
+typedef void (*CKDW_frame_in_t)(CKaldiDecoderWrapper*, unsigned char *, size_t);
+typedef void (*CKDW_pop_hyp_t)(CKaldiDecoderWrapper*, int *, size_t);
+typedef int (*CKDW_setup_t)(CKaldiDecoderWrapper*, int, char **);
+
 template<class FT> FT load_function(const char *nameFce, void *lib);
 void fill_frame_random(unsigned char *frame, size_t size);
 size_t next_frame(unsigned char * data_target, size_t target_size,
                   unsigned char *src, size_t src_position);
 int main(int argc, char **argv);
-void printHyp(int *word_ids, size_t num_words, int full);
+void printHyp(int *word_ids, size_t num_words);
 size_t read_16bitpcm_file(const std::string & filename, unsigned char **pcm);
 
 
@@ -51,14 +60,12 @@ int main(int argc, char **argv) {
   if (!reset) return 5;
   CKDW_frame_in_t frame_in = load_function<CKDW_frame_in_t>("FrameIn", lib);
   if (!frame_in) return 6;
-  CKDW_decode_t decode = load_function<CKDW_decode_t>("Decode", lib);
+  CKDW_size_t decode = load_function<CKDW_size_t>("Decode", lib);
   if (!decode) return 7;
-  CKDW_void_t finish_input = load_function<CKDW_void_t>("FinishInput", lib);
-  if (!finish_input) return 8;
-  CKDW_prep_hyp_t prep_hyp = load_function<CKDW_prep_hyp_t>("PrepareHypothesis", lib);
-  if (!prep_hyp) return 9;
-  CKDW_get_hyp_t get_hyp = load_function<CKDW_get_hyp_t>("GetHypothesis", lib);
-  if (!get_hyp) return 10;
+  CKDW_size_t finish_decoding = load_function<CKDW_size_t>("FinishDecoding", lib);
+  if (!finish_decoding) return 8;
+  CKDW_pop_hyp_t pop_hyp = load_function<CKDW_pop_hyp_t>("PopHyp", lib);
+  if (!pop_hyp) return 9;
 
   // use the loaded functions
   CKaldiDecoderWrapper *d = new_Decoder();
@@ -83,28 +90,24 @@ int main(int argc, char **argv) {
   }
   delete[] frame;
 
-  // tell the decoder that features input ended
-  finish_input(d);
 
   // decode() returns false if there are no more features for decoder
   size_t total_words = 0;
-  while(decode(d)) {
-      int full; 
-      size_t num_words = prep_hyp(d, &full);
+  for(size_t i = 0; i < 100; ++i) {
+      size_t num_words = decode(d);
       int * word_ids = new int[num_words];
-      get_hyp(d, word_ids, num_words);
-      printHyp(word_ids, num_words, full);
+      pop_hyp(d, word_ids, num_words);
+      printHyp(word_ids, num_words);
       delete[] word_ids;
 
       total_words += num_words;
   } 
   // Obtain last hypothesis
   {
-      int full; 
-      size_t num_words = prep_hyp(d, &full);
+      size_t num_words = finish_decoding(d);
       int * word_ids = new int[num_words];
-      get_hyp(d, word_ids, num_words);
-      printHyp(word_ids, num_words, full);
+      pop_hyp(d, word_ids, num_words);
+      printHyp(word_ids, num_words);
       delete[] word_ids;
 
       total_words += num_words;
@@ -116,11 +119,7 @@ int main(int argc, char **argv) {
   return 0;
 }
 
-void printHyp(int *word_ids, size_t num_words, int full) {
-  if(full) 
-    std::cout << "full hypothesis";
-  else 
-    std::cout << "partial hypothesis";
+void printHyp(int *word_ids, size_t num_words) {
   std::cout << ", decoded words: " << num_words << std::endl;
   // print the words
   for(size_t j = 0; j < num_words; ++j)

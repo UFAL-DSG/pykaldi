@@ -27,22 +27,10 @@ For running pykaldi you need cffi module installed!
 '''
     raise e
 
-# FIXME I think that using add_ld_path(dir_path) is not necessary!
-# def add_ld_library_path(newdir):
-#     lib_path = os.environ.get('LD_LIBRARY_PATH', '')
-#     if not lib_path:
-#         os.environ['LD_LIBRARY_PATH'] = newdir
-#     else:
-#         os.environ['LD_LIBRARY_PATH'] = newdir + os.pathsep + lib_path
-#
-# add_ld_library_path(dir_path)
 
-
-def init_dummy():
-    ffidummy = FFI()
-    ffidummy.cdef('''
-    void return_answer(double * prob, char **ans, size_t *size);
-    void frame_in(char *dummydec, char *str_frame, size_t size);
+def init_audio():
+    ffiaudio = FFI()
+    ffiaudio.cdef('''
 
     typedef ... snd_pcm_t;
     int play(snd_pcm_t *handle, unsigned char * buffer, size_t size);
@@ -60,44 +48,15 @@ def init_dummy():
     ''')
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    lib_name = 'libdummyio.so'
+    lib_name = 'libaudio.so'
     shared_lib_path = os.path.join(dir_path, lib_name)
     try:
-        libdummy = ffidummy.dlopen(shared_lib_path)
+        libaudio = ffiaudio.dlopen(shared_lib_path)
     except OSError as e:
         print 'Could not find the C shared library %s' % shared_lib_path
+        print 'OR SOME SYMBOLS IN LIBRARY ARE UNREFERENCED'
         raise e
-    return (ffidummy, libdummy)
+    return (ffiaudio, libaudio)
 
 
-def init_dec():
-    ffidec = FFI()
-    ffidec.cdef('''
-    typedef ... CKaldiDecoderWrapper;
-
-    CKaldiDecoderWrapper* new_KaldiDecoderWrapper();
-    void del_KaldiDecoderWrapper(CKaldiDecoderWrapper *d);
-
-    int Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
-    void Reset(CKaldiDecoderWrapper *d);
-    void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len);
-    bool Decode(CKaldiDecoderWrapper *d);
-    void FinishInput(CKaldiDecoderWrapper *d);
-    size_t PrepareHypothesis(CKaldiDecoderWrapper *d, int * is_full);
-    void GetHypothesis(CKaldiDecoderWrapper *d, int * word_ids, size_t size);
-    ''')
-
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    lib_name = 'libpykaldi.so'
-    shared_lib_path = os.path.join(dir_path, lib_name)
-
-    try:
-        libdec = ffidec.dlopen(shared_lib_path)
-    except OSError as e:
-        print 'Could not find the C shared library %s' % shared_lib_path
-        raise e
-    return (ffidec, libdec)
-
-
-ffidummy, libdummy = init_dummy()
-ffidec, libdec = init_dec()
+ffiaudio, libaudio = init_audio()

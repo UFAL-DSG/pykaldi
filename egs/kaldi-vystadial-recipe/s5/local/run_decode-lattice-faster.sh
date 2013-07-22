@@ -93,8 +93,6 @@ if [ $test_mode == "simulated" ]; then
           *) echo "Invalid feature type $feat_type" && exit 1;
     esac
 
-    # TODO How is the gmm-latgen-paralelized? On data -> bad for us!
-    # TODO $nj == 1 does it depend on data? IMHO yes (See steps/decode.sh)
     time ( $cmd JOB=1:$nj $decode_dir/decodeLattice.JOB.log \
      gmm-latgen-faster --max-active=$max_active --beam=$beam --lattice-beam=$latbeam \
      --acoustic-scale=$acwt --allow-partial=true --word-symbol-table=$ac_model/graph/words.txt \

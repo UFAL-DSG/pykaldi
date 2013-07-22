@@ -14,7 +14,9 @@
 # limitations under the License. #
 
 
+import pykaldi
 import os
+
 try:
     from cffi import FFI
 except ImportError as e:
@@ -29,15 +31,10 @@ For running pykaldi you need cffi module installed!
 
 ffibin = FFI()
 binheader = '''
-int compute_mfcc_feats_like_main(int argc, char **argv);
-int gmm_latgen_faster_like_main(int argc, char **argv);
-int lattice_best_path_like_main(int argc, char **argv);
 int compute_wer_like_main(int argc, char **argv);
-int online_wav_gmm_decode_faster_like_main(int argc, char *argv[]);
-int compute_cmvn_stats_like_main(int argc, char *argv[]);
 '''
 ffibin.cdef(binheader)
-dir_path = os.path.dirname(os.path.realpath(__file__))
+dir_path = os.path.dirname(os.path.realpath(pykaldi.__file__))
 lib_name = 'libpykaldi.so'
 shared_lib_path = os.path.join(dir_path, lib_name)
 try:

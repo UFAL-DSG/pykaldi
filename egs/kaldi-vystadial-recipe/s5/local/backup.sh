@@ -21,10 +21,14 @@ name="${EXP_NAME}_${DATE}"
 target_dir="Results/$name"
 
 # This is EXAMPLE SCRIPT you are ENCOURAGED TO CHANGE IT!
+
+# Collect the results
+local/results.py exp > exp/results.log
+
 mkdir -p "$target_dir"
 cp -rf exp  "$target_dir"
 
-echo "DATA successfully copied to $target_dir"
+echo; echo "DATA successfully copied to $target_dir"; echo
 
 echo "du -hs will tell you the size of stored settings"
 du -hs $target_dir

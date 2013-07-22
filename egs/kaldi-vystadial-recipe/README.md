@@ -3,7 +3,6 @@ SUMMARY
  * KALDI recipe based on voxforge KALDI recipe http://vpanayotov.blogspot.cz/2012/07/voxforge-scripts-for-kaldi.html .
  * Requires KALDI installation and Linux environment. (Tested on Ubuntu 10.04 and 12.10.)
  * Written in Bash an Python 2.7.3.
- * Check the results at [Ufal Redmine](https://redmine.ms.mff.cuni.cz/projects/vystadial/wiki/Acoustic_models)
 
 DESCRIPTION
 -----------
@@ -27,8 +26,12 @@ Before running the experiments check the following files:
  ```bash
  ./run.sh | tee mylog.log # I always store the output to the log
  ```
- * I wrote a stupid script for collecting results. It's really beta software. It may crash, but it works for me.
+ * I wrote a script for collecting results. 
+    It's BETA software, but I find it very helpful to collect results.
  ```bash
+# After s5/run.sh finished 
+# the results are stored in exp directory.
+# Let's collect the results:
 $ local/results.py exp # specify the experiment directory wait a while
 exp             RT coef         WER             SER
 _ri3b_fmmi_b    2.42235533333   (19.45, 13)     (44.67, 11)
@@ -48,7 +51,7 @@ mono            & 0.9478559      & (52.42, 15) & (77.33, 14)\\
 tri3b_mmi       & 0.357894733333 & (19.77, 16) & (46.0, 11) \\
 tri1            & 0.6558491      & (27.12, 18) & (57.33, 20)\\
 ...
-... and the same results in TeX
+... and the same results in TeX table
 ...
 
  ```

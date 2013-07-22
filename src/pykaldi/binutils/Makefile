@@ -2,36 +2,30 @@
 # since we are dependent on the code there
 
 # PYTHON PIPELINE EXAMPLE settings 
-VOXFORGE_CONFIG = configs/decoding_pipeline_voxforge_config.json
-VYSTADIAL_CONFIG = configs/decoding_pipeline_vystadial_config.json
-BIGLIB = libpykaldi.so
-
-all: $(BIGLIB)
+# CONFIG = configs/voxforge_config.json
+CONFIG = configs/vystadial_config.json
 
 # extracts testing data 
 DECODE_DIR = work
 include ../online-data.mk
 
-# Compiling the $(BIGLIB) in python-kaldi-decoding directory
-$(BIGLIB): 
-	$(MAKE) -C .. $@
-	cp ../$@ .
+all: decoders
 
 decoders:
-	$(MAKE) -C ../$@
+	$(MAKE) -C .. libpykaldi.so
 
-test: run_pipeline_example
+test: run_online 
 
 # PYTHON PIPELINE EXAMPLE
-run_pipeline_example: decoding_pipeline_example.py decoders $(BIGLIB) $(DATA_TAR) $(VOXFORGE_CONFIG) 
-	python $< $(VOXFORGE_CONFIG)
+run_online: online_decode.py decoders $(DATA_TAR) $(CONFIG) 
+	python $< $(CONFIG)
 
+run_live: decoders
+	echo "BROKEN!"
+	python live_demo.py
 
-
-recipe_test: decoding_pipeline_example.py decoders $(BIGLIB) $(DATA_TAR) $(VYSTADIAL_CONFIG)
-	python $< $(VYSTADIAL_CONFIG)
 	
 clean:
-	rm -rf $(DATA_TAR) $(DATA_FILE) $(DECODE_DIR) $(BIGLIB) *.pyc 
+	rm -rf $(DATA_TAR) $(DATA_FILE) $(DECODE_DIR) *.pyc 
 
 .PHONY: run_pipeline_example test clean decoders

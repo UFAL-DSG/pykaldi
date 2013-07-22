@@ -11,9 +11,10 @@ from numpy import mean
 
 def getLog(path):
     try:
-        rt = subprocess.check_output(['grep', '-r', 'real-time factor', path])
-        wer = subprocess.check_output(['grep', '-r', '%WER', path])
-        ser = subprocess.check_output(['grep', '-r', '%SER', path])
+        grep = ['grep', '-r', '-I', ]
+        rt = subprocess.check_output(grep + ['real-time factor', path])
+        wer = subprocess.check_output(grep + ['%WER', path])
+        ser = subprocess.check_output(grep + ['%SER', path])
         return (rt, wer, ser)
     except subprocess.CalledProcessError as err:
         print err
