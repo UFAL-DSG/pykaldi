@@ -28,6 +28,7 @@
 #include "gmm/decodable-am-diag-gmm.h"
 #include "util/timer.h"
 #include "feat/feature-functions.h"  // feature reversal
+#include "pykaldi-audio-source.h"
 
 /*****************
  *  C interface  *
@@ -40,16 +41,16 @@ extern "C" {
 #endif
 
 // explicit constructor and destructor
-CWrapperLatFastDecoder* new_WrapperLatFastDecoder();
+CWrapperLatFastDecoder* new_WrapperLatFastDecoder(void);
 void del_WrapperLatFastDecoder(CWrapperLatFastDecoder *d);
 
 // methods
-// TODO
-void Decode(CWrapperLatFastDecoder *d);
-bool Finished(CWrapperLatFastDecoder *d);
-void FrameIn(CWrapperLatFastDecoder *d, unsigned char *frame, size_t frame_len);
-void Reset(CKaldiDecoderWrapper *d);
-int Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
+// TODO full list
+bool WLFD_Decode(CWrapperLatFastDecoder *d);
+bool WLFD_Finished(CWrapperLatFastDecoder *d);
+void WLFD_FrameIn(CWrapperLatFastDecoder *d, unsigned char *frame, size_t frame_len);
+void WLFD_Reset(CWrapperLatFastDecoder *d);
+int WLFD_Setup(CWrapperLatFastDecoder *d, int argc, char **argv);
 
 #ifdef __cplusplus
 }
@@ -78,11 +79,11 @@ struct WrapperLatFastDecoderOptions {
   std::string alignment_wspecifier;
 
   void Register(OptionsItf *po) {
-    po.Register("acoustic-scale", &acoustic_scale,
+    po->Register("acoustic-scale", &acoustic_scale,
                 "Scaling factor for acoustic likelihoods");
-    po.Register("word-symbol-table", &word_syms_filename,
+    po->Register("word-symbol-table", &word_syms_filename,
                 "Symbol table for words [for debug output]");
-    po.Register("allow-partial", &allow_partial,
+    po->Register("allow-partial", &allow_partial,
                 "If true, produce output even if end state was not reached.");
   }
 };
@@ -95,7 +96,9 @@ struct WrapperLatFastDecoderOptions {
 class WrapperLatFastDecoder {
  public:
    WrapperLatFastDecoder():
-     decoder_(0), source_(0), decode_fst_(0), trans_model_(0), word_syms_(0) 
+     tot_like(0.0), frame_count(0), num_done(0), num_err(0), 
+     decoder_(0), source_(0), decode_fst_(0), trans_model_(0), word_syms_(0)
+
   { Reset(); }
 
   // @brief Pass the 16 bit audio data
@@ -105,7 +108,7 @@ class WrapperLatFastDecoder {
     source_->Write(frame, frame_len);
   }
 
-  void Decode(void);
+  bool Decode(void);
 
   bool Finished() { return feature_reader_.Done(); }
 
@@ -113,15 +116,16 @@ class WrapperLatFastDecoder {
 
   int Setup(int argc, char **argv);
 
-  virtual ~KaldiDecoderWrapper(){ Reset(); }
+  virtual ~WrapperLatFastDecoder(){ Reset(); }
 
 
  private:
   int ParseArgs(int argc, char **argv);
 
-  double tot_like = 0.0;
-  kaldi::int64 frame_count = 0;
-  int num_done = 0, num_err = 0;
+  double tot_like;
+  kaldi::int64 frame_count;
+  int num_done;
+  int num_err;
 
   // FIXME remove
   CompactLatticeWriter compact_lattice_writer;

@@ -24,7 +24,41 @@
 #include "gmm/decodable-am-diag-gmm.h"
 #include "util/timer.h"
 #include "feat/feature-functions.h"  // feature reversal
-#include "pykaldi-lattice-faster-decoder.h"
+#include "pykaldi/pykaldi-lattice-faster-decoder.h"
+
+/*****************
+ *  C interface  *
+ *****************/
+// explicit constructor and destructor
+
+CWrapperLatFastDecoder* new_WrapperLatFastDecoder(void) {
+  return reinterpret_cast<CWrapperLatFastDecoder*>(new kaldi::WrapperLatFastDecoder());
+}
+void del_WrapperLatFastDecoder(CWrapperLatFastDecoder *d) {
+  delete reinterpret_cast<kaldi::WrapperLatFastDecoder*>(d);
+}
+
+// methods
+// TODO full list
+bool WLFD_Decode(CWrapperLatFastDecoder *d) {
+  return reinterpret_cast<kaldi::WrapperLatFastDecoder*>(d)->Decode();
+}
+bool WLFD_Finished(CWrapperLatFastDecoder *d) {
+  return reinterpret_cast<kaldi::WrapperLatFastDecoder*>(d)->Finished();
+}
+void WLFD_FrameIn(CWrapperLatFastDecoder *d, unsigned char *frame, size_t frame_len) {
+  reinterpret_cast<kaldi::WrapperLatFastDecoder*>(d)->FrameIn(frame, frame_len);
+}
+void WLFD_Reset(CWrapperLatFastDecoder *d) {
+  reinterpret_cast<kaldi::WrapperLatFastDecoder*>(d)->Reset();
+}
+int WLFD_Setup(CWrapperLatFastDecoder *d, int argc, char **argv) {
+  return reinterpret_cast<kaldi::WrapperLatFastDecoder*>(d)->Setup(argc, argv);
+}
+
+/*******************
+ *  C++ interface  *
+ *******************/
 
 namespace kaldi {
 
@@ -38,15 +72,16 @@ bool WrapperLatFastDecoder::Decode(void) {
   if (features.NumRows() == 0) {
     KALDI_WARN << "Zero-length utterance: " << utt;
     num_err++;
-    continue;
+    return false;
   }
   
   DecodableAmDiagGmmScaled gmm_decodable(am_gmm_, *trans_model_, features,
                                          opts_.acoustic_scale);
 
   double like;
+  LatticeWriter lattice_writer;
   if (DecodeUtteranceLatticeFaster(
-          decoder_, gmm_decodable, word_syms_, utt, opts_.acoustic_scale,
+          *decoder_, gmm_decodable, word_syms_, utt, opts_.acoustic_scale,
           true, opts_.allow_partial, &alignment_writer, &words_writer,
           &compact_lattice_writer, &lattice_writer, &like)) {
     tot_like += like;
@@ -57,7 +92,7 @@ bool WrapperLatFastDecoder::Decode(void) {
   return true;
 }
 
-void Reset(void) {
+void WrapperLatFastDecoder::Reset(void) {
   
   // FIXME does not reset lattice_writer, words_writer, etc
   // because I will remove them shortly
@@ -87,7 +122,7 @@ int WrapperLatFastDecoder::ParseArgs(int argc, char **argv) {
     ParseOptions po("Generate lattices using GMM-based model.\n"
         "Usage: gmm-latgen-faster [options] model-in (fst-in|fsts-rspecifier) "
         "features-rspecifier lattice-wspecifier "
-        "[ words-wspecifier [alignments-wspecifier] ]\n";
+        "[ words-wspecifier [alignments-wspecifier] ]\n");
 
     config_.Register(&po);
     opts_.Register(&po);
@@ -124,25 +159,25 @@ int WrapperLatFastDecoder::Setup(int argc, char ** argv) {
     trans_model_ = new TransitionModel();
     {
       bool binary;
-      Input ki(opts_.model_infilename, &binary);
+      Input ki(opts_.model_in_filename, &binary);
       trans_model_->Read(ki.Stream(), binary);
       am_gmm_.Read(ki.Stream(), binary);
     }
 
 
-    if(!compact_lattice_writer.Open(lattice_wspecifier))
+    if(!compact_lattice_writer.Open(opts_.lattice_wspecifier))
       KALDI_ERR << "Could not open table for writing lattices: "
-                << lattice_wspecifier;
+                << opts_.lattice_wspecifier;
 
-    words_writer = Int32VectorWriter(words_wspecifier);
-    alignment_writer = Int32VectorWriter(alignment_wspecifier);
+    words_writer = Int32VectorWriter(opts_.words_wspecifier);
+    alignment_writer = Int32VectorWriter(opts_.alignment_wspecifier);
 
     if (opts_.word_syms_filename != "") 
       if (!(word_syms_ = fst::SymbolTable::ReadText(opts_.word_syms_filename)))
         KALDI_ERR << "Could not read symbol table from file "
                    << opts_.word_syms_filename;
 
-      feature_reader_ = SequentialBaseFloatMatrixReader(feature_rspecifier);
+      feature_reader_ = SequentialBaseFloatMatrixReader(opts_.feature_rspecifier);
 
       // Input FST is just one FST, not a table of FSTs.
       decode_fst_ = fst::ReadFstKaldi(opts_.fst_in_str);
@@ -153,6 +188,7 @@ int WrapperLatFastDecoder::Setup(int argc, char ** argv) {
     Reset();
     return 2;
   }
+  return 0;
 } // Setup()
 
 

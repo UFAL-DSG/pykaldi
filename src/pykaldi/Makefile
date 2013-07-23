@@ -22,9 +22,9 @@ endif
 
 BINFILES = 
 
-TESTFILES = compute-wer-test pykaldi-gmm-decode-faster-test
+TESTFILES = compute-wer-test pykaldi-gmm-decode-faster-test pykaldi-lattice-faster-decoder-test
 
-OBJFILES = compute-wer.o pykaldi-gmm-decode-faster.o pykaldi-audio-source.o
+OBJFILES = compute-wer.o pykaldi-gmm-decode-faster.o pykaldi-audio-source.o pykaldi-lattice-faster-decoder.o
 
 LIBNAME = pykaldi
 LIBFILE = lib$(LIBNAME).so
@@ -62,3 +62,9 @@ pytest: decoders_test.py $(DATA_TAR)
 
 clean:
 	rm -rf $(DATA_TAR) $(DATA_FILE) $(DECODE_DIR) $(TESTFILES) *.pyc *.o *.so 
+
+depend:
+	-$(CXX) -M $(CXXFLAGS) *.cc > .depend.mk  
+
+-include .depend.mk
+

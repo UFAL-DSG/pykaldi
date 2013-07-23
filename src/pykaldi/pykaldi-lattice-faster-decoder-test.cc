@@ -22,6 +22,8 @@
 #include "test-cffi-python-dyn.h"
 #include "pykaldi-lattice-faster-decoder.h"
 
+using namespace kaldi;
+
 // function types for loading functions from shared library
 typedef CWrapperLatFastDecoder* (*CWLFD_constructor_t)(void);
 typedef void (*CWLFD_void_t)(CWrapperLatFastDecoder*);
@@ -31,7 +33,7 @@ typedef int (*CWLFD_setup_t)(CWrapperLatFastDecoder*, int, char **);
 // typedef size_t (*CWLFD_size_t)(CWrapperLatFastDecoder*);
 // typedef void (*CWLFD_pop_hyp_t)(CWrapperLatFastDecoder*, int *, size_t);
 
-int main(int argc, char const *argv[]) {
+int main(int argc, char *argv[]) {
   // open the library
   char nameLib[] = "libpykaldi.so";
   void *lib = dlopen(nameLib, RTLD_NOW);
@@ -44,16 +46,18 @@ int main(int argc, char const *argv[]) {
   if (!new_Decoder) return 2;
   CWLFD_void_t del_Decoder = load_function<CWLFD_void_t>("del_WrapperLatFastDecoder", lib);
   if (!del_Decoder) return 3;
-  CWLFD_setup_t setup = load_function<CWLFD_setup_t>("Setup", lib);
+  CWLFD_setup_t setup = load_function<CWLFD_setup_t>("WLFD_Setup", lib);
   if (!setup) return 4;
-  CWLFD_void_t reset = load_function<CWLFD_void_t>("Reset", lib);
+  CWLFD_void_t reset = load_function<CWLFD_void_t>("WLFD_Reset", lib);
   if (!reset) return 5;
-  CWLFD_frame_in_t frame_in = load_function<CWLFD_frame_in_t>("FrameIn", lib);
+  CWLFD_frame_in_t frame_in = load_function<CWLFD_frame_in_t>("WLFD_FrameIn", lib);
   if (!frame_in) return 6;
-  CWLFD_size_t decode = load_function<CWLFD_size_t>("Decode", lib);
+  CWLFD_bool_t decode = load_function<CWLFD_bool_t>("WLFD_Decode", lib);
   if (!decode) return 7;
-  CWLFD_bool_t finished = load_function<CWLFD_bool_t>("Finished", lib);
+  CWLFD_bool_t finished = load_function<CWLFD_bool_t>("WLFD_Finished", lib);
   if (!finished) return 7;
+
+  KALDI_WARN << "DEBUG";
   
   // create the decoder
   CWrapperLatFastDecoder *d = new_Decoder();
@@ -85,6 +89,6 @@ int main(int argc, char const *argv[]) {
     decode(d);
   }
 
-  del_Decoder(d);
+  del_Decoder(d); // FIXME
   return 0;
 }
