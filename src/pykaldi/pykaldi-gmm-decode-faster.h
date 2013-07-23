@@ -44,8 +44,9 @@ void del_KaldiDecoderWrapper(CKaldiDecoderWrapper *d);
 // methods
 size_t Decode(CKaldiDecoderWrapper *d);
 size_t HypSize(void);
+// FIXME ?Deprecated? -> use Finished and Decode instead from Python
 size_t FinishDecoding(CKaldiDecoderWrapper *d);
-bool Finished(void);
+bool Finished(CKaldiDecoderWrapper *d);
 void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len);
 void PopHyp(CKaldiDecoderWrapper *d, int * word_ids, size_t size);
 size_t PrepareHypothesis(CKaldiDecoderWrapper *d, int * is_full);

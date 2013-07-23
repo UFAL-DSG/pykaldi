@@ -42,10 +42,14 @@ size_t Decode(CKaldiDecoderWrapper *d) {
 size_t DecodedWords(CKaldiDecoderWrapper *d) {
   return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->HypSize();
 }
+// FIXME ?Deprecated? -> use Finished and Decode instead from Python
 size_t FinishDecoding(CKaldiDecoderWrapper *d) {
   // FIXME hardcoded timeout! 
   // 0 - means no timeout
   return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->FinishDecoding(0);
+}
+bool Finished(CKaldiDecoderWrapper *d) {
+  return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Finished();
 }
 void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len) {
   reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->FrameIn(frame, frame_len);
@@ -100,6 +104,7 @@ size_t KaldiDecoderWrapper::Decode(void) {
   return word_ids_.size();
 }
 
+// FIXME ?Deprecated? -> use Finished and Decode instead from Python
 size_t KaldiDecoderWrapper::FinishDecoding(double timeout) {
   Timer timer;
   source_->NoMoreInput();
@@ -175,7 +180,7 @@ int KaldiDecoderWrapper::ParseArgs(int argc, char ** argv) {
 // Looks unficcient but: c++11 move semantics 
 // and RVO: http://cpp-next.com/archive/2009/08/want-speed-pass-by-value/
 // justified it. It has nicer interface.
-std::vector<int32> KaldiDecoderWrapper::PopHyp() { 
+std::vector<int32> KaldiDecoderWrapper::PopHyp(void) { 
   std::vector<int32> tmp;
   std::swap(word_ids_, tmp); // clear the word_ids_
   // KALDI_WARN << "tmp size" << tmp.size();
@@ -249,7 +254,7 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
   }
 } // KaldiDecoderWrapper::Setup()
 
-void KaldiDecoderWrapper::Reset() {
+void KaldiDecoderWrapper::Reset(void) {
 
   delete mfcc_;
   delete source_;
