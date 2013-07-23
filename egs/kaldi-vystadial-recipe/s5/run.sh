@@ -161,7 +161,7 @@ steps/train_diag_ubm.sh --silence-weight 0.5 --nj $njobs --cmd "$train_cmd" \
  # Next, various fMMI+MMI configurations.
 steps/train_mmi_fmmi.sh --learning-rate 0.0025 \
   --boost 0.1 --cmd "$train_cmd" data/train data/lang exp/tri3b_ali exp/dubm3b exp/tri3b_denlats \
-  exp/_ri3b_fmmi_b || exit 1;
+  exp/tri3b_fmmi_b || exit 1;
 
 for iter in 3 4 5 6 7 8; do
  steps/decode_fmmi.sh --nj $njobs --config conf/decode.config --cmd "$decode_cmd" --iter $iter \
