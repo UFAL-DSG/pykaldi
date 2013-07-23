@@ -75,18 +75,19 @@ size_t KaldiDecoderWrapper::Decode(void) {
   decoder_->Decode(decodable_);
   // KALDI_WARN<< "HypSize before" << HypSize();
 
+  fst::VectorFst<LatticeArc> out_fst;
   std::vector<int32> new_word_ids;
   if (UtteranceEnded()) {
     // get the last chunk
-    decoder_->FinishTraceBack(&out_fst_);
-    fst::GetLinearSymbolSequence(out_fst_,
+    decoder_->FinishTraceBack(&out_fst);
+    fst::GetLinearSymbolSequence(out_fst,
                                  static_cast<vector<int32> *>(0),
                                  &new_word_ids,
                                  static_cast<LatticeArc::Weight*>(0));
   } else {
     // get the hypothesis from currently active state
-    if (decoder_->PartialTraceback(&out_fst_)) {
-      fst::GetLinearSymbolSequence(out_fst_,
+    if (decoder_->PartialTraceback(&out_fst)) {
+      fst::GetLinearSymbolSequence(out_fst,
                                    static_cast<vector<int32> *>(0),
                                    &new_word_ids,
                                    static_cast<LatticeArc::Weight*>(0));
@@ -182,7 +183,6 @@ std::vector<int32> KaldiDecoderWrapper::PopHyp() {
 }
 
 int KaldiDecoderWrapper::Setup(int argc, char **argv) {
-  ready_ = false; resetted_ = false;
   try {
     if (ParseArgs(argc, argv) != 0) {
       Reset(); 
@@ -241,7 +241,6 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
     decodable_ = new OnlineDecodableDiagGmmScaled(am_gmm_, 
                                             *trans_model_, 
                                             opts_.acoustic_scale, feature_matrix_);
-    resetted_ = false; ready_ = true;
     return 0;
   } catch(const std::exception& e) {
     std::cerr << e.what();
@@ -278,7 +277,6 @@ void KaldiDecoderWrapper::Reset() {
   feature_reading_opts_.batch_size = 1;
   opts_ = KaldiDecoderWrapperOptions();
 
-  resetted_ = true; ready_ = false;
 } // Reset ()
 
 } // namespace kaldi

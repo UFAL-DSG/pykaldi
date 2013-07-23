@@ -154,9 +154,6 @@ class KaldiDecoderWrapper {
  private:
   int ParseArgs(int argc, char **argv);
 
-  bool resetted_;
-  bool ready_;
-  
   std::vector<int32> word_ids_;
 
   Mfcc *mfcc_;
@@ -164,13 +161,12 @@ class KaldiDecoderWrapper {
   FeInput *fe_input_;
   OnlineCmnInput *cmn_input_;
   TransitionModel *trans_model_;
-  fst::Fst<fst::StdArc> *decode_fst_; // FIXME try  it local
+  fst::Fst<fst::StdArc> *decode_fst_;
   OnlineFasterDecoder *decoder_;
   OnlineFeatInputItf *feat_transform_;
   OnlineFeatureMatrix *feature_matrix_;
   OnlineDecodableDiagGmmScaled *decodable_;
   AmDiagGmm am_gmm_;
-  fst::VectorFst<LatticeArc> out_fst_;  // FIXME try it local
 
   KaldiDecoderWrapperOptions opts_;
   OnlineFasterDecoderOpts decoder_opts_;
