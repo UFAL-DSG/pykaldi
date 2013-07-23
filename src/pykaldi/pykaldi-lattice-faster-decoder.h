@@ -89,9 +89,10 @@ struct WrapperLatFastDecoderOptions {
 };
 
 
-/** A bit more optimized version of the lattice decoder.
+/** A wrapper of lattice-faster-decoder: bit more optimized version of the lattice decoder.
    See \ref lattices_generation \ref decoders_faster and \ref decoders_simple
     for more information.
+   Based on: gmmbin/gmm-latgen-faster.cc
  */
 class WrapperLatFastDecoder {
  public:
