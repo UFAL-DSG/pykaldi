@@ -16,18 +16,18 @@ wst=$exp_dir/graph/words.txt
 
 # out params=
 lattice=$PWD/work/lat.gz
-pylattice=$PWD/work/lat.gz
+pylattice=$PWD/work/pylat.gz
 
 
-gmm-latgen-faster --config=configs/decode.config  \
-    --word-symbol-table=$wst $model $hclg \
-    "ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:$utt2spk scp:$cmvn_scp scp:$feats_scp ark:- | add-deltas  ark:- ark:- |" \
-    "ark:|gzip - c > $lattice"
+# gmm-latgen-faster --config=configs/decode.config  \
+#     --word-symbol-table=$wst $model $hclg \
+#     "ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:$utt2spk scp:$cmvn_scp scp:$feats_scp ark:- | add-deltas  ark:- ark:- |" \
+#     "ark:|gzip - c > $lattice"
+# 
+# lattice-best-path --lm-scale=15 --word-symbol-table=$wst \
+#     "ark:gunzip -c $lattice|" ark,t:work/kaldi.trans
 
-lattice-best-path --lm-scale=15 --word-symbol-table=$wst \
-    "ark:gunzip -c $lattice|" ark,t:work/kaldi.trans
-
-../pykaldi-lattice-faster-decoder --config=configs/decode.config  \
+../pykaldi-lattice-faster-decoder-test --config=configs/decode.config  \
     --word-symbol-table=$wst $model $hclg \
     "ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:$utt2spk scp:$cmvn_scp scp:$feats_scp ark:- | add-deltas  ark:- ark:- |" \
     "ark:|gzip - c > $pylattice"
