@@ -142,40 +142,26 @@ int KaldiDecoderWrapper::ParseArgs(int argc, char ** argv) {
 
     decoder_opts_.Register(&po, true);
     feature_reading_opts_.Register(&po);
+    opts_.Register(&po);
     
-    po.Register("left-context", &left_context_, "Number of frames of left context");
-    po.Register("right-context", &right_context_, "Number of frames of right context");
-    po.Register("acoustic-scale", &acoustic_scale_,
-                "Scaling factor for acoustic likelihoods");
-    po.Register("cmn-window", &cmn_window_,
-        "Number of feat. vectors used in the running average CMN calculation");
-    po.Register("min-cmn-window", &min_cmn_window_,
-                "Minumum CMN window used at start of decoding (adds "
-                "latency only at start)");
-
     po.Read(argc, argv);
     if (po.NumArgs() != 4 && po.NumArgs() != 5) {
       po.PrintUsage();
       return 1;
     }
     if (po.NumArgs() == 4)
-      if (left_context_ % delta_feat_opts_.order != 0 || 
-          left_context_ != right_context_)
+      if (opts_.left_context % delta_feat_opts_.order != 0 || 
+          opts_.left_context != opts_.right_context)
         KALDI_ERR << "Invalid left/right context parameters!";
 
-    int32 window_size = right_context_ + left_context_ + 1;
+    int32 window_size = opts_.right_context + opts_.left_context + 1;
     decoder_opts_.batch_size = std::max(decoder_opts_.batch_size, window_size);
 
-    model_rxfilename_ = po.GetArg(1);
-    fst_rxfilename_ = po.GetArg(2);
-    word_syms_filename_ = po.GetArg(3);
-    std::string silence_phones_str = po.GetArg(4);
-    lda_mat_rspecifier_ = po.GetOptArg(5);
-
-    if (!SplitStringToIntegers(silence_phones_str, ":", false, &silence_phones_))
-        KALDI_ERR << "Invalid silence-phones string " << silence_phones_str;
-    if (this->silence_phones_.empty())
-        KALDI_ERR << "No silence phones given!";
+    opts_.model_rxfilename = po.GetArg(1);
+    opts_.fst_rxfilename = po.GetArg(2);
+    opts_.word_syms_filename = po.GetArg(3);
+    opts_.set_silence_phones(po.GetArg(4));
+    opts_.lda_mat_rspecifier = po.GetOptArg(5);
 
     return 0;
   } catch(const std::exception& e) {
@@ -206,14 +192,14 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
     trans_model_ = new TransitionModel();
     {
       bool binary;
-      Input ki(model_rxfilename_, &binary);
+      Input ki(opts_.model_rxfilename, &binary);
       trans_model_->Read(ki.Stream(), binary);
       am_gmm_.Read(ki.Stream(), binary);
     }
 
-    decode_fst_ = ReadDecodeGraph(fst_rxfilename_);
+    decode_fst_ = ReadDecodeGraph(opts_.fst_rxfilename);
     decoder_ = new OnlineFasterDecoder(*decode_fst_, decoder_opts_,
-                                    silence_phones_, *trans_model_);
+                                    opts_.silence_phones, *trans_model_);
 
     // Fixed 16 bit audio
     source_ = new OnlineBlockSource(); 
@@ -228,24 +214,24 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
     mfcc_ = new Mfcc(mfcc_opts);
 
     fe_input_ = new FeInput(source_, mfcc_,
-                               frame_length * (kSampleFreq_ / 1000),
-                               frame_shift * (kSampleFreq_ / 1000));
-    cmn_input_ = new OnlineCmnInput(fe_input_, cmn_window_, min_cmn_window_);
+                               frame_length * (opts_.kSampleFreq / 1000),
+                               frame_shift * (opts_.kSampleFreq / 1000));
+    cmn_input_ = new OnlineCmnInput(fe_input_, opts_.cmn_window, opts_.min_cmn_window);
 
-    if (lda_mat_rspecifier_ != "") {
+    if (opts_.lda_mat_rspecifier != "") {
       bool binary_in;
       Matrix<BaseFloat> lda_transform; 
-      Input ki(lda_mat_rspecifier_, &binary_in);
+      Input ki(opts_.lda_mat_rspecifier, &binary_in);
       lda_transform.Read(ki.Stream(), binary_in);
       // lda_transform is copied to OnlineLdaInput
       feat_transform_ = new OnlineLdaInput(cmn_input_, 
                                 lda_transform,
-                                left_context_, right_context_);
+                                opts_.left_context, opts_.right_context);
     } else {
       // Note from Dan: keeping the next statement for back-compatibility,
       // but I don't think this is really the right way to set the window-size
       // in the delta computation: it should be a separate config.
-      delta_feat_opts_.window = left_context_ / 2;
+      delta_feat_opts_.window = opts_.left_context / 2;
       feat_transform_ = new OnlineDeltaInput(delta_feat_opts_, cmn_input_);
     }
 
@@ -254,7 +240,7 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
                                        feat_transform_);
     decodable_ = new OnlineDecodableDiagGmmScaled(am_gmm_, 
                                             *trans_model_, 
-                                            acoustic_scale_, feature_matrix_);
+                                            opts_.acoustic_scale, feature_matrix_);
     resetted_ = false; ready_ = true;
     return 0;
   } catch(const std::exception& e) {
@@ -274,8 +260,6 @@ void KaldiDecoderWrapper::Reset() {
   delete decode_fst_;
   delete decoder_;
   delete decodable_;
-  silence_phones_.clear();
-  word_syms_filename_.clear(); // FIXME remove it from options
   word_ids_.clear();
 
   mfcc_ = 0;
@@ -291,16 +275,8 @@ void KaldiDecoderWrapper::Reset() {
   // Up to delta-delta derivative features are calculated unless LDA is used
   // default values: order & window
   delta_feat_opts_ = DeltaFeaturesOptions(2, 2); 
-
-  acoustic_scale_ = 0.1;
-  cmn_window_ = 600; min_cmn_window_ = 100;
-  right_context_ = 4; left_context_ = 4;
-
   feature_reading_opts_.batch_size = 1;
-
-  model_rxfilename_.clear();
-  fst_rxfilename_.clear();
-  lda_mat_rspecifier_.clear();
+  opts_ = KaldiDecoderWrapperOptions();
 
   resetted_ = true; ready_ = false;
 } // Reset ()
