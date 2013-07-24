@@ -54,6 +54,7 @@ BaseFloat PykaldiDecodableDiagGmmScaled::LogLikelihood(int32 frame, int32 index)
   int32 pdf_id = trans_model_.TransitionIdToPdf(index);
   if (cache_[pdf_id].first == frame)
     return cache_[pdf_id].second;
+  // FIXME cur_feats are empty
   BaseFloat ans = ac_model_.LogLikelihood(pdf_id, cur_feats_) * ac_scale_;
   cache_[pdf_id].first = frame;
   cache_[pdf_id].second = ans;
@@ -66,8 +67,10 @@ bool PykaldiDecodableDiagGmmScaled::IsLastFrame(int32 frame) {
 }
 
 void PykaldiDecodableDiagGmmScaled::NewStart() {
-  cur_frame_ = 0;
-  cache_.clear();
+  cur_frame_ = -1; // not valid frame
+  // Keep the last num_pdfs values if they were available
+  int32 num_pdfs = trans_model_.NumPdfs();
+  cache_.resize(num_pdfs, std::make_pair<int32,BaseFloat>(-1, 0.0));
   cur_feats_ = Vector<BaseFloat>(); // clear the vector 
   features_->NewStart(); // send the message further to features source 
 }
