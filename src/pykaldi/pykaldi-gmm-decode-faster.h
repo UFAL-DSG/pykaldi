@@ -18,12 +18,14 @@
 #ifndef KALDI_PYKALDI_GMM_DECODE_FASTER_H_
 #define KALDI_PYKALDI_GMM_DECODE_FASTER_H_
 
+// FIXME reduce the includes - some may be unnecessary
 #include <string>
 #include <vector>
 #include "feat/feature-mfcc.h"
-#include "online/online-audio-source.h"
-#include "online/online-faster-decoder.h"
+// #include "online/online-audio-source.h"
 #include "online/online-feat-input.h"
+#include "online/online-faster-decoder.h"
+#include "pykaldi-faster-decoder.h"
 #include "pykaldi-feat-input.h"
 #include "pykaldi-decodable.h"
 #include "pykaldi-audio-source.h"
@@ -164,7 +166,7 @@ class KaldiDecoderWrapper {
   OnlineCmnInput *cmn_input_;
   TransitionModel *trans_model_;
   fst::Fst<fst::StdArc> *decode_fst_;
-  OnlineFasterDecoder *decoder_;
+  PykaldiFasterDecoder *decoder_;
   OnlineFeatInputItf *feat_transform_;
   PykaldiFeatureMatrix *feature_matrix_;
   PykaldiDecodableDiagGmmScaled *decodable_;

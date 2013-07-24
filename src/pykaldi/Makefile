@@ -24,7 +24,9 @@ BINFILES =
 
 TESTFILES = compute-wer-test pykaldi-gmm-decode-faster-test pykaldi-lattice-faster-decoder-test
 
-OBJFILES = compute-wer.o pykaldi-gmm-decode-faster.o pykaldi-audio-source.o pykaldi-lattice-faster-decoder.o pykaldi-decodable.o pykaldi-feat-input.o
+OBJFILES = compute-wer.o pykaldi-gmm-decode-faster.o pykaldi-audio-source.o \
+		   pykaldi-lattice-faster-decoder.o pykaldi-decodable.o pykaldi-feat-input.o \
+		   pykaldi-faster-decoder.o
 
 LIBNAME = pykaldi
 LIBFILE = lib$(LIBNAME).so

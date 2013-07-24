@@ -21,6 +21,7 @@
 #include "online/online-decodable.h"
 #include "online/online-faster-decoder.h"
 #include "online/onlinebin-util.h"
+#include "online/online-audio-source.h"
 #include "pykaldi-audio-source.h"
 #include "pykaldi-gmm-decode-faster.h"
 #include "pykaldi-feat-input.h"
@@ -205,7 +206,7 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
     }
 
     decode_fst_ = ReadDecodeGraph(opts_.fst_rxfilename);
-    decoder_ = new OnlineFasterDecoder(*decode_fst_, decoder_opts_,
+    decoder_ = new PykaldiFasterDecoder(*decode_fst_, decoder_opts_,
                                     opts_.silence_phones, *trans_model_);
 
     // Fixed 16 bit audio

@@ -36,35 +36,25 @@ void PykaldiFeatureMatrix::GetNextFeatures() {
   if (have_last_frame)
     last_frame = feat_matrix_.Row(feat_matrix_.NumRows() - 1);
 
-  int32 iter;
-  for (iter = 0; iter < opts_.num_tries; iter++) {
-    Matrix<BaseFloat> next_features(opts_.batch_size, feat_dim_);
-    finished_ = ! input_->Compute(&next_features);
-    if (next_features.NumRows() == 0 && ! finished_) {
-      // It timed out.  Try again.
-      continue;
+  Matrix<BaseFloat> next_features(opts_.batch_size, feat_dim_);
+  finished_ = ! input_->Compute(&next_features);
+  // PyKaldi Input Feature should always return non empty
+  // FIXME enable this when pykaldi-feat-implemented
+  // KALDI_ASSERT (!finished_ && next_features.NumRows() <= 0);
+  if (next_features.NumRows() > 0) {
+    int32 new_size = (have_last_frame ? 1 : 0) +
+        next_features.NumRows();
+    feat_offset_ += feat_matrix_.NumRows() -
+        (have_last_frame ? 1 : 0); // we're discarding this many
+                                   // frames.
+    feat_matrix_.Resize(new_size, feat_dim_, kUndefined);
+    if (have_last_frame) {
+      feat_matrix_.Row(0).CopyFromVec(last_frame);
+      feat_matrix_.Range(1, next_features.NumRows(), 0, feat_dim_).
+          CopyFromMat(next_features);
+    } else {
+      feat_matrix_.CopyFromMat(next_features);
     }
-    if (next_features.NumRows() > 0) {
-      int32 new_size = (have_last_frame ? 1 : 0) +
-          next_features.NumRows();
-      feat_offset_ += feat_matrix_.NumRows() -
-          (have_last_frame ? 1 : 0); // we're discarding this many
-                                     // frames.
-      feat_matrix_.Resize(new_size, feat_dim_, kUndefined);
-      if (have_last_frame) {
-        feat_matrix_.Row(0).CopyFromVec(last_frame);
-        feat_matrix_.Range(1, next_features.NumRows(), 0, feat_dim_).
-            CopyFromMat(next_features);
-      } else {
-        feat_matrix_.CopyFromMat(next_features);
-      }
-    }
-    break;
-  }
-  if (iter == opts_.num_tries) { // we fell off the loop
-    KALDI_WARN << "After " << opts_.num_tries << ", got no features, giving up.";
-    finished_ = true; // We set finished_ to true even though the stream
-    // doesn't say it's finished, because the delay is too much-- we gave up.
   }
 }
 
@@ -95,6 +85,15 @@ SubVector<BaseFloat> PykaldiFeatureMatrix::GetFrame(int32 frame) {
   if (frame >= feat_offset_ + feat_matrix_.NumRows())
     KALDI_ERR << "Attempt get frame without check its validity.";
   return feat_matrix_.Row(frame - feat_offset_);
+}
+
+void PykaldiFeatureMatrix::NewStart() {
+  feat_offset_ = 0;
+  finished_ = false;
+  // resets the "last" matrix
+  feat_matrix_ = Matrix<BaseFloat>();
+  // FIXME reset the  input_! after implementing the iterface for input->EReset()
+  feat_dim_ = input_->Dim();
 }
 
 } // namespace kaldi

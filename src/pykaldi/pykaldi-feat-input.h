@@ -61,13 +61,18 @@ class PykaldiFeatureMatrix {
   // is valid.
   SubVector<BaseFloat> GetFrame(int32 frame);
 
-  bool Good(); // returns true if we have at least one frame.
+  void NewStart();
+  
+  // Was not implemented in online version;-)
+  // bool Good(); // returns true if we have at least one frame.
  private:
   void GetNextFeatures(); // called when we need more features.  Guarantees
   // to get at least one more frame, or set finished_ = true.
   
   const PykaldiFeatureMatrixOptions opts_;
-  OnlineFeatInputItf *input_;
+  //FIXME  change it to PykaldiFeatInputItf
+  // which will enable to pass message that we want to reset the pykaldi-audio-source
+  OnlineFeatInputItf *input_; 
   int32 feat_dim_;
   Matrix<BaseFloat> feat_matrix_;
   int32 feat_offset_; // the offset of the first frame in the current batch

@@ -65,4 +65,11 @@ bool PykaldiDecodableDiagGmmScaled::IsLastFrame(int32 frame) {
   return !features_->IsValidFrame(frame+1);
 }
 
+void PykaldiDecodableDiagGmmScaled::NewStart() {
+  cur_frame_ = 0;
+  cache_.clear();
+  cur_feats_ = Vector<BaseFloat>(); // clear the vector 
+  features_->NewStart(); // send the message further to features source 
+}
+
 } // namespace kaldi

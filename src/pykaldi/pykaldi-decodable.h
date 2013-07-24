@@ -41,6 +41,8 @@ class PykaldiDecodableDiagGmmScaled : public DecodableInterface {
   virtual BaseFloat LogLikelihood(int32 frame, int32 index);
   
   virtual bool IsLastFrame(int32 frame);
+
+  virtual void NewStart();
   
   /// Indices are one-based!  This is for compatibility with OpenFst.
   virtual int32 NumIndices() { return trans_model_.NumTransitionIds(); }
