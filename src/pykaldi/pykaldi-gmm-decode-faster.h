@@ -89,14 +89,6 @@ struct KaldiDecoderWrapperOptions  {
   std::string word_syms_filename; // FIXME remove it from po options
   std::string lda_mat_rspecifier;
   std::vector<int32> silence_phones;
-  void set_silence_phones(const std::string & s) {
-    std::vector<int32> return_phones;
-    if (!SplitStringToIntegers(s, ":", false, &silence_phones))
-        KALDI_ERR << "Invalid silence-phones string " << s;
-    if (this->silence_phones.empty())
-        KALDI_ERR << "No silence phones given!";
-  }
-
   void Register(OptionsItf *po) {
     po->Register("left-context", &left_context, "Number of frames of left context");
     po->Register("right-context", &right_context, "Number of frames of right context");
@@ -108,7 +100,6 @@ struct KaldiDecoderWrapperOptions  {
                 "Minumum CMN window used at start of decoding (adds "
                 "latency only at start)");
   }
-  // FIXME not implemented. Hide the various settings from above into this class!");
 };
 
 
