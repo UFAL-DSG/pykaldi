@@ -21,6 +21,7 @@ from pykaldi.binutils.utils import parse_config_from_arguments, make_dir, \
 from pykaldi.exceptions import PyKaldiError
 from pykaldi.binutils import ffibin, libbin
 from pykaldi.decoders import OnlineDecoder, DecoderCloser
+import time
 
 
 def run_online_dec(pcm, argv, samples_per_frame):
@@ -47,8 +48,7 @@ def recreate_dec(argv, samples_per_frame, wav_paths, file_output):
         print 'Result for %s written.' % wav_name
 
 
-def no_finish(argv, samples_per_frame, wav_paths, file_output):
-    import time
+def no_finish(argv, samples_per_frame, wav_paths, file_output, wst=None, duration=10):
     with DecoderCloser(OnlineDecoder(argv)) as d:
         for wav_name, wav_path in wav_paths:
             print 'Processing utterance %s.' % wav_name
@@ -61,16 +61,19 @@ def no_finish(argv, samples_per_frame, wav_paths, file_output):
                 frame = pcm[i * frame_len:(i + 1) * frame_len]
                 d.frame_in(frame, samples_per_frame)
             start = time.time()
-            while (time.time() - start) < 10:
-                    # let the backward search run for 10 sec max
+            # run the backward search only for limited amount of time
+            while (time.time() - start) < duration:
                     word_ids, prob = d.decode()
                     tot_ids.extend(word_ids)
-            line = [wav_name] + [str(word_id) for word_id in tot_ids] + ['\n']
-            file_output.write(' '.join(line))
+            hyp = [str(word_id) for word_id in tot_ids]
+            if wst is not None:
+                # Debug print
+                print [wst[word_id] for word_id in tot_ids]
+            file_output.write(' '.join([wav_name] + hyp + ['\n']))
             print 'Result for %s written.' % wav_name
 
 
-def decode_once(argv, samples_per_frame, wav_paths, file_output):
+def decode_once(argv, samples_per_frame, wav_paths, file_output, wst=None):
     with DecoderCloser(OnlineDecoder(argv)) as d:
         for wav_name, wav_path in wav_paths:
             print 'Processing utterance %s.' % wav_name
@@ -83,13 +86,16 @@ def decode_once(argv, samples_per_frame, wav_paths, file_output):
                 d.frame_in(frame, samples_per_frame)
             # Extract the hypothesis at once in form of word ids
             word_ids, prob = d.finish_decoding()
+            if wst is not None:
+                # Debug print
+                print [wst[word_id] for word_id in word_ids]
             # Store the results to file
             line = [wav_name] + [str(word_id) for word_id in word_ids] + ['\n']
             file_output.write(' '.join(line))
             print 'Result for %s written.' % wav_name
 
 
-def decode_zig_zag(argv, samples_per_frame, wav_paths, file_output):
+def decode_zig_zag(argv, samples_per_frame, wav_paths, file_output, wst=None):
     with DecoderCloser(OnlineDecoder(argv)) as d:
         for wav_name, wav_path in wav_paths:
             print 'Processing utterance %s.' % wav_name
@@ -108,6 +114,9 @@ def decode_zig_zag(argv, samples_per_frame, wav_paths, file_output):
                     word_ids, prob = d.decode()
                     tot_ids.extend(word_ids)
                     tot_prob = tot_prob * prob
+                    if wst is not None and len(word_ids) > 0:
+                        # Debug print
+                        print [wst[word_id] for word_id in word_ids]
             word_ids, prob = d.finish_decoding()
             tot_ids.extend(word_ids)
             tot_prob = tot_prob * prob
@@ -132,15 +141,17 @@ def run_python_online(config):
         lines = r.readlines()
         scp = [tuple(line.strip().split(' ', 1)) for line in lines]
 
+    wst_dict = wst2dict(config['wst'], intdict=True)
+
     with open(c['trans'], 'wb') as w:
         if c['type'] == 'recreate_dec':
             recreate_dec(argv, samples_per_frame, scp, w)
         elif c['type'] == 'decode_once':
-            decode_once(argv, samples_per_frame, scp, w)
+            decode_once(argv, samples_per_frame, scp, w, wst_dict)
         elif c['type'] == 'decode_zig_zag':
-            decode_zig_zag(argv, samples_per_frame, scp, w)
+            decode_zig_zag(argv, samples_per_frame, scp, w, wst_dict)
         elif c['type'] == 'no_finish':
-            no_finish(argv, samples_per_frame, scp, w)
+            no_finish(argv, samples_per_frame, scp, w, wst_dict)
         else:
             raise Exception('Unknown type of online-python decoding')
 
