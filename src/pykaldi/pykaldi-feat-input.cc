@@ -93,7 +93,11 @@ void PykaldiFeatureMatrix::NewStart() {
   // resets the "last" matrix
   feat_matrix_ = Matrix<BaseFloat>();
   // FIXME reset the  input_! after implementing the iterface for input->EReset()
-  feat_dim_ = input_->Dim();
+
+  // TODO it probably does not make sense right now 
+  // to change the number of features extracted per frame. 
+  // However changing the feature source in the middle of decoding will be cool!
+  // feat_dim_ = input_->Dim(); 
 }
 
 } // namespace kaldi

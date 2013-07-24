@@ -128,8 +128,16 @@ size_t KaldiDecoderWrapper::FinishDecoding(double timeout) {
   } while(Finished()) ;
 
   KALDI_ASSERT(source_->BufferSize() == 0);
+
+  // FIXME should the restart be done here? Or in separate function?
   // Last action -> prepare the decoder for new data
+  // TODO it would nice to send just one "New Start" message to decoder
+  // but it is a lot of work to redesign the whole decoding pipeline
+  decoder_->NewStart();
+  decodable_->NewStart();
+  // feature_matrix_->NewStart(); it is called from decodable_->NewStart()
   source_->NewDataPromised();
+
 
   // KALDI_WARN << "DEBUG " << word_ids_.size();
 
