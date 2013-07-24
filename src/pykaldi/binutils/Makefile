@@ -20,9 +20,11 @@ test: run_online
 run_online: online_decode.py decoders $(DATA_TAR) $(CONFIG) 
 	python $< $(CONFIG)
 
-run_live: decoders
-	echo "BROKEN!"
-	python live_demo.py
+DATA = $(PWD)/online-data/models/tri2a
+run_live: decoders $(DATA_TAR)
+	python live_demo.py --rt-min=0.5 --rt-max=1.0 \
+		--max-active=4000 --beam=12.0 --acoustic-scale=0.0769 \
+		$(DATA)/model $(DATA)/HCLG.fst $(DATA)/words.txt 1:2:3:4:5
 
 	
 clean:

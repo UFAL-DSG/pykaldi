@@ -40,24 +40,22 @@ def teardown_pyaudio(p, stream):
     p, stream = None, None
 
 
-def run_live(argv, stream, samples_per_frame, wst=None, duration=3):
+def run_live(argv, stream, samples_per_frame, wst=None, duration=20):
     '''Runs live demo for number of seconds speficied by duration.'''
     d = OnlineDecoder(argv)
-    for i in xrange(duration * (16000 / samples_per_frame)):
+    num_frames = duration * (16000 / samples_per_frame)
+    for i in xrange(num_frames):
         frame = stream.read(2 * samples_per_frame)
         d.frame_in(frame, len(frame) / 2)
-        it = 0
-        # FIXME do it zig_zag!
-        while True:
-            it += 1
-            word_ids, prob = d.decode()
-            if wst is None:
-                hyp = word_ids
-            else:
-                hyp = [wst[word_id] for word_id in word_ids]
-            if len(word_ids) > 0:
-                print '%d: num_words %d, ids: %s' % (it, len(hyp), str(hyp))
-            assert prob == 1.0, 'Is probability measure implemented now?'
+        word_ids, prob = d.decode()
+        if wst is None:
+            hyp = word_ids
+        else:
+            hyp = [wst[word_id] for word_id in word_ids]
+        if len(word_ids) > 0:
+            print '%f from %d sec: num_words %d, ids: %s' % (
+                (float(i) / num_frames) * duration, duration, len(hyp), str(hyp))
+        assert prob == 1.0, 'Is probability measure implemented now?'
     d.close()
 
 if __name__ == '__main__':

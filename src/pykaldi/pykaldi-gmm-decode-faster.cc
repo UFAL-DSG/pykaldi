@@ -121,6 +121,8 @@ size_t KaldiDecoderWrapper::FinishDecoding(double timeout) {
       // The next decode should force the decoder to output 
       // anything "buffered"
       Decode(); 
+      // FIXME the beam is updated with assumption of 10ms between frames;)
+      // and I am calling decode quite often here;)
 
       KALDI_VLOG(2) << "KaldiDecoderWrapper::FinishDecoding() timeout";
       break;

@@ -64,12 +64,21 @@ def no_finish(argv, samples_per_frame, wav_paths, file_output, wst=None, duratio
             # run the backward search only for limited amount of time
             while (time.time() - start) < duration:
                     word_ids, prob = d.decode()
+                    if wst is not None and len(word_ids) > 0:
+                        print [wst[word_id] for word_id in word_ids]
+                    # FIXME usage of decode decrease performance if not sleep
+                    # because of hardcoded beem update
+                    time.sleep(0.1)
                     tot_ids.extend(word_ids)
-            hyp = [str(word_id) for word_id in tot_ids]
-            if wst is not None:
-                # Debug print
-                print [wst[word_id] for word_id in tot_ids]
-            file_output.write(' '.join([wav_name] + hyp + ['\n']))
+            print 'finish decoding'
+            # finish decoding
+            word_ids, prob = d.finish_decoding()
+            if wst is not None and len(word_ids) > 0:
+                print [wst[word_id] for word_id in word_ids]
+            tot_ids.extend(word_ids)
+
+            line = [wav_name] + [str(word_id) for word_id in tot_ids] + ['\n']
+            file_output.write(' '.join(line))
             print 'Result for %s written.' % wav_name
 
 
@@ -102,7 +111,7 @@ def decode_zig_zag(argv, samples_per_frame, wav_paths, file_output, wst=None):
             pcm = load_wav(wav_path)
             # using 16-bit audio so 1 sample = 2 chars
             frame_len = (2 * samples_per_frame)
-            # FIXME probably shoul use logarithm when using for real
+            # FIXME probably should use logarithm when using for real
             tot_prob = 1  # total probability for whole recording
             tot_ids = []
             it = len(pcm) / frame_len
@@ -110,16 +119,19 @@ def decode_zig_zag(argv, samples_per_frame, wav_paths, file_output, wst=None):
             for i in xrange(it):
                 frame = pcm[i * frame_len:(i + 1) * frame_len]
                 d.frame_in(frame, samples_per_frame)
-                if i % 2 == 0:  # FIXME fix the batch size of the decoder!
-                    word_ids, prob = d.decode()
-                    tot_ids.extend(word_ids)
-                    tot_prob = tot_prob * prob
-                    if wst is not None and len(word_ids) > 0:
-                        # Debug print
-                        print [wst[word_id] for word_id in word_ids]
+                word_ids, prob = d.decode()
+                tot_ids.extend(word_ids)
+                tot_prob *= prob
+                if wst is not None and len(word_ids) > 0:
+                    # Debug print
+                    print [wst[word_id] for word_id in word_ids]
+            # finish decoding
             word_ids, prob = d.finish_decoding()
+            if wst is not None and len(word_ids) > 0:
+                # Debug print
+                print [wst[word_id] for word_id in word_ids]
             tot_ids.extend(word_ids)
-            tot_prob = tot_prob * prob
+            tot_prob *= prob
             # Store the results to file
             line = [wav_name] + [str(word_id) for word_id in tot_ids] + ['\n']
             file_output.write(' '.join(line))
