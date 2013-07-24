@@ -120,7 +120,6 @@ bool OnlinePaSource::Read(Vector<BaseFloat> *data) {
                << "; Received: " << nsamples_rcv << " samples";
     // This would be a PortAudio error.
   }
-  KALDI_WARN << "Requested: " << nsamples_req << "; Received: " << nsamples_rcv << " samples"; // DEBUG
   data->Resize(nsamples_rcv);
   for (int i = 0; i < nsamples_rcv; ++i)
     (*data)(i) = static_cast<BaseFloat>(buf[i]);
