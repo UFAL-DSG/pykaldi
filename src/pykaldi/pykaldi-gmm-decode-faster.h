@@ -22,10 +22,11 @@
 #include <vector>
 #include "feat/feature-mfcc.h"
 #include "online/online-audio-source.h"
-#include "online/online-feat-input.h"
-#include "online/online-decodable.h"
 #include "online/online-faster-decoder.h"
-#include "pykaldi/pykaldi-audio-source.h"
+#include "online/online-feat-input.h"
+#include "pykaldi-feat-input.h"
+#include "pykaldi-decodable.h"
+#include "pykaldi-audio-source.h"
 
 /*****************
  *  C interface  *
@@ -165,13 +166,13 @@ class KaldiDecoderWrapper {
   fst::Fst<fst::StdArc> *decode_fst_;
   OnlineFasterDecoder *decoder_;
   OnlineFeatInputItf *feat_transform_;
-  OnlineFeatureMatrix *feature_matrix_;
-  OnlineDecodableDiagGmmScaled *decodable_;
+  PykaldiFeatureMatrix *feature_matrix_;
+  PykaldiDecodableDiagGmmScaled *decodable_;
   AmDiagGmm am_gmm_;
 
   KaldiDecoderWrapperOptions opts_;
   OnlineFasterDecoderOpts decoder_opts_;
-  OnlineFeatureMatrixOptions feature_reading_opts_;
+  PykaldiFeatureMatrixOptions feature_reading_opts_;
   DeltaFeaturesOptions delta_feat_opts_;
 
   KALDI_DISALLOW_COPY_AND_ASSIGN(KaldiDecoderWrapper);

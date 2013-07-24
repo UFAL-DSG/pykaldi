@@ -15,6 +15,7 @@
  * See the Apache 2 License for the specific language governing permissions and
  * limitations under the License. */
 
+#include "util/timer.h"
 #include "feat/feature-mfcc.h"
 #include "online/online-feat-input.h"
 #include "online/online-decodable.h"
@@ -22,7 +23,8 @@
 #include "online/onlinebin-util.h"
 #include "pykaldi-audio-source.h"
 #include "pykaldi-gmm-decode-faster.h"
-#include "util/timer.h"
+#include "pykaldi-feat-input.h"
+#include "pykaldi-decodable.h"
 
 /*****************
  *  C interface  *
@@ -241,9 +243,9 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
     }
 
     // feature_reading_opts_ contains timeout, batch size.
-    feature_matrix_ = new OnlineFeatureMatrix(feature_reading_opts_,
+    feature_matrix_ = new PykaldiFeatureMatrix(feature_reading_opts_,
                                        feat_transform_);
-    decodable_ = new OnlineDecodableDiagGmmScaled(am_gmm_, 
+    decodable_ = new PykaldiDecodableDiagGmmScaled(am_gmm_, 
                                             *trans_model_, 
                                             opts_.acoustic_scale, feature_matrix_);
     return 0;
@@ -279,7 +281,7 @@ void KaldiDecoderWrapper::Reset(void) {
   // Up to delta-delta derivative features are calculated unless LDA is used
   // default values: order & window
   delta_feat_opts_ = DeltaFeaturesOptions(2, 2); 
-  feature_reading_opts_.batch_size = 1;
+  feature_reading_opts_.batch_size = 27; // 27 should be the default
   opts_ = KaldiDecoderWrapperOptions();
 
 } // Reset ()

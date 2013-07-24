@@ -21,9 +21,9 @@
 #ifndef KALDI_PYKALDI_PYKALDI_FEAT_INPUT_H_
 #define KALDI_PYKALDI_PYKALDI_FEAT_INPUT_H_
 
-
-#include "pykaldi-audio-source.h"
 #include "feat/feature-functions.h"
+#include "online/online-feat-input.h"
+#include "pykaldi-audio-source.h"
 
 namespace kaldi {
 
