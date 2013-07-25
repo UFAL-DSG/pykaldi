@@ -145,7 +145,7 @@ def run_python_online(config):
     if not config_is_yes(c, 'run'):
         print 'Skipping running run_python_online'
         return
-    argv = ['--config=%(config)s' % c,
+    argv = ['--config=%(config)s' % c, '--verbose=%(verbose)s' % c,
             c['model'], c['hclg'],
             config['wst'], '%(silent_phones)s' % c]
     samples_per_frame = int(c['samples_per_frame'])
