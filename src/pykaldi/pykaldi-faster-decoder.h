@@ -41,6 +41,8 @@ class PykaldiFasterDecoder : public OnlineFasterDecoder {
       : OnlineFasterDecoder(fst, opts, sil_phones , trans_model) {}
   void NewStart(void);
 
+  DecodeState Decode(DecodableInterface *decodable);
+
   KALDI_DISALLOW_COPY_AND_ASSIGN(PykaldiFasterDecoder);
 };
 

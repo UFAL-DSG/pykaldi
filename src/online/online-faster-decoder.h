@@ -107,7 +107,8 @@ class OnlineFasterDecoder : public FasterDecoder {
 
   DecodeState state() { return state_; }
 
- private:
+ // Change to protected for implementation of pykaldi/pykaldi-faster-decoder.cc
+ protected:
   void ResetDecoder(bool full);
 
   // Returns a linear fst by tracing back the last N frames, beginning
@@ -128,9 +129,6 @@ class OnlineFasterDecoder : public FasterDecoder {
 
   const BaseFloat max_beam_; // the maximum allowed beam
 
- // Change to protected for implementation of NewStart() function
- // See pykaldi/pykaldi-faster-decoder.cc
- protected:
   BaseFloat &effective_beam_; // the currently used beam
   DecodeState state_; // the current state of the decoder
   int32 frame_; // the next frame to be processed

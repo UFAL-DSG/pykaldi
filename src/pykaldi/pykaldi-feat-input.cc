@@ -39,7 +39,7 @@ void PykaldiFeatureMatrix::GetNextFeatures() {
   Matrix<BaseFloat> next_features(opts_.batch_size, feat_dim_);
   finished_ = ! input_->Compute(&next_features);
   // PyKaldi Input Feature should always return non empty
-  // FIXME enable this when pykaldi-feat-implemented
+  // FIXME enable it and make it work
   // KALDI_ASSERT (!finished_ && next_features.NumRows() <= 0);
   if (next_features.NumRows() > 0) {
     int32 new_size = (have_last_frame ? 1 : 0) +

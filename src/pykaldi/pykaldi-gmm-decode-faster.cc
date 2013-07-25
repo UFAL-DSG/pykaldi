@@ -293,10 +293,10 @@ void KaldiDecoderWrapper::Reset(void) {
   feature_matrix_ = 0;
   decodable_ = 0;
 
-  // Up to delta-delta derivative features are calculated unless LDA is used
-  // default values: order & window
-  delta_feat_opts_ = DeltaFeaturesOptions(2, 2); 
-  feature_reading_opts_.batch_size = 27; // 27 should be the default
+  // delta-delta derivative features are calculated unless LDA is used
+  // LDA has parameters opts_.left and right context
+  delta_feat_opts_ = DeltaFeaturesOptions(); 
+  feature_reading_opts_ = PykaldiFeatureMatrixOptions();
   opts_ = KaldiDecoderWrapperOptions();
 
 } // Reset ()

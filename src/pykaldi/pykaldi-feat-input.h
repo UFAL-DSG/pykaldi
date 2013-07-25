@@ -29,16 +29,10 @@ namespace kaldi {
 
 struct PykaldiFeatureMatrixOptions {
   int32 batch_size; // number of frames to request each time.
-  int32 num_tries; // number of tries of getting no output and timing out,
-                   // before we give up.
-  PykaldiFeatureMatrixOptions(): batch_size(27),
-                                num_tries(5) { }
+  PykaldiFeatureMatrixOptions(): batch_size(27) { }
   void Register(OptionsItf *po) {
     po->Register("batch-size", &batch_size,
                  "Number of feature vectors processed w/o interruption");
-    po->Register("num-tries", &num_tries,
-                 "Number of successive repetitions of timeout before we "
-                 "terminate stream");
   }
 };
 
