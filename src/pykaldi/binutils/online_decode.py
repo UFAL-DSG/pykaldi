@@ -68,7 +68,7 @@ def no_finish(argv, samples_per_frame, wav_paths, file_output, wst=None, duratio
                         print [wst[word_id] for word_id in word_ids]
                     # FIXME usage of decode decrease performance if not sleep
                     # because of hardcoded beem update
-                    time.sleep(0.1)
+                    # time.sleep(0.1)
                     tot_ids.extend(word_ids)
             print 'finish decoding'
             # finish decoding

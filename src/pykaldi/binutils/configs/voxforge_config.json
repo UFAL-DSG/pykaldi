@@ -7,8 +7,8 @@
     "online-python": {
         "run": "yes",
         "typeUNUSED": "recreate_dec",
-        "typeUNUSED": "no_finish",
-        "type": "decode_zig_zag",
+        "type": "no_finish",
+        "typeUNUSED": "decode_zig_zag",
         "typeUNUSED": "decode_once",
         "config": "configs/online_python.config",
         "trans":{"prefix": "decode_dir", "value": "python-vox.trans"},
