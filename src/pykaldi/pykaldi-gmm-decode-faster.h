@@ -123,7 +123,7 @@ class KaldiDecoderWrapper {
   /// May take a longer time, timeout in seconds
   size_t FinishDecoding(bool clear_input=true);
 
-  bool Finished(void) { return (OnlineFasterDecoder::kEndFeats != decoder_->state()); }
+  bool Finished(void) { return (OnlineFasterDecoder::kEndFeats == decoder_->state()); }
 
   size_t HypSize(void) { return word_ids_.size(); }
 

@@ -119,13 +119,12 @@ def decode_zig_zag(argv, samples_per_frame, wav_paths, file_output, wst=None):
             for i in xrange(it):
                 frame = pcm[i * frame_len:(i + 1) * frame_len]
                 d.frame_in(frame, samples_per_frame)
-                if i % 2 == 0:  # FIXME works quite good
-                    word_ids, prob = d.decode()
-                    tot_ids.extend(word_ids)
-                    tot_prob *= prob
-                    if wst is not None and len(word_ids) > 0:
-                        # Debug print
-                        print [wst[word_id] for word_id in word_ids]
+                word_ids, prob = d.decode()
+                tot_ids.extend(word_ids)
+                tot_prob *= prob
+                if wst is not None and len(word_ids) > 0:
+                    # Debug print
+                    print [wst[word_id] for word_id in word_ids]
             # finish decoding
             word_ids, prob = d.finish_decoding()
             if wst is not None and len(word_ids) > 0:

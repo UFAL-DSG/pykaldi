@@ -107,7 +107,6 @@ size_t KaldiDecoderWrapper::Decode(void) {
 size_t KaldiDecoderWrapper::FinishDecoding(bool clear_input) {
   source_->NoMoreInput(clear_input);
   while(!Finished()) {
-    KALDI_VLOG(0) << "Is finished: " << Finished();
     Decode();
   }
 
