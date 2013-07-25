@@ -6,7 +6,7 @@
     "wst": {"prefix": "exp_dir", "value": "words.txt"},
     "online-python": {
         "run": "yes",
-        "verbose": "3",
+        "verbose": "4",
         "typeUNUSED": "recreate_dec",
         "type": "no_finish",
         "typeUNUSED": "decode_zig_zag",

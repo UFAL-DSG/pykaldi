@@ -18,25 +18,40 @@
 
 
 #include <cmath>
+#include <unistd.h>
 
 #include "pykaldi-audio-source.h"
 
 namespace kaldi {
 
-bool OnlineBlockSource::Read(Vector<BaseFloat> *data) {
-  KALDI_ASSERT(data->Dim() > 0);
+bool OnlineBlockSource::Read(Vector<BaseFloat> *output) {
+  // Requesting at least something
+  KALDI_ASSERT(output->Dim() > 0);
 
-  // TODO check: static_cast<size_t> from data->Dim() works on all architectures
-  size_t n = std::min(src_.size(), static_cast<size_t>(data->Dim()));
-  for (size_t i = 0; i < n ; ++i) {
-    (*data)(i) = src_[i];
+  size_t d =  static_cast<size_t>(output->Dim());
+  while(block_ && (src_.size() < d) && more_input_) { 
+    // wait for enough input 
+    usleep(sleep_time_);
+    KALDI_VLOG(2) << "Waiting for input block " << block_
+                  << " more_input_ " << more_input_;
   }
-  // remove the already read elements
-  std::vector<BaseFloat>(src_.begin() + n, src_.end()).swap(src_);
-  // KALDI_WARN << "src size: " << src_.size();
-  // KALDI_WARN << "no_more_input_: " << no_more_input_;
 
-  return ((!no_more_input_) || (src_.size() > 0));
+  if (src_.size() > d) {
+    // copy the buffer to output
+    for (size_t i = 0; i < d ; ++i) {
+      (*output)(i) = src_[i];
+    }
+    // remove the already read elements
+    std::vector<BaseFloat>(src_.begin() + d, src_.end()).swap(src_);
+  } else {
+    // block_ is false otherwise we would be waiting for input 
+    KALDI_ASSERT(!block_);
+    more_input_ = false;
+  }
+  
+  // Assumption that output->Dim() will not change
+  // and in next turn we have still something to return
+  return ((more_input_) || (src_.size() > d));
 }
 
 void OnlineBlockSource::Write(unsigned char * data, size_t num_samples, size_t bits_per_sample) {

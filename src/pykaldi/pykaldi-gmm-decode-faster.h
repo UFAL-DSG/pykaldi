@@ -47,8 +47,7 @@ void del_KaldiDecoderWrapper(CKaldiDecoderWrapper *d);
 // methods
 size_t Decode(CKaldiDecoderWrapper *d);
 size_t HypSize(void);
-// FIXME ?Deprecated? -> use Finished and Decode instead from Python
-size_t FinishDecoding(CKaldiDecoderWrapper *d);
+size_t FinishDecoding(CKaldiDecoderWrapper *d, bool clear_input);
 bool Finished(CKaldiDecoderWrapper *d);
 void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len);
 void PopHyp(CKaldiDecoderWrapper *d, int * word_ids, size_t size);
@@ -68,9 +67,6 @@ int Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
  *******************/
 
 namespace kaldi {
-
-typedef OnlineFeInput<Mfcc> FeInput;
-
 
 struct KaldiDecoderWrapperOptions  {
   /// Input sampling frequency is fixed to 16KHz
@@ -125,7 +121,7 @@ class KaldiDecoderWrapper {
   }
 
   /// May take a longer time, timeout in seconds
-  size_t FinishDecoding(double timeout);
+  size_t FinishDecoding(bool clear_input=true);
 
   bool Finished(void) { return (OnlineFasterDecoder::kEndFeats != decoder_->state()); }
 
@@ -153,7 +149,7 @@ class KaldiDecoderWrapper {
 
   Mfcc *mfcc_;
   OnlineBlockSource *source_;
-  FeInput *fe_input_;
+  OnlineFeInput<Mfcc> *fe_input_;
   OnlineCmnInput *cmn_input_;
   TransitionModel *trans_model_;
   fst::Fst<fst::StdArc> *decode_fst_;

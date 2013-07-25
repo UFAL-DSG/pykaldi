@@ -90,11 +90,12 @@ class OnlineDecoder(KaldiDecoder):
         and does not wait for more features."""
         return self.lib.Finished()
 
-    def finish_decoding(self):
+    def finish_decoding(self, clear_input=False):
         """Tell the decoder that no more input is coming
         and to decode last hypothesis.
+        clear_input Discards the so far unprocessed data first
         Returns: int. The size of decoded hypotheses."""
-        size = self.lib.FinishDecoding(self.dec)
+        size = self.lib.FinishDecoding(self.dec, clear_input)
         return self._pop_hyp_from_c(size)
 
     def frame_in(self, frame_str, num_samples):

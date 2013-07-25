@@ -27,6 +27,7 @@ typedef CKaldiDecoderWrapper* (*CKDW_constructor_t)(void);
 typedef void (*CKDW_void_t)(CKaldiDecoderWrapper*);
 typedef bool (*CKDW_bool_t)(CKaldiDecoderWrapper*);
 typedef size_t (*CKDW_size_t)(CKaldiDecoderWrapper*);
+typedef size_t (*CKDW_fin_dec_t)(CKaldiDecoderWrapper*, bool);
 typedef void (*CKDW_frame_in_t)(CKaldiDecoderWrapper*, unsigned char *, size_t);
 typedef void (*CKDW_pop_hyp_t)(CKaldiDecoderWrapper*, int *, size_t);
 typedef int (*CKDW_setup_t)(CKaldiDecoderWrapper*, int, char **);
@@ -52,7 +53,7 @@ int main(int argc, char **argv) {
   if (!frame_in) return 6;
   CKDW_size_t decode = load_function<CKDW_size_t>("Decode", lib);
   if (!decode) return 7;
-  CKDW_size_t finish_decoding = load_function<CKDW_size_t>("FinishDecoding", lib);
+  CKDW_fin_dec_t finish_decoding = load_function<CKDW_fin_dec_t>("FinishDecoding", lib);
   if (!finish_decoding) return 8;
   CKDW_pop_hyp_t pop_hyp = load_function<CKDW_pop_hyp_t>("PopHyp", lib);
   if (!pop_hyp) return 9;
@@ -95,7 +96,7 @@ int main(int argc, char **argv) {
   } 
   // Obtain last hypothesis
   {
-      size_t num_words = finish_decoding(d);
+      size_t num_words = finish_decoding(d, false);
       int * word_ids = new int[num_words];
       pop_hyp(d, word_ids, num_words);
       printHyp(word_ids, num_words);

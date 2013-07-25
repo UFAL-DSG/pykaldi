@@ -51,23 +51,23 @@ PykaldiFasterDecoder::Decode(DecodableInterface *decodable) {
   BaseFloat factor = -1;
   for (; !decodable->IsLastFrame(frame_ - 1) && batch_frame < opts_.batch_size;
        ++frame_, ++utt_frames_, ++batch_frame) {
-    if (batch_frame != 0 && (batch_frame % opts_.update_interval) == 0) {
-      // adjust the beam if needed
-      BaseFloat tend = timer.Elapsed();
-      BaseFloat elapsed = (tend - tstart) * 1000;
-      // FIXME solve the update beam and remove the hardcoded dependancy!
-      // warning: hardcoded 10ms frames assumption!
-      factor = elapsed / (opts_.rt_max * opts_.update_interval * 10);
-      BaseFloat min_factor = (opts_.rt_min / opts_.rt_max);
-      if (factor > 1 || factor < min_factor) {
-        BaseFloat update_factor = (factor > 1)?
-            -std::min(opts_.beam_update * factor, opts_.max_beam_update):
-             std::min(opts_.beam_update / factor, opts_.max_beam_update);
-        effective_beam_ += effective_beam_ * update_factor;
-        effective_beam_ = std::min(effective_beam_, max_beam_);
-      }
-      tstart = tend;
-    }
+    // if (batch_frame != 0 && (batch_frame % opts_.update_interval) == 0) {
+    //   // adjust the beam if needed
+    //   BaseFloat tend = timer.Elapsed();
+    //   BaseFloat elapsed = (tend - tstart) * 1000;
+    //   // FIXME solve the update beam and remove the hardcoded dependancy!
+    //   // warning: hardcoded 10ms frames assumption!
+    //   factor = elapsed / (opts_.rt_max * opts_.update_interval * 10);
+    //   BaseFloat min_factor = (opts_.rt_min / opts_.rt_max);
+    //   if (factor > 1 || factor < min_factor) {
+    //     BaseFloat update_factor = (factor > 1)?
+    //         -std::min(opts_.beam_update * factor, opts_.max_beam_update):
+    //          std::min(opts_.beam_update / factor, opts_.max_beam_update);
+    //     effective_beam_ += effective_beam_ * update_factor;
+    //     effective_beam_ = std::min(effective_beam_, max_beam_);
+    //   }
+    //   tstart = tend;
+    // }
     if (batch_frame != 0 && (frame_ % 200) == 0)
       // one log message at every 2 seconds assuming 10ms frames
       KALDI_VLOG(3) << "Beam: " << effective_beam_

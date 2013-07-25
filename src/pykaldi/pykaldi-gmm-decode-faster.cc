@@ -15,7 +15,6 @@
  * See the Apache 2 License for the specific language governing permissions and
  * limitations under the License. */
 
-#include "util/timer.h"
 #include "feat/feature-mfcc.h"
 #include "online/online-feat-input.h"
 #include "online/online-decodable.h"
@@ -45,11 +44,9 @@ size_t Decode(CKaldiDecoderWrapper *d) {
 size_t DecodedWords(CKaldiDecoderWrapper *d) {
   return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->HypSize();
 }
-// FIXME ?Deprecated? -> use Finished and Decode instead from Python
-size_t FinishDecoding(CKaldiDecoderWrapper *d) {
-  // FIXME hardcoded timeout! 
-  // 0 - means no timeout
-  return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->FinishDecoding(0);
+size_t FinishDecoding(CKaldiDecoderWrapper *d, bool clear_input) {
+  kaldi::KaldiDecoderWrapper *dp = reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d);
+  return dp->FinishDecoding(clear_input);
 }
 bool Finished(CKaldiDecoderWrapper *d) {
   return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Finished();
@@ -107,29 +104,14 @@ size_t KaldiDecoderWrapper::Decode(void) {
   return word_ids_.size();
 }
 
-// FIXME ?Deprecated? -> use Finished and Decode instead from Python
-size_t KaldiDecoderWrapper::FinishDecoding(double timeout) {
-  Timer timer;
-  source_->NoMoreInput();
-
-  do {
+size_t KaldiDecoderWrapper::FinishDecoding(bool clear_input) {
+  source_->NoMoreInput(clear_input);
+  while(!Finished()) {
+    KALDI_VLOG(0) << "Is finished: " << Finished();
     Decode();
-    // KALDI_WARN << "DEBUG " << word_ids_.size();
-    double elapsed = timer.Elapsed(); 
-    if ( (timeout > 0.001) && ( elapsed > timeout)) {
-      source_->DiscardAndFinish();
-      // The next decode should force the decoder to output 
-      // anything "buffered"
-      Decode(); 
-      // FIXME the beam is updated with assumption of 10ms between frames;)
-      // and I am calling decode quite often here;)
+  }
 
-      KALDI_VLOG(2) << "KaldiDecoderWrapper::FinishDecoding() timeout";
-      break;
-    } 
-  } while(Finished()) ;
-
-  KALDI_ASSERT(source_->BufferSize() == 0);
+  KALDI_ASSERT((!clear_input) || (source_->BufferSize() == 0));
 
   // FIXME should the restart be done here? Or in separate function?
   // Last action -> prepare the decoder for new data
@@ -140,9 +122,7 @@ size_t KaldiDecoderWrapper::FinishDecoding(double timeout) {
   // feature_matrix_->NewStart(); it is called from decodable_->NewStart()
   source_->NewDataPromised();
 
-
-  // KALDI_WARN << "DEBUG " << word_ids_.size();
-
+  KALDI_VLOG(2) << "word_ids_.size() " << word_ids_.size();
   return word_ids_.size();
 }
 
@@ -200,7 +180,7 @@ int KaldiDecoderWrapper::ParseArgs(int argc, char ** argv) {
 std::vector<int32> KaldiDecoderWrapper::PopHyp(void) { 
   std::vector<int32> tmp;
   std::swap(word_ids_, tmp); // clear the word_ids_
-  // KALDI_WARN << "tmp size" << tmp.size();
+  KALDI_VLOG(2) << "tmp.size() " << tmp.size();
   return tmp; 
 }
 
@@ -235,7 +215,7 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
     int32 frame_shift = mfcc_opts.frame_opts.frame_shift_ms = 10;
     mfcc_ = new Mfcc(mfcc_opts);
 
-    fe_input_ = new FeInput(source_, mfcc_,
+    fe_input_ = new OnlineFeInput<Mfcc>(source_, mfcc_,
                                frame_length * (opts_.kSampleFreq / 1000),
                                frame_shift * (opts_.kSampleFreq / 1000));
     cmn_input_ = new OnlineCmnInput(fe_input_, opts_.cmn_window, opts_.min_cmn_window);
@@ -250,14 +230,9 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
                                 lda_transform,
                                 opts_.left_context, opts_.right_context);
     } else {
-      // Note from Dan: keeping the next statement for back-compatibility,
-      // but I don't think this is really the right way to set the window-size
-      // in the delta computation: it should be a separate config.
-      delta_feat_opts_.window = opts_.left_context / 2;
       feat_transform_ = new OnlineDeltaInput(delta_feat_opts_, cmn_input_);
     }
 
-    // feature_reading_opts_ contains timeout, batch size.
     feature_matrix_ = new PykaldiFeatureMatrix(feature_reading_opts_,
                                        feat_transform_);
     decodable_ = new PykaldiDecodableDiagGmmScaled(am_gmm_, 

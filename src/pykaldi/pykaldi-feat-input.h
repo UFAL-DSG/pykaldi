@@ -60,8 +60,9 @@ class PykaldiFeatureMatrix {
   // Was not implemented in online version;-)
   // bool Good(); // returns true if we have at least one frame.
  private:
-  void GetNextFeatures(); // called when we need more features.  Guarantees
-  // to get at least one more frame, or set finished_ = true.
+  /// Called when we need more features.  
+  // Guarantees to get at least one more frame, or set finished_ = true.
+  void GetNextFeatures(); 
   
   const PykaldiFeatureMatrixOptions opts_;
   //FIXME  change it to PykaldiFeatInputItf

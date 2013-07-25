@@ -26,6 +26,8 @@
 
 namespace kaldi {
 
+  // FIXME add options
+
 /** @brief Proxy Audio Input. Acts like a buffer.
  *
  *  OnlineAudioSource implementation.
@@ -36,25 +38,23 @@ class OnlineBlockSource: public OnlineAudioSourceItf{
 
   /// Creates the OnlineBlockSource empty "buffer"
   OnlineBlockSource():
-      no_more_input_(false) { }
+      block_(false), sleep_time_(10000), more_input_(true) { }
 
   size_t BufferSize() { return src_.size(); }
   
-  /// Discards the buffer data. 
-  /// It should be used with caution.
-  /// Read() will return false immediately
-  void DiscardAndFinish() { src_.clear(); no_more_input_ = true; }
-
   // Promise of new data -> Read() will return true
-  void NewDataPromised() { no_more_input_ = false; }
+  void NewDataPromised() { more_input_ = true; }
 
   /// Call it, if no more data will be written 
   /// Read() will return false after returning all the buffered data
-  void NoMoreInput() { no_more_input_ = true; }
+  void NoMoreInput(bool discard) { 
+    more_input_ = false; 
+    if (discard) src_.clear();
+  }
 
   /// Implements OnlineAudioSource API
-  /// Returns true if we have buffered data or 
-  /// we will get them soon.
+  /// Returns true if we have buffered data and we have promis for more. 
+  /// It blocks if does not have enough data! 
   bool Read(Vector<BaseFloat> *data);
 
   /// Converts and buffers  the data 
@@ -65,7 +65,9 @@ class OnlineBlockSource: public OnlineAudioSourceItf{
   void Write(unsigned char *data, size_t num_samples, size_t bits_per_sample=16);
 
  private:
-  bool no_more_input_;
+  bool block_;
+  unsigned int sleep_time_; // microseconds
+  bool more_input_;
   std::vector<BaseFloat> src_;
 
   KALDI_DISALLOW_COPY_AND_ASSIGN(OnlineBlockSource);

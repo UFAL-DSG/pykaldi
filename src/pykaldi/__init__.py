@@ -48,7 +48,7 @@ def init_dec():
 
     size_t Decode(CKaldiDecoderWrapper *d);
     size_t HypSize(void);
-    size_t FinishDecoding(CKaldiDecoderWrapper *d);
+    size_t FinishDecoding(CKaldiDecoderWrapper *d, bool);
     bool Finished(void);
     void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len);
     void PopHyp(CKaldiDecoderWrapper *d, int * word_ids, size_t size);
