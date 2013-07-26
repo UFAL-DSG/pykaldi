@@ -120,6 +120,7 @@ def decode_zig_zag(argv, samples_per_frame, wav_paths, file_output, wst=None):
                 frame = pcm[i * frame_len:(i + 1) * frame_len]
                 d.frame_in(frame, samples_per_frame)
                 word_ids, prob = d.decode()
+                print 'finished ', d.finished()
                 tot_ids.extend(word_ids)
                 tot_prob *= prob
                 if wst is not None and len(word_ids) > 0:

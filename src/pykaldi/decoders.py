@@ -88,7 +88,7 @@ class OnlineDecoder(KaldiDecoder):
     def finished(self):
         """ Returns: bool. Indicating if decoder processed all features
         and does not wait for more features."""
-        return self.lib.Finished()
+        return self.lib.Finished(self.dec)
 
     def finish_decoding(self, clear_input=False):
         """Tell the decoder that no more input is coming

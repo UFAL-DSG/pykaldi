@@ -51,7 +51,12 @@ bool OnlineBlockSource::Read(Vector<BaseFloat> *output) {
   
   // Assumption that output->Dim() will not change
   // and in next turn we have still something to return
-  return ((more_input_) || (src_.size() > d));
+  bool has_data = ((more_input_) || (src_.size() > d));
+  KALDI_VLOG(1) << " src_.size() " << src_.size() 
+                << " output->Dim() " << output->Dim()
+                << " more_input " << more_input_ 
+                << " has_data " << has_data;
+  return has_data;
 }
 
 void OnlineBlockSource::Write(unsigned char * data, size_t num_samples, size_t bits_per_sample) {

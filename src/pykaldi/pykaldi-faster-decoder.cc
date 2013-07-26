@@ -48,15 +48,15 @@ PykaldiFasterDecoder::Decode(DecodableInterface *decodable) {
   int32 batch_frame = 0;
   Timer timer;
   double64 tstart = timer.Elapsed(), tstart_batch = tstart;
-  BaseFloat factor = -1;
+  // BaseFloat factor = -1;
   for (; !decodable->IsLastFrame(frame_ - 1) && batch_frame < opts_.batch_size;
        ++frame_, ++utt_frames_, ++batch_frame) {
+    //   // FIXME solve the update beam and remove the hardcoded dependancy!
+    //   // warning: hardcoded 10ms frames assumption!
     // if (batch_frame != 0 && (batch_frame % opts_.update_interval) == 0) {
     //   // adjust the beam if needed
     //   BaseFloat tend = timer.Elapsed();
     //   BaseFloat elapsed = (tend - tstart) * 1000;
-    //   // FIXME solve the update beam and remove the hardcoded dependancy!
-    //   // warning: hardcoded 10ms frames assumption!
     //   factor = elapsed / (opts_.rt_max * opts_.update_interval * 10);
     //   BaseFloat min_factor = (opts_.rt_min / opts_.rt_max);
     //   if (factor > 1 || factor < min_factor) {
@@ -70,7 +70,7 @@ PykaldiFasterDecoder::Decode(DecodableInterface *decodable) {
     // }
     if (batch_frame != 0 && (frame_ % 200) == 0)
       // one log message at every 2 seconds assuming 10ms frames
-      KALDI_VLOG(3) << "Beam: " << effective_beam_
+      KALDI_VLOG(5) << "Beam: " << effective_beam_
           << "; Speed: "
           << ((timer.Elapsed() - tstart_batch) * 1000) / (batch_frame*10)
           << " xRT";

@@ -106,11 +106,12 @@ size_t KaldiDecoderWrapper::Decode(void) {
 
 size_t KaldiDecoderWrapper::FinishDecoding(bool clear_input) {
   source_->NoMoreInput(clear_input);
+  KALDI_VLOG(1) << "before while input size" << source_->BufferSize();
   while(!Finished()) {
     Decode();
+    KALDI_VLOG(1) << "inside loop" << source_->BufferSize();
   }
-
-  KALDI_ASSERT((!clear_input) || (source_->BufferSize() == 0));
+  KALDI_VLOG(1) << "after while" << source_->BufferSize();
 
   // FIXME should the restart be done here? Or in separate function?
   // Last action -> prepare the decoder for new data
