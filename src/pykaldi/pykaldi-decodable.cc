@@ -63,7 +63,7 @@ BaseFloat PykaldiDecodableDiagGmmScaled::LogLikelihood(int32 frame, int32 index)
 
 
 bool PykaldiDecodableDiagGmmScaled::IsLastFrame(int32 frame) {
-  return !features_->IsValidFrame(frame+1);
+  return !features_->IsValidFrame(frame);
 }
 
 void PykaldiDecodableDiagGmmScaled::NewStart() {

@@ -111,32 +111,33 @@ def decode_zig_zag(argv, samples_per_frame, wav_paths, file_output, wst=None):
             pcm = load_wav(wav_path)
             # using 16-bit audio so 1 sample = 2 chars
             frame_len = (2 * samples_per_frame)
-            # FIXME probably should use logarithm when using for real
-            tot_prob = 1  # total probability for whole recording
-            tot_ids = []
-            it = len(pcm) / frame_len
+            print frame_len
+            # frame = pcm[0:2 * frame_len]
+            # d.frame_in(frame, 2 * samples_per_frame)
+            # word_ids, prob = d.decode()
+            # word_ids, prob = d.finish_decoding()
+            it, tot_ids = (len(pcm) / frame_len), []
             print 'NUMBER of iterations: %s' % it
             for i in xrange(it):
                 frame = pcm[i * frame_len:(i + 1) * frame_len]
                 d.frame_in(frame, samples_per_frame)
-                word_ids, prob = d.decode()
                 print 'finished ', d.finished()
+                word_ids, prob = d.decode()
                 tot_ids.extend(word_ids)
-                tot_prob *= prob
                 if wst is not None and len(word_ids) > 0:
                     # Debug print
                     print [wst[word_id] for word_id in word_ids]
             # finish decoding
+            print "finish decoding"
             word_ids, prob = d.finish_decoding()
             if wst is not None and len(word_ids) > 0:
                 # Debug print
                 print [wst[word_id] for word_id in word_ids]
             tot_ids.extend(word_ids)
-            tot_prob *= prob
             # Store the results to file
             line = [wav_name] + [str(word_id) for word_id in tot_ids] + ['\n']
             file_output.write(' '.join(line))
-            print 'Result for %s written. Probability %.2f' % (wav_name, tot_prob)
+            print 'Result for %s written.' % (wav_name)
 
 
 def run_python_online(config):
@@ -156,6 +157,8 @@ def run_python_online(config):
 
     wst_dict = wst2dict(config['wst'], intdict=True)
 
+    print """When using non blocking version of PykaldiAudioSource
+    it is necessary supply enough data for Decode by frame_in!"""
     with open(c['trans'], 'wb') as w:
         if c['type'] == 'recreate_dec':
             recreate_dec(argv, samples_per_frame, scp, w)

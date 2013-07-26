@@ -57,8 +57,6 @@ class PykaldiFeatureMatrix {
 
   void NewStart();
   
-  // Was not implemented in online version;-)
-  // bool Good(); // returns true if we have at least one frame.
  private:
   /// Called when we need more features.  
   // Guarantees to get at least one more frame, or set finished_ = true.

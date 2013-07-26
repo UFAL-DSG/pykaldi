@@ -24,47 +24,41 @@
 
 namespace kaldi {
 
-bool OnlineBlockSource::Read(Vector<BaseFloat> *output) {
-  // Requesting at least something
-  KALDI_ASSERT(output->Dim() > 0);
-
+bool PykaldiBlockSource::Read(Vector<BaseFloat> *output) {
   size_t d =  static_cast<size_t>(output->Dim());
+  KALDI_ASSERT(d > 0 && "Request at least something");
+
   while(block_ && (src_.size() < d) && more_input_) { 
-    // wait for enough input 
     usleep(sleep_time_);
-    KALDI_VLOG(2) << "Waiting for input block " << block_
-                  << " more_input_ " << more_input_;
+    KALDI_WARN << "Waiting for input! (Posibbly never ending loop!)\n" 
+               << "Have data " << src_.size()
+               << " required data " << output->Dim();
   }
 
-  if (src_.size() > d) {
+  if (src_.size() >= d) {
     // copy the buffer to output
     for (size_t i = 0; i < d ; ++i) {
       (*output)(i) = src_[i];
     }
     // remove the already read elements
     std::vector<BaseFloat>(src_.begin() + d, src_.end()).swap(src_);
+    return true;
   } else {
     // block_ is false otherwise we would be waiting for input 
     KALDI_ASSERT(!block_);
-    more_input_ = false;
+    KALDI_VLOG(1) << "End of stream! more_input_: " << more_input_
+                  << " src_.size(): " << src_.size()
+                  << " requested: " << d;
+    return false;
   }
-  
-  // Assumption that output->Dim() will not change
-  // and in next turn we have still something to return
-  bool has_data = ((more_input_) || (src_.size() > d));
-  KALDI_VLOG(1) << " src_.size() " << src_.size() 
-                << " output->Dim() " << output->Dim()
-                << " more_input " << more_input_ 
-                << " has_data " << has_data;
-  return has_data;
 }
 
-void OnlineBlockSource::Write(unsigned char * data, size_t num_samples, size_t bits_per_sample) {
+void PykaldiBlockSource::Write(unsigned char * data, size_t num_samples) {
   // allocate the space at once -> should be faster
   src_.reserve(src_.size() + num_samples);
   // copy and convert the data to the buffer
   for (size_t i = 0; i < num_samples; ++i) {
-      switch (bits_per_sample) {
+      switch (bits_per_sample_) {
         case 8:
           src_.push_back(*data);
           data++;
@@ -90,7 +84,7 @@ void OnlineBlockSource::Write(unsigned char * data, size_t num_samples, size_t b
             break;
           }
         default:
-          KALDI_ERR << "bits per sample is " << bits_per_sample;
+          KALDI_ERR << "unsupported bits per sample: " << bits_per_sample_;
       }
   }
 }

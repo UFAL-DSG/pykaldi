@@ -15,7 +15,7 @@
         "trans":{"prefix": "decode_dir", "value": "python-vox.trans"},
         "model": {"prefix": "exp_dir", "value": "model"},
         "hclg": {"prefix": "exp_dir", "value": "HCLG.fst"},
-        "samples_per_frame":"2120",
+        "samples_per_frame":"4560",
         "silent_phones":"1:2:3:4:5",
         "lattice": {"prefixUNUSED": "decode_dir", "value": "UNUSEDlat.gz"}
     },

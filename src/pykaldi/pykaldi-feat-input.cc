@@ -39,7 +39,6 @@ void PykaldiFeatureMatrix::GetNextFeatures() {
   Matrix<BaseFloat> next_features(opts_.batch_size, feat_dim_);
   finished_ = ! input_->Compute(&next_features);
   
-  KALDI_VLOG(4) << "finished " << finished_ << " Num rows " <<  next_features.NumRows();
   if (next_features.NumRows() > 0) {
     int32 new_size = (have_last_frame ? 1 : 0) +
         next_features.NumRows();
@@ -54,7 +53,7 @@ void PykaldiFeatureMatrix::GetNextFeatures() {
     } else {
       feat_matrix_.CopyFromMat(next_features);
     }
-  }
+  } 
 }
 
 

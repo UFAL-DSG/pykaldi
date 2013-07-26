@@ -204,7 +204,7 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
                                     opts_.silence_phones, *trans_model_);
 
     // Fixed 16 bit audio
-    source_ = new OnlineBlockSource(); 
+    source_ = new PykaldiBlockSource(); 
 
     // We are not properly registering/exposing MFCC and frame extraction options,
     // because there are parts of the online decoding code, where some of these

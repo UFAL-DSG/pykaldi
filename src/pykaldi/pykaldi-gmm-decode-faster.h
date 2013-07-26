@@ -148,7 +148,7 @@ class KaldiDecoderWrapper {
   std::vector<int32> word_ids_;
 
   Mfcc *mfcc_;
-  OnlineBlockSource *source_;
+  PykaldiBlockSource *source_;
   OnlineFeInput<Mfcc> *fe_input_;
   OnlineCmnInput *cmn_input_;
   TransitionModel *trans_model_;

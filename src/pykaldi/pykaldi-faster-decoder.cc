@@ -49,7 +49,7 @@ PykaldiFasterDecoder::Decode(DecodableInterface *decodable) {
   Timer timer;
   double64 tstart = timer.Elapsed(), tstart_batch = tstart;
   // BaseFloat factor = -1;
-  for (; !decodable->IsLastFrame(frame_ - 1) && batch_frame < opts_.batch_size;
+  for (; !decodable->IsLastFrame(frame_) && batch_frame < opts_.batch_size;
        ++frame_, ++utt_frames_, ++batch_frame) {
     //   // FIXME solve the update beam and remove the hardcoded dependancy!
     //   // warning: hardcoded 10ms frames assumption!
@@ -77,7 +77,7 @@ PykaldiFasterDecoder::Decode(DecodableInterface *decodable) {
     BaseFloat weight_cutoff = ProcessEmitting(decodable, frame_);
     ProcessNonemitting(weight_cutoff);
   }
-  if (batch_frame == opts_.batch_size && !decodable->IsLastFrame(frame_ - 1)) {
+  if (batch_frame == opts_.batch_size && !decodable->IsLastFrame(frame_)) {
     if (EndOfUtterance())
       state_ = kEndUtt;
     else

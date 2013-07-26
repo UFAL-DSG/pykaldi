@@ -33,14 +33,17 @@ namespace kaldi {
  *  OnlineAudioSource implementation.
  *  It expects to be fed with the audio frame by frame.
  *  Supports only one channel. */
-class OnlineBlockSource: public OnlineAudioSourceItf{
+class PykaldiBlockSource: public OnlineAudioSourceItf {
  public:
 
-  /// Creates the OnlineBlockSource empty "buffer"
-  OnlineBlockSource():
-      block_(false), sleep_time_(10000), more_input_(true) { }
+  /// Creates the PykaldiBlockSource empty "buffer"
+  PykaldiBlockSource(unsigned int sleep_time=10000, 
+                    size_t bits_per_sample=16):
+      bits_per_sample_(bits_per_sample), block_(false), 
+      more_input_(true), sleep_time_(sleep_time) { }
 
   size_t BufferSize() { return src_.size(); }
+  size_t frame_size;
   
   // Promise of new data -> Read() will return true
   void NewDataPromised() { more_input_ = true; }
@@ -61,16 +64,16 @@ class OnlineBlockSource: public OnlineAudioSourceItf{
   /// based on bits_per_sample specified in constructor
   /// @param data [in] the single channel pcm audio data
   /// @param num_samples [in] number of samples in data array
-  /// @param bits_per_sample [in] number of bits per sample 
-  void Write(unsigned char *data, size_t num_samples, size_t bits_per_sample=16);
+  void Write(unsigned char *data, size_t num_samples);
 
  private:
+  size_t bits_per_sample_;
   bool block_;
-  unsigned int sleep_time_; // microseconds
   bool more_input_;
+  unsigned int sleep_time_; // microseconds
   std::vector<BaseFloat> src_;
 
-  KALDI_DISALLOW_COPY_AND_ASSIGN(OnlineBlockSource);
+  KALDI_DISALLOW_COPY_AND_ASSIGN(PykaldiBlockSource);
 };
 
 } // namespace kaldi
