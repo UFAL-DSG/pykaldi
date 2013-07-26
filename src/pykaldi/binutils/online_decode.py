@@ -112,12 +112,9 @@ def decode_zig_zag(argv, samples_per_frame, wav_paths, file_output, wst=None):
             # using 16-bit audio so 1 sample = 2 chars
             frame_len = (2 * samples_per_frame)
             print frame_len
-            # frame = pcm[0:2 * frame_len]
-            # d.frame_in(frame, 2 * samples_per_frame)
-            # word_ids, prob = d.decode()
-            # word_ids, prob = d.finish_decoding()
             it, tot_ids = (len(pcm) / frame_len), []
             print 'NUMBER of iterations: %s' % it
+            word_ids, prob = d.finish_decoding()
             for i in xrange(it):
                 frame = pcm[i * frame_len:(i + 1) * frame_len]
                 d.frame_in(frame, samples_per_frame)

@@ -63,11 +63,11 @@ BaseFloat PykaldiDecodableDiagGmmScaled::LogLikelihood(int32 frame, int32 index)
 
 
 bool PykaldiDecodableDiagGmmScaled::IsLastFrame(int32 frame) {
-  return !features_->IsValidFrame(frame);
+  return !features_->IsValidFrame(frame+1);
 }
 
 void PykaldiDecodableDiagGmmScaled::NewStart() {
-  cur_frame_ = -1; // not valid frame
+  cur_frame_ = -1;
   // Keep the last num_pdfs values if they were available
   int32 num_pdfs = trans_model_.NumPdfs();
   cache_.resize(num_pdfs, std::make_pair<int32,BaseFloat>(-1, 0.0));

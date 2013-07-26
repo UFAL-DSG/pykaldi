@@ -77,7 +77,6 @@ namespace kaldi {
 size_t KaldiDecoderWrapper::Decode(void) {
 
   decoder_->Decode(decodable_);
-  // KALDI_WARN<< "HypSize before" << HypSize();
 
   fst::VectorFst<LatticeArc> out_fst;
   std::vector<int32> new_word_ids;
