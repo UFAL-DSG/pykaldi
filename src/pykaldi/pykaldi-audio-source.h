@@ -26,7 +26,9 @@
 
 namespace kaldi {
 
-  // FIXME add options
+struct PykaldiBlockSourceOpts {
+
+};
 
 /** @brief Proxy Audio Input. Acts like a buffer.
  *

@@ -20,6 +20,7 @@ import os
 # Just import this is a test ;-)
 from pykaldi.binutils.utils import load_wav
 from pykaldi.binutils.online_decode import run_online_dec
+from pykaldi.decoders import OnlineDecoder, DecoderCloser
 
 
 class TestOnlineDecoder(unittest.TestCase):
@@ -29,20 +30,63 @@ class TestOnlineDecoder(unittest.TestCase):
         self.wav_path = 'audio/test.wav'
         # self.wav_path = dir_path + '/online-data/audio/test1.wav'
         p = dir_path + '/online-data/models/tri2a'
-        self.argv = [
-            '--rt-min=0.5', '--rt-max=99.0', '--max-active=4000', '--beam=12.0',
-            '--acoustic-scale=0.0769', '%s/model' % p, '%s/HCLG.fst' % p,
-            '%s/words.txt' % p, '1:2:3:4:5']
-        self.samples_per_frame = 2120
+        self.argv = ['--verbose=0', '--rt-min=0.5', '--rt-max=1.0',
+                     '--max-active=4000', '--beam=12.0',
+                     '--acoustic-scale=0.0769', '%s/model' % p, '%s/HCLG.fst' % p,
+                     '%s/words.txt' % p, '1:2:3:4:5']
+
+    def test_decode(self, num_it=200):
+        with DecoderCloser(OnlineDecoder(self.argv)) as d:
+            for i in xrange(num_it):
+                d.decode()
+
+    def test_finished(self, num_it=200):
+        with DecoderCloser(OnlineDecoder(self.argv)) as d:
+            self.assertTrue(d.finished())
+            for i in xrange(num_it):
+                d.finished()
+                self.assertFalse(d.finished(), 'it %d' % i)
+
+    def test_finish_decoding(self, num_it=200):
+        with DecoderCloser(OnlineDecoder(self.argv)) as d:
+            for i in xrange(num_it):
+                d.finish_decoding()
+
+    def test_empty(self, num_it=100, num_frm=4560):
+        from random import choice
+        from string import hexdigits
+        # frame with 16bit sample
+        dummy_frame = ''.join(choice(hexdigits) for n in xrange(2 * num_frm))
+        with DecoderCloser(OnlineDecoder(self.argv)) as d:
+            self.assertTrue(d.finished())
+            for i in xrange(num_it):
+                d.decode()
+                self.assertTrue(d.finished(), 'it %d' % i)
+            d.finish_decoding()
+            self.assertTrue(d.finished())
+            print 'empty decode'
+            for i in xrange(num_it):
+                d.frame_in(dummy_frame, num_frm)
+                d.decode()
+                # suppose we are providing enough input data
+                self.assertFalse(d.finished(), 'it %d' % i)
+            d.finish_decoding()
+            for i in xrange(num_it):
+                d.frame_in(dummy_frame, num_frm)
+                d.decode()
+                d.finished()
+            d.finish_decoding()
 
     def test_wav(self, words_to_dec=3):
         pcm = load_wav(self.wav_path)
         # Test OnlineDecoder
-        word_ids, prob = run_online_dec(pcm, self.argv, self.samples_per_frame)
+        samples_per_frame = 2120
+        word_ids, prob = run_online_dec(pcm, self.argv, samples_per_frame)
         print 'From %s decoded %d utt: %s' % (self.wav_path, len(word_ids), str(word_ids))
         self.assertTrue(len(word_ids) > words_to_dec,
                         'We have to decode at least %d words' % words_to_dec)
-        self.assertAlmostEqual(prob, 1.0, 'Have we implemented the probability or sthing wrong returned')
+        self.assertAlmostEqual(
+            prob, 1.0, 'Have we implemented the probability or sthing wrong returned')
 
 
 if __name__ == '__main__':

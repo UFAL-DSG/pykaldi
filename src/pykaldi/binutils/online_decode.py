@@ -114,6 +114,9 @@ def decode_zig_zag(argv, samples_per_frame, wav_paths, file_output, wst=None):
             print frame_len
             it, tot_ids = (len(pcm) / frame_len), []
             print 'NUMBER of iterations: %s' % it
+            for i in xrange(100):
+                word_ids, prob = d.decode()
+                print 'finished ', d.finished()
             word_ids, prob = d.finish_decoding()
             for i in xrange(it):
                 frame = pcm[i * frame_len:(i + 1) * frame_len]
@@ -138,7 +141,6 @@ def decode_zig_zag(argv, samples_per_frame, wav_paths, file_output, wst=None):
 
 
 def run_python_online(config):
-
     c = config['online-python']
     if not config_is_yes(c, 'run'):
         print 'Skipping running run_python_online'
