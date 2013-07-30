@@ -72,7 +72,7 @@ struct KaldiDecoderWrapperOptions  {
   /// Input sampling frequency is fixed to 16KHz
   explicit KaldiDecoderWrapperOptions():kSampleFreq(16000), acoustic_scale(0.1),
   left_context(4), right_context(4),
-  cmn_window(600), min_cmn_window(100)
+  cmn_window(600), min_cmn_window(1)
   {}
   int32 kSampleFreq;
   BaseFloat acoustic_scale;
