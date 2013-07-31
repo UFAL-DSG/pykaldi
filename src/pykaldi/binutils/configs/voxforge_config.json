@@ -11,13 +11,15 @@
         "typeUNUSED": "no_finish",
         "type": "decode_zig_zag",
         "typeUNUSED": "decode_once",
-        "config": "configs/online_python.config",
+        "COMMENT 00": "1:2:3:4:5 are silent phones",
+        "args": [   "--verbose=0", "--acoustic-scale=0.1", 
+                    "--config=configs/online_python.config",
+                    {"prefix": "exp_dir", "value": "model"},
+                    {"prefix": "exp_dir", "value": "HCLG.fst"},
+                    {"prefix": "wst", "value": ""},
+                    "1:2:3:4:5"
         "trans":{"prefix": "decode_dir", "value": "python-vox.trans"},
-        "model": {"prefix": "exp_dir", "value": "model"},
-        "hclg": {"prefix": "exp_dir", "value": "HCLG.fst"},
         "samples_per_frame":"4560",
-        "silent_phones":"1:2:3:4:5",
-        "lattice": {"prefixUNUSED": "decode_dir", "value": "UNUSEDlat.gz"}
     },
     "wer-compute": {
         "run": "yes",

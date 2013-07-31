@@ -11,15 +11,18 @@
         "run": "yes",
         "typeUNUSED": "recreate_dec",
         "typeUNUSED": "decode_once",
-        "type": "no_finish",
-        "typeUNUSED": "decode_zig_zag",
-        "config": "configs/online_python.config",
+        "typeUNUSED": "no_finish",
+        "type": "decode_zig_zag",
+        "COMMENT 00": "1:2:3:4:5 are silent phones",
+        "args": [   "--verbose=0", "--acoustic-scale=0.1", 
+                    "--config=configs/online_python.config",
+                    {"prefix": "exp_dir", "value": "final.mdl"},
+                    {"prefix": "exp_dir", "value": "graph/HCLG.fst"},
+                    {"prefix": "wst", "value": ""},
+                    "1:2:3:4:5"
+                ],
         "trans": {"prefix": "decode_dir", "value": "python-vys.trans"},
-        "model": {"prefix": "exp_dir", "value": "final.mdl"},
-        "hclg": {"prefix": "exp_dir", "value": "graph/HCLG.fst"},
-        "samples_per_frame":"2120",
-        "silent_phones":"1:2:3:4:5",
-        "lattice": {"prefixUNUSED": "UNUSED", "value": "UNUSED_lat.gz"}
+        "samples_per_frame":"4560"
     },
     "wer-compute": {
         "run": "yes",
@@ -27,7 +30,9 @@
         "config": "configs/wer.config",
         "reference": {"prefix": "decode_dir", "value": "reference-vys.txt"},
         "hypothesis": [ 
-                        {"prefix": "decode_dir", "value": "python-vys.trans"},
+                        {"prefix": "decode_dir", "value": "python-vys.trans"}
+            ],
+        "UNUSEDhypothesis": [
                         {"prefix": "decode_dir", "value": "bash.trans"}
             ]
     }
