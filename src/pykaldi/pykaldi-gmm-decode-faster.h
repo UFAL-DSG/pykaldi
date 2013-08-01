@@ -22,9 +22,6 @@
 #include <string>
 #include <vector>
 #include "feat/feature-mfcc.h"
-// #include "online/online-audio-source.h"
-#include "online/online-feat-input.h"
-#include "online/online-faster-decoder.h"
 #include "pykaldi-faster-decoder.h"
 #include "pykaldi-feat-input.h"
 #include "pykaldi-decodable.h"
@@ -123,7 +120,7 @@ class KaldiDecoderWrapper {
   /// May take a longer time, timeout in seconds
   size_t FinishDecoding(bool clear_input=true);
 
-  bool Finished(void) { return (OnlineFasterDecoder::kEndFeats == decoder_->state()); }
+  bool Finished(void) { return (PykaldiFasterDecoder::kEndFeats == decoder_->state()); }
 
   size_t HypSize(void) { return word_ids_.size(); }
 
@@ -135,8 +132,8 @@ class KaldiDecoderWrapper {
   int Setup(int argc, char **argv);
 
   bool UtteranceEnded() {
-    OnlineFasterDecoder::DecodeState s = decoder_->state();
-    return ((s  == OnlineFasterDecoder::kEndFeats) || (s == OnlineFasterDecoder::kEndUtt));
+    PykaldiFasterDecoder::DecodeState s = decoder_->state();
+    return ((s  == PykaldiFasterDecoder::kEndFeats) || (s == PykaldiFasterDecoder::kEndUtt));
   }
 
   virtual ~KaldiDecoderWrapper(){ Reset(); }
@@ -160,7 +157,7 @@ class KaldiDecoderWrapper {
   AmDiagGmm am_gmm_;
 
   KaldiDecoderWrapperOptions opts_;
-  OnlineFasterDecoderOpts decoder_opts_;
+  PykaldiFasterDecoderOpts decoder_opts_;
   PykaldiFeatureMatrixOptions feature_reading_opts_;
   DeltaFeaturesOptions delta_feat_opts_;
 

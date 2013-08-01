@@ -21,21 +21,48 @@
 #ifndef KALDI_PYKALDI_PYKALDI_AUDIO_SOURCE_H_
 #define KALDI_PYKALDI_PYKALDI_AUDIO_SOURCE_H_
 
-#include "online/online-audio-source.h"
 #include "matrix/kaldi-vector.h"
 
 namespace kaldi {
 
-struct PykaldiBlockSourceOpts {
 
+// Copied and renamed from online -> in order to get rid of portaudio dependency
+// FIXME move to separate file!
+class PykaldiAudioSourceItf {
+ public:
+  // Reads from the audio source, and writes the samples converted to BaseFloat
+  // into the vector pointed by "data".
+  // The user sets data->Dim() as a way of requesting that many samples.
+  // The function returns true if there may be more data, and false if it
+  // knows we are at the end of the stream.
+  // In case an unexpected and unrecoverable error occurs the function throws
+  // an exception of type std::runtime_error (e.g. by using KALDI_ERR macro).
+  //
+  // NOTE: The older version of this interface had a second paramater - "timeout".
+  //       We decided to remove it, because we don't envision usage scenarios,
+  //       where "timeout" will need to be changed dynamically from call to call.
+  //       If the particular audio source can experience timeouts for some reason
+  //       (e.g. the samples are received over a network connection)
+  //       we encourage the implementors to configure timeout using a
+  //       constructor parameter.
+  //       The suggested semantics are: if timeout is used and is greater than 0,
+  //       this method has to wait no longer than "timeout" milliseconds before
+  //       returning data-- by that time, it will return as much data as it has.
+  virtual bool Read(Vector<BaseFloat> *data) = 0;
+
+  virtual ~PykaldiAudioSourceItf() { }
+};
+
+struct PykaldiBlockSourceOpts {
+  // FIXME move the options here
 };
 
 /** @brief Proxy Audio Input. Acts like a buffer.
  *
- *  OnlineAudioSource implementation.
+ *  PykaldiAudioSource implementation.
  *  It expects to be fed with the audio frame by frame.
  *  Supports only one channel. */
-class PykaldiBlockSource: public OnlineAudioSourceItf {
+class PykaldiBlockSource: public PykaldiAudioSourceItf {
  public:
 
   /// Creates the PykaldiBlockSource empty "buffer"

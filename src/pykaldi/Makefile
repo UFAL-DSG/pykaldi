@@ -4,21 +4,14 @@ include ../kaldi.mk
 ifneq ($(KALDI_FLAVOR), dynamic)
 $(error Kaldi must compiled with dynamic libraries support. Run configure with --shared flag. )
 endif
-EXTRA_CXXFLAGS = -Wno-sign-compare -I ../../tools/portaudio/install/include
+EXTRA_CXXFLAGS = -Wno-sign-compare
 EXTRA_CXXFLAGS += -ggdb -O0  # for gdb debugging
 
 # Kaldi libraries required by the pykaldi
-ADDLIBS = ../decoder/kaldi-decoder.a ../online/kaldi-online.a ../thread/kaldi-thread.a \
+ADDLIBS = ../decoder/kaldi-decoder.a ../thread/kaldi-thread.a \
 		../lat/kaldi-lat.a ../hmm/kaldi-hmm.a ../transform/kaldi-transform.a ../gmm/kaldi-gmm.a \
 		../fstext/kaldi-fstext.a ../tree/kaldi-tree.a ../matrix/kaldi-matrix.a \
 		../feat/kaldi-feat.a ../util/kaldi-util.a ../base/kaldi-base.a
-
-EXTRA_LDLIBS += ../../tools/portaudio/install/lib/libportaudio.a
-ifneq ($(wildcard ../../tools/portaudio/install/include/pa_linux_alsa.h),)
-    EXTRA_LDLIBS += -lasound
-else
-    EXTRA_LDLIBS += -lrt
-endif
 
 BINFILES = 
 
@@ -26,7 +19,7 @@ TESTFILES = compute-wer-test pykaldi-gmm-decode-faster-test
 
 OBJFILES = compute-wer.o pykaldi-gmm-decode-faster.o pykaldi-audio-source.o \
 		   pykaldi-decodable.o pykaldi-feat-input.o \
-		   pykaldi-faster-decoder.o
+		   pykaldi-faster-decoder.o pykaldibin-util.o
 
 LIBNAME = pykaldi
 LIBFILE = lib$(LIBNAME).so

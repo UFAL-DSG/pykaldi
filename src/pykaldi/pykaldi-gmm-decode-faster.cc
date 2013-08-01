@@ -16,11 +16,7 @@
  * limitations under the License. */
 
 #include "feat/feature-mfcc.h"
-#include "online/online-feat-input.h"
-#include "online/online-decodable.h"
-#include "online/online-faster-decoder.h"
-#include "online/onlinebin-util.h"
-#include "online/online-audio-source.h"
+#include "pykaldibin-util.h"
 #include "pykaldi-audio-source.h"
 #include "pykaldi-gmm-decode-faster.h"
 #include "pykaldi-feat-input.h"

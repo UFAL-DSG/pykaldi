@@ -107,8 +107,7 @@ class OnlineFasterDecoder : public FasterDecoder {
 
   DecodeState state() { return state_; }
 
- // Change to protected for implementation of pykaldi/pykaldi-faster-decoder.cc
- protected:
+ private:
   void ResetDecoder(bool full);
 
   // Returns a linear fst by tracing back the last N frames, beginning
