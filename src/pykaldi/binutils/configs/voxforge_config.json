@@ -18,10 +18,11 @@
                     {"prefix": "exp_dir", "value": "HCLG.fst"},
                     {"prefix": "wst", "value": ""},
                     "1:2:3:4:5"
-        "trans":{"prefix": "decode_dir", "value": "python-vox.trans"},
-        "samples_per_frame":"4560",
-    },
-    "wer-compute": {
+                ]
+        ,"trans":{"prefix": "decode_dir", "value": "python-vox.trans"}
+        ,"samples_per_frame":"4560"
+    }
+    ,"wer-compute": {
         "run": "yes",
         "build_ref": "yes",
         "config": "configs/wer.config",

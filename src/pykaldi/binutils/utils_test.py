@@ -22,22 +22,25 @@ from utils import expand_prefix
 class TestExpandPref(unittest.TestCase):
     def setUp(self):
         self.test = {'x': '1',
-                     'mypath': {'prefix': 'myownpath/', 'value': 'origin'},
+                     'prefixdir': 'myownpath',
+                     'mypath': {'prefix': 'prefixdir', 'value': 'origin'},
                      'y': {'prefix': 'mypath', 'value': 'file'},
                      'innerdic': {'a': {'prefix': 'mypath', 'value': ''}, 'b': ['arg1', 'arg2']},
                      'innerlist': [{'prefix': 'mypath', 'value': 'file2'}, 'arg3']
                      }
         self.gold = {'x': '1',
+                     'prefixdir': 'myownpath',
                      'mypath': 'myownpath/origin',
-                     'y': 'myownpath/file',
-                     'innerdic': {'a': 'myownpath/', 'b': ['arg1', 'arg2']},
-                     'innerlist': ['myownpath/file2', 'arg3']
+                     'y': 'myownpath/origin/file',
+                     'innerdic': {'a': 'myownpath/origin', 'b': ['arg1', 'arg2']},
+                     'innerlist': ['myownpath/origin/file2', 'arg3']
                      }
 
     def test_expand_prefix(self):
         test, gold = copy.deepcopy(self.test), copy.deepcopy(self.gold)
         expand_prefix(test, gold)
 
+        print '%r\ntest vs gold\n%r\n' % (test, gold)
         self.assertTrue(self.gold == gold, 'We modified gold!')
 
         self.assertFalse(set(test) ^ set(gold), 'symetric difference of keys should be empty')
@@ -45,8 +48,6 @@ class TestExpandPref(unittest.TestCase):
         t, g = gold['innerdic']['a'], test['innerdic']['a']
         self.assertTrue(t == g, 'empty value for expansion fails: %r vs %r' % (t, g))
         self.assertTrue(gold['innerlist'][0] == test['innerlist'][0], 'list expansion fails')
-
-        print '%r\nvs\n%r\n' % (test, gold)
 
 
 if __name__ == '__main__':

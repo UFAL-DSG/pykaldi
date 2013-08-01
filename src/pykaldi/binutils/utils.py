@@ -81,24 +81,25 @@ def make_dir(path):
 def expand_prefix(d, bigd):
     '''Supports only strings, list and dictionaries and its combinations.
     Replace {'prefix':'key_to_path', 'value':'suffix_of_path'} with correct path'''
-    try:
-        if isinstance(d, dict):
-            if len(d) == 2 and 'prefix' in d and 'value' in d:
-                s = ''.join([bigd[d['prefix']], d['value']])
-                return s.encode('utf-8')
-            else:
-                for k, v in d.iteritems():
-                    d[k] = expand_prefix(v, bigd)
-                return d
-        elif isinstance(d, list):
-            return [expand_prefix(x, bigd) for x in d]
-        elif isinstance(d, unicode) or isinstance(d, str):
-            # we need strings not unicode
-            return d.encode('utf-8')
+    if isinstance(d, dict):
+        if len(d) == 2 and 'prefix' in d and 'value' in d:
+            pref = bigd[d['prefix']]
+            if isinstance(pref, dict):
+                # we allow prefix to be another dictionary convertable to string
+                pref = expand_prefix(pref, bigd)
+            s = os.path.sep.join([pref, d['value']]).rstrip(os.path.sep)
+            return s.encode('utf-8')
         else:
-            raise ValueError('We support only dictionaries, lists and strings.')
-    except:
-        import ipdb; ipdb.set_trace()
+            for k, v in d.iteritems():
+                d[k] = expand_prefix(v, bigd)
+            return d
+    elif isinstance(d, list):
+        return [expand_prefix(x, bigd) for x in d]
+    elif isinstance(d, unicode) or isinstance(d, str):
+        # we need strings not unicode
+        return d.encode('utf-8')
+    else:
+        raise ValueError('We support only dictionaries, lists and strings.')
 
 
 def build_reference(wav_scp, ref_path):
