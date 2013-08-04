@@ -1,4 +1,4 @@
-// online/onlinebin-util.cc
+// pykaldi/pykaldi-util.cc
 
 // Copyright 2012 Cisco Systems (author: Matthias Paulik)
 
@@ -18,7 +18,23 @@
 // See the Apache 2 License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string>
 #include "pykaldibin-util.h"
+
+void pykaldi_version(int *out_major, int * out_minor, int *patch) {
+  *out_major = PYKALDI_MAJOR;
+  *out_minor = PYKALDI_MINOR;
+  *patch = PYKALDI_PATCH;
+}
+
+char* pykaldi_git_revision() {
+  char * res = NULL;
+  std::string  sha_tmp(PYKALDI_GIT_VERSION);
+  KALDI_ASSERT(sha_tmp.size() == 40 && "Git SHA has length 40 size");
+  memcpy(res, sha_tmp.c_str(), sha_tmp.size());
+  return res;
+}
+
 
 namespace kaldi {
 

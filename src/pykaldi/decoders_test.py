@@ -18,6 +18,7 @@
 import unittest
 import os
 # Just import this is a test ;-)
+import pykaldi
 from pykaldi.binutils.utils import load_wav
 from pykaldi.binutils.online_decode import run_online_dec
 from pykaldi.decoders import OnlineDecoder, DecoderCloser
@@ -34,6 +35,11 @@ class TestOnlineDecoder(unittest.TestCase):
                      '--max-active=4000', '--beam=12.0',
                      '--acoustic-scale=0.0769', '%s/model' % p, '%s/HCLG.fst' % p,
                      '%s/words.txt' % p, '1:2:3:4:5']
+
+    def test_version(self):
+        print 'pykaldi %s' % (str(pykaldi.__version__))
+        b, m, p = pykaldi.__version__
+        self.assertTrue(b + m + p > 0)
 
     def test_decode(self, num_it=200):
         with DecoderCloser(OnlineDecoder(self.argv)) as d:

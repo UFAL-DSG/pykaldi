@@ -41,6 +41,8 @@ For running pykaldi you need cffi module installed!
 def init_dec():
     ffidec = FFI()
     ffidec.cdef('''
+    void pykaldi_version(int *out_major, int *out_minor, int *path);
+
     typedef ... CKaldiDecoderWrapper;
 
     CKaldiDecoderWrapper* new_KaldiDecoderWrapper();
@@ -71,3 +73,12 @@ def init_dec():
 
 
 ffidec, libdec = init_dec()
+
+
+def pykaldi_version():
+    major, minor, patch = ffidec.new('int*'), ffidec.new('int*'), ffidec.new('int*')
+    libdec.pykaldi_version(major, minor, patch)
+
+    return (int(major[0]), int(minor[0]), int(patch[0]))
+
+__version__ = pykaldi_version()

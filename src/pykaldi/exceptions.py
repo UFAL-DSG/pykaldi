@@ -8,3 +8,7 @@ class PyKaldiCError(PyKaldiError):
 
     def __str__(self):
         return 'Failed with return code: %s' % repr(self.retcode)
+
+
+class PyKaldiInstallError(PyKaldiCError):
+    pass

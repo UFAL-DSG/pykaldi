@@ -4,7 +4,14 @@ include ../kaldi.mk
 ifneq ($(KALDI_FLAVOR), dynamic)
 $(error Kaldi must compiled with dynamic libraries support. Run configure with --shared flag. )
 endif
-EXTRA_CXXFLAGS = -Wno-sign-compare
+
+
+# Tag the compilation with version 
+EXTRA_CXXFLAGS += -DPYKALDI_MAJOR=0 -DPYKALDI_MINOR=0 -DPYKALDI_MINOR=0 -DPYKALDI_PATCH=1
+# Git version is also stored to pykaldi library
+GIT_HASH=`git log -1 HEAD --pretty=format:"%H"`
+EXTRA_CXXFLAGS += -DPYKALDI_GIT_VERSION=\"$(GIT_HASH)\"
+EXTRA_CXXFLAGS += -Wno-sign-compare
 EXTRA_CXXFLAGS += -ggdb -O0  # for gdb debugging
 
 # Kaldi libraries required by the pykaldi

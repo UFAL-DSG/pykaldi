@@ -1,9 +1,10 @@
-// online/onlinebin-util.h
+// pykaldi/pykaldi-util.h
 
 // Copyright 2012 Cisco Systems (author: Matthias Paulik)
 
 //   Modifications to the original contribution by Cisco Systems made by:
 //   Vassil Panayotov
+//   Ondrej Platek
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,8 +19,8 @@
 // See the Apache 2 License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef KALDI_ONLINE_ONLINEBIN_UTIL_H_
-#define KALDI_ONLINE_ONLINEBIN_UTIL_H_
+#ifndef KALDI_PYKALDI_PYKALDIBIN_UTIL_H_
+#define KALDI_PYKALDI_PYKALDIBIN_UTIL_H_
 
 #include "base/kaldi-common.h"
 #include "fstext/fstext-lib.h"
@@ -28,6 +29,19 @@
 // the binaries in "onlinebin" directory. These functions are not part of the
 // core online decoding infrastructure, but rather artefacts of the particular
 // implementation of the binaries.
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void pykaldi_version(int *out_major, int * out_minor, int *patch);
+
+char* pykaldi_git_revision();
+
+#ifdef __cplusplus
+}
+#endif
+
 
 namespace kaldi {
 
@@ -42,4 +56,4 @@ void PrintPartialResult(const std::vector<int32>& words,
 
 } // namespace kaldi
 
-#endif // KALDI_ONLINE_ONLINEBIN_UTIL_H_
+#endif // KALDI_PYKALDI_PYKALDIBIN_UTIL_H_
