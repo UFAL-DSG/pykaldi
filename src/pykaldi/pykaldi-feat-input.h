@@ -185,6 +185,7 @@ OnlineFeInput<E>::Compute(Matrix<BaseFloat> *output) {
 }
 
 
+// FIXME check cmvn core src/transform/cmvn.cc and think about reimplementing
 // Acts as a proxy to an underlying OnlineFeatInput.
 // Applies cepstral mean normalization
 class OnlineCmnInput: public OnlineFeatInputItf {
