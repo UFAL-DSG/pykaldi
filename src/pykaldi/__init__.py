@@ -42,6 +42,7 @@ def init_dec():
     ffidec = FFI()
     ffidec.cdef('''
     void pykaldi_version(int *out_major, int *out_minor, int *path);
+    char* pykaldi_git_revision();
 
     typedef ... CKaldiDecoderWrapper;
 
@@ -75,10 +76,19 @@ def init_dec():
 ffidec, libdec = init_dec()
 
 
-def pykaldi_version():
+def _version():
     major, minor, patch = ffidec.new('int*'), ffidec.new('int*'), ffidec.new('int*')
     libdec.pykaldi_version(major, minor, patch)
 
     return (int(major[0]), int(minor[0]), int(patch[0]))
 
-__version__ = pykaldi_version()
+__version__ = _version()
+
+
+def _git_revision():
+    git_ver = ffidec.new("char*")
+    libdec.pykaldi_git_revision()
+    ffidec.string(git_ver)
+
+# FIXME segfaults
+__git_revision__ = _git_revision()

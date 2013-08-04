@@ -41,6 +41,10 @@ class TestOnlineDecoder(unittest.TestCase):
         b, m, p = pykaldi.__version__
         self.assertTrue(b + m + p > 0)
 
+    def test_git_revision(self):
+        print 'pykaldi %s' % (str(pykaldi.__version__))
+        self.assertTrue(len(pykaldi.__git_revision__) == 40)
+
     def test_decode(self, num_it=200):
         with DecoderCloser(OnlineDecoder(self.argv)) as d:
             for i in xrange(num_it):
