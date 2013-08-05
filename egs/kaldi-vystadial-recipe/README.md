@@ -4,6 +4,8 @@ SUMMARY
  * Requires KALDI installation and Linux environment. (Tested on Ubuntu 10.04 and 12.10.)
  * Written in Bash an Python 2.7.3.
 
+
+
 DESCRIPTION
 -----------
  * Our scripts prepare the data to expected format in s5/data. 
@@ -12,6 +14,7 @@ DESCRIPTION
  * utils/ cotains common scritps from wsj/s5/utils
  * local/ contains scripts for data preparation to prepare s5/data structure
  * conf/ contains a few configuration files for KALDI
+ * We use a language model (LM) either built from the training data using [IRSTLM](http://sourceforge.net/projects/irstlm/)  or we supply one in ARPA format
 
 
 Runnning experiments
