@@ -12,8 +12,10 @@ Description
 
 Install
 -------
+[![Build Status](https://travis-ci.org/oplatek/pykaldi.png)](https://travis-ci.org/oplatek/pykaldi)
  * Read `INSTALL.md` and `INSTALL` first!
  * `INSTALL.md` contains instructions specific for Pykaldi. `INSTALL` stores general instructions for Kaldi.
+
 
 Other info
 ----------
