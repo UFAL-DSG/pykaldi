@@ -75,9 +75,12 @@ What setup did I use?
 In order to use Kaldi binaries everywhere I add them to `PATH`. 
 In addition, I needed to add `openfst` directory to `LD_LIBRARY_PATH`, I compiled Kaldi dynamically linked against `openfst`. To conclude, I added following lines to my `.bashrc`.
 ```bash
-############# Kaldi ###########
-kaldisrc=/net/work/people/oplatek/kaldi/src
+### Kaldi ###
+kaldisrc=/home/ondra/school/diplomka/kaldi/src
 export PATH="$PATH":$kaldisrc/bin:$kaldisrc/fgmmbin:$kaldisrc/gmmbin:$kaldisrc/nnetbin:$kaldisrc/sgmm2bin:$kaldisrc/tiedbin:$kaldisrc/featbin:$kaldisrc/fstbin:$kaldisrc/latbin:$kaldisrc/onlinebin:$kaldisrc/sgmmbin
+### Pykaldi ###
+pykaldisrc=$kaldisrc/pykaldi
+export PYTHONPATH="$PYTHONPATH":$pykaldisrc
 
 ### Openfst ###
 openfst=/ha/home/oplatek/50GBmax/kaldi/tools/openfst

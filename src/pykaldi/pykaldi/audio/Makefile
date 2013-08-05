@@ -2,6 +2,7 @@
 LIBNAME = audio
 LIBFILE = lib$(LIBNAME).so
 OBJFILES = frames.o debug.o
+# FIXME it is better to use portaudio;)
 LDLIBS = -lasound
 
 all: $(LIBFILE)

@@ -5,7 +5,6 @@
 from setuptools import setup, find_packages
 from sys import version_info
 from os import path
-import re
 
 
 install_requires = [
@@ -22,15 +21,15 @@ long_description = open(path.join(path.dirname(__file__), 'README.md')).read()
 setup(
     name='pykaldi',
     version='0.0',
-    author='Ondrej Platek',
-    url='https://github.com/oplatek/pykaldi',
-    license='Apache, Version 2.0',
-    author_email='ondrej.platek@seznam.cz',
-    keywords='kaldi speech recognition python bindings',
-    description='C and Python wrapper for Kaldi decoders',
     install_requires=install_requires,
     packages=find_packages(),
     zip_safe=False,  # based on cffi docs
+    author='Ondrej Platek',
+    author_email='ondrej.platek@seznam.cz',
+    url='https://github.com/oplatek/pykaldi',
+    license='Apache, Version 2.0',
+    keywords='kaldi speech recognition python bindings',
+    description='C and Python wrapper for Kaldi decoders',
     long_description=long_description,
     classifiers='''
         Programming Language :: Python :: 2
@@ -39,5 +38,5 @@ setup(
         Intended Audiance :: Speech Recognition scientist
         Intended Audiance :: Students
         Environment :: Console
-        '''.stip().splitlines(),
+        '''.strip().splitlines(),
 )

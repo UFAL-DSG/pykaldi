@@ -23,7 +23,7 @@ pylattice=$PWD/work/pylat.gz
 #     --word-symbol-table=$wst $model $hclg \
 #     "ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:$utt2spk scp:$cmvn_scp scp:$feats_scp ark:- | add-deltas  ark:- ark:- |" \
 #     "ark:|gzip - c > $lattice"
-# 
+#
 # lattice-best-path --lm-scale=15 --word-symbol-table=$wst \
 #     "ark:gunzip -c $lattice|" ark,t:work/kaldi.trans
 
