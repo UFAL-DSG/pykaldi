@@ -1,0 +1,8 @@
+language: cpp
+compiler:
+  - gcc
+script: pushd tools && make openblas && make openfst_tgt && popd && \
+        pushd src && ./configure  --openblas-root=`pwd`/../tools/OpenBLAS/install --fst-root=`pwd`/../tools/openfst --shared && \
+        make depend && \
+        pushd pykaldi && make depend && make && make test && \
+        make pytest
