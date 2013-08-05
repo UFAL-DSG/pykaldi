@@ -86,9 +86,9 @@ __version__ = _version()
 
 
 def _git_revision():
+    # git SHA has 40 characters
     git_ver = ffidec.new("char*")
-    libdec.pykaldi_git_revision()
-    ffidec.string(git_ver)
+    git_ver = libdec.pykaldi_git_revision()
+    return ffidec.string(git_ver)
 
-# FIXME segfaults
 __git_revision__ = _git_revision()

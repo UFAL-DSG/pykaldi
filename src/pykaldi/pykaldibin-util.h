@@ -36,7 +36,7 @@ extern "C" {
 
 void pykaldi_version(int *out_major, int * out_minor, int *patch);
 
-char* pykaldi_git_revision();
+const char* pykaldi_git_revision();
 
 #ifdef __cplusplus
 }

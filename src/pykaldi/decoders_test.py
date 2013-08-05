@@ -42,7 +42,7 @@ class TestOnlineDecoder(unittest.TestCase):
         self.assertTrue(b + m + p > 0)
 
     def test_git_revision(self):
-        print 'pykaldi %s' % (str(pykaldi.__version__))
+        print 'pykaldi last commit: %s' % (str(pykaldi.__git_revision__))
         self.assertTrue(len(pykaldi.__git_revision__) == 40)
 
     def test_decode(self, num_it=200):

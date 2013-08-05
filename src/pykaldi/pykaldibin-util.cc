@@ -27,12 +27,10 @@ void pykaldi_version(int *out_major, int * out_minor, int *patch) {
   *patch = PYKALDI_PATCH;
 }
 
-char* pykaldi_git_revision() {
-  char * res = NULL;
-  std::string  sha_tmp(PYKALDI_GIT_VERSION);
-  KALDI_ASSERT(sha_tmp.size() == 40 && "Git SHA has length 40 size");
-  memcpy(res, sha_tmp.c_str(), sha_tmp.size());
-  return res;
+const char* pykaldi_git_revision() {
+  KALDI_ASSERT( (strlen(PYKALDI_GIT_VERSION) == 40) && 
+                          "Git SHA has length 40 size");
+  return PYKALDI_GIT_VERSION;
 }
 
 
