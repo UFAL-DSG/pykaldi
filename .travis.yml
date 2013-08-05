@@ -1,6 +1,7 @@
 # http://about.travis-ci.org/docs/user/ci-environment/
 # http://about.travis-ci.org/docs/user/build-configuration/
-# Ubuntu 64 12.04
+# Travis uses Ubuntu 64 12.04
+
 language: python
 python:
     # - "2.6" enable it by specify packages in setup.py and test it
