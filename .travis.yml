@@ -15,10 +15,10 @@ install:
     - pip install -q cffi --use-mirrors
     - pushd tools && make openblas && make openfst_tgt && popd
     - pushd src && ./configure  --openblas-root=`pwd`/../tools/OpenBLAS/install --fst-root=`pwd`/../tools/openfst --shared && make depend && popd
-    - pushd src/dec-wrap && make depend && make && make test && popd
 
 
 script:          
+    - pushd src/dec-wrap && make depend && make && make test && popd
     - pushd src/pykaldi && make test 
     # - pushd src/pykaldi nosetest
     # - pushd src/pykaldi/binutils nosetest
