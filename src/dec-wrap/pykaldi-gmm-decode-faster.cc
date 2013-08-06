@@ -26,11 +26,11 @@
  *  C interface  *
  *****************/
 // explicit constructor and destructor
-CKaldiDecoderWrapper *new_KaldiDecoderWrapper() {
+CKaldiDecoderWrapper *new_KaldiDecoderWrapper(void) {
   return reinterpret_cast<CKaldiDecoderWrapper*>(new kaldi::KaldiDecoderWrapper());
 }
-void del_KaldiDecoderWrapper(CKaldiDecoderWrapper* unallocate_pointer) {
-  delete reinterpret_cast<kaldi::KaldiDecoderWrapper*>(unallocate_pointer);
+void del_KaldiDecoderWrapper(CKaldiDecoderWrapper* d) {
+  delete reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d);
 }
 
 // methods from C

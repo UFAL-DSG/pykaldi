@@ -30,7 +30,7 @@ extern "C" {
 #endif
 
 // explicit constructor and destructor
-CKaldiDecoderWrapper* new_KaldiDecoderWrapper();
+CKaldiDecoderWrapper* new_KaldiDecoderWrapper(void);
 void del_KaldiDecoderWrapper(CKaldiDecoderWrapper *d);
 
 // methods

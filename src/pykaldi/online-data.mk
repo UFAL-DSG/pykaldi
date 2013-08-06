@@ -16,9 +16,9 @@ DATA_TAR = $(DATA_FILE).tar.bz2
 
 $(DATA_TAR): 
 	@# generate helper files from the downloaded data
-	@# wget -T 10 -t 3 "$(DATA_URL)"
+	wget -T 10 -t 3 "$(DATA_URL)"
 	@# DEBUG ONLY: if no Internet available use copy
-	cp $(DATA_TAR)_donotdelete $(DATA_TAR) 
+	@# cp $(DATA_TAR)_donotdelete $(DATA_TAR) 
 	mkdir -p $(DECODE_DIR)
 	tar --keep-newer-files -xf $(DATA_TAR) > /dev/null 2> /dev/null
 	rm -f $(INPUT_SCP)  # reset the file do not append

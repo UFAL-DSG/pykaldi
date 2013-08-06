@@ -51,10 +51,10 @@ def init_dec():
 
     ''')
 
+    srcdir = os.path.realpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
+    decwrapdir = os.path.join(srcdir, 'dec-wrap')
+    libs = ['pykaldi']
     try:
-        srcdir = os.path.realpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
-        decwrapdir = os.path.join(srcdir, 'dec-wrap')
-        libs = ['pykaldi']
         libdec = ffidec.verify(
             '''
             #include "dec-wrap/pykaldi-gmm-decode-faster.h"
@@ -80,7 +80,7 @@ def _version(vlib, vffi):
 
 def _git_revision(glib, gffi):
     # git SHA has 40 characters
-    git_ver = gffi.new("char*")
+    git_ver = gffi.new("const char*")
     git_ver = glib.pykaldi_git_revision()
     return gffi.string(git_ver)
 

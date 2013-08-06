@@ -30,6 +30,7 @@ However, you can always install it by running `install_cffi.sh` from `tools` dir
 Running and building examples
 -----------------------------
 
+[DEPRECATED] todo rewrite it with python setup.py develop/install/test
 In order to build shared libraries and run C test binaries run following commands from this directory.
 ```sh
 $make

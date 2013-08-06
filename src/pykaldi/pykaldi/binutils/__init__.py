@@ -14,11 +14,10 @@
 # limitations under the License. #
 
 
-import pykaldi
 import os
 
 try:
-    from cffi import FFI
+    from cffi import FFI, VerificationError
 except ImportError as e:
     print '''
 
@@ -27,18 +26,26 @@ For running pykaldi you need cffi module installed!
 '''
     raise e
 
-# binary like utils from Kaldi
 
-ffibin = FFI()
-binheader = '''
-int compute_wer_like_main(int argc, char **argv);
-'''
-ffibin.cdef(binheader)
-dir_path = os.path.dirname(os.path.realpath(pykaldi.__file__))
-lib_name = 'libpykaldi.so'
-shared_lib_path = os.path.join(dir_path, lib_name)
-try:
-    libbin = ffibin.dlopen(shared_lib_path)
-except OSError as e:
-    print 'Could not find the C shared library %s' % shared_lib_path
-    raise e
+def init_bin():
+    ffibin = FFI()
+    ffibin.cdef('int compute_wer_like_main(int argc, char **argv);')
+
+    srcdir = os.path.realpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../..'))
+    decwrapdir = os.path.join(srcdir, 'dec-wrap')
+    libs = ['pykaldi']
+    try:
+        libbin = ffibin.verify(
+            '#include "dec-wrap/compute-wer.h"',
+            libraries=libs,
+            include_dirs=[srcdir],
+            library_dirs=[decwrapdir],
+            runtime_library_dirs=[decwrapdir],
+            ext_package='pykaldi',
+        )
+    except VerificationError as e:
+        print 'Have you compiled libraries: %s?' % str(libs)
+        raise e
+    return (ffibin, libbin)
+
+ffibin, libbin = init_bin()

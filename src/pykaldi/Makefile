@@ -1,7 +1,13 @@
-# TODO delegate all the work to the Makefile in pykaldi/pykaldi
-# fix the handling of the paths
+LIBNAME=pykaldi
+LIBFILE=lib$(LIBNAME).so
+SOURCEDIR=../dec-wrap
 
-MAKE=$(MAKE) -C pykaldi
+$(LIBFILE):
+	$(MAKE) -C $(SOURCEDIR) $(LIBFILE)
+	# TODO how to use the LIBFILE -> add it as dependancy to setup.py?
+	cp $(SOURCEDIR)/$(LIBFILE) .
+
+all: $(LIBFILE)
 
 clean:
 	@# removing build directory
