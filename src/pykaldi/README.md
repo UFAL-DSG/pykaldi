@@ -32,13 +32,13 @@ Running and building examples
 
 [DEPRECATED] todo rewrite it with python setup.py develop/install/test
 In order to build shared libraries and run C test binaries run following commands from this directory.
-```sh
-$make
-```
-For details and running other commands run tests and check the `Makefile`
-```sh
-make test
-```
+
+python setup.py develop --user vs  python setup.py develop --uninstall
+python setup.py install --user vs  pip uninstall pykaldi
+
+Note, that install fails due to missing headers: It is reasonable!
+There are no headers for Kaldi in system paths! So only develop mode is available!
+When Kaldi is ready to be installed in system path it will be easy to install it too!
 
 
 

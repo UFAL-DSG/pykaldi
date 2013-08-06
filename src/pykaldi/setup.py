@@ -23,7 +23,7 @@ setup(
     name='pykaldi',
     version='0.0',
     install_requires=install_requires,
-    # packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
+    packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     # based on cffi docs: http://cffi.readthedocs.org/en/release-0.7/
     zip_safe=False,
     # get extension from cffi if using verify
