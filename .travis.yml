@@ -11,10 +11,15 @@ compiler:
 
 install: 
     - sudo apt-get install python-dev libffi-dev  # cffi deps
-    - sudo apt-get install gfortran  # openblas compilation dep
     - pip install -q cffi --use-mirrors
-    - pushd tools && make openblas && make openfst_tgt && popd
-    - pushd src && ./configure  --openblas-root=`pwd`/../tools/OpenBLAS/install --fst-root=`pwd`/../tools/openfst --shared && make depend && popd
+    - sudo apt-get install gfortran  # openblas compilation dep
+    - pushd tools && make openblas && popd
+    # - sudo apt-get install openblas # does not work
+    # - pushd src && ./configure  --openblas-root=/usr --fst-root=`pwd`/../tools/openfst --shared && make depend && popd
+    - pushd tools && make openfst_tgt && popd
+    - pushd src && ./configure  --openblas-root=`pwd`/../tools/OpenBLAS/install --fst-root=`pwd`/../tools/openfst --shared && popd 
+    - pushd src && make depend && popd
+    - pushd src && make && popd
 
 
 script:          
