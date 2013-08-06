@@ -10,11 +10,10 @@ compiler:
     - gcc
 
 install: 
-    - sudo apt-get install python-dev 
-    - sudo apt-get install libffi-dev
-    - sudo apt-get install libopenblas-dev
+    - sudo apt-get install python-dev libffi-dev  # cffi deps
+    - sudo apt-get install gfortran  # openblas compilation dep
     - pip install -q cffi --use-mirrors
-    - pushd tools && make openfst_tgt && make openblas && popd
+    - pushd tools && make openblas && make openfst_tgt && popd
     - pushd src && ./configure  --openblas-root=`pwd`/../tools/OpenBLAS/install --fst-root=`pwd`/../tools/openfst --shared && make depend && popd
     - pushd src/dec-wrap && make depend && make && make test && popd
 
