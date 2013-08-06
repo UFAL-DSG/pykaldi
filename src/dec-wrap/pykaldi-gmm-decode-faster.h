@@ -18,19 +18,10 @@
 #ifndef KALDI_PYKALDI_GMM_DECODE_FASTER_H_
 #define KALDI_PYKALDI_GMM_DECODE_FASTER_H_
 
-// FIXME reduce the includes - some may be unnecessary
-// FIXME this includes should be available only for cpp?
-#include <string>
-#include <vector>
-#include "feat/feature-mfcc.h"
-#include "pykaldi-faster-decoder.h"
-#include "pykaldi-feat-input.h"
-#include "pykaldi-decodable.h"
-#include "pykaldi-audio-source.h"
-
 /*****************
  *  C interface  *
  *****************/
+#include <stdio.h>
 
 typedef void CKaldiDecoderWrapper;
 
@@ -44,12 +35,11 @@ void del_KaldiDecoderWrapper(CKaldiDecoderWrapper *d);
 
 // methods
 size_t Decode(CKaldiDecoderWrapper *d);
-size_t HypSize(void);
-size_t FinishDecoding(CKaldiDecoderWrapper *d, bool clear_input);
-bool Finished(CKaldiDecoderWrapper *d);
+size_t HypSize(CKaldiDecoderWrapper *d);
+size_t FinishDecoding(CKaldiDecoderWrapper *d, int clear_input);
+int Finished(CKaldiDecoderWrapper *d);
 void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len);
 void PopHyp(CKaldiDecoderWrapper *d, int * word_ids, size_t size);
-size_t PrepareHypothesis(CKaldiDecoderWrapper *d, int * is_full);
 void Reset(CKaldiDecoderWrapper *d);
 int Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
 
@@ -63,6 +53,14 @@ int Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
 /*******************
  *  C++ interface  *
  *******************/
+#include <string>
+#include <vector>
+#include "feat/feature-mfcc.h"
+#include "pykaldi-faster-decoder.h"
+#include "pykaldi-feat-input.h"
+#include "pykaldi-decodable.h"
+#include "pykaldi-audio-source.h"
+
 
 namespace kaldi {
 

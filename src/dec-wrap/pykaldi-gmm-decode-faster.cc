@@ -37,14 +37,14 @@ void del_KaldiDecoderWrapper(CKaldiDecoderWrapper* unallocate_pointer) {
 size_t Decode(CKaldiDecoderWrapper *d) {
   return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Decode();
 }
-size_t DecodedWords(CKaldiDecoderWrapper *d) {
+size_t HypSize(CKaldiDecoderWrapper *d) {
   return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->HypSize();
 }
-size_t FinishDecoding(CKaldiDecoderWrapper *d, bool clear_input) {
+size_t FinishDecoding(CKaldiDecoderWrapper *d, int clear_input) {
   kaldi::KaldiDecoderWrapper *dp = reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d);
   return dp->FinishDecoding(clear_input);
 }
-bool Finished(CKaldiDecoderWrapper *d) {
+int Finished(CKaldiDecoderWrapper *d) {
   return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Finished();
 }
 void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len) {

@@ -15,6 +15,8 @@ The module wraps C++/Python interface for Kaldi decoders.
 # MERCHANTABLITY OR NON-INFRINGEMENT.
 # See the Apache 2 License for the specific language governing permissions and
 # limitations under the License. #
+import os
+
 
 try:
     from cffi import FFI, VerificationError
@@ -44,24 +46,24 @@ def init_dec():
     bool Finished(CKaldiDecoderWrapper *d);
     void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len);
     void PopHyp(CKaldiDecoderWrapper *d, int * word_ids, size_t size);
-    size_t PrepareHypothesis(CKaldiDecoderWrapper *d, int * is_full);
     void Reset(CKaldiDecoderWrapper *d);
     int Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
 
     ''')
 
     try:
-        # TODO check how it works
-        dirs = ['../../dec-wrap']
+        srcdir = os.path.realpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
+        decwrapdir = os.path.join(srcdir, 'dec-wrap')
         libs = ['pykaldi']
         libdec = ffidec.verify(
             '''
             #include "dec-wrap/pykaldi-gmm-decode-faster.h"
-            #include "dec-wrap/pykaldibin-utils.h"   // version
+            #include "dec-wrap/pykaldibin-util.h"
             ''',
-            libraries=['c'] + libs,
-            include_dirs=dirs,
-            library_dirs=dirs,
+            libraries=libs,
+            include_dirs=[srcdir],
+            library_dirs=[decwrapdir],
+            runtime_library_dirs=[decwrapdir],
             ext_package='pykaldi',
         )
     except VerificationError as e:

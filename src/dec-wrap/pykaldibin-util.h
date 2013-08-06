@@ -22,17 +22,14 @@
 #ifndef KALDI_PYKALDI_PYKALDIBIN_UTIL_H_
 #define KALDI_PYKALDI_PYKALDIBIN_UTIL_H_
 
-#include "base/kaldi-common.h"
-#include "fstext/fstext-lib.h"
 
-// This file hosts the declarations of various auxiliary functions, used by
-// the binaries in "onlinebin" directory. These functions are not part of the
-// core online decoding infrastructure, but rather artefacts of the particular
-// implementation of the binaries.
-
+/*****************
+ *  C interface  *
+ *****************/
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 
 void pykaldi_version(int *out_major, int * out_minor, int *patch);
 
@@ -42,6 +39,14 @@ const char* pykaldi_git_revision();
 }
 #endif
 
+
+#ifdef __cplusplus
+/*******************
+ *  C++ interface  *
+ *******************/
+
+#include "base/kaldi-common.h"
+#include "fstext/fstext-lib.h"
 
 namespace kaldi {
 
@@ -56,4 +61,5 @@ void PrintPartialResult(const std::vector<int32>& words,
 
 } // namespace kaldi
 
+#endif // __cplusplus
 #endif // KALDI_PYKALDI_PYKALDIBIN_UTIL_H_
