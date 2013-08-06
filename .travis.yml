@@ -18,7 +18,7 @@ install:
     # # little fix for openblas
     # - pushd /usr/lib && sudo ln -s /usr/lib/openblas-base/libopenblas.so && popd
     # long lasting alternative
-    - pushd tools && make openblas 2> /dev/null && popd
+    - pushd tools && make openblas 2> /dev/null ; popd  # make opeblas returns 2
     # openfst
     - pushd tools && make openfst_tgt && popd
     - pushd src && ./configure  --openblas-root=`pwd`/../tools/OpenBLAS/install --fst-root=`pwd`/../tools/openfst --shared && popd 

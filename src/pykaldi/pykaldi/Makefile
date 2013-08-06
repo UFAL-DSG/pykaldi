@@ -14,6 +14,6 @@ test: decoders_test.py $(DATA_TAR)
 	nosetests -s $<  # -s let the output be printed
 
 clean:
-	rm -rf $(DATA_TAR) $(DATA_FILE) $(DECODE_DIR) *.pyc 
+	rm -rf $(DATA_TAR) $(DATA_FILE) $(DECODE_DIR) *.pyc  __pycache__
 
 .PHONY: test clean
