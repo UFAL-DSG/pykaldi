@@ -15,11 +15,12 @@ install:
     - sudo apt-get install libopenblas-dev
     - pip install -q cffi --use-mirrors
     - pushd tools && make openfst_tgt && popd
-    - pushd src && ./configure  --openblas-root=`pwd`/../tools/OpenBLAS/install --fst-root=`pwd`/../tools/openfst --shared && make depend && popd
-    - pushd src/pykaldi && make depend && make && make test && popd
+    # - pushd src && ./configure  --openblas-root=`pwd`/../tools/OpenBLAS/install --fst-root=`pwd`/../tools/openfst --shared && make depend && popd
+    - pushd src && ./configure  --fst-root=`pwd`/../tools/openfst --shared && make depend && popd
+    - pushd src/dec-wrap && make depend && make && make test && popd
 
 
 script:          
-    - pushd src/pykaldi make test
-    - pushd src/pykaldi nosetest
+    - pushd src/pykaldi && make test 
+    # - pushd src/pykaldi nosetest
     # - pushd src/pykaldi/binutils nosetest
