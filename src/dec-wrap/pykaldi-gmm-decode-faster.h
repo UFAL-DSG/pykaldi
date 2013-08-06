@@ -19,6 +19,7 @@
 #define KALDI_PYKALDI_GMM_DECODE_FASTER_H_
 
 // FIXME reduce the includes - some may be unnecessary
+// FIXME this includes should be available only for cpp?
 #include <string>
 #include <vector>
 #include "feat/feature-mfcc.h"

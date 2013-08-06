@@ -5,6 +5,7 @@
 from setuptools import setup, find_packages
 from sys import version_info
 from os import path
+from pykaldi import ffidec
 
 
 install_requires = [
@@ -22,13 +23,17 @@ setup(
     name='pykaldi',
     version='0.0',
     install_requires=install_requires,
-    packages=find_packages(),
-    zip_safe=False,  # based on cffi docs
+    # packages=find_packages(),
+    # based on cffi docs: http://cffi.readthedocs.org/en/release-0.7/
+    zip_safe=False,
+    # get extension from cffi if using verify
+    ext_package='pykaldi',
+    ext_modules=[ffidec.verifier.get_extension()],
     author='Ondrej Platek',
     author_email='ondrej.platek@seznam.cz',
     url='https://github.com/oplatek/pykaldi',
     license='Apache, Version 2.0',
-    keywords='kaldi speech recognition python bindings',
+    keywords='Kaldi speech recognition python bindings',
     description='C and Python wrapper for Kaldi decoders',
     long_description=long_description,
     classifiers='''

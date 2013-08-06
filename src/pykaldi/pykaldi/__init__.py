@@ -16,9 +16,8 @@ The module wraps C++/Python interface for Kaldi decoders.
 # See the Apache 2 License for the specific language governing permissions and
 # limitations under the License. #
 
-import os
 try:
-    from cffi import FFI
+    from cffi import FFI, VerificationError
 except ImportError as e:
     print '''
 
@@ -26,16 +25,6 @@ For running pykaldi you need cffi module installed!
 
 '''
     raise e
-
-# FIXME I think that using add_ld_path(dir_path) is not necessary!
-# def add_ld_library_path(newdir):
-#     lib_path = os.environ.get('LD_LIBRARY_PATH', '')
-#     if not lib_path:
-#         os.environ['LD_LIBRARY_PATH'] = newdir
-#     else:
-#         os.environ['LD_LIBRARY_PATH'] = newdir + os.pathsep + lib_path
-#
-# add_ld_library_path(dir_path)
 
 
 def init_dec():
@@ -61,34 +50,39 @@ def init_dec():
 
     ''')
 
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    lib_name = 'libpykaldi.so'
-    shared_lib_path = os.path.join(dir_path, lib_name)
-
     try:
-        libdec = ffidec.dlopen(shared_lib_path)
-    except OSError as e:
-        print 'Could not find the C shared library %s' % shared_lib_path
+        # TODO check how it works
+        dirs = ['../../dec-wrap']
+        libs = ['pykaldi']
+        libdec = ffidec.verify(
+            '''
+            #include "dec-wrap/pykaldi-gmm-decode-faster.h"
+            #include "dec-wrap/pykaldibin-utils.h"   // version
+            ''',
+            libraries=['c'] + libs,
+            include_dirs=dirs,
+            library_dirs=dirs,
+            ext_package='pykaldi',
+        )
+    except VerificationError as e:
+        print 'Have you compiled libraries: %s?' % str(libs)
         raise e
     return (ffidec, libdec)
 
 
-ffidec, libdec = init_dec()
-
-
-def _version():
-    major, minor, patch = ffidec.new('int*'), ffidec.new('int*'), ffidec.new('int*')
-    libdec.pykaldi_version(major, minor, patch)
-
+def _version(vlib, vffi):
+    major, minor, patch = vffi.new('int*'), vffi.new('int*'), vffi.new('int*')
+    vlib.pykaldi_version(major, minor, patch)
     return (int(major[0]), int(minor[0]), int(patch[0]))
 
-__version__ = _version()
 
-
-def _git_revision():
+def _git_revision(glib, gffi):
     # git SHA has 40 characters
-    git_ver = ffidec.new("char*")
-    git_ver = libdec.pykaldi_git_revision()
-    return ffidec.string(git_ver)
+    git_ver = gffi.new("char*")
+    git_ver = glib.pykaldi_git_revision()
+    return gffi.string(git_ver)
 
-__git_revision__ = _git_revision()
+
+ffidec, libdec = init_dec()
+__version__ = _version(libdec, ffidec)
+__git_revision__ = _git_revision(libdec, ffidec)
