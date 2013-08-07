@@ -13,13 +13,11 @@ install:
     # cffi deps
     - sudo apt-get install python-dev libffi-dev  
     - pip install -q cffi --use-mirrors
-    # # openblas matrix library deps
-    # - sudo apt-get install libopenblas-dev liblapacke-dev
-    # # little fix for openblas
-    # - pushd /usr/lib && sudo ln -s /usr/lib/openblas-base/libopenblas.so && popd
-    # long lasting alternative
-    - pushd tools && make openblas 2> /dev/null ; popd  # make opeblas returns 2
-    # openfst
+    # ATLAS matrix library
+    - sudo apt-get install libatlas3gf-base
+    # OpenBLAS long lasting alternative with build
+    # - pushd tools && sudo apt-get install gfortran && make openblas 2> /dev/null ; popd  # make opeblas returns 2
+    # Openfst
     - pushd tools && make openfst_tgt && popd
     - pushd src && ./configure  --openblas-root=`pwd`/../tools/OpenBLAS/install --fst-root=`pwd`/../tools/openfst --shared && popd 
     - pushd src && make depend 2>/dev/null >/dev/null && popd
@@ -28,6 +26,4 @@ install:
 script:          
     - pushd src && make test && popd
     - pushd src/dec-wrap && make depend && make && make test && popd
-    - pushd src/pykaldi && make test 
-    # - pushd src/pykaldi nosetest
-    # - pushd src/pykaldi/binutils nosetest
+    - pushd src/pykaldi && python setup.py nosetests  # currently it will fail because of audio -> need get rid of makefile
