@@ -8,9 +8,7 @@ from os import path
 from pykaldi import ffidec
 
 
-install_requires = [
-    'cffi >=0.6',
-    'pycparser >= 2.9.1']
+install_requires = ['cffi >=0.7']  # cffi transitively requires pycparser
 
 
 if python_version < (2, 7):
@@ -29,9 +27,8 @@ setup(
     # get extension from cffi if using verify
     ext_package='pykaldi',
     ext_modules=[ffidec.verifier.get_extension()],
-    setup_requires=['nose>=1.0'],
     test_suite="nose.collector",
-    tests_require=['pykaldi'],
+    tests_require=['nose>=1.0', 'pykaldi'],
     entry_points={
         'console_scripts': [
             'live_demo=pykaldi.binutils.main',
@@ -42,7 +39,7 @@ setup(
     author_email='ondrej.platek@seznam.cz',
     url='https://github.com/oplatek/pykaldi',
     license='Apache, Version 2.0',
-    keywords='Kaldi speech recognition python bindings',
+    keywords='Kaldi speech recognition Python bindings',
     description='C and Python wrapper for Kaldi decoders',
     long_description=long_description,
     classifiers='''

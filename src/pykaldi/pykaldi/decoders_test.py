@@ -22,6 +22,7 @@ import pykaldi
 from pykaldi.utils import load_wav
 from pykaldi.binutils.online_decode import run_online_dec
 from pykaldi.decoders import OnlineDecoder, DecoderCloser
+from pykaldi.utils import get_voxforge_data
 
 
 class TestOnlineDecoder(unittest.TestCase):
@@ -30,6 +31,8 @@ class TestOnlineDecoder(unittest.TestCase):
         # Should be extracted by makefile
         self.wav_path = 'audio/test.wav'
         # self.wav_path = dir_path + '/online-data/audio/test1.wav'
+
+        get_voxforge_data(path=dir_path)
         p = dir_path + '/online-data/models/tri2a'
         self.argv = ['--verbose=0', '--rt-min=0.5', '--rt-max=1.0',
                      '--max-active=4000', '--beam=12.0',
