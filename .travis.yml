@@ -10,24 +10,23 @@ compiler:
     - gcc
 
 install: 
-    - sudo apt-get install python-dev libffi-dev  # cffi deps
+    # cffi deps
+    - sudo apt-get install python-dev libffi-dev  
     - pip install -q cffi --use-mirrors
-    - sudo apt-get install gfortran  # openblas compilation dep
-    - pushd tools && make openblas 2>/dev/null >/dev/null && popd
-    # - sudo apt-get install openblas # does not work
-    # - pushd src && ./configure  --openblas-root=/usr --fst-root=`pwd`/../tools/openfst --shared && make depend && popd
-    - pushd tools && make openfst_tgt 2>/dev/null >/dev/null && popd
-    # OpenBLAS configure version
+    # ATLAS matrix library
+    - sudo apt-get install libatlas3gf-base
+    # OpenBLAS long lasting alternative with build
+    # - pushd tools && sudo apt-get install gfortran && make openblas ; popd  # make opeblas returns 2?
+    # Openfst
+    - pushd tools && make openfst_tgt && popd
+    # Configure with OpenBLAS
     # - pushd src && ./configure  --openblas-root=`pwd`/../tools/OpenBLAS/install --fst-root=`pwd`/../tools/openfst --shared && popd 
-    # ATLAS (default) version
+    # Configure with ATLAS (default)
     - pushd src && ./configure  --fst-root=`pwd`/../tools/openfst --shared && popd 
     - pushd src && make depend 2>/dev/null >/dev/null && popd
-    - pushd src && make 2>/dev/null >/dev/null && popd
-
+    - pushd src && make && popd
 
 script:          
     - pushd src && make test && popd
     - pushd src/dec-wrap && make depend && make && make test && popd
-    - pushd src/pykaldi && make test 
-    # - pushd src/pykaldi nosetest
-    # - pushd src/pykaldi/binutils nosetest
+    - pushd src/pykaldi && python setup.py nosetests  # currently it will fail because of audio -> need get rid of makefile

@@ -16,7 +16,7 @@
 
 import unittest
 from pykaldi.audio import libaudio, ffiaudio
-from pykaldi.binutils.utils import load_wav
+from pykaldi.utils import load_wav
 
 
 class TestFrames(unittest.TestCase):
