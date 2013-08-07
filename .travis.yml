@@ -16,6 +16,9 @@ install:
     # ATLAS matrix library
     - sudo apt-get install libatlas3gf-base libblas-dev
     - pushd /usr/include && sudo ln -s atlas/*.h . && popd  # hack how to make available clapack.h
+    - ls -al /usr/include
+    - ls -al /usr/lib
+    - dpkg -l | grep 'blas\|lap'
     # OpenBLAS long lasting alternative with build
     # - pushd tools && sudo apt-get install gfortran && make openblas ; popd  # make opeblas returns 2?
     # Openfst
