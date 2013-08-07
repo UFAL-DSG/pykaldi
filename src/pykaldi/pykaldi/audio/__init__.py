@@ -18,7 +18,7 @@ The module wraps C++/Python interface for Kaldi decoders.
 
 import os
 try:
-    from cffi import FFI
+    from cffi import FFI, VerificationError
 except ImportError as e:
     print '''
 
@@ -47,14 +47,21 @@ def init_audio():
     int play_list(snd_pcm_t *handle, frame_list * fl);
     ''')
 
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    lib_name = 'libaudio.so'
-    shared_lib_path = os.path.join(dir_path, lib_name)
+    srcdir = os.path.dirname(os.path.realpath(__file__))
+
+    with open('debug.h') as fh:
+        debug_h = fh.read()
     try:
-        libaudio = ffiaudio.dlopen(shared_lib_path)
-    except OSError as e:
-        print 'Could not find the C shared library %s' % shared_lib_path
-        print 'OR SOME SYMBOLS IN LIBRARY ARE UNREFERENCED'
+        libaudio = ffiaudio.verify(
+            debug_h,
+            libraries=['asound'], # FIXME use at least portaudio (something portable)
+            # TODO remove zero optimiziation and debugging
+            extra_compile_args=['-msse', '-Wall', '-fPIC', '-Wno-sign-compare', '-g', '-O0'],
+            sources=['debug.c', 'frames.c'],
+            include_dirs=[srcdir],
+            ext_package='pykaldi',
+        )
+    except VerificationError as e:
         raise e
     return (ffiaudio, libaudio)
 
