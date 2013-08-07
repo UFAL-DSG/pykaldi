@@ -14,7 +14,7 @@ install:
     - sudo apt-get install python-dev libffi-dev  
     - pip install -q cffi --use-mirrors
     # ATLAS matrix library
-    - sudo apt-get install libatlas3gf-base libblas-dev
+    - sudo apt-get install libatlas3gf-base libblas-dev libatlas-dev libblas-dev libblas3gf
     - pushd /usr/include && sudo ln -s atlas/*.h . && popd  # hack how to make available clapack.h
     - ls -al /usr/include
     - ls -al /usr/lib
