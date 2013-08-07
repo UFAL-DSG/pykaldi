@@ -29,8 +29,9 @@ setup(
     # get extension from cffi if using verify
     ext_package='pykaldi',
     ext_modules=[ffidec.verifier.get_extension()],
+    setup_requires=['nose>=1.0'],
     test_suite="nose.collector",
-    tests_require="nose",
+    tests_require=['pykaldi'],
     entry_points={
         'console_scripts': [
             'live_demo=pykaldi.binutils.main',

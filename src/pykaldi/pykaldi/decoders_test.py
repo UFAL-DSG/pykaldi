@@ -19,7 +19,7 @@ import unittest
 import os
 # Just import this is a test ;-)
 import pykaldi
-from pykaldi.binutils.utils import load_wav
+from pykaldi.utils import load_wav
 from pykaldi.binutils.online_decode import run_online_dec
 from pykaldi.decoders import OnlineDecoder, DecoderCloser
 

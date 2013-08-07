@@ -40,6 +40,7 @@ Note, that install fails due to missing headers: It is reasonable!
 There are no headers for Kaldi in system paths! So only develop mode is available!
 When Kaldi is ready to be installed in system path it will be easy to install it too!
 
+python setup.py nosetests
 
 
 Remarks on linking

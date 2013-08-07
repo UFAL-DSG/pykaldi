@@ -15,7 +15,7 @@
 # limitations under the License. #
 
 
-from pykaldi.binutils.utils import parse_config_from_arguments, make_dir, \
+from pykaldi.utils import parse_config_from_arguments, make_dir, \
     build_reference, wst2dict, int_to_txt, compact_hyp, \
     config_is_yes, load_wav
 from pykaldi.exceptions import PyKaldiError
