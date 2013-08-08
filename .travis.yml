@@ -20,19 +20,14 @@ before_install:
 install: 
     - pip install -q cffi --use-mirrors
     # Openfst: building
-    # - pushd tools && make -j 4 openfst_tgt && popd
+    - pushd tools && make -j 4 openfst_tgt && popd
     # Openfst: downloading prebuild openfst
-    - pushd tools && wget https://dl.dropboxusercontent.com/u/8933908/openfst-build-1204_06.tar.gz && tar xfv openfst-build-1204_06.tar.gz && ln -s openfst-1.3.2 openfst && popd
-    # Configure with OpenBLAS
-    # - pushd src && ./configure  --openblas-root=`pwd`/../tools/OpenBLAS/install --shared && popd 
+    # - pushd tools && wget https://dl.dropboxusercontent.com/u/8933908/openfst-build-1204_06.tar.gz && tar xfv openfst-build-1204_06.tar.gz && ln -s openfst-1.3.2 openfst && popd
     # Configure with ATLAS (default)
     - pushd src && ./configure --atlas-root=/usr --shared && popd 
-    - pushd src && make -j 4 depend 2>/dev/null >/dev/null && popd
     - pushd src && make -j 4 && popd
     - pushd src/dec-wrap && make -j 4 && popd
 
-env:
-    - TEST_SUITE="pushd src/pykaldi && python setup.py nosetests && popd"
-    - TEST_SUITE="pushd src/dec-wrap && make -j 4 test && popd"
-
-script: "$TEST_SUITE" 
+script:
+    - pushd src/dec-wrap && make -j 4 test && popd
+    - pushd src/pykaldi && python setup.py nosetests && popd
