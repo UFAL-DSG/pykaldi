@@ -85,9 +85,10 @@ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH":$openfst/lib
 
 How have I installed Atlas?
 --------------------
-NOTE1: I normally use OpenBLAS instead of ATLAS. 
-NOTE2: There is prepared installation script `tools/install_atlas.sh` which you should try first. If it fails, you may find the help in this section.
-NOTE3: On Ubuntu 12.04 for Travis CI I used prepared packages with minor hacks. See [travis.yml](./.travis.yml).
+ * NOTE1: I normally use OpenBLAS instead of ATLAS. 
+ * NOTE2: There is prepared installation script `tools/install_atlas.sh` which you should try first. 
+          If it fails, you may find the help in this section.
+ * NOTE3: On Ubuntu 12.04 for Travis CI I used Debian packages. See [travis.yml](./.travis.yml).
 
 How I install Atlas:
  * I installed version atlas3.10.1.tar.bz2 (available at sourceforge)
