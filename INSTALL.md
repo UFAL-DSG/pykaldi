@@ -1,5 +1,3 @@
-Installation TIPS for KALDI and installation INSTRUCTIONS for my additional repositories
-=================================================================================
 Intro
 -----
 Kaldi has very good  [installation guide](http://kaldi.sourceforge.net/install.html). It is easy and straightforward.
@@ -78,9 +76,6 @@ In addition, I needed to add `openfst` directory to `LD_LIBRARY_PATH`, I compile
 ### Kaldi ###
 kaldisrc=/home/ondra/school/diplomka/kaldi/src
 export PATH="$PATH":$kaldisrc/bin:$kaldisrc/fgmmbin:$kaldisrc/gmmbin:$kaldisrc/nnetbin:$kaldisrc/sgmm2bin:$kaldisrc/tiedbin:$kaldisrc/featbin:$kaldisrc/fstbin:$kaldisrc/latbin:$kaldisrc/onlinebin:$kaldisrc/sgmmbin
-### Pykaldi ###
-pykaldisrc=$kaldisrc/pykaldi
-export PYTHONPATH="$PYTHONPATH":$pykaldisrc
 
 ### Openfst ###
 openfst=/ha/home/oplatek/50GBmax/kaldi/tools/openfst
@@ -90,8 +85,9 @@ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH":$openfst/lib
 
 How have I installed Atlas?
 --------------------
-NOTE: I decided NOT to use Atlas, I USE OpenBlas INSTEAD. 
+NOTE1: I normally use OpenBLAS instead of ATLAS. 
 NOTE2: There is prepared installation script `tools/install_atlas.sh` which you should try first. If it fails, you may find the help in this section.
+NOTE3: On Ubuntu 12.04 for Travis CI I used prepared packages with minor hacks. See [travis.yml](./.travis.yml).
 
 How I install Atlas:
  * I installed version atlas3.10.1.tar.bz2 (available at sourceforge)

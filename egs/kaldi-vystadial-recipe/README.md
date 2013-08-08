@@ -1,4 +1,4 @@
-SUMMARY
+Summary
 -------
  * KALDI recipe based on voxforge KALDI recipe http://vpanayotov.blogspot.cz/2012/07/voxforge-scripts-for-kaldi.html .
  * Requires KALDI installation and Linux environment. (Tested on Ubuntu 10.04 and 12.10.)
@@ -6,7 +6,7 @@ SUMMARY
 
 
 
-DESCRIPTION
+Details
 -----------
  * Our scripts prepare the data to expected format in s5/data. 
  * Stores experiments in s5/exp
@@ -35,7 +35,8 @@ Before running the experiments check the following files:
 # After s5/run.sh finished 
 # the results are stored in exp directory.
 # Let's collect the results:
-$ local/results.py exp # specify the experiment directory wait a while
+# Specify the experiment directory wait a while
+$ local/results.py exp 
 exp             RT coef         WER             SER
 _ri3b_fmmi_b    2.42235533333   (19.45, 13)     (44.67, 11)
 tri2b_mpe       0.37968465      (20.83, 20)     (47.2, 14)
