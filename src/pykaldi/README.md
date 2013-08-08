@@ -13,6 +13,7 @@ Install & Dependencies
  * See [setup.py](./setup.py) `install_requires` variable for full list of Python dependencies.
 
    The [setup.py](./setup.py) INSTALL ALL THE DEPENDENCIES BY ITSELF. See the section below!.
+
    Note: In the `sanbox/oplatek/tools/extras/` you can find `install_cffi.sh` installation script.
 
 
@@ -31,7 +32,7 @@ Commands you SHOULD USE:
     The command links pykaldi directory to PYTHONPATH (at Ubuntu to `$HOME/.local/lib/python2.7/site-packages/`),
     so you can use pykaldi system wide. 
 
-    ```py
+    ```python
     import pykaldi
     print pykaldi.__version__
     ```
