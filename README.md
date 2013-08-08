@@ -22,5 +22,5 @@ Other info
 
 LICENSE
 --------
- * Pykaldi is released under the [Apache license, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0). Kaldi also uses `Apache 2.0` license. 
- * We also want to publicly release the training data in the autumn 2013.
+ * Pykaldi is released under the [Apache license, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0), which is also used by Kaldi itself. 
+ * We also want to publicly release the training data for the recipe in the autumn 2013.
