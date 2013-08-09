@@ -15,76 +15,78 @@
 # limitations under the License. #
 
 import unittest
-from pykaldi.audio import libaudio, ffiaudio
-from pykaldi.utils import load_wav
 
 
+@unittest.skip("Requires ALSA library (on Linux).")
 class TestFrames(unittest.TestCase):
     def setUp(self):
+        from pykaldi.audio import libaudio, ffiaudio
+        from pykaldi.utils import load_wav
+        self.lib, self.ffi = libaudio, ffiaudio
+        self.load_wav = load_wav
         import string
         self.test_str = string.ascii_lowercase
 
     def test_list(self):
         s = self.test_str
         # store strings of length 1
-        flp = libaudio.create_frame_list(2, 1)
+        flp = self.lib.create_frame_list(2, 1)
         for c in s:
             # pcm is stored like char array:  2 chars == one 16bit sample
-            libaudio.add_frame_to_list(flp, c)
+            self.lib.add_frame_to_list(flp, c)
 
         # C pointer magic: i is in range of (end_pointer - start_pointer)
-        start = libaudio.frame_list_start(flp)
-        for i in range(libaudio.frame_list_end(flp) - start):
+        start = self.lib.frame_list_start(flp)
+        for i in range(self.lib.frame_list_end(flp) - start):
             it = start + i
             # casting unsigned char** to char**
-            str_p = ffiaudio.cast("char **", it)
-            # Dereferencing in cffiaudio way p[0] instead of *p
-            c_str = ffiaudio.string(str_p[0])
+            str_p = self.ffi.cast("char **", it)
+            # Dereferencing in cself.ffi way p[0] instead of *p
+            c_str = self.ffi.string(str_p[0])
             python_str = s[i]
             self.assertEqual(c_str, python_str,
                              'Failed at %d th string: %s vs %s!'
                              % (i, c_str, python_str))
 
-        libaudio.delete_frame_list(flp)
+        self.lib.delete_frame_list(flp)
 
 
+@unittest.skip("Requires ALSA library (on Linux).")
 class TestAudio(unittest.TestCase):
     def setUp(self):
         self.wav_path = 'test.wav'
         self.samples_per_frame = 256
 
-    @unittest.skip("Requires ALSA library (on Linux). Do not run live test by default")
     def test_play_list(self):
-        pcm = load_wav(self.wav_path)
+        pcm = self.load_wav(self.wav_path)
         play_len, frame_len = len(pcm), self.samples_per_frame
 
-        flp = libaudio.create_frame_list(2, frame_len)
+        flp = self.lib.create_frame_list(2, frame_len)
         keep_alive = []
         for i in range(play_len / frame_len):
             frame = pcm[i * frame_len:(i + 1) * frame_len]
             keep_alive.append(frame)
-            libaudio.add_frame_to_list(flp, frame)
-        handlep = libaudio.play_setup()
-        if handlep == ffiaudio.NULL:
+            self.lib.add_frame_to_list(flp, frame)
+        handlep = self.lib.play_setup()
+        if handlep == self.ffi.NULL:
             raise OSError("Alsa not initialized")
         # using two chars for one sample of 16 bit audio is handled by play_list itself!
-        ret_code = libaudio.play_list(handlep, flp)
+        ret_code = self.lib.play_list(handlep, flp)
         self.assertEqual(
-            ret_code, 0, 'Function play from C libaudiorary FAILED with exit status %s' % ret_code)
-        libaudio.play_tear_down(handlep)
-        libaudio.delete_frame_list(flp)
+            ret_code, 0, 'Function play from C self.library FAILED with exit status %s' % ret_code)
+        self.lib.play_tear_down(handlep)
+        self.lib.delete_frame_list(flp)
 
-    @unittest.skip("Requires ALSA library (on Linux). Do not run live test by default")
     def test_play(self):
-        pcm = load_wav(self.wav_path)
+        pcm = self.load_wav(self.wav_path)
         play_len = len(pcm) / 2  # using two chars for one sample of 16 bit audio
-        handlep = libaudio.play_setup()
-        if handlep == ffiaudio.NULL:
+        handlep = self.lib.play_setup()
+        if handlep == self.ffi.NULL:
             raise OSError("Alsa not initialized")
-        ret_code = libaudio.play(handlep, pcm, play_len)
+        ret_code = self.lib.play(handlep, pcm, play_len)
         self.assertEqual(
-            ret_code, 0, 'Function play from C libaudiorary FAILED with exit status %s' % ret_code)
-        libaudio.play_tear_down(handlep)
+            ret_code, 0, 'Function play from C self.library FAILED with exit status %s' % ret_code)
+        self.lib.play_tear_down(handlep)
 
 
 if __name__ == '__main__':
