@@ -27,6 +27,7 @@ It is so, because the `Pykaldi` depends on Kaldi libraries and they are not used
 If the it changes it will work. In fact, it does not matter.
 
 Commands you SHOULD USE:
+ * `pip install --user cffi`  # install cffi 
  * `python setup.py develop --user` an its undo `python setup.py develop --uninstall`
 
     The command links pykaldi directory to PYTHONPATH (at Ubuntu to `$HOME/.local/lib/python2.7/site-packages/`),

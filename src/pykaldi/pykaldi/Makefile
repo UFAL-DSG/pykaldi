@@ -3,6 +3,6 @@ test:
 	nosetests -s
 
 clean:
-	rm -rf online-data online-data.tar.bz2 *.pyc  __pycache__
+	rm -rf online-data online-data.tar.bz2 work *.pyc  __pycache__ *.so
 
 .PHONY: test clean
