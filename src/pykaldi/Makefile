@@ -11,12 +11,15 @@ all: $(LIBFILE)
 
 clean:
 	@# removing build directory
-	python setup.py clean --all
+	-python setup.py clean --all
 	rm -rf dist
 	@# Do not want to use wildcards and rm -rf
 	rm -f *.egg-info/* *.egg-info/.[a-zA-Z]*
-	rmdir *.egg-info
+	-rmdir *.egg-info
 	
 
-cleanall:
-	# TODO recursive make clean
+cleanall: clean
+	# recursive make clean
+	$(MAKE) -C pykaldi clean
+	$(MAKE) -C pykaldi/binutils clean
+	$(MAKE) -C pykaldi/audio clean

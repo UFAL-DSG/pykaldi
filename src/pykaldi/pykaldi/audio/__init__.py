@@ -48,16 +48,18 @@ def init_audio():
     ''')
 
     srcdir = os.path.dirname(os.path.realpath(__file__))
-
-    with open('debug.h') as fh:
-        debug_h = fh.read()
+    sources = ['debug.c', 'frames.c']
+    sources = [os.path.join(srcdir, s) for s in sources]  # needed only for nosetests
     try:
         libaudio = ffiaudio.verify(
-            debug_h,
-            libraries=['asound'], # FIXME use at least portaudio (something portable)
+            '''
+            #include "debug.h"
+            #include "frames.h"
+            ''',
+            libraries=['asound'],  # FIXME use at least portaudio (something portable)
             # TODO remove zero optimiziation and debugging
             extra_compile_args=['-msse', '-Wall', '-fPIC', '-Wno-sign-compare', '-g', '-O0'],
-            sources=['debug.c', 'frames.c'],
+            sources=sources,
             include_dirs=[srcdir],
             ext_package='pykaldi',
         )

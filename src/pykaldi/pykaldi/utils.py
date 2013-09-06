@@ -37,7 +37,7 @@ def get_voxforge_data(path=None, workdir='work'):
         os.makedirs(workdir)
     url = 'http://sourceforge.net/projects/kaldi/files/online-data.tar.bz2'
     name = 'online-data'
-    tar_name = name + '.tar.bz2'
+    tar_name = os.path.join(path, '%s.tar.bz2' % name)
     if os.path.isfile(os.path.join(path, tar_name)):
         print 'Skipping download. File exists.'
     else:
@@ -54,8 +54,8 @@ def get_voxforge_data(path=None, workdir='work'):
             return False
 
     print 'Extracting Tarball'
-    with tarfile.open(tar_name) as tar:  # FIXME should I add mode='r:bz2' to open?
-        tar.extractall()
+    with tarfile.open(tar_name) as tar:
+        tar.extractall(path=path)
 
     audio_path = os.path.sep.join([path, 'online-data', 'audio'])
     wav_paths = glob.glob(os.path.join(audio_path, '*.wav'))

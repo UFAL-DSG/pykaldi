@@ -28,16 +28,16 @@ from pykaldi.utils import get_voxforge_data
 class TestOnlineDecoder(unittest.TestCase):
     def setUp(self):
         dir_path = os.path.realpath(os.path.dirname(__file__))
-        # Should be extracted by makefile
-        self.wav_path = 'audio/test.wav'
-        # self.wav_path = dir_path + '/online-data/audio/test1.wav'
-
+        self.wav_path = os.path.join(dir_path, 'audio', 'test.wav')
         get_voxforge_data(path=dir_path)
-        p = dir_path + '/online-data/models/tri2a'
+        p = os.path.join(dir_path, 'online-data', 'models', 'tri2a')
         self.argv = ['--verbose=0', '--rt-min=0.5', '--rt-max=1.0',
                      '--max-active=4000', '--beam=12.0',
-                     '--acoustic-scale=0.0769', '%s/model' % p, '%s/HCLG.fst' % p,
-                     '%s/words.txt' % p, '1:2:3:4:5']
+                     '--acoustic-scale=0.0769',
+                     os.path.join(p, 'model'),
+                     os.path.join(p, 'HCLG.fst'),
+                     os.path.join(p, 'words.txt'),
+                     '1:2:3:4:5']
 
     def test_version(self):
         print 'pykaldi %s' % (str(pykaldi.__version__))
