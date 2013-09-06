@@ -88,7 +88,7 @@ class OnlineDecoder(KaldiDecoder):
         return self._pop_hyp_from_c(size)
 
     def finished(self):
-        """ Returns: bool. Indicating if decoder processed all features
+        """ Returns: bool. Indicating if decoder processed all frames
         and does not wait for more features."""
         return self.lib.Finished(self.dec)
 
@@ -153,7 +153,9 @@ class OnlineDecoderNumpy(OnlineDecoder):
 
 
 class ConfNetDecoder(KaldiDecoder):
-    """Docstring for ConfNetDecoder """
+    """Docstring for ConfNetDecoder 
+    pysfst implementation use lattice
+    """
 
     def __init__(self):
         """@todo: to be defined """
