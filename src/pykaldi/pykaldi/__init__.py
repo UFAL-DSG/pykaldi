@@ -56,7 +56,7 @@ def init_dec():
     try:
         libdec = ffidec.verify(
             '''
-            #include "dec-wrap/pykaldi-gmm-decode-faster.h"
+            #include "dec-wrap/pykaldi-faster-wrapper.h"
             #include "dec-wrap/pykaldibin-util.h"
             ''',
             libraries=libs,

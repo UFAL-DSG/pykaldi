@@ -1,18 +1,18 @@
 # include python-kaldi-decoding Makefile 
 # since we are dependent on the code there
 
-# PYTHON PIPELINE EXAMPLE settings 
-CONFIG = configs/voxforge_config.json
-# CONFIG = configs/vystadial_config.json
-
-test: run_online 
+# FIXME todo addd run vystadial with selected model
+test: run_voxforge
 
 work:
-	 python -c "from pykaldi.utils import get_voxforge_data; get_voxforge_data()" 
+	 python -c "import pykaldi.utils; pykaldi.utils.get_voxforge_data()" 
 
-# PYTHON PIPELINE EXAMPLE
-run_online: online_decode.py work $(CONFIG) 
-	python $< $(CONFIG)
+run_voxforge: online_decode.py work configs/voxforge_config.json
+	python configs/voxforge_config.json
+
+run_vystadial: online_decode.py work configs/vystadial_config.json
+	python configs/vystadial_config.json
+
 
 DATA = $(PWD)/online-data/models/tri2a
 run_live: work
