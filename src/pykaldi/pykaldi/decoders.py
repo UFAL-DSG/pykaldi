@@ -82,8 +82,6 @@ class OnlineDecoder(KaldiDecoder):
         The decoder will return a part of hypothesis, if safe.
         Returns: list. Possibly very short (or empty) list of word_ids.
         """
-        # FIXME currently segfaults at KALDI_ASSERT
-        # if there is not enough audio
         size = self.lib.Decode(self.dec)
         return self._pop_hyp_from_c(size)
 
@@ -153,7 +151,7 @@ class OnlineDecoderNumpy(OnlineDecoder):
 
 
 class ConfNetDecoder(KaldiDecoder):
-    """Docstring for ConfNetDecoder 
+    """Docstring for ConfNetDecoder
     pysfst implementation use lattice
     """
 

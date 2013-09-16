@@ -18,7 +18,7 @@
 #include "feat/feature-mfcc.h"
 #include "pykaldibin-util.h"
 #include "pykaldi-audio-source.h"
-#include "pykaldi-gmm-decode-faster.h"
+#include "pykaldi-faster-wrapper.h"
 #include "pykaldi-feat-input.h"
 #include "pykaldi-decodable.h"
 
@@ -57,9 +57,6 @@ void PopHyp(CKaldiDecoderWrapper *d, int * word_ids, size_t size) {
   std::copy(tmp.begin(), tmp.begin()+size, word_ids);
 
 }
-void Reset(CKaldiDecoderWrapper *d) {
-  reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Reset();
-}
 int Setup(CKaldiDecoderWrapper *d, int argc, char **argv) {
   return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Setup(argc, argv);
 } 
@@ -69,6 +66,9 @@ int Setup(CKaldiDecoderWrapper *d, int argc, char **argv) {
  *******************/
 
 namespace kaldi {
+
+// we will use this helper function in ParseArgs
+std::vector<int32> phones_to_vector(const std::string & s);
 
 size_t KaldiDecoderWrapper::Decode(void) {
   KALDI_VLOG(2) << "Finished: " << Finished()
@@ -124,14 +124,11 @@ size_t KaldiDecoderWrapper::FinishDecoding(bool clear_input) {
   return word_ids_.size();
 }
 
-// we will use this helper function in ParseArgs
-std::vector<int32> phones_to_vector(const std::string & s);
-
 int KaldiDecoderWrapper::ParseArgs(int argc, char ** argv) {
   try {
 
     ParseOptions po("Utterance segmentation is done on-the-fly.\n"
-      "Feature splicing/LDA transform is used, if the optional(last) " 
+      "Feature splicing/LDA transform is used, if the optional(last) "
       "argument is given.\n"
       "Otherwise delta/delta-delta(2-nd order) features are produced.\n\n"
       "Usage: online-gmm-Decode-faster [options] <model-in>"
@@ -140,22 +137,21 @@ int KaldiDecoderWrapper::ParseArgs(int argc, char ** argv) {
       "--max-active=4000 --beam=12.0 --acoustic-scale=0.0769 "
       "model HCLG.fst words.txt '1:2:3:4:5' lda-matrix");
 
+    opts_.Register(&po);
+    mfcc_opts_.Register(&po);
     decoder_opts_.Register(&po, true);
     feature_reading_opts_.Register(&po);
-    opts_.Register(&po);
-    
+    delta_feat_opts_.Register(&po);
+
     po.Read(argc, argv);
     if (po.NumArgs() != 4 && po.NumArgs() != 5) {
       po.PrintUsage();
       return 1;
     }
     if (po.NumArgs() == 4)
-      if (opts_.left_context % delta_feat_opts_.order != 0 || 
+      if (opts_.left_context % delta_feat_opts_.order != 0 ||
           opts_.left_context != opts_.right_context)
         KALDI_ERR << "Invalid left/right context parameters!";
-
-    int32 window_size = opts_.right_context + opts_.left_context + 1;
-    decoder_opts_.batch_size = std::max(decoder_opts_.batch_size, window_size);
 
     opts_.model_rxfilename = po.GetArg(1);
     opts_.fst_rxfilename = po.GetArg(2);
@@ -171,7 +167,6 @@ int KaldiDecoderWrapper::ParseArgs(int argc, char ** argv) {
   }
 }  // KaldiDecoderWrapper::ParseArgs()
 
-
 // Looks unficcient but: c++11 move semantics 
 // and RVO: http://cpp-next.com/archive/2009/08/want-speed-pass-by-value/
 // justified it. It has nicer interface.
@@ -185,7 +180,6 @@ std::vector<int32> KaldiDecoderWrapper::PopHyp(void) {
 int KaldiDecoderWrapper::Setup(int argc, char **argv) {
   try {
     if (ParseArgs(argc, argv) != 0) {
-      Reset(); 
       return 1;
     }
 
@@ -204,19 +198,12 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
     // Fixed 16 bit audio
     source_ = new PykaldiBlockSource(); 
 
-    // We are not properly registering/exposing MFCC and frame extraction options,
-    // because there are parts of the online decoding code, where some of these
-    // options are hardwired(ToDo: we should fix this at some point)
-    MfccOptions mfcc_opts;
-    mfcc_opts.use_energy = false;
-    int32 frame_length = mfcc_opts.frame_opts.frame_length_ms = 25;
-    int32 frame_shift = mfcc_opts.frame_opts.frame_shift_ms = 10;
-    mfcc_ = new Mfcc(mfcc_opts);
-
+    mfcc_ = new Mfcc(mfcc_opts_);
+    int32 frame_length = mfcc_opts_.frame_opts.frame_length_ms;
+    int32 frame_shift = mfcc_opts_.frame_opts.frame_shift_ms;
     fe_input_ = new OnlineFeInput<Mfcc>(source_, mfcc_,
                                frame_length * (opts_.kSampleFreq / 1000),
                                frame_shift * (opts_.kSampleFreq / 1000));
-    cmn_input_ = new OnlineCmnInput(fe_input_, opts_.cmn_window, opts_.min_cmn_window);
 
     if (opts_.lda_mat_rspecifier != "") {
       bool binary_in;
@@ -224,11 +211,11 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
       Input ki(opts_.lda_mat_rspecifier, &binary_in);
       lda_transform.Read(ki.Stream(), binary_in);
       // lda_transform is copied to OnlineLdaInput
-      feat_transform_ = new OnlineLdaInput(cmn_input_, 
+      feat_transform_ = new OnlineLdaInput(fe_input_, 
                                 lda_transform,
                                 opts_.left_context, opts_.right_context);
     } else {
-      feat_transform_ = new OnlineDeltaInput(delta_feat_opts_, cmn_input_);
+      feat_transform_ = new OnlineDeltaInput(delta_feat_opts_, fe_input_);
     }
 
     feature_matrix_ = new PykaldiFeatureMatrix(feature_reading_opts_,
@@ -239,40 +226,9 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
     return 0;
   } catch(const std::exception& e) {
     std::cerr << e.what();
-    Reset();
     return 2;
   }
 } // KaldiDecoderWrapper::Setup()
-
-void KaldiDecoderWrapper::Reset(void) {
-
-  delete mfcc_;
-  delete source_;
-  delete feat_transform_;
-  delete cmn_input_;
-  delete trans_model_;
-  delete decode_fst_;
-  delete decoder_;
-  delete decodable_;
-  word_ids_.clear();
-
-  mfcc_ = 0;
-  source_ = 0;
-  feat_transform_ = 0;
-  cmn_input_ = 0;
-  trans_model_ = 0;
-  decode_fst_ = 0;
-  decoder_ = 0;
-  feature_matrix_ = 0;
-  decodable_ = 0;
-
-  // delta-delta derivative features are calculated unless LDA is used
-  // LDA has parameters opts_.left and right context
-  delta_feat_opts_ = DeltaFeaturesOptions(); 
-  feature_reading_opts_ = PykaldiFeatureMatrixOptions();
-  opts_ = KaldiDecoderWrapperOptions();
-
-} // Reset ()
 
 // converts  phones to vector representation
 std::vector<int32> phones_to_vector(const std::string & s) {

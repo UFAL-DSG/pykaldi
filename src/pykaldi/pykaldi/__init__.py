@@ -46,7 +46,6 @@ def init_dec():
     bool Finished(CKaldiDecoderWrapper *d);
     void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len);
     void PopHyp(CKaldiDecoderWrapper *d, int * word_ids, size_t size);
-    void Reset(CKaldiDecoderWrapper *d);
     int Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
 
     ''')

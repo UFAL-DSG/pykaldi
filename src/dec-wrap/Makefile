@@ -22,9 +22,9 @@ ADDLIBS = ../decoder/kaldi-decoder.a ../thread/kaldi-thread.a \
 
 BINFILES = 
 
-TESTFILES = compute-wer-test pykaldi-gmm-decode-faster-test
+TESTFILES = compute-wer-test pykaldi-faster-wrapper-test
 
-OBJFILES = compute-wer.o pykaldi-gmm-decode-faster.o pykaldi-audio-source.o \
+OBJFILES = compute-wer.o pykaldi-faster-wrapper.o pykaldi-audio-source.o \
 		   pykaldi-decodable.o pykaldi-feat-input.o \
 		   pykaldi-faster-decoder.o pykaldibin-util.o
 
