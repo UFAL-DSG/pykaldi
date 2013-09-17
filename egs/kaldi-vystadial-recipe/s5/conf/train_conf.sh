@@ -1,29 +1,30 @@
 #!/bin/bash
 
 # Vystadial data 1 channel 16000 16-bit
-export DATA_ROOT="/ha/projects/vystadial/data/asr/en/voip/"
+# export DATA_ROOT="/ha/projects/vystadial/data/asr/en/voip/"
+export DATA_ROOT="/ha/work/people/oplatek/kaldi/egs/kaldi-vystadial-recipe/s5/test-sample/data"
 
 # Test-time language model order
-# The script just copies the arpa LM 
-# export LM_ORDER=3 
-export ARPA_MODEL="/ha/projects/vystadial/git/alex/resources/lm/caminfo/arpa_trigram"
+# The script just copies the arpa LM
+# export LM_ORDER=3
+# export ARPA_MODEL="/ha/projects/vystadial/git/alex/resources/lm/caminfo/arpa_trigram"
 
 export LM_ORDER=3
-# Unset or empty ARPA_MODEL variable means 
+# Unset or empty ARPA_MODEL variable means
 # that the script will build the LM itself
-# unset ARPA_MODEL 
+# unset ARPA_MODEL
 
-export DICTIONARY="/ha/projects/vystadial/git/alex/resources/lm/caminfo/dict"
+# export DICTIONARY="/ha/projects/vystadial/git/alex/resources/lm/caminfo/dict"
 
-# Unset or empty DICTIONARY variable means 
+# Unset or empty DICTIONARY variable means
 # that the script will build the DICTIONARY itself
 # unset DICTIONARY
 
-# Storage dir for MFCC. Need a lot of space. 
+# Storage dir for MFCC. Need a lot of space.
 export MFCC_DIR="./mfcc"
 
 # Want to remove OOV from LM?
-export NOOOV="yes"  # nonempty string triggers it;)
+export NOOOV="yes"  # nonempty string triggers removing;)
 # unset NOOOV
 
 
@@ -32,7 +33,7 @@ export NOOOV="yes"  # nonempty string triggers it;)
 everyN=1
 
 # Train monophone models on a subset of the data of this size
-monoTrainData=1000
+monoTrainData=150
 
 # Number of states for phonem training
 pdf=1200
