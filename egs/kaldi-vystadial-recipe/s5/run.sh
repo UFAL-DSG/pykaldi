@@ -47,7 +47,8 @@ if [ ! "$(ls -A ${MFCC_DIR} 2>/dev/null)" ]; then
   for x in train test ; do 
   steps/make_mfcc.sh --cmd "$train_cmd" --nj $njobs \
       data/$x exp/make_mfcc/$x ${MFCC_DIR} || exit 1;
-  steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x ${MFCC_DIR} || exit 1;
+  # CMVN does not have sense for us
+  # steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x ${MFCC_DIR} || exit 1;
   done
 fi
 
@@ -127,71 +128,6 @@ steps/decode.sh --config conf/decode.config --iter 4 --nj $njobs --cmd "$decode_
 steps/decode.sh --config conf/decode.config --iter 3 --nj $njobs --cmd "$decode_cmd" \
    exp/tri2b/graph data/test exp/tri2b_mpe/decode_it3 || exit 1;
 
-
-# Do LDA+MLLT+SAT, and decode.
-steps/train_sat.sh $pdf $gauss data/train data/lang exp/tri2b_ali exp/tri3b || exit 1;
-utils/mkgraph.sh data/lang_test exp/tri3b exp/tri3b/graph || exit 1;
-steps/decode_fmllr.sh --config conf/decode.config --nj $njobs --cmd "$decode_cmd" \
-  exp/tri3b/graph data/test exp/tri3b/decode || exit 1;
-
-
-# Align all data with LDA+MLLT+SAT system (tri3b)
-steps/align_fmllr.sh --nj $njobs --cmd "$train_cmd" --use-graphs true \
-  data/train data/lang exp/tri3b exp/tri3b_ali || exit 1;
-
-# MMI on top of tri3b (i.e. LDA+MLLT+SAT+MMI)
-steps/make_denlats.sh --config conf/decode.config \
-   --nj $njobs --cmd "$train_cmd" --transform-dir exp/tri3b_ali \
-  data/train data/lang exp/tri3b exp/tri3b_denlats || exit 1;
-steps/train_mmi.sh data/train data/lang exp/tri3b_ali exp/tri3b_denlats exp/tri3b_mmi || exit 1;
-
-steps/decode_fmllr.sh --config conf/decode.config --nj $njobs --cmd "$decode_cmd" \
-  --alignment-model exp/tri3b/final.alimdl --adapt-model exp/tri3b/final.mdl \
-   exp/tri3b/graph data/test exp/tri3b_mmi/decode || exit 1;
-
-# Do a decoding that uses the exp/tri3b/decode directory to get transforms from.
-steps/decode.sh --config conf/decode.config --nj $njobs --cmd "$decode_cmd" \
-  --transform-dir exp/tri3b/decode  exp/tri3b/graph data/test exp/tri3b_mmi/decode2 || exit 1;
-
-
-# first, train UBM for fMMI experiments.
-steps/train_diag_ubm.sh --silence-weight 0.5 --nj $njobs --cmd "$train_cmd" \
-  250 data/train data/lang exp/tri3b_ali exp/dubm3b
-
- # Next, various fMMI+MMI configurations.
-steps/train_mmi_fmmi.sh --learning-rate 0.0025 \
-  --boost 0.1 --cmd "$train_cmd" data/train data/lang exp/tri3b_ali exp/dubm3b exp/tri3b_denlats \
-  exp/tri3b_fmmi_b || exit 1;
-
-for iter in 3 4 5 6 7 8; do
- steps/decode_fmmi.sh --nj $njobs --config conf/decode.config --cmd "$decode_cmd" --iter $iter \
-   --transform-dir exp/tri3b/decode  exp/tri3b/graph data/test exp/tri3b_fmmi_b/decode_it$iter &
-done
-
-steps/train_mmi_fmmi.sh --learning-rate 0.001 \
-  --boost 0.1 --cmd "$train_cmd" data/train data/lang exp/tri3b_ali exp/dubm3b exp/tri3b_denlats \
-  exp/tri3b_fmmi_c || exit 1;
-
-for iter in 3 4 5 6 7 8; do
- steps/decode_fmmi.sh --nj $njobs --config conf/decode.config --cmd "$decode_cmd" --iter $iter \
-   --transform-dir exp/tri3b/decode  exp/tri3b/graph data/test exp/tri3b_fmmi_c/decode_it$iter &
-done
-
-# for indirect one, use twice the learning rate.
-steps/train_mmi_fmmi_indirect.sh --learning-rate 0.002 --schedule "fmmi fmmi fmmi fmmi mmi mmi mmi mmi" \
-  --boost 0.1 --cmd "$train_cmd" data/train data/lang exp/tri3b_ali exp/dubm3b exp/tri3b_denlats \
-  exp/tri3b_fmmi_d || exit 1;
-
-for iter in 3 4 5 6 7 8; do
- steps/decode_fmmi.sh --nj $njobs --config conf/decode.config --cmd "$decode_cmd" --iter $iter \
-   --transform-dir exp/tri3b/decode  exp/tri3b/graph data/test exp/tri3b_fmmi_d/decode_it$iter &
-done
-
-# SKIPPING this mixturing and speaker dependant settings
-# You don't have to run all 3 of the below, e.g. you can just run the run_sgmm2x.sh
-# local/run_sgmm.sh
-# local/run_sgmm2.sh
-# local/run_sgmm2x.sh
 
 echo "Successfully trained and tested all the experiments"
 
