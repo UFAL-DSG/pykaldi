@@ -36,20 +36,18 @@ class PykaldiDecodableDiagGmmScaled : public DecodableInterface {
                                const BaseFloat scale,
                                PykaldiFeatureMatrix *input_feats);
 
-  
+
   /// Returns the log likelihood, which will be negated in the decoder.
   virtual BaseFloat LogLikelihood(int32 frame, int32 index);
-  
+
   virtual bool IsLastFrame(int32 frame);
 
-  virtual void NewStart();
-  
   /// Indices are one-based!  This is for compatibility with OpenFst.
   virtual int32 NumIndices() { return trans_model_.NumTransitionIds(); }
 
  private:
-  void CacheFrame(int32 frame);
-  
+  void GetFrame(int32 frame);
+
   PykaldiFeatureMatrix *features_;
   const AmDiagGmm &ac_model_;
   BaseFloat ac_scale_;

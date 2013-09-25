@@ -28,46 +28,26 @@
 namespace kaldi {
 
 
-// Interface specification COPY -> because OnlineFeatInputItf
+// Interface specification COPY -> because PykaldiFeatInputItf
 // requires portaudio to be installed through various includes
 // It should be easy to remove the portaudio dependancy by splitting
 // the code into multiple files.
-class OnlineFeatInputItf {
+class PykaldiFeatInputItf {
  public:
   // Produces feature vectors in some way.
   // The features may be e.g. extracted from an audio samples, received and/or
-  // transformed from another OnlineFeatInput class etc.
+  // transformed from another PykaldiFeatInput class etc.
   //
   // "output" - a matrix to store the extracted feature vectors in its rows.
   //            The number of rows (NumRows()) of "output" when the function is
   //            called, is treated as a hint of how many frames the user wants,
   //            but this function does not promise to produce exactly that many:
   //            it may be slightly more, less, or even zero, on a given call.
-  //            Zero frames may be returned because we timed out or because
-  //            we're at the beginning of the file and some buffering is going on.
-  //            In that case you should try again.  The function will return "false"
-  //            when it knows the stream is finished, but if it returns nothing
-  //            several times in a row you may want to terminate processing the
-  //            stream.
-  //
-  // Note: similar to the OnlineAudioInput::Read(), Compute() previously
-  //       had a second argument - "timeout". Again we decided against including
-  //       this parameter in the interface specification. Instead we are
-  //       considering time out handling to be implementation detail, and if needed
-  //       it should be configured, through the descendant class' constructor,
-  //       or by other means.
-  //       For consistency, we recommend 'timeout' values greater than zero
-  //       to mean that Compute() should not block for more than that number
-  //       of milliseconds, and to return whatever data it has, when the timeout
-  //       period is exceeded.
-  //
-  // Returns "false" if we know the underlying data source has no more data, and
-  // true if there may be more data.
-  virtual bool Compute(Matrix<BaseFloat> *output) = 0;
+  virtual void Compute(Matrix<BaseFloat> *output) = 0;
 
   virtual int32 Dim() const = 0; // Return the output dimension of these features.
-  
-  virtual ~OnlineFeatInputItf() {}
+
+  virtual ~PykaldiFeatInputItf() {}
 };
 
 
@@ -77,21 +57,21 @@ struct PykaldiFeatureMatrixOptions {
   PykaldiFeatureMatrixOptions(): batch_size(27) { }
   void Register(OptionsItf *po) {
     po->Register("batch-size", &batch_size,
-                 "Number of feature vectors processed w/o interruption");
+                 "Number of feature vectors processed without interruption");
   }
 };
 
 // The class PykaldiFeatureMatrix wraps something of type
-// OnlineFeatInputItf in a manner that is convenient for
+// PykaldiFeatInputItf in a manner that is convenient for
 // a Decodable type to consume.
 class PykaldiFeatureMatrix {
  public:
   PykaldiFeatureMatrix(const PykaldiFeatureMatrixOptions &opts,
-                      OnlineFeatInputItf *input):
+                      PykaldiFeatInputItf *input):
       opts_(opts), input_(input), feat_dim_(input->Dim()),
-      feat_offset_(0), finished_(false) { }
-  
-  bool IsValidFrame (int32 frame); 
+      feat_offset_(0) { }
+
+  bool IsValidFrame (int32 frame);
 
   int32 Dim() const { return feat_dim_; }
 
@@ -100,41 +80,34 @@ class PykaldiFeatureMatrix {
   // is valid.
   SubVector<BaseFloat> GetFrame(int32 frame);
 
-  void NewStart();
-  
+
  private:
-  /// Called when we need more features.  
-  // Guarantees to get at least one more frame, or set finished_ = true.
-  void GetNextFeatures(); 
-  
+  /// Called when we need more features.
+  void GetNextFeatures();
+
   const PykaldiFeatureMatrixOptions opts_;
-  //FIXME  change it to PykaldiFeatInputItf
-  // which will enable to pass message that we want to reset the pykaldi-audio-source
-  OnlineFeatInputItf *input_; 
+  PykaldiFeatInputItf *input_;
   int32 feat_dim_;
   Matrix<BaseFloat> feat_matrix_;
   int32 feat_offset_; // the offset of the first frame in the current batch
-  bool finished_; // True if there are no more frames to be got from the input.
 };
 
 
-// TODO Change the implementation and simplify the code!
-// TODO split the interfaces in separate file!
 // Implementation, that is meant to be used to read samples from an
-// OnlineAudioSource and to extract MFCC/PLP features in the usual way
+// PykaldiAudioSource and to extract MFCC/PLP features in the usual way
 template <class E>
-class OnlineFeInput : public OnlineFeatInputItf {
+class PykaldiFeInput : public PykaldiFeatInputItf {
  public:
-  // "au_src" - OnlineAudioSourceItf object
+  // "au_src" - PykaldiAudioSourceItf object
   // "fe" - object implementing MFCC/PLP feature extraction
   // "frame_size" - frame extraction window size in audio samples
   // "frame_shift" - feature frame width in audio samples
-  OnlineFeInput(PykaldiAudioSourceItf *au_src, E *fe,
+  PykaldiFeInput(PykaldiAudioSourceItf *au_src, E *fe,
                 const int32 frame_size, const int32 frame_shift);
 
   virtual int32 Dim() const { return extractor_->Dim(); }
-  
-  virtual bool Compute(Matrix<BaseFloat> *output);
+
+  virtual void Compute(Matrix<BaseFloat> *output);
 
  private:
   PykaldiAudioSourceItf *source_; // audio source
@@ -145,34 +118,34 @@ class OnlineFeInput : public OnlineFeatInputItf {
   Vector<BaseFloat> wave_remainder_; // the samples remained from the previous
                                      // feature batch
 
-  KALDI_DISALLOW_COPY_AND_ASSIGN(OnlineFeInput);
+  KALDI_DISALLOW_COPY_AND_ASSIGN(PykaldiFeInput);
 };
 
 template<class E>
-OnlineFeInput<E>::OnlineFeInput(PykaldiAudioSourceItf *au_src, E *fe,
+PykaldiFeInput<E>::PykaldiFeInput(PykaldiAudioSourceItf *au_src, E *fe,
                                    int32 frame_size, int32 frame_shift)
     : source_(au_src), extractor_(fe),
       frame_size_(frame_size), frame_shift_(frame_shift) {}
 
-template<class E> bool
-OnlineFeInput<E>::Compute(Matrix<BaseFloat> *output) {
+template<class E> void
+PykaldiFeInput<E>::Compute(Matrix<BaseFloat> *output) {
   MatrixIndexT nvec = output->NumRows(); // the number of output vectors
   if (nvec <= 0) {
     KALDI_WARN << "No feature vectors requested?!";
-    return true;
+    return;
   }
 
   // Prepare the input audio samples
   int32 samples_req = frame_size_ + (nvec - 1) * frame_shift_;
   Vector<BaseFloat> read_samples(samples_req);
 
-  bool ans = source_->Read(&read_samples);
-  
+  source_->Read(&read_samples);
+
   Vector<BaseFloat> all_samples(wave_remainder_.Dim() + read_samples.Dim());
   all_samples.Range(0, wave_remainder_.Dim()).CopyFromVec(wave_remainder_);
   all_samples.Range(wave_remainder_.Dim(), read_samples.Dim()).
       CopyFromVec(read_samples);
-  
+
   // Extract the features
   if (all_samples.Dim() >= frame_size_) {
     extractor_->Compute(all_samples, 1.0, output, &wave_remainder_);
@@ -180,75 +153,21 @@ OnlineFeInput<E>::Compute(Matrix<BaseFloat> *output) {
     output->Resize(0, 0);
     wave_remainder_ = all_samples;
   }
-  
-  return ans;
 }
 
-
-// FIXME check cmvn core src/transform/cmvn.cc and think about reimplementing
-// Acts as a proxy to an underlying OnlineFeatInput.
-// Applies cepstral mean normalization
-class OnlineCmnInput: public OnlineFeatInputItf {
- public:
-  // "input" - the underlying(unnormalized) feature source
-  // "cmn_window" - the count of the preceding vectors over which the average is
-  //                calculated
-  // "min_window" - the minimum count of frames for which it will compute the
-  //                mean, at the start of the file.  Adds latency but only at the
-  //                start
-  OnlineCmnInput(OnlineFeatInputItf *input, int32 cmn_window, int32 min_window)
-      : input_(input), cmn_window_(cmn_window), min_window_(min_window),
-        history_(cmn_window + 1, input->Dim()), t_in_(0), t_out_(0),
-        sum_(input->Dim()) { KALDI_ASSERT(cmn_window >= min_window && min_window > 0); }
-  
-  virtual bool Compute(Matrix<BaseFloat> *output);
-
-  virtual int32 Dim() const { return input_->Dim(); }
-
- private:
-  virtual bool ComputeInternal(Matrix<BaseFloat> *output);
-
-  
-  OnlineFeatInputItf *input_;
-  const int32 cmn_window_; // > 0
-  const int32 min_window_; // > 0, < cmn_window_.
-  Matrix<BaseFloat> history_; // circular-buffer history, of dim (cmn_window_ +
-                              // 1, feat-dim).  The + 1 is to serve as a place
-                              // for the frame we're about to normalize.
-
-  void AcceptFrame(const VectorBase<BaseFloat> &input); // Accept the next frame
-                                                        // of input (read into the
-                                                        // history buffer).
-  void OutputFrame(VectorBase<BaseFloat> *output); // Output the next frame.
-  
-  int32 NumOutputFrames(int32 num_new_frames,
-                        bool more_data) const; // Tells the caller, assuming
-  // we get given "num_new_frames" of input (and given knowledge of whether
-  // there is more data coming), how many frames would we be able to
-  // output?
-  
-  
-  int64 t_in_; // Time-counter for what we've obtained from the input.
-  int64 t_out_; // Time-counter for what we've written to the output.
-  
-  Vector<double> sum_; // Sum of the frames from t_out_ - HistoryLength(t_out_),
-                       // to t_out_ - 1.
-  
-  KALDI_DISALLOW_COPY_AND_ASSIGN(OnlineCmnInput);
-};
 
 
 // Splices the input features and applies a transformation matrix.
 // Note: the transformation matrix will usually be a linear transformation
 // [output-dim x input-dim] but we accept an affine transformation too.
-class OnlineLdaInput: public OnlineFeatInputItf {
+class PykaldiLdaInput: public PykaldiFeatInputItf {
  public:
-  OnlineLdaInput(OnlineFeatInputItf *input,
+  PykaldiLdaInput(PykaldiFeatInputItf *input,
                  const Matrix<BaseFloat> &transform,
                  int32 left_context,
                  int32 right_context);
 
-  virtual bool Compute(Matrix<BaseFloat> *output);
+  virtual void Compute(Matrix<BaseFloat> *output);
 
   virtual int32 Dim() const { return linear_transform_.NumRows(); }
 
@@ -269,8 +188,8 @@ class OnlineLdaInput: public OnlineFeatInputItf {
   void TransformToOutput(const MatrixBase<BaseFloat> &spliced_feats,
                          Matrix<BaseFloat> *output);
   void ComputeNextRemainder(const MatrixBase<BaseFloat> &input);
-  
-  OnlineFeatInputItf *input_; // underlying/inferior input object
+
+  PykaldiFeatInputItf *input_; // underlying/inferior input object
   const int32 input_dim_; // dimension of the feature vectors before xform
   const int32 left_context_;
   const int32 right_context_;
@@ -278,23 +197,23 @@ class OnlineLdaInput: public OnlineFeatInputItf {
   Vector<BaseFloat> offset_; // Offset, if present; else empty.
   Matrix<BaseFloat> remainder_; // The last few frames of the input, that may
   // be needed for context purposes.
-  
-  KALDI_DISALLOW_COPY_AND_ASSIGN(OnlineLdaInput);
+
+  KALDI_DISALLOW_COPY_AND_ASSIGN(PykaldiLdaInput);
 };
 
 // Does the time-derivative computation (e.g., adding deltas and delta-deltas).
 // This is standard in more "old-fashioned" feature extraction.  Like an online
 // version of the function ComputeDeltas in feat/feature-functions.h, where the
 // struct DeltaFeaturesOptions is also defined.
-class OnlineDeltaInput: public OnlineFeatInputItf {
+class PykaldiDeltaInput: public PykaldiFeatInputItf {
  public:
-  OnlineDeltaInput(const DeltaFeaturesOptions &delta_opts,
-                   OnlineFeatInputItf *input);
-  
-  virtual bool Compute(Matrix<BaseFloat> *output);
+  PykaldiDeltaInput(const DeltaFeaturesOptions &delta_opts,
+                   PykaldiFeatInputItf *input);
+
+  virtual void Compute(Matrix<BaseFloat> *output);
 
   virtual int32 Dim() const { return input_dim_ * (opts_.order + 1); }
-  
+
  private:
   // The static function AppendFrames appends together the three input matrices,
   // some of which may be empty.
@@ -306,21 +225,21 @@ class OnlineDeltaInput: public OnlineFeatInputItf {
   // Context() is the number of frames on each side of a given frame,
   // that we need for context.
   int32 Context() const { return opts_.order * opts_.window; }
-  
+
   // Does the delta computation.  Here, "output" will be resized to dimension
   // (input.NumRows() - Context() * 2) by (input.NumCols() * opts_.order)
   // "remainder" will be the last Context() rows of "input".
   void DeltaComputation(const MatrixBase<BaseFloat> &input,
                         Matrix<BaseFloat> *output,
                         Matrix<BaseFloat> *remainder) const;
-  
-  OnlineFeatInputItf *input_; // underlying/inferior input object
+
+  PykaldiFeatInputItf *input_; // underlying/inferior input object
   DeltaFeaturesOptions opts_;
   const int32 input_dim_;
   Matrix<BaseFloat> remainder_; // The last few frames of the input, that may
   // be needed for context purposes.
-  
-  KALDI_DISALLOW_COPY_AND_ASSIGN(OnlineDeltaInput);
+
+  KALDI_DISALLOW_COPY_AND_ASSIGN(PykaldiDeltaInput);
 };
 
 

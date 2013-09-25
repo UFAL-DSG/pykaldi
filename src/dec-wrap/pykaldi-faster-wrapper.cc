@@ -102,7 +102,6 @@ size_t KaldiDecoderWrapper::Decode(void) {
 }
 
 size_t KaldiDecoderWrapper::FinishDecoding(bool clear_input) {
-  source_->NoMoreInput(clear_input);
   KALDI_VLOG(1) << "before while: input size: " << source_->BufferSize()
                 << " decoder_->Finished() " << Finished();
   while(!Finished()) {
@@ -115,11 +114,6 @@ size_t KaldiDecoderWrapper::FinishDecoding(bool clear_input) {
   // Last action -> prepare the decoder for new data
   // TODO it would nice to send just one "New Start" message to decoder
   // but it is a lot of work to redesign the whole decoding pipeline
-  decoder_->NewStart();
-  decodable_->NewStart();
-  // feature_matrix_->NewStart(); it is called from decodable_->NewStart()
-  source_->NewDataPromised();
-
   KALDI_VLOG(2) << "word_ids_.size() " << word_ids_.size();
   return word_ids_.size();
 }
@@ -196,12 +190,12 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
                                     opts_.silence_phones, *trans_model_);
 
     // Fixed 16 bit audio
-    source_ = new PykaldiBlockSource(); 
+    source_ = new PykaldiBuffSource(); 
 
     mfcc_ = new Mfcc(mfcc_opts_);
     int32 frame_length = mfcc_opts_.frame_opts.frame_length_ms;
     int32 frame_shift = mfcc_opts_.frame_opts.frame_shift_ms;
-    fe_input_ = new OnlineFeInput<Mfcc>(source_, mfcc_,
+    fe_input_ = new PykaldiFeInput<Mfcc>(source_, mfcc_,
                                frame_length * (opts_.kSampleFreq / 1000),
                                frame_shift * (opts_.kSampleFreq / 1000));
 
@@ -210,12 +204,12 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
       Matrix<BaseFloat> lda_transform; 
       Input ki(opts_.lda_mat_rspecifier, &binary_in);
       lda_transform.Read(ki.Stream(), binary_in);
-      // lda_transform is copied to OnlineLdaInput
-      feat_transform_ = new OnlineLdaInput(fe_input_, 
+      // lda_transform is copied to PykaldiLdaInput
+      feat_transform_ = new PykaldiLdaInput(fe_input_, 
                                 lda_transform,
                                 opts_.left_context, opts_.right_context);
     } else {
-      feat_transform_ = new OnlineDeltaInput(delta_feat_opts_, fe_input_);
+      feat_transform_ = new PykaldiDeltaInput(delta_feat_opts_, fe_input_);
     }
 
     feature_matrix_ = new PykaldiFeatureMatrix(feature_reading_opts_,

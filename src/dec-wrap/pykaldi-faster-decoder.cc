@@ -43,15 +43,12 @@ void PykaldiFasterDecoder::NewStart(void) {
 
 PykaldiFasterDecoder::DecodeState
 PykaldiFasterDecoder::Decode(DecodableInterface *decodable) {
-  if (state_ == kEndFeats || state_ == kEndUtt) // new utterance
-    ResetDecoder(state_ == kEndFeats);
   ProcessNonemitting(std::numeric_limits<float>::max());
   for (; !decodable->IsLastFrame(frame_ - 1);
        ++frame_, ++utt_frames_) {
     BaseFloat weight_cutoff = ProcessEmitting(decodable, frame_);
     ProcessNonemitting(weight_cutoff);
   }
-  state_ = kEndFeats;
   return state_;
 }
 

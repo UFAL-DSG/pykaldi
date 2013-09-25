@@ -24,16 +24,9 @@
 
 namespace kaldi {
 
-bool PykaldiBlockSource::Read(Vector<BaseFloat> *output) {
+size_t PykaldiBuffSource::Read(Vector<BaseFloat> *output) {
   size_t d =  static_cast<size_t>(output->Dim());
   KALDI_ASSERT(d > 0 && "Request at least something");
-
-  while(block_ && (src_.size() < d) && more_input_) { 
-    usleep(sleep_time_);
-    KALDI_WARN << "Waiting for input! (Posibbly never ending loop!)\n" 
-               << "Have data " << src_.size()
-               << " required data " << output->Dim();
-  }
 
   if (src_.size() >= d) {
     // copy the buffer to output
@@ -42,18 +35,15 @@ bool PykaldiBlockSource::Read(Vector<BaseFloat> *output) {
     }
     // remove the already read elements
     std::vector<BaseFloat>(src_.begin() + d, src_.end()).swap(src_);
-    return true;
+    return d;
   } else {
-    // block_ is false otherwise we would be waiting for input 
-    KALDI_ASSERT(!block_);
-    KALDI_VLOG(1) << "End of stream! more_input_: " << more_input_
-                  << " src_.size(): " << src_.size()
-                  << " requested: " << d;
-    return false;
+    KALDI_VLOG(1) << "No data read! Data requested:  " << d
+                  << " Data available: " << src_.size();
+    return 0;
   }
 }
 
-void PykaldiBlockSource::Write(unsigned char * data, size_t num_samples) {
+void PykaldiBuffSource::Write(unsigned char * data, size_t num_samples) {
   // allocate the space at once -> should be faster
   src_.reserve(src_.size() + num_samples);
   // copy and convert the data to the buffer

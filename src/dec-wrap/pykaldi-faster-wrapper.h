@@ -86,9 +86,9 @@ struct KaldiDecoderWrapperOptions  {
 };
 
 
-/** @brief A class for setting up and using Online Decoder.
+/** @brief A class for setting up and using Pykaldi Decoder.
  *
- *  This class provides an interface to Online Decoder.
+ *  This class provides an interface to Pykaldi Decoder.
  *  It exposes C++ as well as C API. 
  *
  *  It is absolutelly thread unsafe! */
@@ -147,12 +147,12 @@ class KaldiDecoderWrapper {
   std::vector<int32> word_ids_;
 
   Mfcc *mfcc_;
-  PykaldiBlockSource *source_;
-  OnlineFeInput<Mfcc> *fe_input_;
+  PykaldiBuffSource *source_;
+  PykaldiFeInput<Mfcc> *fe_input_;
   TransitionModel *trans_model_;
   fst::Fst<fst::StdArc> *decode_fst_;
   PykaldiFasterDecoder *decoder_;
-  OnlineFeatInputItf *feat_transform_;
+  PykaldiFeatInputItf *feat_transform_;
   PykaldiFeatureMatrix *feature_matrix_;
   PykaldiDecodableDiagGmmScaled *decodable_;
   AmDiagGmm am_gmm_;
