@@ -31,8 +31,7 @@ class TestOnlineDecoder(unittest.TestCase):
         self.wav_path = os.path.join(dir_path, 'audio', 'test.wav')
         get_voxforge_data(path=dir_path)
         p = os.path.join(dir_path, 'online-data', 'models', 'tri2a')
-        self.argv = ['--verbose=0', '--rt-min=0.5', '--rt-max=1.0',
-                     '--max-active=4000', '--beam=12.0',
+        self.argv = ['--verbose=0', '--max-active=4000', '--beam=12.0',
                      '--acoustic-scale=0.0769',
                      os.path.join(p, 'model'),
                      os.path.join(p, 'HCLG.fst'),
