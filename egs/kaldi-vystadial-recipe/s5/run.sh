@@ -54,14 +54,14 @@ fi
 
 # Train monophone models on a subset of the data
 utils/subset_data_dir.sh data/train $monoTrainData data/train.1k  || exit 1;
-local/train_mono.sh --nj $njobs --cmd "$train_cmd" data/train.1k data/lang exp/mono || exit 1;
+steps/train_mono.sh --run-cmn false --nj $njobs --cmd "$train_cmd" data/train.1k data/lang exp/mono || exit 1;
  
 # Monophone decoding
 utils/mkgraph.sh --mono data/lang_test exp/mono exp/mono/graph || exit 1
 # note: local/decode.sh calls the command line once for each
 # test, and afterwards averages the WERs into (in this case
 # exp/mono/decode/
-local/decode.sh --config conf/decode.config --nj $njobs --cmd "$decode_cmd" \
+steps/decode.sh --config conf/decode.config --nj $njobs --cmd "$decode_cmd" \
   exp/mono/graph data/test exp/mono/decode
 #  
 # # Get alignments from monophone system.
