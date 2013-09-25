@@ -170,7 +170,7 @@ def run_python_online(config):
 
 def compute_wer(ffi, werlib, config):
     '''Settings and arguments based on /ha/work/people/oplatek/kaldi-trunk/egs/kaldi-
-    vystadial-recipe/s5/local/shore.sh
+    vystadial-recipe/s5/local/score.sh
     | compute-wer --text --mode=present ark:exp/tri2a/decode/scoring/test_filt.txt ark,p:- >&
     exp/tri2a/decode/wer_15'''
 

@@ -81,6 +81,30 @@ def get_voxforge_data(path=None, workdir='work'):
     return True
 
 
+def get_vystadial_data(src_tar_path, path=None):
+    if path is None:
+        path = os.getcwd()
+
+    print 'Get the tar file'
+    from subprocess import call
+    call(['cp', src_tar_path, path])
+
+    print 'Extracting Tarball'
+    name = 'vystadial-sample-test'
+    tar_name = os.path.join(path, '%s.tar.bz2' % name)
+    with tarfile.open(tar_name) as tar:
+        tar.extractall(path=path)
+
+    print 'Create input scp.'
+
+    audio_path = os.path.sep.join([path, name, 'data', 'test'])
+    wav_paths = glob.glob(os.path.join(audio_path, '*.wav'))
+    wav_names = [os.path.basename(p)[:-4] for p in wav_paths]
+    with open(os.path.join(audio_path, 'input.scp'), 'wb') as input_scp:
+        for n, p in zip(wav_names, wav_paths):
+            input_scp.write('%s %s\n' % (n, p))
+
+
 def load_wav(file_name, def_sample_rate=16000):
     """ Source: from Alex/utils/audio.py
     Reads all audio data from the file and returns it in a string.

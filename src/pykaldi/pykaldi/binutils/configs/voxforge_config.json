@@ -1,18 +1,17 @@
 {
-    "decode_dir": "work",
-    "exp_dir": "online-data/models/tri2a",
-    "data_dir": "unused",
+    "vystadial_sample": "test-sample"
+    "exp_dir": {"prefix": "vystadial_sample", "value": "exp/tri2a"},
+    "decode_dir": {"prefix": "exp_dir", "value": "decode-online"},
     "wav_scp": {"prefix": "decode_dir", "value": "input.scp"},
     "wst": {"prefix": "exp_dir", "value": "words.txt"},
     "online-python": {
         "run": "yes",
-        "verbose": "1",
         "typeUNUSED": "recreate_dec",
         "typeUNUSED": "no_finish",
         "type": "decode_zig_zag",
         "typeUNUSED": "decode_once",
         "COMMENT 00": "1:2:3:4:5 are silent phones",
-        "args": [   "--verbose=0", "--acoustic-scale=0.1", 
+        "args": [   "--verbose=0", "--acoustic-scale=0.1",
                     "--config=configs/online_python.config",
                     {"prefix": "exp_dir", "value": "model"},
                     {"prefix": "exp_dir", "value": "HCLG.fst"},
@@ -27,7 +26,7 @@
         "build_ref": "yes",
         "config": "configs/wer.config",
         "reference": {"prefix": "decode_dir", "value": "reference-vox.txt"},
-        "hypothesis": [ 
+        "hypothesis": [
                         {"prefix": "decode_dir", "value": "python-vox.trans"}
             ]
     }
