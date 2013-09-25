@@ -54,11 +54,12 @@ sdata=$data/split$nj;
 
 
 case $run_cmn in
-    true) feats="ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- | add-deltas ark:- ark:- |";;
-    false) feats="ark,s,cs:add-deltas scp:$sdata/JOB/feats.scp ark:- |";;
+    true) cmn="ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- ";;
+    false) cmn="ark,s,cs:copy-feats scp:$sdata/JOB/feats.scp ark:- ";;
     *) echo "Invalid boolean value $run_cmn" && exit 1;;
 esac
 
+feats="$cmn | add-deltas ark:- ark:- |"
 example_feats="`echo $feats | sed s/JOB/1/g`";
 
 echo "$0: Initializing monophone system."

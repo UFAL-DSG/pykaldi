@@ -83,7 +83,7 @@ thread_string=
 
 case $run_cmn in
     true) cmn="ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- |" ;;
-    false) cmn="" ;;
+    false) cmn="ark,s,cs:copy-feats scp:$sdata/JOB/feats.scp ark:- |" ;;
     *) echo "Invalid boolean value $run_cmn" && exit 1;;
 esac
 
