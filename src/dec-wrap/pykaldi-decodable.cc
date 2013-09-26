@@ -44,8 +44,7 @@ void PykaldiDecodableDiagGmmScaled::GetFrame(int32 frame) {
   KALDI_ASSERT(frame >= 0);
   cur_feats_.Resize(feat_dim_);
   if (!features_->IsValidFrame(frame))
-    KALDI_ERR << "Request for invalid frame (you need to check IsLastFrame, or, "
-              << "for frame zero, check that the input is valid.";
+    KALDI_ERR << "Request for invalid frame: " << frame; 
   cur_feats_.CopyFromVec(features_->GetFrame(frame));
   cur_frame_ = frame;
 }

@@ -102,6 +102,7 @@ def decode_once(argv, samples_per_frame, wav_paths, file_output, wst=None):
 
 
 def decode_zig_zag(argv, samples_per_frame, wav_paths, file_output, wst=None):
+    print 'decode_zig_zag'
     with DecoderCloser(OnlineDecoder(argv)) as d:
         for wav_name, wav_path in wav_paths:
             print 'Processing utterance %s.' % wav_name
@@ -117,12 +118,10 @@ def decode_zig_zag(argv, samples_per_frame, wav_paths, file_output, wst=None):
                 word_ids, prob = d.decode()
                 tot_ids.extend(word_ids)
                 if wst is not None and len(word_ids) > 0:
-                    # Debug print
                     print [wst[word_id] for word_id in word_ids]
             print "finish decoding"
             word_ids, prob = d.decode(force_end_utt=True)
             if wst is not None and len(word_ids) > 0:
-                # Debug print
                 print [wst[word_id] for word_id in word_ids]
             tot_ids.extend(word_ids)
             # Store the results to file

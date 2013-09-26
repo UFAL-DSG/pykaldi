@@ -24,20 +24,22 @@
 
 namespace kaldi {
 
-size_t PykaldiBuffSource::Read(Vector<BaseFloat> *output) {
-  size_t d =  static_cast<size_t>(output->Dim());
-  KALDI_ASSERT(d > 0 && "Request at least something");
+MatrixIndexT PykaldiBuffSource::Read(Vector<BaseFloat> *output) {
+  KALDI_ASSERT(output->Dim() > 0 && "Request at least something");
 
+  size_t d =  static_cast<size_t>(output->Dim());
   if (src_.size() >= d) {
     // copy the buffer to output
-    for (size_t i = 0; i < d ; ++i) {
+    for (MatrixIndexT i = 0; i < output->Dim() ; ++i) {
       (*output)(i) = src_[i];
     }
     // remove the already read elements
     std::vector<BaseFloat>(src_.begin() + d, src_.end()).swap(src_);
-    return d;
+    return output->Dim();
+    KALDI_VLOG(2) << "All data read:  " <<  output->Dim()
+                  << "Data still available: " << src_.size();
   } else {
-    KALDI_VLOG(1) << "No data read! Data requested:  " << d
+    KALDI_VLOG(1) << "No data read! Data requested:  " << output->Dim()
                   << " Data available: " << src_.size();
     return 0;
   }

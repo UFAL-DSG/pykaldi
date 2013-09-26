@@ -22,7 +22,6 @@
 #define KALDI_PYKALDI_PYKALDI_FEAT_INPUT_H_
 
 #include "feat/feature-functions.h"
-// #include "online/online-feat-input.h"
 #include "pykaldi-audio-source.h"
 
 namespace kaldi {
@@ -43,7 +42,7 @@ class PykaldiFeatInputItf {
   //            called, is treated as a hint of how many frames the user wants,
   //            but this function does not promise to produce exactly that many:
   //            it may be slightly more, less, or even zero, on a given call.
-  virtual void Compute(Matrix<BaseFloat> *output) = 0;
+  virtual MatrixIndexT Compute(Matrix<BaseFloat> *output) = 0;
 
   virtual int32 Dim() const = 0; // Return the output dimension of these features.
 
@@ -69,7 +68,7 @@ class PykaldiFeatureMatrix {
   PykaldiFeatureMatrix(const PykaldiFeatureMatrixOptions &opts,
                       PykaldiFeatInputItf *input):
       opts_(opts), input_(input), feat_dim_(input->Dim()),
-      feat_offset_(0) { }
+      feat_loaded_(0) { }
 
   bool IsValidFrame (int32 frame);
 
@@ -89,7 +88,8 @@ class PykaldiFeatureMatrix {
   PykaldiFeatInputItf *input_;
   int32 feat_dim_;
   Matrix<BaseFloat> feat_matrix_;
-  int32 feat_offset_; // the offset of the first frame in the current batch
+  Matrix<BaseFloat> feat_matrix_old_;
+  int32 feat_loaded_; // the # of features totally loaded 
 };
 
 
@@ -107,7 +107,7 @@ class PykaldiFeInput : public PykaldiFeatInputItf {
 
   virtual int32 Dim() const { return extractor_->Dim(); }
 
-  virtual void Compute(Matrix<BaseFloat> *output);
+  virtual MatrixIndexT Compute(Matrix<BaseFloat> *output);
 
  private:
   PykaldiAudioSourceItf *source_; // audio source
@@ -127,21 +127,21 @@ PykaldiFeInput<E>::PykaldiFeInput(PykaldiAudioSourceItf *au_src, E *fe,
     : source_(au_src), extractor_(fe),
       frame_size_(frame_size), frame_shift_(frame_shift) {}
 
-template<class E> void
+template<class E> MatrixIndexT
 PykaldiFeInput<E>::Compute(Matrix<BaseFloat> *output) {
   MatrixIndexT nvec = output->NumRows(); // the number of output vectors
   if (nvec <= 0) {
     KALDI_WARN << "No feature vectors requested?!";
-    return;
+    return 0;
   }
 
   // Prepare the input audio samples
   int32 samples_req = frame_size_ + (nvec - 1) * frame_shift_;
   Vector<BaseFloat> read_samples(samples_req);
 
-  source_->Read(&read_samples);
+  MatrixIndexT read = source_->Read(&read_samples);
 
-  Vector<BaseFloat> all_samples(wave_remainder_.Dim() + read_samples.Dim());
+  Vector<BaseFloat> all_samples(wave_remainder_.Dim() + read);
   all_samples.Range(0, wave_remainder_.Dim()).CopyFromVec(wave_remainder_);
   all_samples.Range(wave_remainder_.Dim(), read_samples.Dim()).
       CopyFromVec(read_samples);
@@ -149,9 +149,10 @@ PykaldiFeInput<E>::Compute(Matrix<BaseFloat> *output) {
   // Extract the features
   if (all_samples.Dim() >= frame_size_) {
     extractor_->Compute(all_samples, 1.0, output, &wave_remainder_);
+    return output->NumRows();
   } else {
-    output->Resize(0, 0);
     wave_remainder_ = all_samples;
+    return 0;
   }
 }
 
@@ -167,7 +168,7 @@ class PykaldiLdaInput: public PykaldiFeatInputItf {
                  int32 left_context,
                  int32 right_context);
 
-  virtual void Compute(Matrix<BaseFloat> *output);
+  virtual MatrixIndexT Compute(Matrix<BaseFloat> *output);
 
   virtual int32 Dim() const { return linear_transform_.NumRows(); }
 
@@ -210,7 +211,7 @@ class PykaldiDeltaInput: public PykaldiFeatInputItf {
   PykaldiDeltaInput(const DeltaFeaturesOptions &delta_opts,
                    PykaldiFeatInputItf *input);
 
-  virtual void Compute(Matrix<BaseFloat> *output);
+  virtual MatrixIndexT Compute(Matrix<BaseFloat> *output);
 
   virtual int32 Dim() const { return input_dim_ * (opts_.order + 1); }
 

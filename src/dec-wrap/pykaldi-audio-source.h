@@ -34,7 +34,7 @@ class PykaldiAudioSourceItf {
   // The user sets data->Dim() as a way of requesting that many samples.
   // The function returns number of actually read data.
   // Ideal scenerio the return value is equal to data->Dim()
-  virtual size_t Read(Vector<BaseFloat> *data) = 0;
+  virtual MatrixIndexT Read(Vector<BaseFloat> *data) = 0;
 
   virtual ~PykaldiAudioSourceItf() { }
 };
@@ -59,7 +59,7 @@ class PykaldiBuffSource: public PykaldiAudioSourceItf {
   size_t frame_size;
   
 
-  size_t Read(Vector<BaseFloat> *data);
+ MatrixIndexT Read(Vector<BaseFloat> *data);
 
   /// Converts and buffers  the data 
   /// based on bits_per_sample specified in constructor

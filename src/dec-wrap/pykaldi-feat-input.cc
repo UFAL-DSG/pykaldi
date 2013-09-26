@@ -26,57 +26,52 @@ namespace kaldi {
 
 MatrixIndexT PykaldiFeatureMatrix::GetNextFeatures() {
 
-  // We always keep the most recent frame of features, if present,
-  // in case it is needed (this may happen when someone calls
-  // IsLastFrame(), which requires us to get the next frame, while
-  // they're stil processing this frame.
-  bool have_last_frame = (feat_matrix_.NumRows() != 0);
-  Vector<BaseFloat> last_frame;
-  if (have_last_frame)
-    last_frame = feat_matrix_.Row(feat_matrix_.NumRows() - 1);
-
   Matrix<BaseFloat> next_features(opts_.batch_size, feat_dim_);
-  input_->Compute(&next_features);
 
-
-  if (next_features.NumRows() > 0) {
-    int32 new_size = (have_last_frame ? 1 : 0) +
-        next_features.NumRows();
-    feat_offset_ += feat_matrix_.NumRows() -
-        (have_last_frame ? 1 : 0); // we're discarding this many
-                                   // frames.
-    feat_matrix_.Resize(new_size, feat_dim_, kUndefined);
-    if (have_last_frame) {
-      feat_matrix_.Row(0).CopyFromVec(last_frame);
-      feat_matrix_.Range(1, next_features.NumRows(), 0, feat_dim_).
-          CopyFromMat(next_features);
-    } else {
-      feat_matrix_.CopyFromMat(next_features);
-    }
+  MatrixIndexT new_feat_count = input_->Compute(&next_features);
+  if (new_feat_count > 0) {
+    // 1. We will moved the values from feat_matrix to feat_matrix_old
+    // 2. We will discard the original values from feat_matrix_old
+    // 3. We will fill feat_matrix_ with new values
+    feat_matrix_.Swap(&feat_matrix_old_);
+    feat_matrix_.Resize(new_feat_count, feat_dim_, kUndefined);
+    feat_matrix_.CopyFromMat(next_features);
+    feat_loaded_ += new_feat_count;
   }
-  return next_features.NumRows();
+  return new_feat_count;
 }
 
 
 bool PykaldiFeatureMatrix::IsValidFrame (int32 frame) {
-  KALDI_VLOG(3) << "DEBUG isValid" << frame;
-  if (frame < feat_offset_ + feat_matrix_.NumRows())
+  KALDI_ASSERT(frame >= 0);
+  KALDI_VLOG(4) << "DEBUG isValid" << frame;
+  if (frame < feat_loaded_)
     return true;
   else {
-    if (GetNextFeatures() > 0)
-      return true;
-    else
+    if (frame >= (feat_loaded_ + opts_.batch_size))
       return false;
+    else {
+      if (GetNextFeatures() > 0)
+        return true;
+      else
+        return false;
+    }
   }
 }
 
 SubVector<BaseFloat> PykaldiFeatureMatrix::GetFrame(int32 frame) {
-  KALDI_VLOG(3) << "DEBUG getFrame" << frame;
-  if (frame < feat_offset_)
+  KALDI_ASSERT(frame >= 0);
+  KALDI_VLOG(4) << "DEBUG getFrame" << frame;
+  if (frame < feat_loaded_-(feat_matrix_.NumRows()+feat_matrix_old_.NumRows()) )
     KALDI_ERR << "Attempting to get already discarded frame.";
-  if (frame >= feat_offset_ + feat_matrix_.NumRows())
+  if (frame >= feat_loaded_)
     KALDI_ERR << "Attempting to get frame not yet processed frame.";
-  return feat_matrix_.Row(frame - feat_offset_);
+
+  int32 d_from_end = feat_loaded_ - frame; // now: this is positive
+  if (d_from_end > feat_matrix_.NumRows())
+    return feat_matrix_old_.Row(feat_matrix_old_.NumRows() - (d_from_end - feat_matrix_.NumRows()));
+  else
+    return feat_matrix_.Row(feat_matrix_.NumRows() - d_from_end);
 }
 
 
@@ -153,7 +148,7 @@ void PykaldiLdaInput::TransformToOutput(const MatrixBase<BaseFloat> &spliced_fea
   }
 }
 
-void PykaldiLdaInput::Compute(Matrix<BaseFloat> *output) {
+MatrixIndexT PykaldiLdaInput::Compute(Matrix<BaseFloat> *output) {
   KALDI_ASSERT(output->NumRows() > 0 &&
                output->NumCols() == linear_transform_.NumRows());
   // If output->NumRows() == 0, it corresponds to a request for zero frames,
@@ -161,16 +156,14 @@ void PykaldiLdaInput::Compute(Matrix<BaseFloat> *output) {
 
   // We request the same number of frames of data that we were requested.
   Matrix<BaseFloat> input(output->NumRows(), input_dim_);
-  input_->Compute(&input);
 
-  if (input.NumRows() == 0) {
-    output->Resize(0, 0);
-    return;
-  }
+  // finish if we get no features
+  if (input_->Compute(&input) == 0)
+    return 0;
 
   // If this is the first segment of the utterance, we put in the
   // initial duplicates of the first frame, numbered "left_context".
-  if (remainder_.NumRows() == 0 && input.NumRows() != 0 && left_context_ > 0) {
+  if (remainder_.NumRows() == 0 && left_context_ > 0) {
     remainder_.Resize(left_context_, input_dim_);
     for (int32 i = 0; i < left_context_; i++)
       remainder_.Row(i).CopyFromVec(input.Row(0));
@@ -195,6 +188,7 @@ void PykaldiLdaInput::Compute(Matrix<BaseFloat> *output) {
   this->SpliceFrames(remainder_, input, tail, context_window, &spliced_feats);
   this->TransformToOutput(spliced_feats, output);
   this->ComputeNextRemainder(input);
+  return output->NumRows();
 }
 
 void PykaldiLdaInput::ComputeNextRemainder(const MatrixBase<BaseFloat> &input) {
@@ -279,26 +273,20 @@ void PykaldiDeltaInput::DeltaComputation(const MatrixBase<BaseFloat> &input,
   }
 }
 
-void PykaldiDeltaInput::Compute(Matrix<BaseFloat> *output) {
+MatrixIndexT PykaldiDeltaInput::Compute(Matrix<BaseFloat> *output) {
+  // If output->NumRows() == 0, it corresponds to a request for zero frames
   KALDI_ASSERT(output->NumRows() > 0 &&
                output->NumCols() == Dim());
-  // If output->NumRows() == 0, it corresponds to a request for zero frames,
-  // which makes no sense.
 
   // We request the same number of frames of data that we were requested.
   Matrix<BaseFloat> input(output->NumRows(), input_dim_);
-  input_->Compute(&input);
-
-  // If we got no input (timed out) and we're not at the end, we return
-  // empty output.
-  if (input.NumRows() == 0) {
-    output->Resize(0, 0);
-    return;
-  }
+  // finish if we get no features
+  if (input_->Compute(&input) == 0)
+    return 0;
 
   // If this is the first segment of the utterance, we put in the
   // initial duplicates of the first frame, numbered "Context()"
-  if (remainder_.NumRows() == 0 && input.NumRows() != 0 && Context() != 0) {
+  if (remainder_.NumRows() == 0 && Context() != 0) {
     remainder_.Resize(Context(), input_dim_);
     for (int32 i = 0; i < Context(); i++)
       remainder_.Row(i).CopyFromVec(input.Row(0));
@@ -321,6 +309,7 @@ void PykaldiDeltaInput::Compute(Matrix<BaseFloat> *output) {
   Matrix<BaseFloat> appended_feats;
   AppendFrames(remainder_, input, tail, &appended_feats);
   DeltaComputation(appended_feats, output, &remainder_);
+  return output->NumRows();
 }
 
 
