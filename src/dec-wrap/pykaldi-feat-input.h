@@ -89,7 +89,7 @@ class PykaldiFeatureMatrix {
   int32 feat_dim_;
   Matrix<BaseFloat> feat_matrix_;
   Matrix<BaseFloat> feat_matrix_old_;
-  int32 feat_loaded_; // the # of features totally loaded 
+  int32 feat_loaded_; // the # of features totally loaded
 };
 
 
@@ -140,11 +140,12 @@ PykaldiFeInput<E>::Compute(Matrix<BaseFloat> *output) {
   Vector<BaseFloat> read_samples(samples_req);
 
   MatrixIndexT read = source_->Read(&read_samples);
+  if (read == 0 ) 
+    return 0;
 
   Vector<BaseFloat> all_samples(wave_remainder_.Dim() + read);
   all_samples.Range(0, wave_remainder_.Dim()).CopyFromVec(wave_remainder_);
-  all_samples.Range(wave_remainder_.Dim(), read_samples.Dim()).
-      CopyFromVec(read_samples);
+  all_samples.Range(wave_remainder_.Dim(), read).CopyFromVec(read_samples);
 
   // Extract the features
   if (all_samples.Dim() >= frame_size_) {
