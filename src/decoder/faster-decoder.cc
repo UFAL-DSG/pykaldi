@@ -21,20 +21,6 @@
 namespace kaldi {
 
 
-void OnlineFasterDecoder::ResetDecoder(bool full) {
-  ClearToks(toks_.Clear());
-  StateId start_state = fst_.Start();
-  KALDI_ASSERT(start_state != fst::kNoStateId);
-  Arc dummy_arc(0, 0, Weight::One(), start_state);
-  Token *dummy_token = new Token(dummy_arc, NULL);
-  toks_.Insert(start_state, dummy_token);
-  prev_immortal_tok_ = immortal_tok_ = dummy_token;
-  utt_frames_ = 0;
-  if (full)
-    frame_ = 0;
-}
-
-
 FasterDecoder::FasterDecoder(const fst::Fst<fst::StdArc> &fst,
                              const FasterDecoderOptions &opts): fst_(fst), config_(opts) {
   KALDI_ASSERT(config_.hash_ratio >= 1.0);  // less doesn't make much sense.
