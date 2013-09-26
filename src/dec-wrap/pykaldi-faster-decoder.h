@@ -66,11 +66,6 @@ struct PykaldiFasterDecoderOpts : public FasterDecoderOptions {
 /// without the recreating the decoder.
 class PykaldiFasterDecoder : public FasterDecoder {
  public:
-  // Codes returned by Decode() to show the current state of the decoder
-  enum DecodeState {
-    kEndFeats = 1, // No more scores are available from the Decodable
-    kEndUtt = 2, // End of utterance, caused by e.g. a sufficiently long silence
-  };
 
   // "sil_phones" - the IDs of all silence phones
   PykaldiFasterDecoder(const fst::Fst<fst::StdArc> &fst,
@@ -80,11 +75,10 @@ class PykaldiFasterDecoder : public FasterDecoder {
       : FasterDecoder(fst, opts), opts_(opts),
         silence_set_(sil_phones), trans_model_(trans_model),
         max_beam_(opts.beam), effective_beam_(FasterDecoder::config_.beam),
-        state_(kEndFeats), frame_(0), utt_frames_(0) {}
+        frame_(0), utt_frames_(0) 
+      { ResetDecoder(true); }
 
-  void NewStart(void);
-
-  DecodeState Decode(DecodableInterface *decodable);
+  size_t Decode(DecodableInterface *decodable);
 
   // Makes a linear graph, by tracing back from the last "immortal" token
   // to the previous one
@@ -99,8 +93,6 @@ class PykaldiFasterDecoder : public FasterDecoder {
   bool EndOfUtterance();
 
   int32 frame() { return frame_; }
-
-  DecodeState state() { return state_; }
 
  // Change to protected for implementation of pykaldi/pykaldi-faster-decoder.cc
  protected:
@@ -125,7 +117,6 @@ class PykaldiFasterDecoder : public FasterDecoder {
   const BaseFloat max_beam_; // the maximum allowed beam
 
   BaseFloat &effective_beam_; // the currently used beam
-  DecodeState state_; // the current state of the decoder
   int32 frame_; // the next frame to be processed
   int32 utt_frames_; // # frames processed from the current utterance
   Token *immortal_tok_;      // "immortal" token means it's an ancestor of ...

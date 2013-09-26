@@ -83,7 +83,7 @@ class PykaldiFeatureMatrix {
 
  private:
   /// Called when we need more features.
-  void GetNextFeatures();
+  MatrixIndexT GetNextFeatures();
 
   const PykaldiFeatureMatrixOptions opts_;
   PykaldiFeatInputItf *input_;

@@ -40,10 +40,8 @@ def init_dec():
     CKaldiDecoderWrapper* new_KaldiDecoderWrapper();
     void del_KaldiDecoderWrapper(CKaldiDecoderWrapper *d);
 
-    size_t Decode(CKaldiDecoderWrapper *d);
+    size_t Decode(CKaldiDecoderWrapper *d, int force_end_utt);
     size_t HypSize(CKaldiDecoderWrapper *d);
-    size_t FinishDecoding(CKaldiDecoderWrapper *d, bool);
-    bool Finished(CKaldiDecoderWrapper *d);
     void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len);
     void PopHyp(CKaldiDecoderWrapper *d, int * word_ids, size_t size);
     int Setup(CKaldiDecoderWrapper *d, int argc, char **argv);

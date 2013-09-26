@@ -70,9 +70,6 @@ def no_finish(argv, samples_per_frame, wav_paths, file_output, wst=None, duratio
                     # because of hardcoded beem update
                     # time.sleep(0.1)
                     tot_ids.extend(word_ids)
-            print 'finish decoding'
-            # finish decoding
-            word_ids, prob = d.finish_decoding()
             if wst is not None and len(word_ids) > 0:
                 print [wst[word_id] for word_id in word_ids]
             tot_ids.extend(word_ids)
@@ -94,7 +91,7 @@ def decode_once(argv, samples_per_frame, wav_paths, file_output, wst=None):
                 frame = pcm[i * frame_len:(i + 1) * frame_len]
                 d.frame_in(frame, samples_per_frame)
             # Extract the hypothesis at once in form of word ids
-            word_ids, prob = d.finish_decoding()
+            word_ids, prob = d.decode(force_end_utt=True)
             if wst is not None:
                 # Debug print
                 print [wst[word_id] for word_id in word_ids]
@@ -111,25 +108,19 @@ def decode_zig_zag(argv, samples_per_frame, wav_paths, file_output, wst=None):
             pcm = load_wav(wav_path)
             # using 16-bit audio so 1 sample = 2 chars
             frame_len = (2 * samples_per_frame)
-            print frame_len
+            print 'Frame length in bytes %d' % frame_len
             it, tot_ids = (len(pcm) / frame_len), []
             print 'NUMBER of iterations: %s' % it
-            for i in xrange(100):
-                word_ids, prob = d.decode()
-                print 'finished ', d.finished()
-            word_ids, prob = d.finish_decoding()
             for i in xrange(it):
                 frame = pcm[i * frame_len:(i + 1) * frame_len]
                 d.frame_in(frame, samples_per_frame)
-                print 'finished ', d.finished()
                 word_ids, prob = d.decode()
                 tot_ids.extend(word_ids)
                 if wst is not None and len(word_ids) > 0:
                     # Debug print
                     print [wst[word_id] for word_id in word_ids]
-            # finish decoding
             print "finish decoding"
-            word_ids, prob = d.finish_decoding()
+            word_ids, prob = d.decode(force_end_utt=True)
             if wst is not None and len(word_ids) > 0:
                 # Debug print
                 print [wst[word_id] for word_id in word_ids]

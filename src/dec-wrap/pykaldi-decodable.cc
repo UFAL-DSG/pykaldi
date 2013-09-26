@@ -28,17 +28,19 @@ PykaldiDecodableDiagGmmScaled::PykaldiDecodableDiagGmmScaled(
       features_(input_feats), ac_model_(am),
       ac_scale_(scale), trans_model_(trans_model),
       feat_dim_(input_feats->Dim()), cur_frame_(-1) {
-  if (!input_feats->IsValidFrame(0)) {
-    // It's not safe to throw from a constructor, so please check
-    // this condition yourself before reaching this point in the code.
-    KALDI_ERR << "Attempt to initialize decodable object with empty "
-              << "input: please check this before the initializer!";
-  }
+  // FIXME Why should it be checked? -> our source can break at any time
+  // if (!input_feats->IsValidFrame(0)) {
+  //   // It's not safe to throw from a constructor, so please check
+  //   // this condition yourself before reaching this point in the code.
+  //   KALDI_ERR << "Attempt to initialize decodable object with empty "
+  //             << "input: please check this before the initializer!";
+  // }
   int32 num_pdfs = trans_model_.NumPdfs();
   cache_.resize(num_pdfs, std::make_pair<int32,BaseFloat>(-1, 0.0));
 }
 
 void PykaldiDecodableDiagGmmScaled::GetFrame(int32 frame) {
+  KALDI_VLOG(4) << "Begin Decodable->GetFrame frame" << frame;
   KALDI_ASSERT(frame >= 0);
   cur_feats_.Resize(feat_dim_);
   if (!features_->IsValidFrame(frame))
@@ -49,8 +51,10 @@ void PykaldiDecodableDiagGmmScaled::GetFrame(int32 frame) {
 }
 
 BaseFloat PykaldiDecodableDiagGmmScaled::LogLikelihood(int32 frame, int32 index) {
-  if (frame != cur_frame_)
+  KALDI_VLOG(4) << "Begin Decodable->LogLikelihood frame, index" << frame << index;
+  if (frame != cur_frame_) {
     GetFrame(frame);
+  }
   int32 pdf_id = trans_model_.TransitionIdToPdf(index);
   if (cache_[pdf_id].first == frame)
     return cache_[pdf_id].second;

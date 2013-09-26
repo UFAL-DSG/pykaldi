@@ -34,18 +34,11 @@ void del_KaldiDecoderWrapper(CKaldiDecoderWrapper* d) {
 }
 
 // methods from C
-size_t Decode(CKaldiDecoderWrapper *d) {
-  return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Decode();
+size_t Decode(CKaldiDecoderWrapper *d, int force_utt_end) {
+  return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Decode(force_utt_end);
 }
 size_t HypSize(CKaldiDecoderWrapper *d) {
   return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->HypSize();
-}
-size_t FinishDecoding(CKaldiDecoderWrapper *d, int clear_input) {
-  kaldi::KaldiDecoderWrapper *dp = reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d);
-  return dp->FinishDecoding(clear_input);
-}
-int Finished(CKaldiDecoderWrapper *d) {
-  return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Finished();
 }
 void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len) {
   reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->FrameIn(frame, frame_len);
@@ -70,15 +63,14 @@ namespace kaldi {
 // we will use this helper function in ParseArgs
 std::vector<int32> phones_to_vector(const std::string & s);
 
-size_t KaldiDecoderWrapper::Decode(void) {
-  KALDI_VLOG(2) << "Finished: " << Finished()
-                << " input size: " << source_->BufferSize();
+size_t KaldiDecoderWrapper::Decode(bool force_utt_end) {
+  KALDI_VLOG(2) << " input size: " << source_->BufferSize();
 
   decoder_->Decode(decodable_);
 
   fst::VectorFst<LatticeArc> out_fst;
   std::vector<int32> new_word_ids;
-  if (UtteranceEnded()) {
+  if (UtteranceEnded() || force_utt_end) {
     // get the last chunk
     decoder_->FinishTraceBack(&out_fst);
     fst::GetLinearSymbolSequence(out_fst,
@@ -98,23 +90,6 @@ size_t KaldiDecoderWrapper::Decode(void) {
   word_ids_.insert(word_ids_.end(), new_word_ids.begin(), new_word_ids.end());
   // KALDI_WARN<< "HypSize after " << HypSize() << " new word size " << new_word_ids.size();
 
-  return word_ids_.size();
-}
-
-size_t KaldiDecoderWrapper::FinishDecoding(bool clear_input) {
-  KALDI_VLOG(1) << "before while: input size: " << source_->BufferSize()
-                << " decoder_->Finished() " << Finished();
-  while(!Finished()) {
-    Decode();
-  }
-  KALDI_VLOG(1) << "after while: input size: " << source_->BufferSize()
-                << " decoder_->Finished() " << Finished();
-
-  // FIXME should the restart be done here? Or in separate function?
-  // Last action -> prepare the decoder for new data
-  // TODO it would nice to send just one "New Start" message to decoder
-  // but it is a lot of work to redesign the whole decoding pipeline
-  KALDI_VLOG(2) << "word_ids_.size() " << word_ids_.size();
   return word_ids_.size();
 }
 

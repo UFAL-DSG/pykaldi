@@ -34,13 +34,12 @@ CKaldiDecoderWrapper* new_KaldiDecoderWrapper(void);
 void del_KaldiDecoderWrapper(CKaldiDecoderWrapper *d);
 
 // methods
-size_t Decode(CKaldiDecoderWrapper *d);
+size_t Decode(CKaldiDecoderWrapper *d, int force_utt_end);
 size_t HypSize(CKaldiDecoderWrapper *d);
-size_t FinishDecoding(CKaldiDecoderWrapper *d, int clear_input);
-int Finished(CKaldiDecoderWrapper *d);
 void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len);
 void PopHyp(CKaldiDecoderWrapper *d, int * word_ids, size_t size);
 int Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
+// FIXME todo ClearBuffers()  : it will reset the buffers in pipeline
 
 #ifdef __cplusplus
 }
@@ -89,21 +88,26 @@ struct KaldiDecoderWrapperOptions  {
 /** @brief A class for setting up and using Pykaldi Decoder.
  *
  *  This class provides an interface to Pykaldi Decoder.
- *  It exposes C++ as well as C API. 
+ *  It exposes C++ as well as C API.
  *
  *  It is absolutelly thread unsafe! */
 class KaldiDecoderWrapper {
  public:
-   // The default parameters can be overriden in Setup function 
-   KaldiDecoderWrapper():mfcc_(0), source_(0), 
+   // The default parameters can be overriden in Setup function
+   KaldiDecoderWrapper():mfcc_(0), source_(0),
     fe_input_(0), trans_model_(0), decode_fst_(0), decoder_(0),
-    feat_transform_(0), feature_matrix_(0), decodable_(0) { 
-      mfcc_opts_.use_energy = false; 
+    feat_transform_(0), feature_matrix_(0), decodable_(0) {
+      mfcc_opts_.use_energy = false;
       mfcc_opts_.frame_opts.frame_length_ms = 25;
       mfcc_opts_.frame_opts.frame_shift_ms = 10;
   }
 
-  size_t Decode(void);
+  /// @brief Do forward decoding and partial backward decoding if it is in
+  /// the middle of utterance. At the end of utterance it performs full backward decoding.
+  /// The decoded output is buffered word_ids variable
+  /// @param force_utt_end [in] The data which are in audio_source are last data for utterance
+  /// and so we enforce full backward decoding
+  size_t Decode(bool force_utt_end=false);
 
   // @brief Pass the 16 bit audio data
   /// @param data [in] the single channel pcm audio data
@@ -111,11 +115,6 @@ class KaldiDecoderWrapper {
   void FrameIn(unsigned char *frame, size_t frame_len) {
     source_->Write(frame, frame_len);
   }
-
-  /// May take a longer time, timeout in seconds
-  size_t FinishDecoding(bool clear_input=true);
-
-  bool Finished(void) { return (PykaldiFasterDecoder::kEndFeats == decoder_->state()); }
 
   size_t HypSize(void) { return word_ids_.size(); }
 
@@ -126,11 +125,10 @@ class KaldiDecoderWrapper {
   int Setup(int argc, char **argv);
 
   bool UtteranceEnded() {
-    PykaldiFasterDecoder::DecodeState s = decoder_->state();
-    return ((s  == PykaldiFasterDecoder::kEndFeats) || (s == PykaldiFasterDecoder::kEndUtt));
+    return decoder_->EndOfUtterance();
   }
 
-  virtual ~KaldiDecoderWrapper(){ 
+  virtual ~KaldiDecoderWrapper(){
     delete mfcc_;
     delete source_;
     delete feat_transform_;

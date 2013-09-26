@@ -25,31 +25,17 @@
 
 namespace kaldi {
 
-void PykaldiFasterDecoder::NewStart(void) { 
-  ClearToks(toks_.Clear());
-
-  StateId start_state = fst_.Start();
-  KALDI_ASSERT(start_state != fst::kNoStateId);
-  Arc dummy_arc(0, 0, Weight::One(), start_state);
-  Token *dummy_token = new Token(dummy_arc, NULL);
-  toks_.Insert(start_state, dummy_token);
-
-  prev_immortal_tok_ = immortal_tok_ = dummy_token;
-
-  frame_ = utt_frames_ = 0;
-  effective_beam_ = FasterDecoder::config_.beam;
-  state_ = kEndFeats;
-}
-
-PykaldiFasterDecoder::DecodeState
+size_t
 PykaldiFasterDecoder::Decode(DecodableInterface *decodable) {
   ProcessNonemitting(std::numeric_limits<float>::max());
-  for (; !decodable->IsLastFrame(frame_ - 1);
-       ++frame_, ++utt_frames_) {
+  size_t processed;
+  for (processed=0 ; !decodable->IsLastFrame(frame_ - 1);
+       ++frame_, ++utt_frames_, ++processed) {
     BaseFloat weight_cutoff = ProcessEmitting(decodable, frame_);
     ProcessNonemitting(weight_cutoff);
   }
-  return state_;
+  KALDI_VLOG(1) << "DEBUG End of Decode";
+  return processed;
 }
 
 

@@ -14,7 +14,7 @@
         "typeUNUSED": "no_finish",
         "type": "decode_zig_zag",
         "COMMENT 04": "1:2:3:4:5 are silent phones",
-        "args": [   "--verbose=0", "--acoustic-scale=0.1", 
+        "args": [   "--verbose=2", "--acoustic-scale=0.1", 
                     "--config=configs/online_python.config",
                     {"prefix": "exp_dir", "value": "final.mdl"},
                     {"prefix": "exp_dir", "value": "graph/HCLG.fst"},

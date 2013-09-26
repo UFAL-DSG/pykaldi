@@ -24,7 +24,7 @@
 
 namespace kaldi {
 
-void PykaldiFeatureMatrix::GetNextFeatures() {
+MatrixIndexT PykaldiFeatureMatrix::GetNextFeatures() {
 
   // We always keep the most recent frame of features, if present,
   // in case it is needed (this may happen when someone calls
@@ -37,6 +37,7 @@ void PykaldiFeatureMatrix::GetNextFeatures() {
 
   Matrix<BaseFloat> next_features(opts_.batch_size, feat_dim_);
   input_->Compute(&next_features);
+
 
   if (next_features.NumRows() > 0) {
     int32 new_size = (have_last_frame ? 1 : 0) +
@@ -53,26 +54,28 @@ void PykaldiFeatureMatrix::GetNextFeatures() {
       feat_matrix_.CopyFromMat(next_features);
     }
   }
+  return next_features.NumRows();
 }
 
 
 bool PykaldiFeatureMatrix::IsValidFrame (int32 frame) {
+  KALDI_VLOG(3) << "DEBUG isValid" << frame;
   if (frame < feat_offset_ + feat_matrix_.NumRows())
     return true;
   else {
-    GetNextFeatures();
-    if (frame < feat_offset_ + feat_matrix_.NumRows())
+    if (GetNextFeatures() > 0)
       return true;
     else
-       return false;
+      return false;
   }
 }
 
 SubVector<BaseFloat> PykaldiFeatureMatrix::GetFrame(int32 frame) {
+  KALDI_VLOG(3) << "DEBUG getFrame" << frame;
   if (frame < feat_offset_)
-    KALDI_ERR << "Attempting to get a discarded frame.";
+    KALDI_ERR << "Attempting to get already discarded frame.";
   if (frame >= feat_offset_ + feat_matrix_.NumRows())
-    KALDI_ERR << "Attempt get frame without check its validity.";
+    KALDI_ERR << "Attempting to get frame not yet processed frame.";
   return feat_matrix_.Row(frame - feat_offset_);
 }
 
