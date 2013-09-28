@@ -94,13 +94,9 @@ struct KaldiDecoderWrapperOptions  {
 class KaldiDecoderWrapper {
  public:
    // The default parameters can be overriden in Setup function
-   KaldiDecoderWrapper():mfcc_(0), source_(0),
-    fe_input_(0), trans_model_(0), decode_fst_(0), decoder_(0),
-    feat_transform_(0), feature_matrix_(0), decodable_(0) {
-      mfcc_opts_.use_energy = false;
-      mfcc_opts_.frame_opts.frame_length_ms = 25;
-      mfcc_opts_.frame_opts.frame_shift_ms = 10;
-  }
+   KaldiDecoderWrapper(const KaldiDecoderWrapperOptions &opts):opts_(opts),
+    mfcc_(0), source_(0), fe_input_(0), trans_model_(0), decode_fst_(0),
+    decoder_(0), feat_transform_(0), feature_matrix_(0), decodable_(0) { }
 
   /// @brief Do forward decoding and partial backward decoding if it is in
   /// the middle of utterance. At the end of utterance it performs full backward decoding.
@@ -112,9 +108,8 @@ class KaldiDecoderWrapper {
   // @brief Pass the 16 bit audio data
   /// @param data [in] the single channel pcm audio data
   /// @param num_samples [in] number of samples in data array
-  void FrameIn(unsigned char *frame, size_t frame_len) {
-    source_->Write(frame, frame_len);
-  }
+  void FrameIn(unsigned char *frame, size_t frame_len)
+    { source_->Write(frame, frame_len); }
 
   size_t HypSize(void) { return word_ids_.size(); }
 
@@ -124,24 +119,15 @@ class KaldiDecoderWrapper {
   // Change the default values by specifying parameters like command line args
   int Setup(int argc, char **argv);
 
-  bool UtteranceEnded() {
-    return decoder_->EndOfUtterance();
-  }
+  bool UtteranceEnded() { return decoder_->EndOfUtterance(); }
 
   virtual ~KaldiDecoderWrapper(){
-    delete mfcc_;
-    delete source_;
-    delete feat_transform_;
-    delete trans_model_;
-    delete decode_fst_;
-    delete decoder_;
-    delete decodable_;
-    word_ids_.clear();
+    delete mfcc_; delete source_; delete feat_transform_; delete trans_model_;
+    delete decode_fst_; delete decoder_; delete decodable_;
   }
 
  private:
-  int ParseArgs(int argc, char **argv);
-
+  KaldiDecoderWrapperOptions opts_;
   std::vector<int32> word_ids_;
 
   Mfcc *mfcc_;
@@ -154,12 +140,6 @@ class KaldiDecoderWrapper {
   PykaldiFeatureMatrix *feature_matrix_;
   PykaldiDecodableDiagGmmScaled *decodable_;
   AmDiagGmm am_gmm_;
-
-  KaldiDecoderWrapperOptions opts_;
-  MfccOptions mfcc_opts_;
-  PykaldiFasterDecoderOpts decoder_opts_;
-  PykaldiFeatureMatrixOptions feature_reading_opts_;
-  DeltaFeaturesOptions delta_feat_opts_;
 
   KALDI_DISALLOW_COPY_AND_ASSIGN(KaldiDecoderWrapper);
 };

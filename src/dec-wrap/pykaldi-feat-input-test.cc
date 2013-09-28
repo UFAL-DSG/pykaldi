@@ -87,7 +87,7 @@ void test_fm_GetFrame(PykaldiFeatureMatrixOptions opts, int32 dim) {
       int32 first_n = 1; // check just the first value
       for (int32 j = 0; j < first_n; ++j) {
         if(v(j) != b)
-          std::cout << "DummyFeatInput return vectors with values " << b
+          std::cerr << "DummyFeatInput return vectors with values " << b
               << " for batch of vectors " << b << std::endl 
               << "However the vector " << i << " of batch " << b
               << " has item " << j << " with value " << v(j) << std::endl;

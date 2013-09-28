@@ -22,6 +22,7 @@
 #define KALDI_PYKALDI_PYKALDI_AUDIO_SOURCE_H_
 
 #include "matrix/kaldi-vector.h"
+#include "itf/options-itf.h"
 
 namespace kaldi {
 
@@ -39,8 +40,13 @@ class PykaldiAudioSourceItf {
   virtual ~PykaldiAudioSourceItf() { }
 };
 
-struct PykaldiBuffSourceOpts {
-  // FIXME move the options here
+struct PykaldiBuffSourceOptions {
+  int32 bits_per_sample;
+  PykaldiBuffSourceOptions(): bits_per_sample(16) { }
+  void Register(OptionsItf *po) {
+    po->Register("bits-per-sample", &bits_per_sample,
+                 "Number of bits for storing one audio sample. Typically 8, 16, 32");
+  }
 };
 
 /** @brief Proxy Audio Input. Acts like a buffer.
@@ -52,23 +58,21 @@ class PykaldiBuffSource: public PykaldiAudioSourceItf {
  public:
 
   /// Creates the PykaldiBuffSource empty "buffer"
-  PykaldiBuffSource(size_t bits_per_sample=16):
-      bits_per_sample_(bits_per_sample) { }
+  PykaldiBuffSource(const PykaldiBuffSourceOptions &opts): opts_(opts) { }
 
   size_t BufferSize() { return src_.size(); }
   size_t frame_size;
-  
+
 
  MatrixIndexT Read(Vector<BaseFloat> *data);
 
-  /// Converts and buffers  the data 
-  /// based on bits_per_sample specified in constructor
+  /// Converts and buffers  the data based on bits_per_sample 
   /// @param data [in] the single channel pcm audio data
   /// @param num_samples [in] number of samples in data array
   void Write(unsigned char *data, size_t num_samples);
 
  private:
-  size_t bits_per_sample_;
+  const PykaldiBuffSourceOptions opts_;
   std::vector<BaseFloat> src_;
 
   KALDI_DISALLOW_COPY_AND_ASSIGN(PykaldiBuffSource);

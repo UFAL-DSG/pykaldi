@@ -50,7 +50,7 @@ void PykaldiBuffSource::Write(unsigned char * data, size_t num_samples) {
   src_.reserve(src_.size() + num_samples);
   // copy and convert the data to the buffer
   for (size_t i = 0; i < num_samples; ++i) {
-      switch (bits_per_sample_) {
+      switch (opts_.bits_per_sample) {
         case 8:
           src_.push_back(*data);
           data++;
@@ -76,7 +76,7 @@ void PykaldiBuffSource::Write(unsigned char * data, size_t num_samples) {
             break;
           }
         default:
-          KALDI_ERR << "unsupported bits per sample: " << bits_per_sample_;
+          KALDI_ERR << "unsupported bits per sample: " << opts_.bits_per_sample;
       }
   }
 }

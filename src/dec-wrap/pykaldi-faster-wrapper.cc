@@ -27,7 +27,8 @@
  *****************/
 // explicit constructor and destructor
 CKaldiDecoderWrapper *new_KaldiDecoderWrapper(void) {
-  return reinterpret_cast<CKaldiDecoderWrapper*>(new kaldi::KaldiDecoderWrapper());
+  kaldi::KaldiDecoderWrapperOptions opts;
+  return reinterpret_cast<CKaldiDecoderWrapper*>(new kaldi::KaldiDecoderWrapper(opts));
 }
 void del_KaldiDecoderWrapper(CKaldiDecoderWrapper* d) {
   delete reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d);
@@ -93,18 +94,37 @@ size_t KaldiDecoderWrapper::Decode(bool force_utt_end) {
   return word_ids_.size();
 }
 
-int KaldiDecoderWrapper::ParseArgs(int argc, char ** argv) {
-  try {
 
+// Looks unficcient but: c++11 move semantics 
+// and RVO: http://cpp-next.com/archive/2009/08/want-speed-pass-by-value/
+// justified it. It has nicer interface.
+std::vector<int32> KaldiDecoderWrapper::PopHyp(void) { 
+  std::vector<int32> tmp;
+  std::swap(word_ids_, tmp); // clear the word_ids_
+  KALDI_VLOG(2) << "tmp.size() " << tmp.size();
+  return tmp; 
+}
+
+int KaldiDecoderWrapper::Setup(int argc, char **argv) {
+  try {
+    PykaldiFeatureMatrixOptions feature_reading_opts_;
+    MfccOptions mfcc_opts_;
+    PykaldiFasterDecoderOpts decoder_opts_;
+    DeltaFeaturesOptions delta_feat_opts_;
+
+    mfcc_opts_.use_energy = false;
+    mfcc_opts_.frame_opts.frame_length_ms = 25;
+    mfcc_opts_.frame_opts.frame_shift_ms = 10;
+  
+    // Parsing options
     ParseOptions po("Utterance segmentation is done on-the-fly.\n"
       "Feature splicing/LDA transform is used, if the optional(last) "
       "argument is given.\n"
       "Otherwise delta/delta-delta(2-nd order) features are produced.\n\n"
       "Usage: online-gmm-Decode-faster [options] <model-in>"
       "<fst-in> <word-symbol-table> <silence-phones> [<lda-matrix-in>]\n\n"
-      "Example: online-gmm-Decode-faster --rt-min=0.3 --rt-max=0.5 "
-      "--max-active=4000 --beam=12.0 --acoustic-scale=0.0769 "
-      "model HCLG.fst words.txt '1:2:3:4:5' lda-matrix");
+      "Example: online-gmm-Decode-faster --max-active=4000 --beam=12.0 "
+      "--acoustic-scale=0.0769 model HCLG.fst words.txt '1:2:3:4:5' lda-matrix");
 
     opts_.Register(&po);
     mfcc_opts_.Register(&po);
@@ -129,29 +149,7 @@ int KaldiDecoderWrapper::ParseArgs(int argc, char ** argv) {
     opts_.silence_phones = phones_to_vector(po.GetArg(4));
     opts_.lda_mat_rspecifier = po.GetOptArg(5);
 
-    return 0;
-  } catch(const std::exception& e) {
-    std::cerr << e.what();
-    return -1;
-  }
-}  // KaldiDecoderWrapper::ParseArgs()
-
-// Looks unficcient but: c++11 move semantics 
-// and RVO: http://cpp-next.com/archive/2009/08/want-speed-pass-by-value/
-// justified it. It has nicer interface.
-std::vector<int32> KaldiDecoderWrapper::PopHyp(void) { 
-  std::vector<int32> tmp;
-  std::swap(word_ids_, tmp); // clear the word_ids_
-  KALDI_VLOG(2) << "tmp.size() " << tmp.size();
-  return tmp; 
-}
-
-int KaldiDecoderWrapper::Setup(int argc, char **argv) {
-  try {
-    if (ParseArgs(argc, argv) != 0) {
-      return 1;
-    }
-
+    // Setting up components
     trans_model_ = new TransitionModel();
     {
       bool binary;
@@ -164,8 +162,8 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
     decoder_ = new PykaldiFasterDecoder(*decode_fst_, decoder_opts_,
                                     opts_.silence_phones, *trans_model_);
 
-    // Fixed 16 bit audio
-    source_ = new PykaldiBuffSource(); 
+    PykaldiBuffSourceOptions au_opts;  // Fixed 16 bit audio
+    source_ = new PykaldiBuffSource(au_opts); 
 
     mfcc_ = new Mfcc(mfcc_opts_);
     int32 frame_length = mfcc_opts_.frame_opts.frame_length_ms;
@@ -195,7 +193,7 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
     return 0;
   } catch(const std::exception& e) {
     std::cerr << e.what();
-    return 2;
+    return 1;
   }
 } // KaldiDecoderWrapper::Setup()
 
