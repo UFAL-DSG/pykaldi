@@ -17,7 +17,6 @@
 // MERCHANTABLITY OR NON-INFRINGEMENT.
 // See the Apache 2 License for the specific language governing permissions and
 // limitations under the License.
-
 #ifndef KALDI_PYKALDI_PYKALDI_FEAT_INPUT_H_
 #define KALDI_PYKALDI_PYKALDI_FEAT_INPUT_H_
 
@@ -49,8 +48,9 @@ class PykaldiFeatInputItf {
   virtual ~PykaldiFeatInputItf() {}
 };
 
-
-
+/*********************************************************************
+ *                    PykaldiFeatureMatrix                           *
+ *********************************************************************/
 struct PykaldiFeatureMatrixOptions {
   int32 batch_size; // number of frames to request each time.
   PykaldiFeatureMatrixOptions(): batch_size(27) { }
@@ -92,7 +92,9 @@ class PykaldiFeatureMatrix {
   int32 feat_loaded_; // the # of features totally loaded
 };
 
-
+/*********************************************************************
+ *                          PykaldiFeInput                           *
+ *********************************************************************/
 // Implementation, that is meant to be used to read samples from an
 // PykaldiAudioSource and to extract MFCC/PLP features in the usual way
 template <class E>
@@ -140,7 +142,7 @@ PykaldiFeInput<E>::Compute(Matrix<BaseFloat> *output) {
   Vector<BaseFloat> read_samples(samples_req);
 
   MatrixIndexT read = source_->Read(&read_samples);
-  if (read == 0 ) 
+  if (read == 0)
     return 0;
 
   Vector<BaseFloat> all_samples(wave_remainder_.Dim() + read);
@@ -158,7 +160,9 @@ PykaldiFeInput<E>::Compute(Matrix<BaseFloat> *output) {
 }
 
 
-
+/*********************************************************************
+ *                          PykaldiLdaInput                          *
+ *********************************************************************/
 // Splices the input features and applies a transformation matrix.
 // Note: the transformation matrix will usually be a linear transformation
 // [output-dim x input-dim] but we accept an affine transformation too.
@@ -203,6 +207,9 @@ class PykaldiLdaInput: public PykaldiFeatInputItf {
   KALDI_DISALLOW_COPY_AND_ASSIGN(PykaldiLdaInput);
 };
 
+/*********************************************************************
+ *                         PykaldiDeltaInput                         *
+ *********************************************************************/
 // Does the time-derivative computation (e.g., adding deltas and delta-deltas).
 // This is standard in more "old-fashioned" feature extraction.  Like an online
 // version of the function ComputeDeltas in feat/feature-functions.h, where the

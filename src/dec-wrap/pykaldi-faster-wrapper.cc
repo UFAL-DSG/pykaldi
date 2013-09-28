@@ -64,7 +64,7 @@ namespace kaldi {
 std::vector<int32> phones_to_vector(const std::string & s);
 
 size_t KaldiDecoderWrapper::Decode(bool force_utt_end) {
-  KALDI_VLOG(2) << " input size: " << source_->BufferSize();
+  KALDI_VLOG(2) << " audio source size: " << source_->BufferSize();
 
   decoder_->Decode(decodable_);
 
@@ -88,7 +88,7 @@ size_t KaldiDecoderWrapper::Decode(bool force_utt_end) {
   }
   // append the new ids to buffer
   word_ids_.insert(word_ids_.end(), new_word_ids.begin(), new_word_ids.end());
-  // KALDI_WARN<< "HypSize after " << HypSize() << " new word size " << new_word_ids.size();
+  KALDI_VLOG(2) << "HypSize() after " << HypSize() << " new word size " << new_word_ids.size();
 
   return word_ids_.size();
 }
