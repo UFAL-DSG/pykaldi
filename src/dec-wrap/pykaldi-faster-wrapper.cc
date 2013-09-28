@@ -67,29 +67,30 @@ std::vector<int32> phones_to_vector(const std::string & s);
 size_t KaldiDecoderWrapper::Decode(bool force_utt_end) {
   KALDI_VLOG(2) << " audio source size: " << source_->BufferSize();
 
-  decoder_->Decode(decodable_);
+  size_t frames_processed = decoder_->Decode(decodable_);
 
-  fst::VectorFst<LatticeArc> out_fst;
-  std::vector<int32> new_word_ids;
-  if (UtteranceEnded() || force_utt_end) {
-    // get the last chunk
-    decoder_->FinishTraceBack(&out_fst);
-    fst::GetLinearSymbolSequence(out_fst,
-                                 static_cast<vector<int32> *>(0),
-                                 &new_word_ids,
-                                 static_cast<LatticeArc::Weight*>(0));
-  } else {
-    // get the hypothesis from currently active state
-    if (decoder_->PartialTraceback(&out_fst)) {
+  if (frames_processed > 0 ) {
+    fst::VectorFst<LatticeArc> out_fst;
+    std::vector<int32> new_word_ids;
+    if (UtteranceEnded() || force_utt_end) {
+      // get the last chunk
+      decoder_->FinishTraceBack(&out_fst);
       fst::GetLinearSymbolSequence(out_fst,
                                    static_cast<vector<int32> *>(0),
                                    &new_word_ids,
                                    static_cast<LatticeArc::Weight*>(0));
+    } else {
+      // get the hypothesis from currently active state
+      if (decoder_->PartialTraceback(&out_fst)) {
+        fst::GetLinearSymbolSequence(out_fst,
+                                     static_cast<vector<int32> *>(0),
+                                     &new_word_ids,
+                                     static_cast<LatticeArc::Weight*>(0));
+      }
     }
+    // append the new ids to buffer
+    word_ids_.insert(word_ids_.end(), new_word_ids.begin(), new_word_ids.end());
   }
-  // append the new ids to buffer
-  word_ids_.insert(word_ids_.end(), new_word_ids.begin(), new_word_ids.end());
-  KALDI_VLOG(2) << "HypSize() after " << HypSize() << " new word size " << new_word_ids.size();
 
   return word_ids_.size();
 }

@@ -35,9 +35,9 @@ MatrixIndexT PykaldiBuffSource::Read(Vector<BaseFloat> *output) {
     }
     // remove the already read elements
     std::vector<BaseFloat>(src_.begin() + d, src_.end()).swap(src_);
-    return output->Dim();
     KALDI_VLOG(2) << "All data read:  " <<  output->Dim()
                   << "Data still available: " << src_.size();
+    return output->Dim();
   } else {
     KALDI_VLOG(1) << "No data read! Data requested:  " << output->Dim()
                   << " Data available: " << src_.size();

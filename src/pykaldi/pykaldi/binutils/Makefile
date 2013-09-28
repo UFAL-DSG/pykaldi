@@ -5,13 +5,13 @@ test: run_voxforge
 vorforge_data:
 	 python -c "import pykaldi.utils; pykaldi.utils.get_voxforge_data()"
 
-run_voxforge: online_decode.py vorforge_data configs/voxforge_config.json
+voxforge: online_decode.py vorforge_data configs/voxforge_config.json
 	python online_decode.py configs/voxforge_config.json
 
 $(VYSTADIAL_SCP):
 	 python -c "import pykaldi.utils; pykaldi.utils.get_vystadial_data('/net/work/people/oplatek/kaldi/egs/kaldi-vystadial-recipe/s5/Results/vystadial-sample-test.tar.bz2')"
 
-run_vystadial: online_decode.py $(VYSTADIAL_SCP) configs/vystadial_config.json
+vystadial: online_decode.py $(VYSTADIAL_SCP) configs/vystadial_config.json
 	python online_decode.py configs/vystadial_config.json
 
 
