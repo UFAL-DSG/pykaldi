@@ -22,7 +22,7 @@
                     "1:2:3:4:5"
                 ],
         "trans": {"prefix": "decode_dir", "value": "vystadial.tra"},
-        "samples_per_frame":"4560"
+        "audio_batch_size":"4560"
     },
     "wer-compute": {
         "run": "yes",

@@ -24,42 +24,42 @@ from pykaldi.decoders import OnlineDecoder, DecoderCloser
 import time
 
 
-def run_online_dec(pcm, argv, samples_per_frame):
+def run_online_dec(pcm, argv, audio_batch_size):
     with DecoderCloser(OnlineDecoder(argv)) as d:
         # using 16-bit audio so 1 sample = 2 chars
-        frame_len = (2 * samples_per_frame)
+        frame_len = (2 * audio_batch_size)
         # Pass the audio data to decoder at once
         for i in range(len(pcm) / frame_len):
             frame = pcm[i * frame_len:(i + 1) * frame_len]
-            d.frame_in(frame, samples_per_frame)
+            d.frame_in(frame, audio_batch_size)
         # Extract the hypothesis in form of word ids
         word_ids, prob = d.finish_decoding()
         return word_ids, prob
 
 
-def recreate_dec(argv, samples_per_frame, wav_paths, file_output):
+def recreate_dec(argv, audio_batch_size, wav_paths, file_output):
     for wav_name, wav_path in wav_paths:
         pcm = load_wav(wav_path)
         print 'Processing utterance %s.' % wav_name
-        word_ids, prob = run_online_dec(pcm, argv, samples_per_frame)
+        word_ids, prob = run_online_dec(pcm, argv, audio_batch_size)
 
         line = [wav_name] + [str(word_id) for word_id in word_ids] + ['\n']
         file_output.write(' '.join(line))
         print 'Result for %s written.' % wav_name
 
 
-def no_finish(argv, samples_per_frame, wav_paths, file_output, wst=None, duration=10):
+def no_finish(argv, audio_batch_size, wav_paths, file_output, wst=None, duration=10):
     with DecoderCloser(OnlineDecoder(argv)) as d:
         for wav_name, wav_path in wav_paths:
             print 'Processing utterance %s.' % wav_name
             pcm = load_wav(wav_path)
             # using 16-bit audio so 1 sample = 2 chars
-            frame_len = (2 * samples_per_frame)
+            frame_len = (2 * audio_batch_size)
             # Pass the audio data to decoder at once
             tot_ids = []
             for i in xrange(len(pcm) / frame_len):
                 frame = pcm[i * frame_len:(i + 1) * frame_len]
-                d.frame_in(frame, samples_per_frame)
+                d.frame_in(frame, audio_batch_size)
             start = time.time()
             # run the backward search only for limited amount of time
             while (time.time() - start) < duration:
@@ -79,17 +79,17 @@ def no_finish(argv, samples_per_frame, wav_paths, file_output, wst=None, duratio
             print 'Result for %s written.' % wav_name
 
 
-def decode_once(argv, samples_per_frame, wav_paths, file_output, wst=None):
+def decode_once(argv, audio_batch_size, wav_paths, file_output, wst=None):
     with DecoderCloser(OnlineDecoder(argv)) as d:
         for wav_name, wav_path in wav_paths:
             print 'Processing utterance %s.' % wav_name
             pcm = load_wav(wav_path)
             # using 16-bit audio so 1 sample = 2 chars
-            frame_len = (2 * samples_per_frame)
+            frame_len = (2 * audio_batch_size)
             # Pass the audio data to decoder at once
             for i in xrange(len(pcm) / frame_len):
                 frame = pcm[i * frame_len:(i + 1) * frame_len]
-                d.frame_in(frame, samples_per_frame)
+                d.frame_in(frame, audio_batch_size)
             # Extract the hypothesis at once in form of word ids
             word_ids, prob = d.decode(force_end_utt=True)
             if wst is not None:
@@ -101,20 +101,20 @@ def decode_once(argv, samples_per_frame, wav_paths, file_output, wst=None):
             print 'Result for %s written.' % wav_name
 
 
-def decode_zig_zag(argv, samples_per_frame, wav_paths, file_output, wst=None):
+def decode_zig_zag(argv, audio_batch_size, wav_paths, file_output, wst=None):
     print 'decode_zig_zag'
     with DecoderCloser(OnlineDecoder(argv)) as d:
         for wav_name, wav_path in wav_paths:
             print 'Processing utterance %s.' % wav_name
             pcm = load_wav(wav_path)
             # using 16-bit audio so 1 sample = 2 chars
-            frame_len = (2 * samples_per_frame)
+            frame_len = (2 * audio_batch_size)
             print 'Frame length in bytes %d' % frame_len
             it, tot_ids = (len(pcm) / frame_len), []
-            print 'NUMBER of iterations: %s' % it
+            print 'NUMBER of frames: %s' % it
             for i in xrange(it):
                 frame = pcm[i * frame_len:(i + 1) * frame_len]
-                d.frame_in(frame, samples_per_frame)
+                d.frame_in(frame, audio_batch_size)
                 word_ids, prob = d.decode()
                 tot_ids.extend(word_ids)
                 if wst is not None and len(word_ids) > 0:
@@ -135,7 +135,7 @@ def run_python_online(config):
     if not config_is_yes(c, 'run'):
         print 'Skipping running run_python_online'
         return
-    argv, samples_per_frame = c['args'], int(c['samples_per_frame'])
+    argv, audio_batch_size = c['args'], int(c['audio_batch_size'])
 
     with open(config['wav_scp'], 'rb') as r:
         lines = r.readlines()
@@ -147,13 +147,13 @@ def run_python_online(config):
     it is necessary supply enough data for Decode by frame_in!"""
     with open(c['trans'], 'wb') as w:
         if c['type'] == 'recreate_dec':
-            recreate_dec(argv, samples_per_frame, scp, w)
+            recreate_dec(argv, audio_batch_size, scp, w)
         elif c['type'] == 'decode_once':
-            decode_once(argv, samples_per_frame, scp, w, wst_dict)
+            decode_once(argv, audio_batch_size, scp, w, wst_dict)
         elif c['type'] == 'decode_zig_zag':
-            decode_zig_zag(argv, samples_per_frame, scp, w, wst_dict)
+            decode_zig_zag(argv, audio_batch_size, scp, w, wst_dict)
         elif c['type'] == 'no_finish':
-            no_finish(argv, samples_per_frame, scp, w, wst_dict)
+            no_finish(argv, audio_batch_size, scp, w, wst_dict)
         else:
             raise Exception('Unknown type of online-python decoding')
 
