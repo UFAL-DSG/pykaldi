@@ -18,6 +18,7 @@
 
 using namespace kaldi;
 
+
 void test_ReadEmpty(const PykaldiBuffSourceOptions & opts) {
   int32 dim = 8;
   Vector<BaseFloat> to_fill;
@@ -29,10 +30,44 @@ void test_ReadEmpty(const PykaldiBuffSourceOptions & opts) {
   KALDI_ASSERT(to_fill.Dim() == dim);
 }
 
+void test_Bits() {
+  PykaldiBuffSourceOptions opts;
+  int bits[3] = { 8, 16, 32};
+  int32 dim = 100;
+  unsigned char data[4] = { 'a', 'h', 'o', 'j' };
+  Vector<BaseFloat> to_fill;
+  to_fill.Resize(dim);
+
+  for(size_t i = 0; i < 3; ++i) {
+    opts.bits_per_sample = bits[i];
+    PykaldiBuffSource s(opts);
+    size_t num_samples = (4 * 8) / bits[i];
+
+    // write to less data to read
+    PykaldiBuffSource s1(opts);
+    for (size_t k = 0; i < dim -1 ; ++k)
+      s1.Write(data, num_samples);
+    KALDI_ASSERT(s1.Read(&to_fill) == 0);
+
+    // write as much data as needed
+    PykaldiBuffSource s2(opts);
+    for (size_t k = 0; i < dim ; ++k)
+      s2.Write(data, num_samples);
+    KALDI_ASSERT(s2.Read(&to_fill) == 1);
+    KALDI_ASSERT(s2.Read(&to_fill) == 0);
+
+    // write enough data for 1 plus extra
+    PykaldiBuffSource s3(opts);
+    for (size_t k = 0; i < (2 * dim + 1); ++k)
+      s3.Write(data, num_samples);
+    KALDI_ASSERT(s3.Read(&to_fill) == 1);
+    KALDI_ASSERT(s3.Read(&to_fill) == 0);
+  }
+}
+
 
 int main() {
   PykaldiBuffSourceOptions opts;
   test_ReadEmpty(opts);
   return 0;
 }
-
