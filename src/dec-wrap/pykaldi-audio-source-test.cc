@@ -13,11 +13,26 @@
  * MERCHANTABLITY OR NON-INFRINGEMENT.
  * See the Apache 2 License for the specific language governing permissions and
  * limitations under the License. */
-#include "pykaldi-feat-input.h"
+#include "pykaldi-audio-source.h"
+#include "matrix/kaldi-vector.h"
 
 using namespace kaldi;
 
+void test_ReadEmpty(const PykaldiBuffSourceOptions & opts) {
+  int32 dim = 8;
+  Vector<BaseFloat> to_fill;
+  to_fill.Resize(dim);
+  PykaldiBuffSource s(opts);
+
+  int32 read = s.Read(&to_fill);
+  KALDI_ASSERT(read == 0);
+  KALDI_ASSERT(to_fill.Dim() == dim);
+}
+
+
 int main() {
+  PykaldiBuffSourceOptions opts;
+  test_ReadEmpty(opts);
   return 0;
 }
 
