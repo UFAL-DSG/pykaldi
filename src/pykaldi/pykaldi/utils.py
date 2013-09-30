@@ -103,9 +103,15 @@ def get_vystadial_data(src_tar_path, path=None):
     with open(os.path.join(audio_path, 'input.scp'), 'wb') as input_scp:
         for n, p in zip(wav_names, wav_paths):
             input_scp.write('%s %s\n' % (n, p))
+    with open(os.path.join(audio_path, 'input_max_10.scp'), 'wb') as input_scp:
+        for n, p, i in zip(wav_names, wav_paths, range(10)):
+            input_scp.write('%s %s\n' % (n, p))
+    with open(os.path.join(audio_path, 'input_best.scp'), 'wb') as input_scp:
+        best_index = 10
+        input_scp.write('%s %s\n' % (wav_names[best_index], wav_paths[best_index]))
 
 
-def load_wav(file_name, def_sample_rate=16000):
+def load_wav(file_name, def_sample_width=2, def_sample_rate=16000):
     """ Source: from Alex/utils/audio.py
     Reads all audio data from the file and returns it in a string.
 
@@ -114,7 +120,7 @@ def load_wav(file_name, def_sample_rate=16000):
         wf = wave.open(file_name, 'r')
         if wf.getnchannels() != 1:
             raise Exception('Input wave is not in mono')
-        if wf.getsampwidth() != 2:
+        if wf.getsampwidth() != def_sample_width:
             raise Exception('Input wave is not in 16bit')
         sample_rate = wf.getframerate()
         # read all the samples
@@ -182,16 +188,6 @@ def expand_prefix(d, bigd):
         return d.encode('utf-8')
     else:
         raise ValueError('We support only dictionaries, lists and strings.')
-
-
-def build_reference(wav_scp, ref_path):
-    with open(ref_path, 'w') as w:
-        with open(wav_scp, 'r') as scp:
-            for line in scp:
-                name, wavpath = line.strip().split(' ', 1)
-                with open(wavpath + '.trn') as trn:
-                    trans = trn.read().strip()
-                    w.write('%s %s\n' % (name, trans))
 
 
 def wst2dict(wst_path, intdict=False):

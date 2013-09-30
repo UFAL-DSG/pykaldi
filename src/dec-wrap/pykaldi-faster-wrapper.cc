@@ -119,13 +119,11 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
   
     // Parsing options
     ParseOptions po("Utterance segmentation is done on-the-fly.\n"
-      "Feature splicing/LDA transform is used, if the optional(last) "
-      "argument is given.\n"
-      "Otherwise delta/delta-delta(2-nd order) features are produced.\n\n"
-      "Usage: online-gmm-Decode-faster [options] <model-in>"
-      "<fst-in> <word-symbol-table> <silence-phones> [<lda-matrix-in>]\n\n"
-      "Example: online-gmm-Decode-faster --max-active=4000 --beam=12.0 "
-      "--acoustic-scale=0.0769 model HCLG.fst words.txt '1:2:3:4:5' lda-matrix");
+      "The delta/delta-delta(2-nd order) features are produced.\n\n"
+      "Usage: decoder-binary-name [options] <model-in>"
+      "<fst-in> <word-symbol-table> <silence-phones> \n\n"
+      "Example: decoder-binary-name --max-active=4000 --beam=12.0 "
+      "--acoustic-scale=0.0769 model HCLG.fst words.txt '1:2:3:4:5'");
 
     opts_.Register(&po);
     mfcc_opts_.Register(&po);

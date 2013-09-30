@@ -5,14 +5,17 @@ test: run_voxforge
 vorforge_data:
 	 python -c "import pykaldi.utils; pykaldi.utils.get_voxforge_data()"
 
-voxforge: online_decode.py vorforge_data configs/voxforge_config.json
-	python online_decode.py configs/voxforge_config.json
+voxforge: 
+	echo "Broken: TODO"
 
 $(VYSTADIAL_SCP):
 	 python -c "import pykaldi.utils; pykaldi.utils.get_vystadial_data('/net/work/people/oplatek/kaldi/egs/kaldi-vystadial-recipe/s5/Results/vystadial-sample-test.tar.bz2')"
 
-vystadial: online_decode.py $(VYSTADIAL_SCP) configs/vystadial_config.json
-	python online_decode.py configs/vystadial_config.json
+pykaldi: $(VYSTADIAL_SCP)
+	./run_pykaldi-faster-decoder.sh
+
+gmm_latgen: $(VYSTADIAL_SCP)
+	./run_gmm_latgen_faster.sh
 
 
 DATA = $(PWD)/online-data/models/tri2a
@@ -25,4 +28,4 @@ run_live: vorforge_data
 clean:
 	rm -rf online-data online-data.tar.bz2 *.pyc  __pycache__ work
 
-.PHONY: run_live run_online test clean
+.PHONY: run_live pykaldi gmm_latgen test clean
