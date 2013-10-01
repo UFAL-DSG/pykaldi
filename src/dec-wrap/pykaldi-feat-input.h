@@ -23,7 +23,6 @@
 #include "feat/feature-functions.h"
 #include "pykaldi-audio-source.h"
 
-#include <iostream>  // DEBUG
 
 namespace kaldi {
 
@@ -146,7 +145,7 @@ PykaldiFeInput<E>::Compute(Matrix<BaseFloat> *output) {
   MatrixIndexT read = source_->Read(&read_samples);
 
   if (read == 0) {
-    KALDI_VLOG(4) << "Read nothing from audio source"; 
+    KALDI_VLOG(4) << "Read nothing from audio source";
     return 0;
   }
 
@@ -158,25 +157,15 @@ PykaldiFeInput<E>::Compute(Matrix<BaseFloat> *output) {
 
   // Extract the features
   if (all_samples.Dim() < frame_size_) {
-    wave_remainder_ = all_samples; 
-    KALDI_VLOG(2) << "Read some " << read 
-                  << " but not enough for " << read_samples.Dim(); 
+    wave_remainder_ = all_samples;
+    KALDI_VLOG(2) << "Read some " << read
+                  << " but not enough for " << read_samples.Dim();
     return 0;
   } else {
     BaseFloat vtln_warp_local = 1.0;
     extractor_->Compute(all_samples, vtln_warp_local, output, &wave_remainder_);
-    
-    // // DEBUG
-    // std::cout << std::endl << "audio";
-    // read_samples.Write(std::cout, false);
-    // std::cout << std::endl;
-    std::cout << std::endl << "mfcc ";
-    output->Write(std::cout, false);  // true -> write in binary
-    std::cout << std::endl;
-    // ENDOFDEBUG
-
-    KALDI_VLOG(2) << "Read all data " << read 
-                  << ", still reamining " << wave_remainder_.Dim(); 
+    KALDI_VLOG(2) << "Read all data " << read
+                  << ", still reamining " << wave_remainder_.Dim();
     return output->NumRows();
   }
 }
