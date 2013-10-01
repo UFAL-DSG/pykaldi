@@ -23,6 +23,8 @@
 #include "feat/feature-functions.h"
 #include "pykaldi-audio-source.h"
 
+#include <iostream>  // DEBUG
+
 namespace kaldi {
 
 
@@ -152,6 +154,9 @@ PykaldiFeInput<E>::Compute(Matrix<BaseFloat> *output) {
   // Extract the features
   if (all_samples.Dim() >= frame_size_) {
     extractor_->Compute(all_samples, 1.0, output, &wave_remainder_);
+    std::cout << std::endl << "mfcc ";
+    output->Write(std::cout, false);  // true -> write in binary
+    std::cout << std::endl;
     return output->NumRows();
   } else {
     wave_remainder_ = all_samples;

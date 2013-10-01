@@ -28,7 +28,7 @@ def write_decoded(f, wav_name, word_ids, wst):
     else:
         decoded = [str(w) for w in word_ids]
     line = ' '.join([wav_name] + decoded + ['\n'])
-    print 'DEBUG %s: %s' % (wav_name, line)
+    print >> sys.stderr,  'DEBUG %s: %s' % (wav_name, line)
     f.write(line)
 
 
@@ -41,7 +41,7 @@ def decode_once(d, pcm):
 def decode(d, pcm):
     frame_len = (2 * audio_batch_size)  # 16-bit audio so 1 sample = 2 chars
     it, decoded = (len(pcm) / frame_len), []
-    print 'NUMBER of audio input frames: %d' % it
+    print >> sys.stderr,  'NUMBER of audio input frames: %d' % it
     for i in xrange(it):
         frame = pcm[i * frame_len:(i + 1) * frame_len]
         d.frame_in(frame, audio_batch_size)
@@ -53,7 +53,7 @@ def decode(d, pcm):
 
 
 def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst=None):
-    print 'decode_zig_zag'
+    print >> sys.stderr, 'decode_zig_zag'
     with DecoderCloser(OnlineDecoder(argv)) as d:
         for wav_name, wav_path in wav_paths:
             # 16-bit audio so 1 sample_width = 2 chars
@@ -65,7 +65,7 @@ def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst=None):
 if __name__ == '__main__':
     audio_scp, audio_batch_size, dec_hypo = sys.argv[1], int(sys.argv[2]), sys.argv[3]
     argv = sys.argv[4:]
-    print 'Python args: %s' % str(sys.argv)
+    print >> sys.stderr, 'Python args: %s' % str(sys.argv)
 
     # Try to locate and extract wst argument
     wst = None
