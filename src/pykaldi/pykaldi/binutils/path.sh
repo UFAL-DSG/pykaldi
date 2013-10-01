@@ -15,7 +15,7 @@ gmm_latgen_faster_tra_txt=${gmm_latgen_faster_tra}.txt
 pykaldi_faster_tra=$decode_dir/pykaldi-faster.tra.txt
 
 # common configs
-gmm_config=configs/decode.config
+decode_config=conf/decode.conf
 model=$exp_dir/final.mdl
 hclg=$exp_dir/graph/HCLG.fst
 wst=$exp_dir/graph/words.txt

@@ -3,7 +3,7 @@
 # source the settings
 . path.sh
 
-mfcc_config=configs/mfcc.config
+mfcc_config=conf/mfcc.conf
 
 # temporary files
 lattice=$decode_dir/lat.gz
@@ -14,7 +14,7 @@ mkdir -p $mfccdir
 compute-mfcc-feats  --verbose=2 --config=$mfcc_config scp:$wav_scp \
   ark,scp:$mfccdir/raw_mfcc.ark,$feat_scp || exit 1;
 
-gmm-latgen-faster --config=configs/decode.config  \
+gmm-latgen-faster --config=$decode_config \
     --word-symbol-table=$wst $model $hclg \
     "ark,s,cs:copy-feats scp:$feat_scp ark:- | add-deltas  ark:- ark:- |" \
     "ark:|gzip - c > $lattice"

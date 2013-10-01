@@ -6,7 +6,7 @@
 batch_size=4560
 
 ./pykaldi-faster-decoder.py $wav_scp $batch_size $pykaldi_faster_tra \
-        --verbose=2 --acoustic-scale=0.1 --config=configs/decode.config \
+        --verbose=2 --acoustic-scale=0.1 --config=$decode_config \
         $model $hclg $wst 1:2:3:4:5
 
 # reference is named based on wav_scp 
