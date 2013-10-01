@@ -147,6 +147,9 @@ PykaldiFeInput<E>::Compute(Matrix<BaseFloat> *output) {
   if (read == 0)
     return 0;
 
+  // currently for easier implementation
+  KALDI_ASSERT(read == read_samples.Dim());
+
   Vector<BaseFloat> all_samples(wave_remainder_.Dim() + read);
   all_samples.Range(0, wave_remainder_.Dim()).CopyFromVec(wave_remainder_);
   all_samples.Range(wave_remainder_.Dim(), read).CopyFromVec(read_samples);
@@ -156,6 +159,9 @@ PykaldiFeInput<E>::Compute(Matrix<BaseFloat> *output) {
     extractor_->Compute(all_samples, 1.0, output, &wave_remainder_);
     
     // DEBUG
+    std::cout << std::endl << "audio";
+    read_samples.Write(std::cout, false);
+    std::cout << std::endl;
     std::cout << std::endl << "mfcc ";
     output->Write(std::cout, false);  // true -> write in binary
     std::cout << std::endl;
