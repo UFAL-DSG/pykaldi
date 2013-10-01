@@ -310,11 +310,11 @@ MatrixIndexT PykaldiDeltaInput::Compute(Matrix<BaseFloat> *output) {
   AppendFrames(remainder_, input, tail, &appended_feats);
   DeltaComputation(appended_feats, output, &remainder_);
 
-  // DEBUG
-  std::cout << std::endl << "delta-delta ";
-  output->Write(std::cout, false);  // true -> write in binary
-  std::cout << std::endl;
-  // ENDOFDEBUG
+  // // DEBUG
+  // std::cout << std::endl << "delta-delta ";
+  // output->Write(std::cout, false);  // true -> write in binary
+  // std::cout << std::endl;
+  // // ENDOFDEBUG
 
   return output->NumRows();
 }

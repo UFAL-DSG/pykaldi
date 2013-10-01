@@ -27,22 +27,15 @@ namespace kaldi {
 MatrixIndexT PykaldiBuffSource::Read(Vector<BaseFloat> *output) {
   KALDI_ASSERT(output->Dim() > 0 && "Request at least something");
 
-  size_t d =  static_cast<size_t>(output->Dim());
-  if (src_.size() >= d) {
-    // copy the buffer to output
-    for (MatrixIndexT i = 0; i < output->Dim() ; ++i) {
-      (*output)(i) = src_[i];
-    }
-    // remove the already read elements
-    std::vector<BaseFloat>(src_.begin() + d, src_.end()).swap(src_);
-    KALDI_VLOG(2) << "All data read:  " <<  output->Dim()
-                  << "Data still available: " << src_.size();
-    return output->Dim();
-  } else {
-    KALDI_VLOG(1) << "No data read! Data requested:  " << output->Dim()
-                  << " Data available: " << src_.size();
-    return 0;
+  // copy as much as possible to output
+  MatrixIndexT d = std::min(output->Dim(), static_cast<MatrixIndexT>(src_.size()));
+  for (MatrixIndexT i = 0; i < d ; ++i) {
+    (*output)(i) = src_[i];
   }
+  // remove the already read elements
+  std::vector<BaseFloat>(src_.begin() + d, src_.end()).swap(src_);
+  KALDI_VLOG(3) << "Data read: " <<  d << " Data requested " << output->Dim();
+  return d;
 }
 
 void PykaldiBuffSource::Write(unsigned char * data, size_t num_samples) {

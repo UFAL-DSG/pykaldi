@@ -144,33 +144,40 @@ PykaldiFeInput<E>::Compute(Matrix<BaseFloat> *output) {
   Vector<BaseFloat> read_samples(samples_req);
 
   MatrixIndexT read = source_->Read(&read_samples);
-  if (read == 0)
+
+  if (read == 0) {
+    KALDI_VLOG(4) << "Read nothing from audio source"; 
     return 0;
+  }
 
-  // currently for easier implementation
-  KALDI_ASSERT(read == read_samples.Dim());
+  SubVector<BaseFloat> actually_read(read_samples, 0, read);
 
-  Vector<BaseFloat> all_samples(wave_remainder_.Dim() + read);
+  Vector<BaseFloat> all_samples(wave_remainder_.Dim() + actually_read.Dim());
   all_samples.Range(0, wave_remainder_.Dim()).CopyFromVec(wave_remainder_);
-  all_samples.Range(wave_remainder_.Dim(), read).CopyFromVec(read_samples);
+  all_samples.Range(wave_remainder_.Dim(), actually_read.Dim()).CopyFromVec(actually_read);
 
   // Extract the features
-  if (all_samples.Dim() >= frame_size_) {
-    extractor_->Compute(all_samples, 1.0, output, &wave_remainder_);
+  if (all_samples.Dim() < frame_size_) {
+    wave_remainder_ = all_samples; 
+    KALDI_VLOG(2) << "Read some " << read 
+                  << " but not enough for " << read_samples.Dim(); 
+    return 0;
+  } else {
+    BaseFloat vtln_warp_local = 1.0;
+    extractor_->Compute(all_samples, vtln_warp_local, output, &wave_remainder_);
     
-    // DEBUG
-    std::cout << std::endl << "audio";
-    read_samples.Write(std::cout, false);
-    std::cout << std::endl;
+    // // DEBUG
+    // std::cout << std::endl << "audio";
+    // read_samples.Write(std::cout, false);
+    // std::cout << std::endl;
     std::cout << std::endl << "mfcc ";
     output->Write(std::cout, false);  // true -> write in binary
     std::cout << std::endl;
     // ENDOFDEBUG
 
+    KALDI_VLOG(2) << "Read all data " << read 
+                  << ", still reamining " << wave_remainder_.Dim(); 
     return output->NumRows();
-  } else {
-    wave_remainder_ = all_samples;
-    return 0;
   }
 }
 
