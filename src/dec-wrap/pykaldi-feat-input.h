@@ -154,9 +154,13 @@ PykaldiFeInput<E>::Compute(Matrix<BaseFloat> *output) {
   // Extract the features
   if (all_samples.Dim() >= frame_size_) {
     extractor_->Compute(all_samples, 1.0, output, &wave_remainder_);
+    
+    // DEBUG
     std::cout << std::endl << "mfcc ";
     output->Write(std::cout, false);  // true -> write in binary
     std::cout << std::endl;
+    // ENDOFDEBUG
+
     return output->NumRows();
   } else {
     wave_remainder_ = all_samples;
