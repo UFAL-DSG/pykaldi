@@ -4,7 +4,6 @@
 . path.sh
 
 mfcc_config=conf/mfcc.conf
-decode_config=conf/decode-recipe.conf  # debug still bad
 
 # temporary files
 lattice=$decode_dir/lat.gz
@@ -28,9 +27,10 @@ gmm-latgen-faster --config=$decode_config \
     "ark:|gzip - c > $lattice"
 
 lattice-best-path --lm-scale=15 --word-symbol-table=$wst \
-    "ark:gunzip -c $lattice|" ark,t:$gmm_latgen_faster_tra
+    "ark:gunzip -c $lattice|" ark,t:$gmm_latgen_faster_tra || exit 1;
 
-cat $gmm_latgen_faster_tra | ./int2sym.pl -f 2- $wst > $gmm_latgen_faster_tra_txt
+cat $gmm_latgen_faster_tra | ./int2sym.pl -f 2- $wst \
+    > $gmm_latgen_faster_tra_txt || exit 1
 
 # reference is named based on wav_scp 
 ./build_reference.py $wav_scp $decode_dir  
