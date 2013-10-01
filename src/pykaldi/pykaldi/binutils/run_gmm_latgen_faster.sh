@@ -4,6 +4,7 @@
 . path.sh
 
 mfcc_config=conf/mfcc.conf
+decode_config=conf/decode-recipe.conf  # debug still bad
 
 # temporary files
 lattice=$decode_dir/lat.gz
