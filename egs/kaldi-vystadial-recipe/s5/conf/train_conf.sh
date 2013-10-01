@@ -42,6 +42,6 @@ pdf=1200
 gauss=19200
 
 # if run Cepstral Mean Normalisation: true/false
-cmn=true
+cmn=false
 train_mmi_boost=0.05
 
