@@ -53,7 +53,7 @@ void PopHyp(CKaldiDecoderWrapper *d, int * word_ids, size_t size) {
 }
 int Setup(CKaldiDecoderWrapper *d, int argc, char **argv) {
   return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Setup(argc, argv);
-} 
+}
 
 /*******************
  *  C++ interface  *
@@ -96,14 +96,14 @@ size_t KaldiDecoderWrapper::Decode(bool force_utt_end) {
 }
 
 
-// Looks unficcient but: c++11 move semantics 
+// Looks unficcient but: c++11 move semantics
 // and RVO: http://cpp-next.com/archive/2009/08/want-speed-pass-by-value/
 // justified it. It has nicer interface.
-std::vector<int32> KaldiDecoderWrapper::PopHyp(void) { 
+std::vector<int32> KaldiDecoderWrapper::PopHyp(void) {
   std::vector<int32> tmp;
   std::swap(word_ids_, tmp); // clear the word_ids_
   KALDI_VLOG(2) << "tmp.size() " << tmp.size();
-  return tmp; 
+  return tmp;
 }
 
 int KaldiDecoderWrapper::Setup(int argc, char **argv) {
@@ -116,7 +116,7 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
     mfcc_opts_.use_energy = false;
     mfcc_opts_.frame_opts.frame_length_ms = 25;
     mfcc_opts_.frame_opts.frame_shift_ms = 10;
-  
+
     // Parsing options
     ParseOptions po("Utterance segmentation is done on-the-fly.\n"
       "The delta/delta-delta(2-nd order) features are produced.\n\n"
@@ -162,7 +162,7 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
                                     opts_.silence_phones, *trans_model_);
 
     PykaldiBuffSourceOptions au_opts;  // Fixed 16 bit audio
-    source_ = new PykaldiBuffSource(au_opts); 
+    source_ = new PykaldiBuffSource(au_opts);
 
     mfcc_ = new Mfcc(mfcc_opts_);
     int32 frame_length = mfcc_opts_.frame_opts.frame_length_ms;
@@ -173,11 +173,11 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
 
     if (opts_.lda_mat_rspecifier != "") {
       bool binary_in;
-      Matrix<BaseFloat> lda_transform; 
+      Matrix<BaseFloat> lda_transform;
       Input ki(opts_.lda_mat_rspecifier, &binary_in);
       lda_transform.Read(ki.Stream(), binary_in);
       // lda_transform is copied to PykaldiLdaInput
-      feat_transform_ = new PykaldiLdaInput(fe_input_, 
+      feat_transform_ = new PykaldiLdaInput(fe_input_,
                                 lda_transform,
                                 opts_.left_context, opts_.right_context);
     } else {
@@ -186,8 +186,8 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
 
     feature_matrix_ = new PykaldiFeatureMatrix(feature_reading_opts_,
                                        feat_transform_);
-    decodable_ = new PykaldiDecodableDiagGmmScaled(am_gmm_, 
-                                            *trans_model_, 
+    decodable_ = new PykaldiDecodableDiagGmmScaled(am_gmm_,
+                                            *trans_model_,
                                             opts_.acoustic_scale, feature_matrix_);
     return 0;
   } catch(const std::exception& e) {
