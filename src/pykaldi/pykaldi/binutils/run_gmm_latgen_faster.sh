@@ -22,7 +22,6 @@ compute-mfcc-feats  --verbose=2 --config=$mfcc_config scp:$wav_scp \
 # For debugging
 add-deltas "scp,s,cs:$feat_scp" "ark,t:$mfccdir/dd_mfcc.ark.txt"
 
-runtime version
 gmm-latgen-faster --config=$decode_config \
     --word-symbol-table=$wst $model $hclg \
     "ark,s,cs:copy-feats scp:$feat_scp ark:- | add-deltas  ark:- ark:- |" \
