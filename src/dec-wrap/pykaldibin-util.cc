@@ -85,4 +85,15 @@ void PrintPartialResult(const std::vector<int32>& words,
     std::cout.flush();
 }
 
+
+// converts  phones to vector representation
+std::vector<int32> phones_to_vector(const std::string & s) {
+  std::vector<int32> return_phones;
+  if (!SplitStringToIntegers(s, ":", false, &return_phones))
+      KALDI_ERR << "Invalid silence-phones string " << s;
+  if (return_phones.empty())
+      KALDI_ERR << "No silence phones given!";
+  return return_phones;
+} // phones_to_vector
+
 } // namespace kaldi

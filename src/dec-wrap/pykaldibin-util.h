@@ -59,6 +59,8 @@ void PrintPartialResult(const std::vector<int32>& words,
                         const fst::SymbolTable *word_syms,
                         bool line_break);
 
+std::vector<int32> phones_to_vector(const std::string & s);
+
 } // namespace kaldi
 
 #endif // __cplusplus
