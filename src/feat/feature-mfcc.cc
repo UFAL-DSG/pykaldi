@@ -129,18 +129,6 @@ void Mfcc::Compute(const VectorBase<BaseFloat> &wave,
     }
   }
 
-  // DEBUG
-  std::cout << std::endl << "wave";
-  wave.Write(std::cout, false);
-  std::cout << std::endl << "wave_remainder";
-  if(wave_remainder == NULL)
-    std::cout << "wave remainder is NULL " << std::endl;
-  else 
-    wave_remainder->Write(std::cout, false);
-  std::cout << std::endl << "mfcc ";
-  output->Write(std::cout, false);  // true -> write in binary
-  std::cout << std::endl;
-  // ENDOFDEBUG
 }
 
 
