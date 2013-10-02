@@ -68,8 +68,11 @@ SubVector<BaseFloat> PykaldiFeatureMatrix::GetFrame(int32 frame) {
     KALDI_ERR << "Attempting to get frame not yet processed frame.";
 
   int32 d_from_end = feat_loaded_ - frame; // now: this is positive
+
   if (d_from_end > feat_matrix_.NumRows())
-    return feat_matrix_old_.Row(feat_matrix_old_.NumRows() - (d_from_end - feat_matrix_.NumRows()));
+    return feat_matrix_old_.Row(
+             feat_matrix_old_.NumRows() - (d_from_end - feat_matrix_.NumRows())
+                );
   else
     return feat_matrix_.Row(feat_matrix_.NumRows() - d_from_end);
 }
@@ -309,12 +312,6 @@ MatrixIndexT PykaldiDeltaInput::Compute(Matrix<BaseFloat> *output) {
   Matrix<BaseFloat> appended_feats;
   AppendFrames(remainder_, input, tail, &appended_feats);
   DeltaComputation(appended_feats, output, &remainder_);
-
-  // // DEBUG
-  // std::cout << std::endl << "delta-delta ";
-  // output->Write(std::cout, false);  // true -> write in binary
-  // std::cout << std::endl;
-  // // ENDOFDEBUG
 
   return output->NumRows();
 }
