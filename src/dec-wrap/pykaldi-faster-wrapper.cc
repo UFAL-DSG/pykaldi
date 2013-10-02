@@ -22,37 +22,32 @@
 #include "pykaldi-feat-input.h"
 #include "pykaldi-decodable.h"
 
-/*****************
- *  C interface  *
- *****************/
-// explicit constructor and destructor
-CKaldiDecoderWrapper *new_KaldiDecoderWrapper(void) {
-  kaldi::KaldiDecoderWrapperOptions opts;
-  return reinterpret_cast<CKaldiDecoderWrapper*>(new kaldi::KaldiDecoderWrapper(opts));
-}
-void del_KaldiDecoderWrapper(CKaldiDecoderWrapper* d) {
-  delete reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d);
+
+
+size_t Decode(void *decoder, void *decodableItf) {
+  using namespace kaldi;
+  PykaldiFasterDecoder *d = reinterpret_cast<PykaldiFasterDecoder*>(decoder);
+  PykaldiDecodableDiagGmmScaled *decodable = reinterpret_cast<PykaldiDecodableDiagGmmScaled*>(decodableItf);
+  return d->Decode(decodable);
 }
 
-// methods from C
-size_t Decode(CKaldiDecoderWrapper *d, int force_utt_end) {
-  return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Decode(force_utt_end);
-}
-size_t HypSize(CKaldiDecoderWrapper *d) {
-  return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->HypSize();
-}
-void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len) {
-  reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->FrameIn(frame, frame_len);
-}
-void PopHyp(CKaldiDecoderWrapper *d, int * word_ids, size_t size) {
-  kaldi::KaldiDecoderWrapper *dp = reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d);
-  std::vector<int32> tmp = dp->PopHyp();
-  KALDI_ASSERT(size <= tmp.size());
-  std::copy(tmp.begin(), tmp.begin()+size, word_ids);
 
+void FrameIn(void *audio_source, unsigned char *frame, size_t frame_len) {
+  reinterpret_cast<kaldi::PykaldiBuffSource*>(audio_source)->Write(frame, frame_len);
 }
-int Setup(CKaldiDecoderWrapper *d, int argc, char **argv) {
-  return reinterpret_cast<kaldi::KaldiDecoderWrapper*>(d)->Setup(argc, argv);
+
+
+// void PopHyp(void *decoder, void *decoded_hypothesis) {
+//   using namespace kaldi;
+//   std::vector<int32> tmp = dp->PopHyp();
+//   KALDI_ASSERT(size <= tmp.size());
+//   std::copy(tmp.begin(), tmp.begin()+size, word_ids);
+// 
+// }
+
+int Setup(int argc, char **argv) {
+  struct Wrapper w;
+  return 0;
 }
 
 /*******************
