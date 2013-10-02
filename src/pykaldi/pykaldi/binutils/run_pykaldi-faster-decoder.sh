@@ -5,10 +5,16 @@
 
 batch_size=4560
 
+date=`date +%Y-%m-%d`
+tmp_config=/tmp/$(basename $0)_${date}.$$
+cat $decode_config $mfcc_config > $tmp_config 
+echo 1>&2; echo Using config $tmp_config 1>&2 ; echo 1>&2
+cat $tmp_config 1>&2 ; echo 1>&2
+
 # cgdb -q -x .gdbinit --args \
-    python pykaldi-faster-decoder.py $wav_scp $batch_size $pykaldi_faster_tra \
-        --verbose=2 --acoustic-scale=0.1 --config=$decode_config \
-        $model $hclg $wst 1:2:3:4:5
+python pykaldi-faster-decoder.py $wav_scp $batch_size $pykaldi_faster_tra \
+    --verbose=2 --acoustic-scale=0.1 --config=$tmp_config \
+    $model $hclg $wst 1:2:3:4:5
 
 # reference is named based on wav_scp 
 ./build_reference.py $wav_scp $decode_dir  

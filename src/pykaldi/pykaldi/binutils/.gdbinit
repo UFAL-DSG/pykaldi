@@ -28,6 +28,7 @@
 
 directory ../../../dec-wrap
 directory ../../../decoder
+directory ../../../feat
 
 # setup
 # b pykaldi-faster-wrapper.cc:175
@@ -39,8 +40,9 @@ directory ../../../decoder
 # decode - decoder
 # b pykaldi-faster-decoder.cc:46
 
-# IsValidFrame -> features
-b pykaldi-feat-input.cc:73
+# extractor->Compute
+b pykaldi-feat-input.h:166
 # display frame
+b feature-mfcc.cc:75
 
 run
