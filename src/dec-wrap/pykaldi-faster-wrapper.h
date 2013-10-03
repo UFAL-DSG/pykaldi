@@ -21,7 +21,6 @@
 /*****************
  *  C interface  *
  *****************/
-// FIXME namespace prefixes
 #include <stdio.h>
 
 typedef void CKaldiDecoderWrapper;
@@ -34,22 +33,8 @@ extern "C" {
 CKaldiDecoderWrapper* new_KaldiDecoderWrapper(void);
 void del_KaldiDecoderWrapper(CKaldiDecoderWrapper *d);
 
-struct Wrapper {
-  void *audio;
-  void *mfcc;
-  void *feat_input;
-  void *feat_transform;
-  void *feat_matrix;
-  void *decodable;
-  void *trans_model;
-  void *amm;
-  void *decoder;
-  void *decode_fst;
-
-};
-
 // methods
-size_t Decode(void *decoder, void *decodableItf);
+size_t Decode(CKaldiDecoderWrapper *d, int force_utt_end);
 size_t HypSize(CKaldiDecoderWrapper *d);
 void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len);
 void PopHyp(CKaldiDecoderWrapper *d, int * word_ids, size_t size);
