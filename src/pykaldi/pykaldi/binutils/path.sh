@@ -7,7 +7,8 @@ data_dir=$PWD/vystadial-sample-test/data/test
 decode_dir=$exp_dir/decode
 
 # IO parameters
-wav_scp=$data_dir/input_best.scp
+# wav_scp=$data_dir/input_best.scp
+wav_scp=$data_dir/input.scp
 
 gmm_latgen_faster_tra=$decode_dir/gmm-latgen-faster.tra
 gmm_latgen_faster_tra_txt=${gmm_latgen_faster_tra}.txt

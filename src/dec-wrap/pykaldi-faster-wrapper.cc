@@ -88,6 +88,13 @@ size_t KaldiDecoderWrapper::Decode(bool force_utt_end) {
                                      static_cast<LatticeArc::Weight*>(0));
       }
     }
+
+    // debug
+    std::cout << "DEBUG_W";
+    for (size_t i = 0; i < new_word_ids.size(); ++i)
+      std::cout << " " << new_word_ids[i];
+    std::cout << std::endl;
+
     // append the new ids to buffer
     word_ids_.insert(word_ids_.end(), new_word_ids.begin(), new_word_ids.end());
   }

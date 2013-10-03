@@ -19,7 +19,7 @@ from pykaldi.utils import load_wav, wst2dict
 from pykaldi.decoders import OnlineDecoder, DecoderCloser
 import sys
 
-#FIXME todo measure time of decode resp decode_once through profiler
+# FIXME todo measure time of decode resp decode_once through profiler
 
 
 def write_decoded(f, wav_name, word_ids, wst):
@@ -28,7 +28,7 @@ def write_decoded(f, wav_name, word_ids, wst):
     else:
         decoded = [str(w) for w in word_ids]
     line = ' '.join([wav_name] + decoded + ['\n'])
-    print >> sys.stderr,  'DEBUG %s: %s' % (wav_name, line)
+    print >> sys.stderr, 'DEBUG %s' % line
     f.write(line)
 
 
@@ -41,12 +41,13 @@ def decode_once(d, pcm):
 def decode(d, pcm):
     frame_len = (2 * audio_batch_size)  # 16-bit audio so 1 sample = 2 chars
     it, decoded = (len(pcm) / frame_len), []
-    print >> sys.stderr,  'NUMBER of audio input frames: %d' % it
+    print >> sys.stderr, 'NUMBER of audio input frames: %d' % it
     for i in xrange(it):
         frame = pcm[i * frame_len:(i + 1) * frame_len]
         d.frame_in(frame, audio_batch_size)
         ids, prob = d.decode()
         decoded.extend(ids)
+    d.frame_in(pcm[it * frame_len:], (len(pcm) - (it * frame_len)) / 2)
     ids, prob = d.decode(force_end_utt=True)
     decoded.extend(ids)
     return [word_id for word_id in decoded]
