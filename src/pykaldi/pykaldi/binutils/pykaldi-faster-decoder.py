@@ -54,7 +54,6 @@ def decode(d, pcm):
 
 
 def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst=None):
-    print >> sys.stderr, 'decode_zig_zag'
     with DecoderCloser(PykaldiFasterDecoder(argv)) as d:
         for wav_name, wav_path in wav_paths:
             # 16-bit audio so 1 sample_width = 2 chars

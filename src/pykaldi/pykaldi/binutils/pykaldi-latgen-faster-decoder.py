@@ -40,21 +40,18 @@ def decode(d, pcm):
         audio_chunk = pcm[i * frame_len:(i + 1) * frame_len]
         d.frame_in(audio_chunk, audio_batch_size)
         decoded_frames = 0
-        dec_t = d.decode(max_frames=10)
-        while dec_t > 0:
-            decoded_frames += dec_t
-            dec_t = d.decode(max_frames=10)
-        d.get_best_path()
+        # dec_t = d.decode(max_frames=10)
+        # while dec_t > 0:
+        #     decoded_frames += dec_t
+        #     dec_t = d.decode(max_frames=10)
+        # d.get_best_path()
+        print >> sys.stderr, 'Decoded frames: %d' % decoded_frames
 
-    d.frame_in(pcm[it * frame_len:], (len(pcm) - (it * frame_len)) / 2)
-    ids, prob = d.decode(force_end_utt=True)
-    decoded.extend(ids)
     # FIXME interface fst to python
     # return [word_id for word_id in decoded]
 
 
 def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst=None):
-    print >> sys.stderr, 'decode_zig_zag'
     with DecoderCloser(PykaldiLatgenFasterDecoder(argv)) as d:
         for wav_name, wav_path in wav_paths:
             # 16-bit audio so 1 sample_width = 2 chars
