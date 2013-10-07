@@ -40,10 +40,10 @@ def decode(d, pcm):
         audio_chunk = pcm[i * frame_len:(i + 1) * frame_len]
         d.frame_in(audio_chunk, audio_batch_size)
         decoded_frames = 0
-        # dec_t = d.decode(max_frames=10)
-        # while dec_t > 0:
-        #     decoded_frames += dec_t
-        #     dec_t = d.decode(max_frames=10)
+        dec_t = d.decode(max_frames=10)
+        while dec_t > 0:
+            decoded_frames += dec_t
+            dec_t = d.decode(max_frames=10)
         # d.get_best_path()
         print >> sys.stderr, 'Decoded frames: %d' % decoded_frames
 

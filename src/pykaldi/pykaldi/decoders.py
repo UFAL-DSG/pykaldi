@@ -121,7 +121,7 @@ class PykaldiLatgenFasterDecoder(KaldiDecoder):
     def frame_in(self, frame_str, num_samples):
         assert len(frame_str) == (2 * num_samples), "We support only 16bit audio"
         "-> 1 sample == 2 chars -> len(frame_str) = 2 * num_samples"
-        self.lib.FrameIn(self.wrapper_p.audio, frame_str, num_samples)
+        self.lib.GmmLatgenWrapper_FrameIn(self.wrapper_p.audio, frame_str, num_samples)
 
     def get_best_path(self):
         void_p_fst = self.ffi.new("void *")
