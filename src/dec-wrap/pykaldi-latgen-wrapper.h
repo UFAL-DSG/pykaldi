@@ -41,13 +41,13 @@ struct GmmLatgenWrapper {
   void *decode_fst;
 };
 
-void del_GmmLatgenWrapper(GmmLatgenWrapper w); 
-
-// methods
-size_t GmmLatgenWrapper_Decode(void *decoder, void *decodableItf);
+void del_GmmLatgenWrapper(struct GmmLatgenWrapper *w);
+size_t GmmLatgenWrapper_Decode(void *decoder, void *decodableItf, size_t max_frames);
 void GmmLatgenWrapper_FrameIn(void *audio_source, unsigned char *frame, size_t frame_len);
-void GmmLatgenWrapper_PopHyp(void *d, void *fst);
-GmmLatgenWrapper GmmLatgenWrapper_Setup(int argc, char **argv);
+void GmmLatgenWrapper_GetBestPath(void *d, void *fst);
+void GmmLatgenWrapper_GetRawLattice(void *d, void *fst);
+void GmmLatgenWrapper_Reset(void *decoder);
+int GmmLatgenWrapper_Setup(int argc, char **argv, struct GmmLatgenWrapper *w);
 
 #ifdef __cplusplus
 }

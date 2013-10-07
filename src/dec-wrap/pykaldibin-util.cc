@@ -20,12 +20,47 @@
 
 #include <string>
 #include "pykaldibin-util.h"
+#include "lat/kaldi-lattice.h"
+
+
+void* create_lat_fst() {
+  using namespace kaldi;
+  return new fst::VectorFst<LatticeArc>(); // abstract class use something concrete
+}
+
+void print_linear_fst(void * fst_void) {
+   fst::MutableFst<kaldi::LatticeArc> *fst = reinterpret_cast<fst::MutableFst<kaldi::LatticeArc>*>(fst_void);
+    std::vector<int32> alignment;
+    std::vector<int32> words;
+    kaldi::LatticeWeight weight;
+    fst::GetLinearSymbolSequence(*fst, &alignment, &words, &weight);
+
+    std::cout << "words_id ";
+    for (size_t i = 0; i < words.size(); i++)
+      std::cout << words[i] << ' ';
+    std::cout << std::endl;
+
+    std::cout << "alignments ";
+    for (size_t i = 0; i < alignment.size(); i++)
+      std::cout << alignment[i] << ' ';
+    std::cout << std::endl;
+
+    std::cout << "likelihood " << -(weight.Value1() + weight.Value2()) << std::endl;
+}
+
+void delete_lat_fst(void * fst_in) {
+   delete reinterpret_cast<fst::MutableFst<kaldi::LatticeArc>*>(fst_in);
+}
 
 void pykaldi_version(int *out_major, int * out_minor, int *patch) {
   *out_major = PYKALDI_MAJOR;
   *out_minor = PYKALDI_MINOR;
   *patch = PYKALDI_PATCH;
 }
+
+void* create_lat_fst();
+void print_lat_fst(void *fst);
+void delete_lat_fst();
 
 const char* pykaldi_git_revision() {
   std::string git_sha(PYKALDI_GIT_VERSION);

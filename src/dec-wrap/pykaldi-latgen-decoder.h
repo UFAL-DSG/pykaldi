@@ -25,7 +25,14 @@ class PykaldiLatticeFasterDecoder: public LatticeFasterDecoder {
  public:
   PykaldiLatticeFasterDecoder(const fst::Fst<fst::StdArc> &fst,
                        const LatticeFasterDecoderConfig &config)
-    : LatticeFasterDecoder(fst, config) {}
+    : LatticeFasterDecoder(fst, config), frame_(1) {}
+
+  // hides base class bool Decode(DecodableInterface)
+  size_t Decode(DecodableInterface *decodable, size_t max_frames);
+
+  void Reset(); 
+ private:
+  int32 frame_;
 
 };
 

@@ -21,11 +21,11 @@ import os
 import pykaldi
 from pykaldi.utils import load_wav
 from pykaldi.binutils.online_decode import run_online_dec
-from pykaldi.decoders import OnlineDecoder, DecoderCloser
+from pykaldi.decoders import PykaldiFasterDecoder, DecoderCloser
 from pykaldi.utils import get_voxforge_data
 
 
-class TestOnlineDecoder(unittest.TestCase):
+class TestPykaldiFasterDecoder(unittest.TestCase):
     def setUp(self):
         dir_path = os.path.realpath(os.path.dirname(__file__))
         self.wav_path = os.path.join(dir_path, 'audio', 'test.wav')
@@ -48,18 +48,18 @@ class TestOnlineDecoder(unittest.TestCase):
         self.assertTrue(len(pykaldi.__git_revision__) == 40)
 
     def test_decode(self, num_it=200):
-        with DecoderCloser(OnlineDecoder(self.argv)) as d:
+        with DecoderCloser(PykaldiFasterDecoder(self.argv)) as d:
             for i in xrange(num_it):
                 d.decode()
 
     def test_finish_decoding(self, num_it=200):
-        with DecoderCloser(OnlineDecoder(self.argv)) as d:
+        with DecoderCloser(PykaldiFasterDecoder(self.argv)) as d:
             for i in xrange(num_it):
                 d.decode(force_end_utt=True)
 
     def test_wav(self, words_to_dec=3):
         pcm = load_wav(self.wav_path)
-        # Test OnlineDecoder
+        # Test PykaldiFasterDecoder
         samples_per_frame = 2120
         word_ids, prob = run_online_dec(pcm, self.argv, samples_per_frame)
         print 'From %s decoded %d utt: %s' % (self.wav_path, len(word_ids), str(word_ids))
