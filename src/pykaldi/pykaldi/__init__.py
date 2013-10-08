@@ -47,25 +47,27 @@ def init_dec():
     int Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
 
     // pykaldi-latgen-faster-decoder interface
-    struct GmmLatgenWrapper {
+    typedef struct  {
       void *audio;
       void *decodable;
       void *decoder;
       ...;
-    };
+    } GmmLatgenWrapper;
 
     // helper function
-    void* create_lat_fst();
     void print_linear_fst(void *fst);
-    void delete_lat_fst(void *fst);
+    void* new_lat_fst();
+    void del_lat_fst(void *fst);
     // core functions
-    void del_GmmLatgenWrapper(struct GmmLatgenWrapper *w);
+    GmmLatgenWrapper* new_GmmLatgenWrapper();
+    void del_GmmLatgenWrapper(GmmLatgenWrapper *w);
     size_t GmmLatgenWrapper_Decode(void *decoder, void *decodableItf, size_t max_frames);
     void GmmLatgenWrapper_FrameIn(void *audio_source, unsigned char *frame, size_t frame_len);
     void GmmLatgenWrapper_GetBestPath(void *d, void *fst);
     void GmmLatgenWrapper_GetRawLattice(void *d, void *fst);
-    void GmmLatgenWrapper_Reset(void *decoder);
-    int GmmLatgenWrapper_Setup(int argc, char **argv, struct GmmLatgenWrapper *w);
+    void GmmLatgenWrapper_PruneFinal(void *decoder);
+    void GmmLatgenWrapper_Reset(GmmLatgenWrapper *w, int keep_buffer_data);
+    int GmmLatgenWrapper_Setup(int argc, char **argv, GmmLatgenWrapper *w);
     ''')
 
     srcdir = os.path.realpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))

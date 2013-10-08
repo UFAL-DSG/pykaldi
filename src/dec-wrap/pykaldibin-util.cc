@@ -23,10 +23,11 @@
 #include "lat/kaldi-lattice.h"
 
 
-void* create_lat_fst() {
+void* new_lat_fst() {
   using namespace kaldi;
-  return new fst::VectorFst<LatticeArc>(); // abstract class use something concrete
+  return new fst::VectorFst<LatticeArc>();
 }
+
 
 void print_linear_fst(void * fst_void) {
    fst::MutableFst<kaldi::LatticeArc> *fst = reinterpret_cast<fst::MutableFst<kaldi::LatticeArc>*>(fst_void);
@@ -48,8 +49,8 @@ void print_linear_fst(void * fst_void) {
     std::cout << "likelihood " << -(weight.Value1() + weight.Value2()) << std::endl;
 }
 
-void delete_lat_fst(void * fst_in) {
-   delete reinterpret_cast<fst::MutableFst<kaldi::LatticeArc>*>(fst_in);
+void del_lat_fst(void * fst) {
+   delete reinterpret_cast<fst::MutableFst<kaldi::LatticeArc>*>(fst);
 }
 
 void pykaldi_version(int *out_major, int * out_minor, int *patch) {
@@ -57,10 +58,6 @@ void pykaldi_version(int *out_major, int * out_minor, int *patch) {
   *out_minor = PYKALDI_MINOR;
   *patch = PYKALDI_PATCH;
 }
-
-void* create_lat_fst();
-void print_lat_fst(void *fst);
-void delete_lat_fst();
 
 const char* pykaldi_git_revision() {
   std::string git_sha(PYKALDI_GIT_VERSION);

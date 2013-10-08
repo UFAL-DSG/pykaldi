@@ -15,8 +15,9 @@ size_t PykaldiLatticeFasterDecoder::Decode(DecodableInterface *decodable, size_t
     ProcessEmitting(decodable, frame_);
       
     ProcessNonemitting(frame_);
-
-    PruneActiveTokensFinal(frame_);
+    
+    if(frame_ % config_.prune_interval == 0)
+      PruneActiveTokens(frame_, config_.lattice_beam * 0.1); // use larger delta.        
   }
   // // Returns bigger than 0 if we have any kind of traceback available (not necessarily
   // // to the end state; query ReachedFinal() for that).
@@ -24,9 +25,6 @@ size_t PykaldiLatticeFasterDecoder::Decode(DecodableInterface *decodable, size_t
   return i;  // number of actually processed frames
 }
 
-// FIXME use this in pophypothesis
-    // else if (frame_ % config_.prune_interval == 0)
-    //   PruneActiveTokens(frame_, config_.lattice_beam * 0.1); // use larger delta.        
 
 void PykaldiLatticeFasterDecoder::Reset() {
   // clean up from last time:

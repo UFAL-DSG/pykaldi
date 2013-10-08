@@ -30,10 +30,11 @@ class PykaldiLatticeFasterDecoder: public LatticeFasterDecoder {
   // hides base class bool Decode(DecodableInterface)
   size_t Decode(DecodableInterface *decodable, size_t max_frames);
 
+  void PruneFinal() { PruneActiveTokensFinal(frame_ - 1); }
+
   void Reset(); 
  private:
   int32 frame_;
-
 };
 
 }  // namespace kaldi

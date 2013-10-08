@@ -40,6 +40,7 @@ class DummyFeatInput: public PykaldiFeatInputItf {
 
     virtual int32 Dim() const { return m_.NumCols(); }
 
+    virtual void Reset() { m_.Resize(0, 0); }
   private:
     Matrix<BaseFloat> m_;
 };
@@ -50,6 +51,7 @@ class DummyFeatNoInput: public PykaldiFeatInputItf {
     DummyFeatNoInput(MatrixIndexT cols) { dim_ = cols; }
     virtual MatrixIndexT Compute(Matrix<BaseFloat> *output) { output->Resize(0, 0); return 0; }
     virtual int32 Dim() const { return dim_; }
+    virtual void Reset() {}
   private:
     int32 dim_;
 };

@@ -31,14 +31,11 @@ extern "C" {
 #endif
 
 
-void* create_lat_fst();
-
+void* new_lat_fst();
+void del_lat_fst(void *fst);
 void print_linear_fst(void *fst);
 
-void delete_lat_fst(void *fst);
-
 void pykaldi_version(int *out_major, int * out_minor, int *patch);
-
 const char* pykaldi_git_revision();
 
 #ifdef __cplusplus

@@ -44,7 +44,8 @@ def decode(d, pcm):
         while dec_t > 0:
             decoded_frames += dec_t
             dec_t = d.decode(max_frames=10)
-        # d.get_best_path()
+        d.prune_final()
+        d.get_best_path()
         print >> sys.stderr, 'Decoded frames: %d' % decoded_frames
 
     # FIXME interface fst to python

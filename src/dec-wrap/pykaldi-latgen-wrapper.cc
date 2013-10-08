@@ -45,7 +45,13 @@ void unpack_GmmLatgenWrapper(GmmLatgenWrapper *w, Mfcc **mfcc, PykaldiBuffSource
 }
 
 
-void del_GmmLatgenWrapper(struct GmmLatgenWrapper *w) {
+GmmLatgenWrapper *new_GmmLatgenWrapper() { 
+  GmmLatgenWrapper *w = (GmmLatgenWrapper*) malloc(sizeof *w);
+  return w;
+}
+
+
+void del_GmmLatgenWrapper(GmmLatgenWrapper *w) {
   Mfcc *mfcc; PykaldiBuffSource *audio; PykaldiFeInput<Mfcc> *feat_input;
   TransitionModel *trans_model; fst::Fst<fst::StdArc> *decode_fst;
   PykaldiLatticeFasterDecoder *decoder; PykaldiFeatInputItf *feat_transform;
@@ -89,12 +95,33 @@ void GmmLatgenWrapper_GetRawLattice(void *decoder, void *out_fst) {
   reinterpret_cast<PykaldiLatticeFasterDecoder*>(decoder)->GetRawLattice(fst);
 }
 
-void GmmLatgenWrapper_Reset(void *decoder) {
-  reinterpret_cast<PykaldiLatticeFasterDecoder*>(decoder)->Reset();
+
+void GmmLatgenWrapper_PruneFinal(void *decoder) {
+  reinterpret_cast<PykaldiLatticeFasterDecoder*>(decoder)->PruneFinal();
 }
 
 
-int GmmLatgenWrapper_Setup(int argc, char **argv, struct GmmLatgenWrapper *w) {
+void GmmLatgenWrapper_Reset(GmmLatgenWrapper *w, int keep_buffer_data) {
+  Mfcc *mfcc; PykaldiBuffSource *audio; PykaldiFeInput<Mfcc> *feat_input;
+  TransitionModel *trans_model; fst::Fst<fst::StdArc> *decode_fst;
+  PykaldiLatticeFasterDecoder *decoder; PykaldiFeatInputItf *feat_transform;
+  PykaldiFeatureMatrix *feat_matrix; PykaldiDecodableDiagGmmScaled *decodable;
+  AmDiagGmm *amm;
+
+  unpack_GmmLatgenWrapper(w, &mfcc, &audio, &feat_input, &trans_model, &decode_fst,
+    &decoder, &feat_transform, &feat_matrix, &decodable, &amm);
+  if (!keep_buffer_data) {
+    audio->Reset();
+    feat_input->Reset();
+    feat_transform->Reset();
+  }
+  feat_matrix->Reset();
+  decodable->Reset();
+  decoder->Reset();
+}
+
+
+int GmmLatgenWrapper_Setup(int argc, char **argv, GmmLatgenWrapper *w) {
   try {
     KaldiDecoderGmmLatgenWrapperOptions wrapper_opts;
     PykaldiFeatureMatrixOptions feature_reading_opts;

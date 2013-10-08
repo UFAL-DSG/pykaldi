@@ -104,13 +104,14 @@ class PykaldiLatgenFasterDecoder(KaldiDecoder):
     def __init__(self, args, **kwargs):
         self.lib, self.ffi = libdec, ffidec
         # first argument is the name of the "program" like in C
-        argv = ['PykaldiFasterDecoder'] + args
+        argv = ['PykaldiLatgenFasterDecoder'] + args
         # necessary to keep it alive long enough -> member field-> ok
+        self.wrapper_p = self.lib.new_GmmLatgenWrapper()
         self.argv = [self.ffi.new("char[]", arg) for arg in argv]
         argc, argp = len(self.argv), self.ffi.new("char *[]", self.argv)
-        self.wrapper_p = self.ffi.new("struct GmmLatgenWrapper *")
         if self.lib.GmmLatgenWrapper_Setup(argc, argp, self.wrapper_p) != 0:
             raise Exception("PykaldiLatgenFasterDecoder started with wrong parameters!")
+        self.lib.GmmLatgenWrapper_Reset(self.wrapper_p, False)
 
     def decode(self, max_frames=1):
         """The decoder will process at maximum max_frames in forward decoding.
@@ -123,11 +124,16 @@ class PykaldiLatgenFasterDecoder(KaldiDecoder):
         "-> 1 sample == 2 chars -> len(frame_str) = 2 * num_samples"
         self.lib.GmmLatgenWrapper_FrameIn(self.wrapper_p.audio, frame_str, num_samples)
 
+    def prune_final(self):
+        self.lib.GmmLatgenWrapper_PruneFinal(self.wrapper_p.decoder)
+
     def get_best_path(self):
-        void_p_fst = self.ffi.new("void *")
-        self.lib.GmmLatgenWrapper_GetBestPath(self.wrapper_p.decoder, void_p_fst)
-        self.lib.print_linear_fst(void_p_fst)
-        self.lib.delete_lat_fst(void_p_fst)
+        # FIXME extract fst_p from Python object
+        void_fst_p = self.lib.new_lat_fst()
+        self.lib.GmmLatgenWrapper_GetBestPath(self.wrapper_p.decoder, void_fst_p)
+        self.lib.print_linear_fst(void_fst_p)
+        self.lib.del_lat_fst(void_fst_p)
+        self.lib.GmmLatgenWrapper_Reset(self.wrapper_p, False)
 
     def close(self):
         """Deallocates the underlaying C module.

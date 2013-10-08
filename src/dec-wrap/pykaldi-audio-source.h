@@ -71,6 +71,9 @@ class PykaldiBuffSource: public PykaldiAudioSourceItf {
   /// @param num_samples [in] number of samples in data array
   void Write(unsigned char *data, size_t num_samples);
 
+
+  void Reset();
+
  private:
   const PykaldiBuffSourceOptions opts_;
   std::vector<BaseFloat> src_;
