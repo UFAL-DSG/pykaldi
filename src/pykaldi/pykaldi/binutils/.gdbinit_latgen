@@ -43,8 +43,9 @@ directory ../../../feat
 # b pykaldi-latgen-wrapper.cc:GmmLatgenWrapper_Setup
 # b pykaldi-latgen-wrapper.cc:GmmLatgenWrapper_Reset
 # b pykaldi-latgen-wrapper.cc:GmmLatgenWrapper_FrameIn
-b lattice-faster-decoder.cc:317
-b pykaldi-feat-input.cc:70
-b pykaldi-latgen-wrapper.cc:111
+b pykaldi-latgen-wrapper.cc:GmmLatgenWrapper_GetLattice
+b pykaldi-latgen-wrapper.cc:GmmLatgenWrapper_GetBestPath
+# b lattice-faster-decoder.cc:317
+# b pykaldi-feat-input.cc:70
 
 run

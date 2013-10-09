@@ -36,17 +36,18 @@ def decode(d, pcm):
     frame_len = (2 * audio_batch_size)  # 16-bit audio so 1 sample = 2 chars
     it, decoded = (len(pcm) / frame_len), []
     print >> sys.stderr, 'NUMBER of audio input chunks: %d' % it
+    decoded_frames = 0
     for i in xrange(it):
         audio_chunk = pcm[i * frame_len:(i + 1) * frame_len]
         d.frame_in(audio_chunk, audio_batch_size)
-        decoded_frames = 0
         dec_t = d.decode(max_frames=10)
         while dec_t > 0:
             decoded_frames += dec_t
             dec_t = d.decode(max_frames=10)
-        d.prune_final()
-        d.get_best_path()
-        print >> sys.stderr, 'Decoded frames: %d' % decoded_frames
+    d.prune_final()
+    # d.get_best_path()   # segfaults
+    d.get_lattice()
+    print >> sys.stderr, 'Decoded frames: %d' % decoded_frames
 
     # FIXME interface fst to python
     # return [word_id for word_id in decoded]

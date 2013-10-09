@@ -31,9 +31,9 @@ extern "C" {
 #endif
 
 
-void* new_lat_fst();
-void del_lat_fst(void *fst);
-void print_linear_fst(void *fst);
+void* new_fst_VectorFstLatticeArc();
+void del_fst_VectorFstLatticeArc(void *fst);
+void print_fstMutableLatticeArc(void *fst);
 
 void pykaldi_version(int *out_major, int * out_minor, int *patch);
 const char* pykaldi_git_revision();

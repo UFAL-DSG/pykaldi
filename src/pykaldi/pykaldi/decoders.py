@@ -128,12 +128,22 @@ class PykaldiLatgenFasterDecoder(KaldiDecoder):
         self.lib.GmmLatgenWrapper_PruneFinal(self.wrapper_p.decoder)
 
     def get_best_path(self):
-        # FIXME extract fst_p from Python object
-        void_fst_p = self.lib.new_lat_fst()
-        self.lib.GmmLatgenWrapper_GetBestPath(self.wrapper_p.decoder, void_fst_p)
-        self.lib.print_linear_fst(void_fst_p)
-        self.lib.del_lat_fst(void_fst_p)
+        # TODO extract fst_p from Python object
+        void_fst_p = self.lib.new_fst_VectorFstLatticeArc()
+        if not self.lib.GmmLatgenWrapper_GetBestPath(self.wrapper_p.decoder, void_fst_p):
+            self.lib.del_fst_VectorFstLatticeArc(void_fst_p)
+            return None
+        self.lib.del_fst_VectorFstLatticeArc(void_fst_p)
+        self.lib.print_fstMutableLatticeArc(void_fst_p)
         self.lib.GmmLatgenWrapper_Reset(self.wrapper_p, False)
+
+    def get_raw_lattice(self):
+        # TODO extract fst_p from Python object
+        self.lib.GmmLatgenWrapper_GetRawLattice(self.wrapper_p)
+
+    def get_lattice(self):
+        # TODO extract fst_p from Python object
+        self.lib.GmmLatgenWrapper_GetLattice(self.wrapper_p)
 
     def close(self):
         """Deallocates the underlaying C module.

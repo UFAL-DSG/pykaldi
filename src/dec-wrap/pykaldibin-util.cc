@@ -23,13 +23,13 @@
 #include "lat/kaldi-lattice.h"
 
 
-void* new_lat_fst() {
+void* new_fst_VectorFstLatticeArc() {
   using namespace kaldi;
   return new fst::VectorFst<LatticeArc>();
 }
 
 
-void print_linear_fst(void * fst_void) {
+void print_fstMutableLatticeArc(void * fst_void) {
    fst::MutableFst<kaldi::LatticeArc> *fst = reinterpret_cast<fst::MutableFst<kaldi::LatticeArc>*>(fst_void);
     std::vector<int32> alignment;
     std::vector<int32> words;
@@ -49,8 +49,8 @@ void print_linear_fst(void * fst_void) {
     std::cout << "likelihood " << -(weight.Value1() + weight.Value2()) << std::endl;
 }
 
-void del_lat_fst(void * fst) {
-   delete reinterpret_cast<fst::MutableFst<kaldi::LatticeArc>*>(fst);
+void del_fst_VectorFstLatticeArc(void * fst) {
+   delete reinterpret_cast<fst::VectorFst<kaldi::LatticeArc>*>(fst);
 }
 
 void pykaldi_version(int *out_major, int * out_minor, int *patch) {

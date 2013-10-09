@@ -24,6 +24,9 @@
 #include "pykaldi-latgen-wrapper.h"
 #include "pykaldi-latgen-decoder.h"
 #include "fstext/fstext-lib.h"
+// debug
+#include <fstream>
+#include <iostream>
 
 using namespace kaldi;
 
@@ -85,14 +88,47 @@ void GmmLatgenWrapper_FrameIn(void *audio_source, unsigned char *frame, size_t f
 }
 
 
-void GmmLatgenWrapper_GetBestPath(void *decoder, void *out_fst) {
+int GmmLatgenWrapper_GetBestPath(void *decoder, void *out_fst) {
   fst::MutableFst<LatticeArc> *fst = reinterpret_cast<fst::MutableFst<LatticeArc>*>(out_fst);
-  reinterpret_cast<PykaldiLatticeFasterDecoder*>(decoder)->GetBestPath(fst);
+  return reinterpret_cast<PykaldiLatticeFasterDecoder*>(decoder)->GetBestPath(fst);
 }
 
-void GmmLatgenWrapper_GetRawLattice(void *decoder, void *out_fst) {
-  fst::MutableFst<LatticeArc> *fst = reinterpret_cast<fst::MutableFst<LatticeArc>*>(out_fst);
-  reinterpret_cast<PykaldiLatticeFasterDecoder*>(decoder)->GetRawLattice(fst);
+int GmmLatgenWrapper_GetRawLattice(GmmLatgenWrapper *w) {
+  // TODO no output parameter just for debugging
+  fst::VectorFst<LatticeArc> *fst = new fst::VectorFst<LatticeArc>();
+  bool ok = reinterpret_cast<PykaldiLatticeFasterDecoder*>(w->decoder)->GetRawLattice(fst);
+
+  fst::Connect(fst); // Will get rid of this later... shouldn't have any
+
+  PykaldiDecodableDiagGmmScaled* dec = reinterpret_cast<PykaldiDecodableDiagGmmScaled*>(w->decodable);
+  BaseFloat acoustic_scale = dec->GetAcousticScale();
+  if (acoustic_scale != 0.0) // We'll write the lattice without acoustic scaling
+    fst::ScaleLattice(fst::AcousticLatticeScale(1.0 / acoustic_scale), fst); 
+
+
+  delete fst;
+  return ok;
+}
+
+int GmmLatgenWrapper_GetLattice(GmmLatgenWrapper *w) {
+  // TODO no output parameter just for debugging
+  fst::VectorFst<CompactLatticeArc> *fst = new fst::VectorFst<CompactLatticeArc>();
+  bool ok = reinterpret_cast<PykaldiLatticeFasterDecoder*>(w->decoder)->GetLattice(fst);
+  PykaldiDecodableDiagGmmScaled* dec = reinterpret_cast<PykaldiDecodableDiagGmmScaled*>(w->decodable);
+  BaseFloat acoustic_scale = dec->GetAcousticScale();
+
+  if (acoustic_scale != 0.0) // We'll write the lattice without acoustic scaling
+    fst::ScaleLattice(fst::AcousticLatticeScale(1.0 / acoustic_scale), fst); 
+
+  if (ok) {
+    std::ofstream f;
+    f.open("last.lat", std::ios::binary);
+    fst::FstWriteOptions opts;  // in fst/fst.h
+    fst->Write(f, opts);
+    f.close();
+  }
+  delete fst;
+  return ok;
 }
 
 
@@ -128,7 +164,7 @@ int GmmLatgenWrapper_Setup(int argc, char **argv, GmmLatgenWrapper *w) {
     MfccOptions mfcc_opts;
     LatticeFasterDecoderConfig decoder_opts;
     DeltaFeaturesOptions delta_feat_opts;
-    PykaldiBuffSourceOptions au_opts;  // Fixed 16 bit audio
+    PykaldiBuffSourceOptions au_opts;
 
     // Parsing options
     ParseOptions po("Utterance segmentation is done on-the-fly.\n"

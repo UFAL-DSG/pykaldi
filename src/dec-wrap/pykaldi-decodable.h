@@ -47,6 +47,8 @@ class PykaldiDecodableDiagGmmScaled : public DecodableInterface {
 
   void Reset();
 
+  BaseFloat GetAcousticScale() const { return ac_scale_; }
+
  private:
   void GetFrame(int32 frame);
 
