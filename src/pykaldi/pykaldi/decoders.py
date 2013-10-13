@@ -77,27 +77,12 @@ class OnlineDecoder(KaldiDecoder):
             # FIXME use custom exception class eg PykaldiOnlineDecoderArgsError
             raise Exception("OnlineDecoder started with wrong parameters!")
 
-    def decode(self):
+    def decode(self, force_end_utt=False):
         """ Ask the decoder to process the buffered audio data.
         The decoder will return a part of hypothesis, if safe.
         Returns: list. Possibly very short (or empty) list of word_ids.
         """
-        # FIXME currently segfaults at KALDI_ASSERT
-        # if there is not enough audio
-        size = self.lib.Decode(self.dec)
-        return self._pop_hyp_from_c(size)
-
-    def finished(self):
-        """ Returns: bool. Indicating if decoder processed all frames
-        and does not wait for more features."""
-        return self.lib.Finished(self.dec)
-
-    def finish_decoding(self, clear_input=False):
-        """Tell the decoder that no more input is coming
-        and to decode last hypothesis.
-        clear_input Discards the so far unprocessed data first
-        Returns: int. The size of decoded hypotheses."""
-        size = self.lib.FinishDecoding(self.dec, clear_input)
+        size = self.lib.Decode(self.dec, force_end_utt)
         return self._pop_hyp_from_c(size)
 
     def frame_in(self, frame_str, num_samples):
@@ -153,7 +138,7 @@ class OnlineDecoderNumpy(OnlineDecoder):
 
 
 class ConfNetDecoder(KaldiDecoder):
-    """Docstring for ConfNetDecoder 
+    """Docstring for ConfNetDecoder
     pysfst implementation use lattice
     """
 

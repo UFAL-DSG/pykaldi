@@ -39,40 +39,23 @@
 
 namespace kaldi {
 
-// Extends the definition of FasterDecoder's options to include additional
-// parameters. The meaning of the "beam" option is also redefined as
-// the _maximum_ beam value allowed.
+// Extends the definition of FasterDecoder's options to include additional parameters. 
 struct PykaldiFasterDecoderOpts : public FasterDecoderOptions {
-  BaseFloat rt_min; // minimum decoding runtime factor
-  BaseFloat rt_max; // maximum decoding runtime factor
-  int32 batch_size; // number of features decoded in one go
-  int32 inter_utt_sil; // minimum silence (#frames) to trigger end of utterance
-  int32 max_utt_len_; // if utt. is longer, we accept shorter silence as utt. separators
-  int32 update_interval; // beam update period in # of frames
-  BaseFloat beam_update; // rate of adjustment of the beam
-  BaseFloat max_beam_update; // maximum rate of beam adjustment
+  // Check Register function for meaning member attributes
+  int32 inter_utt_sil; 
+  int32 max_utt_len; 
+  
 
   PykaldiFasterDecoderOpts() :
-    rt_min(.7), rt_max(.75), batch_size(27),
-    inter_utt_sil(50), max_utt_len_(1500),
-    update_interval(3), beam_update(.01),
-    max_beam_update(0.05) {}
+    inter_utt_sil(50), max_utt_len(1500) {}
 
   void Register(OptionsItf *po, bool full) {
     FasterDecoderOptions::Register(po, full);
-    po->Register("rt-min", &rt_min,
-                 "Approximate minimum decoding run time factor");
-    po->Register("rt-max", &rt_max,
-                 "Approximate maximum decoding run time factor");
-    po->Register("update-interval", &update_interval,
-                 "Beam update interval in frames");
-    po->Register("beam-update", &beam_update, "Beam update rate");
-    po->Register("max-beam-update", &max_beam_update, "Max beam update rate");
-    po->Register("inter-utt-sil", &inter_utt_sil,
-                 "Maximum # of silence frames to trigger new utterance");
-    po->Register("max-utt-length", &max_utt_len_,
+    po->Register("max-utt-length", &max_utt_len,
                  "If the utterance becomes longer than this number of frames, "
                  "shorter silence is acceptable as an utterance separator");
+    po->Register("inter-utt-sil", &inter_utt_sil, 
+        "Maximum # of silence frames to trigger new utterance");
   }
 };
 
@@ -83,12 +66,6 @@ struct PykaldiFasterDecoderOpts : public FasterDecoderOptions {
 /// without the recreating the decoder.
 class PykaldiFasterDecoder : public FasterDecoder {
  public:
-  // Codes returned by Decode() to show the current state of the decoder
-  enum DecodeState {
-    kEndFeats = 1, // No more scores are available from the Decodable
-    kEndUtt = 2, // End of utterance, caused by e.g. a sufficiently long silence
-    kEndBatch = 4 // End of batch - end of utterance not reached yet
-  };
 
   // "sil_phones" - the IDs of all silence phones
   PykaldiFasterDecoder(const fst::Fst<fst::StdArc> &fst,
@@ -98,11 +75,10 @@ class PykaldiFasterDecoder : public FasterDecoder {
       : FasterDecoder(fst, opts), opts_(opts),
         silence_set_(sil_phones), trans_model_(trans_model),
         max_beam_(opts.beam), effective_beam_(FasterDecoder::config_.beam),
-        state_(kEndFeats), frame_(0), utt_frames_(0) {}
+        frame_(0), utt_frames_(0) 
+      { ResetDecoder(true); }
 
-  void NewStart(void);
-
-  DecodeState Decode(DecodableInterface *decodable);
+  size_t Decode(DecodableInterface *decodable);
 
   // Makes a linear graph, by tracing back from the last "immortal" token
   // to the previous one
@@ -117,8 +93,6 @@ class PykaldiFasterDecoder : public FasterDecoder {
   bool EndOfUtterance();
 
   int32 frame() { return frame_; }
-
-  DecodeState state() { return state_; }
 
  // Change to protected for implementation of pykaldi/pykaldi-faster-decoder.cc
  protected:
@@ -143,7 +117,6 @@ class PykaldiFasterDecoder : public FasterDecoder {
   const BaseFloat max_beam_; // the maximum allowed beam
 
   BaseFloat &effective_beam_; // the currently used beam
-  DecodeState state_; // the current state of the decoder
   int32 frame_; // the next frame to be processed
   int32 utt_frames_; // # frames processed from the current utterance
   Token *immortal_tok_;      // "immortal" token means it's an ancestor of ...

@@ -16,6 +16,7 @@ retry_beam=40
 boost_silence=1.0 # Factor by which to boost silence likelihoods in alignment
 power=0.25 # Exponent for number of gaussians according to occurrence counts
 cluster_thresh=-1  # for build-tree control final bottom-up clustering of leaves
+run_cmn=true
 # End configuration.
 
 echo "$0 $@"  # Print the command line for logging
@@ -55,7 +56,13 @@ echo $nj > $dir/num_jobs
 sdata=$data/split$nj;
 [[ -d $sdata && $data/feats.scp -ot $sdata ]] || split_data.sh $data $nj || exit 1;
 
-feats="ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- | add-deltas ark:- ark:- |"
+case $run_cmn in
+    true) cmn="ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- ";;
+    false) cmn="ark,s,cs:copy-feats scp:$sdata/JOB/feats.scp ark:- ";;
+    *) echo "Invalid boolean value $run_cmn" && exit 1;;
+esac
+
+feats="$cmn | add-deltas ark:- ark:- |"
 
 rm $dir/.error 2>/dev/null
 

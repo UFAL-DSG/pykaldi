@@ -61,7 +61,7 @@ def run_live(argv, stream, samples_per_frame, wst=None, duration=20):
 if __name__ == '__main__':
     ''' example parameters:
     export DATA=online-data/models/tri2a
-    ./live_demo.py --rt-min=0.5 --rt-max=10000.0 --max-active=4000 --beam=12.0 --acoustic-scale=0.0769 $DATA/model $DATA/HCLG.fst $DATA/words.txt 1:2:3:4:5
+    ./live_demo.py --max-active=4000 --beam=12.0 --acoustic-scale=0.0769 $DATA/model $DATA/HCLG.fst $DATA/words.txt 1:2:3:4:5
     '''
     samples_per_frame = 2120
     argv = sys.argv[1:]

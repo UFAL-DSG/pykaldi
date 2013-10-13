@@ -1,0 +1,1 @@
+../../../../egs/wsj/s5/utils/int2sym.pl

@@ -21,6 +21,7 @@ scoring_opts=
 # note: there are no more min-lmwt and max-lmwt options, instead use
 # e.g. --scoring-opts "--min-lmwt 1 --max-lmwt 20"
 skip_scoring=false
+run_cmn=true
 # End configuration section.
 
 echo "$0 $@"  # Print the command line for logging
@@ -34,7 +35,7 @@ if [ $# != 3 ]; then
    echo " where the model is."
    echo "e.g.: steps/decode.sh exp/mono/graph_tgpr data/test_dev93 exp/mono/decode_dev93_tgpr"
    echo ""
-   echo "This script works on CMN + (delta+delta-delta | LDA+MLLT) features; it works out"
+   echo "This script works on [CMN] + (delta+delta-delta | LDA+MLLT) features; it works out"
    echo "what type of features you used (assuming it's one of these two)"
    echo ""
    echo "main options (for others, see top of script file)"
@@ -49,6 +50,7 @@ if [ $# != 3 ]; then
    echo "  --scoring-opts <string>                          # options to local/score.sh"
    echo "  --num-threads <n>                                # number of threads to use, default 1."
    echo "  --parallel-opts <opts>                           # e.g. '-pe smp 4' if you supply --num-threads 4"
+   echo "  --run-cmn                                        # true/false if run CMN"
    exit 1;
 fi
 
@@ -64,7 +66,7 @@ mkdir -p $dir/log
 echo $nj > $dir/num_jobs
 
 if [ -z "$model" ]; then # if --model <mdl> was not specified on the command line...
-  if [ -z $iter ]; then model=$srcdir/final.mdl; 
+  if [ -z $iter ]; then model=$srcdir/final.mdl;
   else model=$srcdir/$iter.mdl; fi
 fi
 
@@ -79,10 +81,16 @@ splice_opts=`cat $srcdir/splice_opts 2>/dev/null`
 thread_string=
 [ $num_threads -gt 1 ] && thread_string="-parallel --num-threads=$num_threads" 
 
+case $run_cmn in
+    true) cmn="ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- |" ;;
+    false) cmn="ark,s,cs:copy-feats scp:$sdata/JOB/feats.scp ark:- |" ;;
+    *) echo "Invalid boolean value $run_cmn" && exit 1;;
+esac
+
 case $feat_type in
-  delta) feats="ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- | add-deltas ark:- ark:- |";;
-  lda) feats="ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- | splice-feats $splice_opts ark:- ark:- | transform-feats $srcdir/final.mat ark:- ark:- |";;
-  *) echo "Invalid feature type $feat_type" && exit 1;
+  delta) feats="$cmn add-deltas ark:- ark:- |";;
+  lda) feats="$cmn splice-feats $splice_opts ark:- ark:- | transform-feats $srcdir/final.mat ark:- ark:- |";;
+  *) echo "Invalid feature type $feat_type" && exit 1;;
 esac
 if [ ! -z "$transform_dir" ]; then # add transforms to features...
   echo "Using fMLLR transforms from $transform_dir"

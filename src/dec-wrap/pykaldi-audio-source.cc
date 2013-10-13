@@ -24,41 +24,26 @@
 
 namespace kaldi {
 
-bool PykaldiBlockSource::Read(Vector<BaseFloat> *output) {
-  size_t d =  static_cast<size_t>(output->Dim());
-  KALDI_ASSERT(d > 0 && "Request at least something");
+MatrixIndexT PykaldiBuffSource::Read(Vector<BaseFloat> *output) {
+  KALDI_ASSERT(output->Dim() > 0 && "Request at least something");
 
-  while(block_ && (src_.size() < d) && more_input_) { 
-    usleep(sleep_time_);
-    KALDI_WARN << "Waiting for input! (Posibbly never ending loop!)\n" 
-               << "Have data " << src_.size()
-               << " required data " << output->Dim();
+  // copy as much as possible to output
+  MatrixIndexT d = std::min(output->Dim(), static_cast<MatrixIndexT>(src_.size()));
+  for (MatrixIndexT i = 0; i < d ; ++i) {
+    (*output)(i) = src_[i];
   }
-
-  if (src_.size() >= d) {
-    // copy the buffer to output
-    for (size_t i = 0; i < d ; ++i) {
-      (*output)(i) = src_[i];
-    }
-    // remove the already read elements
-    std::vector<BaseFloat>(src_.begin() + d, src_.end()).swap(src_);
-    return true;
-  } else {
-    // block_ is false otherwise we would be waiting for input 
-    KALDI_ASSERT(!block_);
-    KALDI_VLOG(1) << "End of stream! more_input_: " << more_input_
-                  << " src_.size(): " << src_.size()
-                  << " requested: " << d;
-    return false;
-  }
+  // remove the already read elements
+  std::vector<BaseFloat>(src_.begin() + d, src_.end()).swap(src_);
+  KALDI_VLOG(3) << "Data read: " <<  d << " Data requested " << output->Dim();
+  return d;
 }
 
-void PykaldiBlockSource::Write(unsigned char * data, size_t num_samples) {
+void PykaldiBuffSource::Write(unsigned char * data, size_t num_samples) {
   // allocate the space at once -> should be faster
   src_.reserve(src_.size() + num_samples);
   // copy and convert the data to the buffer
   for (size_t i = 0; i < num_samples; ++i) {
-      switch (bits_per_sample_) {
+      switch (opts_.bits_per_sample) {
         case 8:
           src_.push_back(*data);
           data++;
@@ -84,7 +69,7 @@ void PykaldiBlockSource::Write(unsigned char * data, size_t num_samples) {
             break;
           }
         default:
-          KALDI_ERR << "unsupported bits per sample: " << bits_per_sample_;
+          KALDI_ERR << "unsupported bits per sample: " << opts_.bits_per_sample;
       }
   }
 }

@@ -21,8 +21,9 @@ randprune=4.0 # This is approximately the ratio by which we will speed up the
               # LDA and MLLT calculations via randomized pruning.
 splice_opts=
 cluster_thresh=-1  # for build-tree control final bottom-up clustering of leaves
-# End configuration.
 train_tree=true  # if false, don't actually train the tree.
+run_cmn=true
+# End configuration.
 
 echo "$0 $@"  # Print the command line for logging
 
@@ -65,8 +66,13 @@ echo "$splice_opts" >$dir/splice_opts # keep track of frame-splicing options
 sdata=$data/split$nj;
 split_data.sh $data $nj || exit 1;
 
+case $run_cmn in
+    true) cmn="ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- ";;
+    false) cmn="ark,s,cs:copy-feats scp:$sdata/JOB/feats.scp ark:- ";;
+    *) echo "Invalid boolean value $run_cmn" && exit 1;;
+esac
 
-splicedfeats="ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- | splice-feats $splice_opts ark:- ark:- |"
+splicedfeats="$cmn | splice-feats $splice_opts ark:- ark:- |"
 # Note: $feats gets overwritten later in the script.
 feats="$splicedfeats transform-feats $dir/0.mat ark:- ark:- |"
 

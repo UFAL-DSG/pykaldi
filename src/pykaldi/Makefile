@@ -8,6 +8,7 @@ $(LIBFILE):
 	cp $(SOURCEDIR)/$(LIBFILE) .
 
 all: $(LIBFILE)
+	python setup.py develop --user
 
 clean:
 	@# removing build directory

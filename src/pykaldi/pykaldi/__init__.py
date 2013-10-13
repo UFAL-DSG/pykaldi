@@ -40,13 +40,10 @@ def init_dec():
     CKaldiDecoderWrapper* new_KaldiDecoderWrapper();
     void del_KaldiDecoderWrapper(CKaldiDecoderWrapper *d);
 
-    size_t Decode(CKaldiDecoderWrapper *d);
+    size_t Decode(CKaldiDecoderWrapper *d, int force_end_utt);
     size_t HypSize(CKaldiDecoderWrapper *d);
-    size_t FinishDecoding(CKaldiDecoderWrapper *d, bool);
-    bool Finished(CKaldiDecoderWrapper *d);
     void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len);
     void PopHyp(CKaldiDecoderWrapper *d, int * word_ids, size_t size);
-    void Reset(CKaldiDecoderWrapper *d);
     int Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
 
     ''')
@@ -57,7 +54,7 @@ def init_dec():
     try:
         libdec = ffidec.verify(
             '''
-            #include "dec-wrap/pykaldi-gmm-decode-faster.h"
+            #include "dec-wrap/pykaldi-faster-wrapper.h"
             #include "dec-wrap/pykaldibin-util.h"
             ''',
             libraries=libs,

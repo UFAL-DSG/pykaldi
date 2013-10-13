@@ -34,14 +34,12 @@ CKaldiDecoderWrapper* new_KaldiDecoderWrapper(void);
 void del_KaldiDecoderWrapper(CKaldiDecoderWrapper *d);
 
 // methods
-size_t Decode(CKaldiDecoderWrapper *d);
+size_t Decode(CKaldiDecoderWrapper *d, int force_utt_end);
 size_t HypSize(CKaldiDecoderWrapper *d);
-size_t FinishDecoding(CKaldiDecoderWrapper *d, int clear_input);
-int Finished(CKaldiDecoderWrapper *d);
 void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len);
 void PopHyp(CKaldiDecoderWrapper *d, int * word_ids, size_t size);
-void Reset(CKaldiDecoderWrapper *d);
 int Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
+// FIXME todo ClearBuffers()  : it will reset the buffers in pipeline
 
 #ifdef __cplusplus
 }
@@ -67,15 +65,12 @@ namespace kaldi {
 struct KaldiDecoderWrapperOptions  {
   /// Input sampling frequency is fixed to 16KHz
   explicit KaldiDecoderWrapperOptions():kSampleFreq(16000), acoustic_scale(0.1),
-  left_context(4), right_context(4),
-  cmn_window(600), min_cmn_window(1)
+  left_context(4), right_context(4)
   {}
   int32 kSampleFreq;
   BaseFloat acoustic_scale;
   int32 left_context;
   int32 right_context;
-  int32 cmn_window;
-  int32 min_cmn_window;
   std::string model_rxfilename;
   std::string fst_rxfilename;
   std::string word_syms_filename; // FIXME remove it from po options
@@ -86,79 +81,65 @@ struct KaldiDecoderWrapperOptions  {
     po->Register("right-context", &right_context, "Number of frames of right context");
     po->Register("acoustic-scale", &acoustic_scale,
                 "Scaling factor for acoustic likelihoods");
-    po->Register("cmn-window", &cmn_window,
-        "Number of feat. vectors used in the running average CMN calculation");
-    po->Register("min-cmn-window", &min_cmn_window,
-                "Minumum CMN window used at start of decoding (adds "
-                "latency only at start)");
   }
 };
 
 
-/** @brief A class for setting up and using Online Decoder.
+/** @brief A class for setting up and using Pykaldi Decoder.
  *
- *  This class provides an interface to Online Decoder.
- *  It exposes C++ as well as C API. 
+ *  This class provides an interface to Pykaldi Decoder.
+ *  It exposes C++ as well as C API.
  *
  *  It is absolutelly thread unsafe! */
 class KaldiDecoderWrapper {
  public:
-   KaldiDecoderWrapper():mfcc_(0), source_(0), 
-    fe_input_(0), cmn_input_(0), trans_model_(0), decode_fst_(0), decoder_(0),
-    feat_transform_(0), feature_matrix_(0), decodable_(0) { Reset(); }
+   // The default parameters can be overriden in Setup function
+   KaldiDecoderWrapper(const KaldiDecoderWrapperOptions &opts):opts_(opts),
+    mfcc_(0), source_(0), fe_input_(0), trans_model_(0), decode_fst_(0),
+    decoder_(0), feat_transform_(0), feature_matrix_(0), decodable_(0) { }
 
-  size_t Decode(void);
+  /// @brief Do forward decoding and partial backward decoding if it is in
+  /// the middle of utterance. At the end of utterance it performs full backward decoding.
+  /// The decoded output is buffered word_ids variable
+  /// @param force_utt_end [in] The data which are in audio_source are last data for utterance
+  /// and so we enforce full backward decoding
+  size_t Decode(bool force_utt_end=false);
 
   // @brief Pass the 16 bit audio data
   /// @param data [in] the single channel pcm audio data
   /// @param num_samples [in] number of samples in data array
-  void FrameIn(unsigned char *frame, size_t frame_len) {
-    source_->Write(frame, frame_len);
-  }
-
-  /// May take a longer time, timeout in seconds
-  size_t FinishDecoding(bool clear_input=true);
-
-  bool Finished(void) { return (PykaldiFasterDecoder::kEndFeats == decoder_->state()); }
+  void FrameIn(unsigned char *frame, size_t frame_len)
+    { source_->Write(frame, frame_len); }
 
   size_t HypSize(void) { return word_ids_.size(); }
 
   /// Return the buffered words and clear the buffer
   std::vector<int32> PopHyp();
 
-  void Reset(void);
-
+  // Change the default values by specifying parameters like command line args
   int Setup(int argc, char **argv);
 
-  bool UtteranceEnded() {
-    PykaldiFasterDecoder::DecodeState s = decoder_->state();
-    return ((s  == PykaldiFasterDecoder::kEndFeats) || (s == PykaldiFasterDecoder::kEndUtt));
+  bool UtteranceEnded() { return decoder_->EndOfUtterance(); }
+
+  virtual ~KaldiDecoderWrapper(){
+    delete mfcc_; delete source_; delete feat_transform_; delete trans_model_;
+    delete decode_fst_; delete decoder_; delete decodable_;
   }
 
-  virtual ~KaldiDecoderWrapper(){ Reset(); }
-
-
  private:
-  int ParseArgs(int argc, char **argv);
-
+  KaldiDecoderWrapperOptions opts_;
   std::vector<int32> word_ids_;
 
   Mfcc *mfcc_;
-  PykaldiBlockSource *source_;
-  OnlineFeInput<Mfcc> *fe_input_;
-  OnlineCmnInput *cmn_input_;
+  PykaldiBuffSource *source_;
+  PykaldiFeInput<Mfcc> *fe_input_;
   TransitionModel *trans_model_;
   fst::Fst<fst::StdArc> *decode_fst_;
   PykaldiFasterDecoder *decoder_;
-  OnlineFeatInputItf *feat_transform_;
+  PykaldiFeatInputItf *feat_transform_;
   PykaldiFeatureMatrix *feature_matrix_;
   PykaldiDecodableDiagGmmScaled *decodable_;
   AmDiagGmm am_gmm_;
-
-  KaldiDecoderWrapperOptions opts_;
-  PykaldiFasterDecoderOpts decoder_opts_;
-  PykaldiFeatureMatrixOptions feature_reading_opts_;
-  DeltaFeaturesOptions delta_feat_opts_;
 
   KALDI_DISALLOW_COPY_AND_ASSIGN(KaldiDecoderWrapper);
 };

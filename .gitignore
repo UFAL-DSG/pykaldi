@@ -7,11 +7,6 @@
 *.fst
 tmp*
 
-# oplatek training recipe
-egs/kaldi-vystadial-recipe/
-# oplatek python-kaldi integration
-src/python-kaldi-decoding/
-
 # tools
 tools/ATLAS/
 tools/OpenBLAS/
@@ -352,6 +347,12 @@ src/nnetbin/rbm-train-cd1-frmshuff
 src/nnetbin/rbm-convert-to-nnet
 src/nnetbin/nnet-trim-n-last-transforms
 src/nnetbin/nnet-train-mmi-sequential
+src/nnetbin/cmvn-to-nnet
+src/nnetbin/nnet1-info
+src/nnetbin/nnet-concat
+src/nnetbin/nnet-train-mpe-sequential
+src/nnetbin/nnet-train-xent-hardlab-frmshuff-prior
+src/nnetbin/transf-to-nnet
 
 # /src/sgmm/
 src/sgmm/.depend.mk
@@ -580,11 +581,6 @@ src/nnet-cpubin/nnet-train-lbfgs
 src/nnet-cpubin/nnet-train-parallel
 src/nnet-cpubin/nnet-train-simple
 src/nnet-cpubin/nnet-train-transitions
-src/nnetbin/cmvn-to-nnet
-src/nnetbin/nnet-concat
-src/nnetbin/nnet-train-mpe-sequential
-src/nnetbin/nnet-train-xent-hardlab-frmshuff-prior
-src/nnetbin/transf-to-nnet
 src/sgmm2bin/sgmm2-latgen-faster-parallel
 
 # added after svn rebase

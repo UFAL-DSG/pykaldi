@@ -31,8 +31,7 @@ class TestOnlineDecoder(unittest.TestCase):
         self.wav_path = os.path.join(dir_path, 'audio', 'test.wav')
         get_voxforge_data(path=dir_path)
         p = os.path.join(dir_path, 'online-data', 'models', 'tri2a')
-        self.argv = ['--verbose=0', '--rt-min=0.5', '--rt-max=1.0',
-                     '--max-active=4000', '--beam=12.0',
+        self.argv = ['--verbose=0', '--max-active=4000', '--beam=12.0',
                      '--acoustic-scale=0.0769',
                      os.path.join(p, 'model'),
                      os.path.join(p, 'HCLG.fst'),
@@ -53,42 +52,10 @@ class TestOnlineDecoder(unittest.TestCase):
             for i in xrange(num_it):
                 d.decode()
 
-    def test_finished(self, num_it=200):
-        with DecoderCloser(OnlineDecoder(self.argv)) as d:
-            self.assertTrue(d.finished())
-            for i in xrange(num_it):
-                d.finished()
-                self.assertFalse(d.finished(), 'it %d' % i)
-
     def test_finish_decoding(self, num_it=200):
         with DecoderCloser(OnlineDecoder(self.argv)) as d:
             for i in xrange(num_it):
-                d.finish_decoding()
-
-    def test_empty(self, num_it=100, num_frm=4560):
-        from random import choice
-        from string import hexdigits
-        # frame with 16bit sample
-        dummy_frame = ''.join(choice(hexdigits) for n in xrange(2 * num_frm))
-        with DecoderCloser(OnlineDecoder(self.argv)) as d:
-            self.assertTrue(d.finished())
-            for i in xrange(num_it):
-                d.decode()
-                self.assertTrue(d.finished(), 'it %d' % i)
-            d.finish_decoding()
-            self.assertTrue(d.finished())
-            print 'empty decode'
-            for i in xrange(num_it):
-                d.frame_in(dummy_frame, num_frm)
-                d.decode()
-                # suppose we are providing enough input data
-                self.assertFalse(d.finished(), 'it %d' % i)
-            d.finish_decoding()
-            for i in xrange(num_it):
-                d.frame_in(dummy_frame, num_frm)
-                d.decode()
-                d.finished()
-            d.finish_decoding()
+                d.decode(force_end_utt=True)
 
     def test_wav(self, words_to_dec=3):
         pcm = load_wav(self.wav_path)
