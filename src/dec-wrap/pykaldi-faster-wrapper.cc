@@ -61,9 +61,6 @@ int Setup(CKaldiDecoderWrapper *d, int argc, char **argv) {
 
 namespace kaldi {
 
-// we will use this helper function in ParseArgs
-std::vector<int32> phones_to_vector(const std::string & s);
-
 size_t KaldiDecoderWrapper::Decode(bool force_utt_end) {
   KALDI_VLOG(2) << " audio source size: " << source_->BufferSize();
 
@@ -88,13 +85,6 @@ size_t KaldiDecoderWrapper::Decode(bool force_utt_end) {
                                      static_cast<LatticeArc::Weight*>(0));
       }
     }
-
-    // debug
-    std::cout << "DEBUG_W";
-    for (size_t i = 0; i < new_word_ids.size(); ++i)
-      std::cout << " " << new_word_ids[i];
-    std::cout << std::endl;
-
     // append the new ids to buffer
     word_ids_.insert(word_ids_.end(), new_word_ids.begin(), new_word_ids.end());
   }
@@ -203,14 +193,5 @@ int KaldiDecoderWrapper::Setup(int argc, char **argv) {
   }
 } // KaldiDecoderWrapper::Setup()
 
-// converts  phones to vector representation
-std::vector<int32> phones_to_vector(const std::string & s) {
-  std::vector<int32> return_phones;
-  if (!SplitStringToIntegers(s, ":", false, &return_phones))
-      KALDI_ERR << "Invalid silence-phones string " << s;
-  if (return_phones.empty())
-      KALDI_ERR << "No silence phones given!";
-  return return_phones;
-} // phones_to_vector
 
 } // namespace kaldi

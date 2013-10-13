@@ -38,6 +38,12 @@ MatrixIndexT PykaldiBuffSource::Read(Vector<BaseFloat> *output) {
   return d;
 }
 
+
+void PykaldiBuffSource::Reset() {
+  src_.clear();
+}
+
+
 void PykaldiBuffSource::Write(unsigned char * data, size_t num_samples) {
   // allocate the space at once -> should be faster
   src_.reserve(src_.size() + num_samples);

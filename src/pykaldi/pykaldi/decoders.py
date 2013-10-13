@@ -12,10 +12,7 @@
 # MERCHANTABLITY OR NON-INFRINGEMENT.
 # See the Apache 2 License for the specific language governing permissions and
 # limitations under the License. #
-
-
 from pykaldi import ffidec, libdec
-from pykaldi.exceptions import PyKaldiError
 
 
 class KaldiDecoder(object):
@@ -33,24 +30,11 @@ class KaldiDecoder(object):
         # This has to set in the derived classes
         self.lib, self.ffi, self.dec = None, None, None
 
-    def rec_in(self, frame):
-        """Recieving audio frame by frame, so defining asynchronous API.
-        The input API is the same for all decs.
-        :frame: @todo
-        :returns: @todo
-        """
-        frame_p = self.ffi.new('char[]', frame)
-        # frame_in has to memcpy the frame out
-        # because frame_p can be deallocated after leaving this method
-        self.lib.frame_in(self.dec, frame_p, len(frame))
-
 
 class DecoderCloser:
-    '''A context manager for KaldiDecoder'''
+    '''A context manager for decoders'''
 
     def __init__(self, dec):
-        if dec is KaldiDecoder:
-            raise PyKaldiError("Not a decoder")
         self.dec = dec
 
     def __enter__(self):
@@ -60,7 +44,7 @@ class DecoderCloser:
         self.dec.close()
 
 
-class OnlineDecoder(KaldiDecoder):
+class PykaldiFasterDecoder(KaldiDecoder):
     """Online API means that the best hypothesis (or its part) can
     be returned almost instantly also in the middle of the utterance."""
 
@@ -68,14 +52,13 @@ class OnlineDecoder(KaldiDecoder):
         KaldiDecoder.__init__(self, **kwargs)
         self.lib, self.ffi = libdec, ffidec
         # first argument is the name of the "program" like in C
-        argv = ['OnlineDecoder'] + args
+        argv = ['PykaldiFasterDecoder'] + args
         # necessary to keep it alive long enough -> member field-> ok
         self.argv = [self.ffi.new("char[]", arg) for arg in argv]
         argc, argp = len(self.argv), self.ffi.new("char *[]", self.argv)
         self.dec = self.lib.new_KaldiDecoderWrapper()
         if self.lib.Setup(self.dec, argc, argp) != 0:
-            # FIXME use custom exception class eg PykaldiOnlineDecoderArgsError
-            raise Exception("OnlineDecoder started with wrong parameters!")
+            raise Exception("PykaldiFasterDecoder started with wrong parameters!")
 
     def decode(self, force_end_utt=False):
         """ Ask the decoder to process the buffered audio data.
@@ -115,36 +98,65 @@ class OnlineDecoder(KaldiDecoder):
         return (hyp, prob)
 
 
-class OnlineDecoderNumpy(OnlineDecoder):
-    '''Inherits all interface from OnlineDecoder and overrides
-    the get_hypothesis method to return Numpy array'''
+class PykaldiLatgenFasterDecoder(KaldiDecoder):
+    """Decoding lattices"""
 
     def __init__(self, args, **kwargs):
-        try:
-            import numpy
-        except:
-            # FIXME use custom exception class eg PykaldiOnlineDecoderArgsError
-            raise Exception("Install numpy for OnlineDecoderNumpy!")
-        OnlineDecoder.__init__(self, args, **kwargs)
+        self.lib, self.ffi = libdec, ffidec
+        # first argument is the name of the "program" like in C
+        argv = ['PykaldiLatgenFasterDecoder'] + args
+        # necessary to keep it alive long enough -> member field-> ok
+        self.wrapper_p = self.lib.new_GmmLatgenWrapper()
+        self.argv = [self.ffi.new("char[]", arg) for arg in argv]
+        argc, argp = len(self.argv), self.ffi.new("char *[]", self.argv)
+        if self.lib.GmmLatgenWrapper_Setup(argc, argp, self.wrapper_p) != 0:
+            raise Exception("PykaldiLatgenFasterDecoder started with wrong parameters!")
+        self.lib.GmmLatgenWrapper_Reset(self.wrapper_p, False)
 
-    def get_hypothesis(self, size):
-        # TODO our dec does not return any measure of quality for the decoded hypothesis
-        # prob_p = self.ffi.new('double *')
-        hyp = numpy.zeros(size).astype('int32')
-        hyp_p = self.ffi.cast("int *", hyp.ctypes.data)
-        self.lib.GetHypothesis(self.dec, hyp_p, size)
-        prob = 1.0  # TODO get real prob from C in feature and dereference it: prob = prob_p[0]
-        return (prob, hyp)
+    def decode(self, max_frames=1):
+        """The decoder will process at maximum max_frames in forward decoding.
+        Returns the number of actually processed frames"""
+        w = self.wrapper_p
+        return self.lib.GmmLatgenWrapper_Decode(w.decoder, w.decodable, max_frames)
 
+    def frame_in(self, frame_str, num_samples):
+        assert len(frame_str) == (2 * num_samples), "We support only 16bit audio"
+        "-> 1 sample == 2 chars -> len(frame_str) = 2 * num_samples"
+        self.lib.GmmLatgenWrapper_FrameIn(self.wrapper_p.audio, frame_str, num_samples)
 
-class ConfNetDecoder(KaldiDecoder):
-    """Docstring for ConfNetDecoder
-    pysfst implementation use lattice
-    """
+    def prune_final(self):
+        self.lib.GmmLatgenWrapper_PruneFinal(self.wrapper_p.decoder)
 
-    def __init__(self):
-        """@todo: to be defined """
-        pass
+    def get_best_path(self):
+        # TODO extract fst_p from Python object
+        void_fst_p = self.lib.new_fst_VectorFstLatticeArc()
+        if not self.lib.GmmLatgenWrapper_GetBestPath(self.wrapper_p.decoder, void_fst_p):
+            self.lib.del_fst_VectorFstLatticeArc(void_fst_p)
+            return None
+        self.lib.del_fst_VectorFstLatticeArc(void_fst_p)
+        self.lib.print_fstMutableLatticeArc(void_fst_p)
+        self.lib.GmmLatgenWrapper_Reset(self.wrapper_p, False)
+
+    def get_raw_lattice(self):
+        # TODO extract fst_p from Python object
+        self.lib.GmmLatgenWrapper_GetRawLattice(self.wrapper_p)
+
+    def get_lattice(self):
+        # TODO extract fst_p from Python object
+        self.lib.GmmLatgenWrapper_GetLattice(self.wrapper_p)
+
+    def close(self):
+        """Deallocates the underlaying C module.
+        Do not use the object after calling close!"""
+        self._deallocate()
+
+    def _deallocate(self):
+        if self.wrapper_p is not None:
+            self.lib.del_GmmLatgenWrapper(self.wrapper_p)
+            self.wrapper_p = None
+
+    def __del__(self):
+        self._deallocate()
 
 
 class DummyDecoder(object):

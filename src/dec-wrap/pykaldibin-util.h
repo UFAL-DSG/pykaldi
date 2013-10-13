@@ -31,8 +31,11 @@ extern "C" {
 #endif
 
 
-void pykaldi_version(int *out_major, int * out_minor, int *patch);
+void* new_fst_VectorFstLatticeArc();
+void del_fst_VectorFstLatticeArc(void *fst);
+void print_fstMutableLatticeArc(void *fst);
 
+void pykaldi_version(int *out_major, int * out_minor, int *patch);
 const char* pykaldi_git_revision();
 
 #ifdef __cplusplus
@@ -58,6 +61,8 @@ fst::Fst<fst::StdArc> *ReadDecodeGraph(std::string filename);
 void PrintPartialResult(const std::vector<int32>& words,
                         const fst::SymbolTable *word_syms,
                         bool line_break);
+
+std::vector<int32> phones_to_vector(const std::string & s);
 
 } // namespace kaldi
 

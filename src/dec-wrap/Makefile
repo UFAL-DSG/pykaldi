@@ -25,9 +25,10 @@ BINFILES =
 TESTFILES = compute-wer-test pykaldi-faster-wrapper-test pykaldi-feat-input-test \
 			pykaldi-audio-source-test read-wav-test
 
-OBJFILES = compute-wer.o pykaldi-faster-wrapper.o pykaldi-audio-source.o \
+OBJFILES = compute-wer.o pykaldi-latgen-decoder.o pykaldi-latgen-wrapper.o \
+		   pykaldi-faster-wrapper.o pykaldi-faster-decoder.o \
+		   pykaldi-audio-source.o  pykaldibin-util.o \
 		   pykaldi-decodable.o pykaldi-feat-input.o \
-		   pykaldi-faster-decoder.o pykaldibin-util.o
 
 LIBNAME = pykaldi
 LIBFILE = lib$(LIBNAME).so

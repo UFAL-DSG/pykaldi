@@ -20,6 +20,38 @@
 
 #include <string>
 #include "pykaldibin-util.h"
+#include "lat/kaldi-lattice.h"
+
+
+void* new_fst_VectorFstLatticeArc() {
+  using namespace kaldi;
+  return new fst::VectorFst<LatticeArc>();
+}
+
+
+void print_fstMutableLatticeArc(void * fst_void) {
+   fst::MutableFst<kaldi::LatticeArc> *fst = reinterpret_cast<fst::MutableFst<kaldi::LatticeArc>*>(fst_void);
+    std::vector<int32> alignment;
+    std::vector<int32> words;
+    kaldi::LatticeWeight weight;
+    fst::GetLinearSymbolSequence(*fst, &alignment, &words, &weight);
+
+    std::cout << "words_id ";
+    for (size_t i = 0; i < words.size(); i++)
+      std::cout << words[i] << ' ';
+    std::cout << std::endl;
+
+    std::cout << "alignments ";
+    for (size_t i = 0; i < alignment.size(); i++)
+      std::cout << alignment[i] << ' ';
+    std::cout << std::endl;
+
+    std::cout << "likelihood " << -(weight.Value1() + weight.Value2()) << std::endl;
+}
+
+void del_fst_VectorFstLatticeArc(void * fst) {
+   delete reinterpret_cast<fst::VectorFst<kaldi::LatticeArc>*>(fst);
+}
 
 void pykaldi_version(int *out_major, int * out_minor, int *patch) {
   *out_major = PYKALDI_MAJOR;
@@ -84,5 +116,16 @@ void PrintPartialResult(const std::vector<int32>& words,
   else
     std::cout.flush();
 }
+
+
+// converts  phones to vector representation
+std::vector<int32> phones_to_vector(const std::string & s) {
+  std::vector<int32> return_phones;
+  if (!SplitStringToIntegers(s, ":", false, &return_phones))
+      KALDI_ERR << "Invalid silence-phones string " << s;
+  if (return_phones.empty())
+      KALDI_ERR << "No silence phones given!";
+  return return_phones;
+} // phones_to_vector
 
 } // namespace kaldi

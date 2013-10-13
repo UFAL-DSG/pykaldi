@@ -37,15 +37,38 @@ def init_dec():
 
     typedef ... CKaldiDecoderWrapper;
 
+    // deprecated pykaldi-faster-decoder interface
     CKaldiDecoderWrapper* new_KaldiDecoderWrapper();
     void del_KaldiDecoderWrapper(CKaldiDecoderWrapper *d);
-
     size_t Decode(CKaldiDecoderWrapper *d, int force_end_utt);
     size_t HypSize(CKaldiDecoderWrapper *d);
     void FrameIn(CKaldiDecoderWrapper *d, unsigned char *frame, size_t frame_len);
     void PopHyp(CKaldiDecoderWrapper *d, int * word_ids, size_t size);
     int Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
 
+    // pykaldi-latgen-faster-decoder interface
+    typedef struct  {
+      void *audio;
+      void *decodable;
+      void *decoder;
+      ...;
+    } GmmLatgenWrapper;
+
+    // helper function
+    void print_fstMutableLatticeArc(void *fst);
+    void* new_fst_VectorFstLatticeArc();
+    void del_fst_VectorFstLatticeArc(void *fst);
+    // core functions
+    GmmLatgenWrapper* new_GmmLatgenWrapper();
+    void del_GmmLatgenWrapper(GmmLatgenWrapper *w);
+    size_t GmmLatgenWrapper_Decode(void *decoder, void *decodableItf, size_t max_frames);
+    void GmmLatgenWrapper_FrameIn(void *audio_source, unsigned char *frame, size_t frame_len);
+    int GmmLatgenWrapper_GetBestPath(void *d, void *fst);
+    int GmmLatgenWrapper_GetRawLattice(GmmLatgenWrapper *w);
+    int GmmLatgenWrapper_GetLattice(GmmLatgenWrapper *w);
+    void GmmLatgenWrapper_PruneFinal(void *decoder);
+    void GmmLatgenWrapper_Reset(GmmLatgenWrapper *w, int keep_buffer_data);
+    int GmmLatgenWrapper_Setup(int argc, char **argv, GmmLatgenWrapper *w);
     ''')
 
     srcdir = os.path.realpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
@@ -56,6 +79,7 @@ def init_dec():
             '''
             #include "dec-wrap/pykaldi-faster-wrapper.h"
             #include "dec-wrap/pykaldibin-util.h"
+            #include "dec-wrap/pykaldi-latgen-wrapper.h"
             ''',
             libraries=libs,
             include_dirs=[srcdir],

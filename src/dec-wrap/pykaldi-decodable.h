@@ -45,6 +45,10 @@ class PykaldiDecodableDiagGmmScaled : public DecodableInterface {
   /// Indices are one-based!  This is for compatibility with OpenFst.
   virtual int32 NumIndices() { return trans_model_.NumTransitionIds(); }
 
+  void Reset();
+
+  BaseFloat GetAcousticScale() const { return ac_scale_; }
+
  private:
   void GetFrame(int32 frame);
 

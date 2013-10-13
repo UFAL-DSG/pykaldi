@@ -24,6 +24,9 @@
 
 namespace kaldi {
 
+/*********************************************************************
+ *                       PykaldiFeatureMatrix                        *
+ *********************************************************************/
 MatrixIndexT PykaldiFeatureMatrix::GetNextFeatures() {
 
   Matrix<BaseFloat> next_features(opts_.batch_size, feat_dim_);
@@ -59,6 +62,7 @@ bool PykaldiFeatureMatrix::IsValidFrame (int32 frame) {
   }
 }
 
+
 SubVector<BaseFloat> PykaldiFeatureMatrix::GetFrame(int32 frame) {
   KALDI_ASSERT(frame >= 0);
   KALDI_VLOG(4) << "DEBUG getFrame" << frame;
@@ -78,11 +82,17 @@ SubVector<BaseFloat> PykaldiFeatureMatrix::GetFrame(int32 frame) {
 }
 
 
+void PykaldiFeatureMatrix::Reset() {
+  // discarding data
+  feat_matrix_.Resize(0, 0);
+  feat_matrix_old_.Resize(0, 0);
+  feat_loaded_ = 0;
+}
 
-/**********************************************************
-LDA INPUT
-**********************************************************/
 
+/*********************************************************************
+ *                          PykaliLdaInput                           *
+ *********************************************************************/
 PykaldiLdaInput::PykaldiLdaInput(PykaldiFeatInputItf *input,
                                const Matrix<BaseFloat> &transform,
                                int32 left_context,
@@ -104,6 +114,12 @@ PykaldiLdaInput::PykaldiLdaInput(PykaldiFeatInputItf *input,
     KALDI_ERR << "Invalid parameters supplied to PykaldiLdaInput";
   }
 }
+
+
+void PykaldiLdaInput::Reset() {
+  remainder_.Resize(0, 0);
+}
+
 
 // static
 void PykaldiLdaInput::SpliceFrames(const MatrixBase<BaseFloat> &input1,
@@ -138,6 +154,7 @@ void PykaldiLdaInput::SpliceFrames(const MatrixBase<BaseFloat> &input1,
   }
 }
 
+
 void PykaldiLdaInput::TransformToOutput(const MatrixBase<BaseFloat> &spliced_feats,
                                        Matrix<BaseFloat> *output) {
   if (spliced_feats.NumRows() == 0) {
@@ -150,6 +167,7 @@ void PykaldiLdaInput::TransformToOutput(const MatrixBase<BaseFloat> &spliced_fea
       output->AddVecToRows(1.0, offset_);
   }
 }
+
 
 MatrixIndexT PykaldiLdaInput::Compute(Matrix<BaseFloat> *output) {
   KALDI_ASSERT(output->NumRows() > 0 &&
@@ -194,6 +212,7 @@ MatrixIndexT PykaldiLdaInput::Compute(Matrix<BaseFloat> *output) {
   return output->NumRows();
 }
 
+
 void PykaldiLdaInput::ComputeNextRemainder(const MatrixBase<BaseFloat> &input) {
   // The size of the remainder that we propagate to the next frame is
   // context_window - 1, if available.
@@ -218,7 +237,9 @@ void PykaldiLdaInput::ComputeNextRemainder(const MatrixBase<BaseFloat> &input) {
 }
 
 
-
+/*********************************************************************
+ *                         PykaldiDeltaInput                         *
+ *********************************************************************/
 PykaldiDeltaInput::PykaldiDeltaInput(const DeltaFeaturesOptions &delta_opts,
                                    PykaldiFeatInputItf *input):
     input_(input), opts_(delta_opts), input_dim_(input_->Dim()) { }
@@ -248,6 +269,7 @@ void PykaldiDeltaInput::AppendFrames(const MatrixBase<BaseFloat> &input1,
     output->Range(size1 + size2, size3, 0, dim).CopyFromMat(input3);
 }
 
+
 void PykaldiDeltaInput::DeltaComputation(const MatrixBase<BaseFloat> &input,
                                         Matrix<BaseFloat> *output,
                                         Matrix<BaseFloat> *remainder) const {
@@ -275,6 +297,7 @@ void PykaldiDeltaInput::DeltaComputation(const MatrixBase<BaseFloat> &input,
     output->Resize(0, 0);
   }
 }
+
 
 MatrixIndexT PykaldiDeltaInput::Compute(Matrix<BaseFloat> *output) {
   // If output->NumRows() == 0, it corresponds to a request for zero frames
@@ -316,6 +339,10 @@ MatrixIndexT PykaldiDeltaInput::Compute(Matrix<BaseFloat> *output) {
   return output->NumRows();
 }
 
+
+void PykaldiDeltaInput::Reset() {
+  remainder_.Resize(0, 0);
+}
 
 
 } // namespace kaldi

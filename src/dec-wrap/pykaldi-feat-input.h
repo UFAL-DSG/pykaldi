@@ -46,7 +46,10 @@ class PykaldiFeatInputItf {
 
   virtual int32 Dim() const = 0; // Return the output dimension of these features.
 
+  virtual void Reset() =0;
+
   virtual ~PykaldiFeatInputItf() {}
+
 };
 
 /*********************************************************************
@@ -80,6 +83,7 @@ class PykaldiFeatureMatrix {
   // is valid.
   SubVector<BaseFloat> GetFrame(int32 frame);
 
+  void Reset();
 
  private:
   /// Called when we need more features.
@@ -112,12 +116,13 @@ class PykaldiFeInput : public PykaldiFeatInputItf {
 
   virtual MatrixIndexT Compute(Matrix<BaseFloat> *output);
 
+  virtual void Reset();
+
  private:
   PykaldiAudioSourceItf *source_; // audio source
   E *extractor_; // the actual feature extractor used
   const int32 frame_size_;
   const int32 frame_shift_;
-  Vector<BaseFloat> wave_; // the samples to be passed for extraction
   Vector<BaseFloat> wave_remainder_; // the samples remained from the previous
                                      // feature batch
 
@@ -170,6 +175,11 @@ PykaldiFeInput<E>::Compute(Matrix<BaseFloat> *output) {
   }
 }
 
+template<class E>
+void PykaldiFeInput<E>::Reset() {
+  wave_remainder_.Resize(0);
+}
+
 
 /*********************************************************************
  *                          PykaldiLdaInput                          *
@@ -187,6 +197,8 @@ class PykaldiLdaInput: public PykaldiFeatInputItf {
   virtual MatrixIndexT Compute(Matrix<BaseFloat> *output);
 
   virtual int32 Dim() const { return linear_transform_.NumRows(); }
+
+  virtual void Reset();
 
  private:
   // The static function SpliceFeats splices together the features and
@@ -233,6 +245,8 @@ class PykaldiDeltaInput: public PykaldiFeatInputItf {
   virtual MatrixIndexT Compute(Matrix<BaseFloat> *output);
 
   virtual int32 Dim() const { return input_dim_ * (opts_.order + 1); }
+
+  virtual void Reset();
 
  private:
   // The static function AppendFrames appends together the three input matrices,

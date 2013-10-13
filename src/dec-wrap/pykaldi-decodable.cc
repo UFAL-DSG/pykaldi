@@ -35,8 +35,7 @@ PykaldiDecodableDiagGmmScaled::PykaldiDecodableDiagGmmScaled(
   //   KALDI_ERR << "Attempt to initialize decodable object with empty "
   //             << "input: please check this before the initializer!";
   // }
-  int32 num_pdfs = trans_model_.NumPdfs();
-  cache_.resize(num_pdfs, std::make_pair<int32,BaseFloat>(-1, 0.0));
+  Reset();
 }
 
 void PykaldiDecodableDiagGmmScaled::GetFrame(int32 frame) {
@@ -66,6 +65,12 @@ BaseFloat PykaldiDecodableDiagGmmScaled::LogLikelihood(int32 frame, int32 index)
 
 bool PykaldiDecodableDiagGmmScaled::IsLastFrame(int32 frame) {
   return !features_->IsValidFrame(frame+1);
+}
+
+void PykaldiDecodableDiagGmmScaled::Reset() {
+  cache_.resize(trans_model_.NumPdfs(), std::make_pair<int32,BaseFloat>(-1, 0.0));
+  cur_frame_ = -1;
+  cur_feats_.Resize(0);
 }
 
 } // namespace kaldi

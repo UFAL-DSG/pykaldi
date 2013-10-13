@@ -11,7 +11,10 @@ voxforge:
 $(VYSTADIAL_SCP):
 	 python -c "import pykaldi.utils; pykaldi.utils.get_vystadial_data('/net/work/people/oplatek/kaldi/egs/kaldi-vystadial-recipe/s5/Results/vystadial-sample-test.tar.bz2')"
 
-pykaldi: $(VYSTADIAL_SCP)
+pykaldi_faster: $(VYSTADIAL_SCP)
+	./run_pykaldi-faster-decoder.sh
+
+pykaldi_latgen_faster: $(VYSTADIAL_SCP)
 	./run_pykaldi-faster-decoder.sh
 
 gmm_latgen: $(VYSTADIAL_SCP)
