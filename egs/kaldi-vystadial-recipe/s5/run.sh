@@ -23,7 +23,6 @@ local/save_check_conf.sh || exit 1;
 # With save_check_conf.sh it ask about rewriting the data directory
 if [ ! "$(ls -A data 2>/dev/null)" ]; then
 
-  # local/voxforge_data_prep.sh --nspk_test ${nspk_test} ${SELECTED} || exit 1
   local/vystadial_data_prep.sh --every_n $everyN ${DATA_ROOT} || exit 1
   
   # Prepare the lexicon, language model and various phone lists
@@ -44,7 +43,7 @@ fi
 if [ ! "$(ls -A ${MFCC_DIR} 2>/dev/null)" ]; then
 
   # Creating MFCC features and storing at ${MFCC_DIR} (Could be large).
-  for x in train test ; do 
+  for x in train $test_sets ; do 
   steps/make_mfcc.sh --mfcc-config conf/mfcc.conf --cmd \
       "$train_cmd" --nj $njobs data/$x exp/make_mfcc/$x ${MFCC_DIR} || exit 1;
   # CMVN does not have sense for us
@@ -52,17 +51,20 @@ if [ ! "$(ls -A ${MFCC_DIR} 2>/dev/null)" ]; then
   done
 fi
 
-# Train monophone models on a subset of the data
-utils/subset_data_dir.sh data/train $monoTrainData data/train.1k  || exit 1;
-steps/train_mono.sh --run-cmn $cmn --nj $njobs --cmd "$train_cmd" data/train.1k data/lang exp/mono || exit 1;
+# Train monophone models on a subset of the data 
+# utils/subset_data_dir.sh data/train $monoTrainData data/train.sub  || exit 1;
+# steps/train_mono.sh --run-cmn $cmn --nj $njobs --cmd "$train_cmd" data/train.sub data/lang exp/mono || exit 1;
+# Train monophone on full data to see the difference
+steps/train_mono.sh --run-cmn $cmn --nj $njobs --cmd "$train_cmd" data/train data/lang exp/mono || exit 1;
  
 # Monophone decoding
-utils/mkgraph.sh --mono data/lang_test exp/mono exp/mono/graph || exit 1
-# note: steps/decode.sh calls the command line once for each
-# test, and afterwards averages the WERs into (in this case
-# exp/mono/decode/
-steps/decode.sh --run-cmn $cmn --config conf/decode.config --nj $njobs --cmd "$decode_cmd" \
-  exp/mono/graph data/test exp/mono/decode
+for data_dir in $test_sets ; do
+ utils/mkgraph.sh --mono data/$data_dir exp/mono exp/mono/graph || exit 1
+ # note: steps/decode.sh calls the command line once for each test, 
+ # and afterwards averages the WERs into (in this case exp/mono/decode/)
+ steps/decode.sh --run-cmn $cmn --config conf/decode.config --nj $njobs --cmd "$decode_cmd" \
+   exp/mono/graph data/$data_dir exp/mono/decode_$data_dir
+done
  
 # Get alignments from monophone system.
 steps/align_si.sh --run-cmn $cmn --nj $njobs --cmd "$train_cmd" \
@@ -73,11 +75,13 @@ steps/train_deltas.sh --run-cmn $cmn --cmd "$train_cmd" \
   $pdf $gauss data/train data/lang exp/mono_ali exp/tri1 || exit 1;
  
 # decode tri1
-utils/mkgraph.sh data/lang_test exp/tri1 exp/tri1/graph || exit 1;
-steps/decode.sh --run-cmn $cmn --config conf/decode.config --nj $njobs --cmd "$decode_cmd" \
-  exp/tri1/graph data/test exp/tri1/decode
+for data_dir in $test_sets ; do
+ utils/mkgraph.sh data/lang_$data_dir exp/tri1 exp/tri1/graph || exit 1;
+ steps/decode.sh --run-cmn $cmn --config conf/decode.config --nj $njobs --cmd "$decode_cmd" \
+   exp/tri1/graph data/$data_dir exp/tri1/decode_$data_dir
+done
  
-# draw-tree data/lang/phones.txt exp/tri1/tree | dot -Tps -Gsize=8,10.5 | ps2pdf - tree.pdf
+draw-tree data/lang/phones.txt exp/tri1/tree | dot -Tps -Gsize=8,10.5 | ps2pdf - tree.pdf
   
 #align tri1 
 steps/align_si.sh --run-cmn $cmn --nj $njobs --cmd "$train_cmd" \
@@ -88,16 +92,20 @@ steps/train_deltas.sh --run-cmn $cmn --cmd "$train_cmd" $pdf $gauss \
   data/train data/lang exp/tri1_ali exp/tri2a || exit 1;
   
 # decode tri2a
-utils/mkgraph.sh data/lang_test exp/tri2a exp/tri2a/graph
-steps/decode.sh --run-cmn $cmn --config conf/decode.config --nj $njobs --cmd "$decode_cmd" \
-  exp/tri2a/graph data/test exp/tri2a/decode
+for data_dir in $test_sets ; do
+ utils/mkgraph.sh data/lang_$data_dir exp/tri2a exp/tri2a/graph
+ steps/decode.sh --run-cmn $cmn --config conf/decode.config --nj $njobs --cmd "$decode_cmd" \
+  exp/tri2a/graph data/$data_dir exp/tri2a/decode_$data_dir
+done
  
 # train and decode tri2b [LDA+MLLT]
 steps/train_lda_mllt.sh --run-cmn $cmn --cmd "$train_cmd" $pdf $gauss \
   data/train data/lang exp/tri1_ali exp/tri2b || exit 1;
-utils/mkgraph.sh data/lang_test exp/tri2b exp/tri2b/graph
-steps/decode.sh --run-cmn $cmn --config conf/decode.config --nj $njobs --cmd "$decode_cmd" \
-  exp/tri2b/graph data/test exp/tri2b/decode
+for data_dir in $test_sets ; do
+ utils/mkgraph.sh data/lang_$data_dir exp/tri2b exp/tri2b/graph
+ steps/decode.sh --run-cmn $cmn --config conf/decode.config --nj $njobs --cmd "$decode_cmd" \
+  exp/tri2b/graph data/$data_dir exp/tri2b/decode_$data_dir
+done
  
 # Align all data with LDA+MLLT system (tri2b)
 steps/align_si.sh --run-cmn $cmn --nj $njobs --cmd "$train_cmd" \
@@ -107,25 +115,31 @@ steps/align_si.sh --run-cmn $cmn --nj $njobs --cmd "$train_cmd" \
 steps/make_denlats.sh --run-cmn $cmn --nj $njobs --cmd "$train_cmd" \
    data/train data/lang exp/tri2b exp/tri2b_denlats || exit 1;
 steps/train_mmi.sh --run-cmn $cmn data/train data/lang exp/tri2b_ali exp/tri2b_denlats exp/tri2b_mmi || exit 1;
-steps/decode.sh --run-cmn $cmn --config conf/decode.config --iter 4 --nj $njobs --cmd "$decode_cmd" \
-   exp/tri2b/graph data/test exp/tri2b_mmi/decode_it4
-steps/decode.sh --run-cmn $cmn --config conf/decode.config --iter 3 --nj $njobs --cmd "$decode_cmd" \
-   exp/tri2b/graph data/test exp/tri2b_mmi/decode_it3
+for data_dir in $test_sets ; do
+ steps/decode.sh --run-cmn $cmn --config conf/decode.config --iter 4 --nj $njobs --cmd "$decode_cmd" \
+  exp/tri2b/graph data/$data_dir exp/tri2b_mmi/decode_it4_$data_dir
+ steps/decode.sh --run-cmn $cmn --config conf/decode.config --iter 3 --nj $njobs --cmd "$decode_cmd" \
+  exp/tri2b/graph data/$data_dir exp/tri2b_mmi/decode_it3_$data_dir
+done
  
 # Do the same with boosting. train_mmi_boost is a number e.g. 0.05
 steps/train_mmi.sh --run-cmn $cmn --boost ${train_mmi_boost} data/train data/lang \
    exp/tri2b_ali exp/tri2b_denlats exp/tri2b_mmi_b${train_mmi_boost} || exit 1;
-steps/decode.sh --run-cmn $cmn --config conf/decode.config --iter 4 --nj $njobs --cmd "$decode_cmd" \
-   exp/tri2b/graph data/test exp/tri2b_mmi_b${train_mmi_boost}/decode_it4 || exit 1;
-steps/decode.sh --run-cmn $cmn --config conf/decode.config --iter 3 --nj $njobs --cmd "$decode_cmd" \
-   exp/tri2b/graph data/test exp/tri2b_mmi_b${train_mmi_boost}/decode_it3 || exit 1;
+for data_dir in $test_sets ; do
+ steps/decode.sh --run-cmn $cmn --config conf/decode.config --iter 4 --nj $njobs --cmd "$decode_cmd" \
+  exp/tri2b/graph data/$data_dir exp/tri2b_mmi_b${train_mmi_boost}/decode_it4_$data_dir || exit 1;
+ steps/decode.sh --run-cmn $cmn --config conf/decode.config --iter 3 --nj $njobs --cmd "$decode_cmd" \
+  exp/tri2b/graph data/$data_dir exp/tri2b_mmi_b${train_mmi_boost}/decode_it3_$data_dir || exit 1;
+done
 
 # Do MPE.
 steps/train_mpe.sh --run-cmn $cmn data/train data/lang exp/tri2b_ali exp/tri2b_denlats exp/tri2b_mpe || exit 1;
-steps/decode.sh --run-cmn $cmn --config conf/decode.config --iter 4 --nj $njobs --cmd "$decode_cmd" \
-   exp/tri2b/graph data/test exp/tri2b_mpe/decode_it4 || exit 1;
-steps/decode.sh --run-cmn $cmn --config conf/decode.config --iter 3 --nj $njobs --cmd "$decode_cmd" \
-   exp/tri2b/graph data/test exp/tri2b_mpe/decode_it3 || exit 1;
+for data_dir in $test_sets ; do
+ steps/decode.sh --run-cmn $cmn --config conf/decode.config --iter 4 --nj $njobs --cmd "$decode_cmd" \
+  exp/tri2b/graph data/$data_dir exp/tri2b_mpe/decode_it4_$data_dir || exit 1;
+ steps/decode.sh --run-cmn $cmn --config conf/decode.config --iter 3 --nj $njobs --cmd "$decode_cmd" \
+  exp/tri2b/graph data/$data_dir exp/tri2b_mpe/decode_it3_$data_dir || exit 1;
+done
 
 
 echo "Successfully trained and evaluated all the experiments"
@@ -133,4 +147,3 @@ echo "Successfully trained and evaluated all the experiments"
 if [ -f local/backup.sh ]; then 
     local/backup.sh
 fi
-
