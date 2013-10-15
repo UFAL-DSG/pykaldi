@@ -19,7 +19,8 @@ mkdir -p $tmpdir
 echo "--- Preparing the grammar transducer (G.fst) for testing ..."
 
 for t in $test_sets ; do
- test=data/$t
+ test=data/lang_$t
+ echo; echo "DEBUGGING preparing $test" ; echo
  mkdir -p $test
  for f in phones.txt words.txt phones.txt L.fst L_disambig.fst phones/; do
      cp -r data/lang/$f $test

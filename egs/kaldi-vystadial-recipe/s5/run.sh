@@ -60,7 +60,7 @@ steps/train_mono.sh --run-cmn $cmn --nj $njobs --cmd "$train_cmd" data/train dat
  
 # Monophone decoding
 for data_dir in $test_sets ; do
- utils/mkgraph.sh --mono data/$data_dir exp/mono exp/mono/graph || exit 1
+ utils/mkgraph.sh --mono data/lang_$data_dir exp/mono exp/mono/graph || exit 1
  # note: steps/decode.sh calls the command line once for each test, 
  # and afterwards averages the WERs into (in this case exp/mono/decode/)
  steps/decode.sh --run-cmn $cmn --config conf/decode.config --nj $njobs --cmd "$decode_cmd" \
