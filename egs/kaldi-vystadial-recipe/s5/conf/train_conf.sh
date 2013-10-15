@@ -1,9 +1,10 @@
 #!/bin/bash
 
 # Vystadial data 1 channel 16000 16-bit
-export DATA_ROOT="/ha/projects/vystadial/data/asr/en/voip/"
-# export DATA_ROOT="/ha/work/people/oplatek/kaldi/egs/kaldi-vystadial-recipe/s5/Results/vystadial-sample/data"
-export test_sets="dev test"
+# export DATA_ROOT="/ha/projects/vystadial/data/asr/en/voip/"
+export DATA_ROOT="/ha/work/people/oplatek/kaldi/egs/kaldi-vystadial-recipe/s5/Results/vystadial-sample/data"
+# export test_sets="dev test"
+export test_sets="test"  # test old settings first
 
 # Test-time language model order
 # The script just copies the arpa LM
@@ -28,6 +29,7 @@ export MFCC_DIR="./mfcc"
 export NOOOV="yes"  # nonempty string triggers removing;)
 # unset NOOOV
 
+data_lang=en
 
 # How big portion of available data to use
 # everyN=3    ->   we use one third of data

@@ -31,9 +31,10 @@ if [ ! "$(ls -A data 2>/dev/null)" ]; then
   local/vystadial_prepare_dict.sh || exit 1 
   
   # Prepare data/lang and data/local/lang directories read it IO param describtion
+  # FIXME for multiple testsets
   utils/prepare_lang.sh data/local/dict 'OOV' data/local/lang data/lang || exit 1
   
-  # Prepare G.fst and data/{train,test} directories
+  # Prepare G.fst
   local/vystadial_format_data.sh || exit 1 
 fi 
 # end of generating data directory
