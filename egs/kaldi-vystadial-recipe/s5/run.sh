@@ -51,11 +51,14 @@ if [ ! "$(ls -A ${MFCC_DIR} 2>/dev/null)" ]; then
   done
 fi
 
-# Train monophone models on a subset of the data 
-# utils/subset_data_dir.sh data/train $monoTrainData data/train.sub  || exit 1;
-# steps/train_mono.sh --run-cmn $cmn --nj $njobs --cmd "$train_cmd" data/train.sub data/lang exp/mono || exit 1;
-# Train monophone on full data to see the difference
-steps/train_mono.sh --run-cmn $cmn --nj $njobs --cmd "$train_cmd" data/train data/lang exp/mono || exit 1;
+# Train monophone models
+# If the monoTrainData is specified Train on data T; |T|==monoTrainData 
+if [ -z $monoTrainData ] ; then 
+    steps/train_mono.sh --run-cmn $cmn --nj $njobs --cmd "$train_cmd" data/train data/lang exp/mono || exit 1;
+else
+    utils/subset_data_dir.sh data/train $monoTrainData data/train.sub  || exit 1;
+    steps/train_mono.sh --run-cmn $cmn --nj $njobs --cmd "$train_cmd" data/train.sub data/lang exp/mono || exit 1;
+fi
  
 # Monophone decoding
 for data_dir in $test_sets ; do
@@ -81,7 +84,7 @@ for data_dir in $test_sets ; do
    exp/tri1/graph data/$data_dir exp/tri1/decode_$data_dir
 done
  
-draw-tree data/lang/phones.txt exp/tri1/tree | dot -Tps -Gsize=8,10.5 | ps2pdf - tree.pdf
+draw-tree data/lang/phones.txt exp/tri1/tree | dot -Tsvg -Gsize=8,10.5 
   
 #align tri1 
 steps/align_si.sh --run-cmn $cmn --nj $njobs --cmd "$train_cmd" \

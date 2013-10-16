@@ -1,13 +1,14 @@
 #!/bin/bash
 
-# data_lang=en
-# # Vystadial data 1 channel 16000 16-bit
-# # export DATA_ROOT="/ha/projects/vystadial/data/asr/en/voip/"
+data_lang=en
+# Vystadial data 1 channel 16000 16-bit
+export DATA_ROOT="/ha/projects/vystadial/data/asr/en/voip/"
 # export DATA_ROOT=/ha/work/people/oplatek/kaldi/egs/kaldi-vystadial-recipe/s5/Results/vystadial-sample/data
 
-data_lang=cs
-# export DATA_ROOT=/ha/projects/vystadial/data/asr/cs/voip_fj
-export DATA_ROOT=/ha/work/people/oplatek/kaldi/egs/kaldi-vystadial-recipe/s5/Results/vystadial-sample-cs/data
+# data_lang=cs
+    # # Vystadial data correct? 16000? or 8000? 16-bit
+# # export DATA_ROOT=/ha/projects/vystadial/data/asr/cs/voip_fj
+# export DATA_ROOT=/ha/work/people/oplatek/kaldi/egs/kaldi-vystadial-recipe/s5/Results/vystadial-sample-cs/data
 
 export test_sets="dev test"
 
@@ -33,7 +34,8 @@ export NOOOV="yes"  # nonempty string triggers removing;)
 everyN=1
 
 # Train monophone models on a subset of the data of this size
-monoTrainData=150
+# monoTrainData=150
+unset monoTrainData  # use full data
 
 # Number of states for phonem training
 pdf=1200
