@@ -1,25 +1,24 @@
 #!/bin/bash
 
-# Vystadial data 1 channel 16000 16-bit
-# export DATA_ROOT="/ha/projects/vystadial/data/asr/en/voip/"
-export DATA_ROOT="/ha/work/people/oplatek/kaldi/egs/kaldi-vystadial-recipe/s5/Results/vystadial-sample/data"
+# data_lang=en
+# # Vystadial data 1 channel 16000 16-bit
+# # export DATA_ROOT="/ha/projects/vystadial/data/asr/en/voip/"
+# export DATA_ROOT=/ha/work/people/oplatek/kaldi/egs/kaldi-vystadial-recipe/s5/Results/vystadial-sample/data
+
+data_lang=cs
+# export DATA_ROOT=/ha/projects/vystadial/data/asr/cs/voip_fj
+export DATA_ROOT=/ha/work/people/oplatek/kaldi/egs/kaldi-vystadial-recipe/s5/Results/vystadial-sample-cs/data
+
 export test_sets="dev test"
 
-# Test-time language model order
-# The script just copies the arpa LM
-# export LM_ORDER=3
-# export ARPA_MODEL="/ha/projects/vystadial/git/alex/resources/lm/caminfo/arpa_trigram"
-
 export LM_ORDER=3
-# Unset or empty ARPA_MODEL variable means
-# that the script will build the LM itself
+# Unset or empty ARPA_MODEL variable means that the script will build the LM itself
+# export ARPA_MODEL="/ha/projects/vystadial/git/alex/resources/lm/caminfo/arpa_trigram"
 # unset ARPA_MODEL
 
+# Unset or empty DICTIONARY variable means that the script will build the DICTIONARY itself
 # export DICTIONARY="/ha/projects/vystadial/git/alex/resources/lm/caminfo/dict"
-
-# Unset or empty DICTIONARY variable means
-# that the script will build the DICTIONARY itself
-# unset DICTIONARY
+unset DICTIONARY
 
 # Storage dir for MFCC. Need a lot of space.
 export MFCC_DIR="./mfcc"
@@ -28,7 +27,6 @@ export MFCC_DIR="./mfcc"
 export NOOOV="yes"  # nonempty string triggers removing;)
 # unset NOOOV
 
-data_lang=en
 
 # How big portion of available data to use
 # everyN=3    ->   we use one third of data

@@ -56,10 +56,10 @@ echo "=== Preparing the dictionary ..."
 
 if [ "$data_lang" == "en" ] ; then
     local/prepare_cmu_dict.sh $locdata $locdict
-elif [ "data_lang" == "cs" ] ; then
-    echo FIXME $data_lang ; exit 1
+elif [ "$data_lang" == "cs" ] ; then
+    local/run_cs_transcriptions.sh $locdata $locdict
 else 
-    echo "Unknown language $data_lang"a ; exit 1
+    echo "Unknown language $data_lang" ; exit 1
 fi
 
 # HANDLING OOV WORDS: OOV   SPN    UNKnow has pronancuation SPoken Noise
