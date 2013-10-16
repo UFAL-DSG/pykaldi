@@ -3,7 +3,7 @@
 # Vystadial data 1 channel 16000 16-bit
 # export DATA_ROOT="/ha/projects/vystadial/data/asr/en/voip/"
 export DATA_ROOT="/ha/work/people/oplatek/kaldi/egs/kaldi-vystadial-recipe/s5/Results/vystadial-sample/data"
-export test_sets="dev"
+export test_sets="dev test"
 
 # Test-time language model order
 # The script just copies the arpa LM

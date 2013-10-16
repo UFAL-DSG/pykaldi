@@ -45,10 +45,10 @@ if [ ! "$(ls -A ${MFCC_DIR} 2>/dev/null)" ]; then
 
   # Creating MFCC features and storing at ${MFCC_DIR} (Could be large).
   for x in train $test_sets ; do 
-  steps/make_mfcc.sh --mfcc-config conf/mfcc.conf --cmd \
+    steps/make_mfcc.sh --mfcc-config conf/mfcc.conf --cmd \
       "$train_cmd" --nj $njobs data/$x exp/make_mfcc/$x ${MFCC_DIR} || exit 1;
-  # CMVN does not have sense for us
-  steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x ${MFCC_DIR} || exit 1;
+    # CMVN does not have sense for us
+    steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x ${MFCC_DIR} || exit 1;
   done
 fi
 

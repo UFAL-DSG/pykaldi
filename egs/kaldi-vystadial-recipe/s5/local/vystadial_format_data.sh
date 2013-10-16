@@ -5,22 +5,22 @@
 # Apache 2.0
 
 source ./path.sh
+source ./conf/train_conf.sh
 
 echo "=== Formating data ..."
 srcdir=data/local
 lmdir=data/local/
 tmpdir=data/local/lm_tmp
 lexicon=data/local/dict/lexicon.txt
-mkdir -p $tmpdir
 
 # Next, for each type of language model, create the corresponding FST
 # and the corresponding lang_test_* directory.
 
-echo "--- Preparing the grammar transducer (G.fst) for testing ..."
 
 for t in $test_sets ; do
+ mkdir -p $tmpdir
  test=data/lang_$t
- echo; echo "DEBUGGING preparing $test" ; echo
+ echo "--- Preparing the grammar transducer (G.fst) for $t in $test..."
  mkdir -p $test
  for f in phones.txt words.txt phones.txt L.fst L_disambig.fst phones/; do
      cp -r data/lang/$f $test
