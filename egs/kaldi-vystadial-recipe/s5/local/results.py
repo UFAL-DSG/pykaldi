@@ -133,7 +133,10 @@ if __name__ == "__main__":
     # c.execute("SELECT * FROM results ORDER BY exp, lm_w, dataset")
     # best experiment
     # c.execute("SELECT exp, dataset, lm_w,  MIN(wer), ser FROM results ORDER BY exp, lm_w, dataset")
-    c.execute("SELECT exp, dataset, lm_w,  MIN(wer), ser FROM results GROUP BY exp, dataset ORDER BY exp, lm_w, dataset")
+    # compare dev and test set by picking up the best experiment
+    c.execute("SELECT exp, dataset, lm_w,  MIN(wer), ser FROM results GROUP BY exp, dataset ORDER BY exp, dataset")
+    # TODO tradicni pouziti devsetu
+    # c.execute("SELECT exp, dataset, lm_w,  MIN(wer), ser FROM results WHERE dataset=='dev' GROUP BY exp, dataset ORDER BY exp, dataset")
     d = c.fetchall()
     print d
     c.close()
