@@ -84,7 +84,7 @@ for data_dir in $test_sets ; do
    exp/tri1/graph data/$data_dir exp/tri1/decode_$data_dir
 done
  
-draw-tree data/lang/phones.txt exp/tri1/tree | dot -Tsvg -Gsize=8,10.5 
+draw-tree data/lang/phones.txt exp/tri1/tree | dot -Tsvg -Gsize=8,10.5  > graph.svg
   
 #align tri1 
 steps/align_si.sh --run-cmn $cmn --nj $njobs --cmd "$train_cmd" \
