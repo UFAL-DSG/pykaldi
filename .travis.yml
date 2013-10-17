@@ -1,0 +1,35 @@
+# http://about.travis-ci.org/docs/user/ci-environment/
+# http://about.travis-ci.org/docs/user/build-configuration/
+# Travis uses Ubuntu 64 12.04
+
+language: python
+python:
+    # - "2.6" enable it by specify packages in setup.py and test it
+    - "2.7" 
+compiler:
+    - gcc
+
+before_install:
+    # - sudo apt-get update -qq
+    # cffi deps
+    - sudo apt-get install python-dev libffi-dev  
+    # ATLAS matrix library
+    - sudo apt-get install libatlas3gf-base libblas-dev libatlas-dev libblas-dev libblas3gf
+    # deps for pykaldi.audio FIXME change it portaudio or remove it
+    - sudo apt-get install libasound2-dev
+    - pushd /usr/include && sudo ln -s atlas/*.h . ; popd  # hack how to make available clapack.h FIXME failing cblas.h exists
+
+install: 
+    - pip install -q cffi --use-mirrors
+    # Openfst: building
+    - pushd tools && make -j 4 openfst_tgt && popd
+    # Openfst: downloading prebuild openfst
+    # - pushd tools && wget https://dl.dropboxusercontent.com/u/8933908/openfst-build-1204_06.tar.gz && tar xfv openfst-build-1204_06.tar.gz && ln -s openfst-1.3.2 openfst && popd
+    # Configure with ATLAS (default)
+    - pushd src && ./configure --atlas-root=/usr --shared && popd 
+    - pushd src && make -j 4 && popd
+    - pushd src/dec-wrap && make -j 4 && popd
+
+script:
+    - pushd src/dec-wrap && make -j 4 test && popd
+    - pushd src/pykaldi && python setup.py nosetests --no-skip && popd

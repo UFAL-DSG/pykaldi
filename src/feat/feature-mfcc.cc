@@ -128,6 +128,7 @@ void Mfcc::Compute(const VectorBase<BaseFloat> &wave,
       this_mfcc(opts_.num_ceps-1)  = energy;
     }
   }
+
 }
 
 

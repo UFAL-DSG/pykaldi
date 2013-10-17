@@ -59,7 +59,7 @@ mkdir -p $locdata
 mkdir -p $loctmp
 
 i=0
-for d in test train ; do
+for d in $test_sets train ; do
     ls $DATA/$d/ | sed -n /.*wav$/p |\
     while read wav ; do
         ((i++)) # bash specific
@@ -89,8 +89,8 @@ for d in test train ; do
     cp $locdata/${d}_trans.txt data/$d/text || exit 1;
     cp $locdata/$d.spk2utt data/$d/spk2utt || exit 1;
     cp $locdata/$d.utt2spk data/$d/utt2spk || exit 1;
-done # for in test train
+done # for in $test_sets train
 
-# set 1:1 relation for spk2utt: spk in test AND train
+# set 1:1 relation for spk2utt: spk in $test_sets AND train
 sort "${loctmp}/spk2gender.unsorted" -k1 > "${locdata}/spk2gender" 
 utils/filter_scp.pl data/$d/spk2utt $locdata/spk2gender > data/$d/spk2gender || exit 1;

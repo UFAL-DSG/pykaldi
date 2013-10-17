@@ -125,7 +125,9 @@ class OnlineFasterDecoder : public FasterDecoder {
   const OnlineFasterDecoderOpts opts_;
   const ConstIntegerSet<int32> silence_set_; // silence phones IDs
   const TransitionModel &trans_model_; // needed for trans-id -> phone conversion
+
   const BaseFloat max_beam_; // the maximum allowed beam
+
   BaseFloat &effective_beam_; // the currently used beam
   DecodeState state_; // the current state of the decoder
   int32 frame_; // the next frame to be processed

@@ -1,62 +1,26 @@
-all: $(LIBFILE) $(PYTHON_LIB)
+LIBNAME=pykaldi
+LIBFILE=lib$(LIBNAME).so
+SOURCEDIR=../dec-wrap
 
-EXTRA_CXXFLAGS = -Wno-sign-compare -I ../../tools/portaudio/install/include # -pedantic
-EXTRA_CXXFLAGS += -ggdb -O0  # for gdb debugging
-EXTRA_LDLIBS =
+$(LIBFILE):
+	$(MAKE) -C $(SOURCEDIR) $(LIBFILE)
+	# TODO how to use the LIBFILE -> add it as dependancy to setup.py?
+	cp $(SOURCEDIR)/$(LIBFILE) .
 
-include ../kaldi.mk
+all: $(LIBFILE)
+	python setup.py develop --user
 
-UNAME=$(shell uname)
-ifeq ($(UNAME), Linux)
-ifeq ($(KALDI_FLAVOR), dynamic)
-		#The PA_RingBuffer interface is internal and is not exported in the so libray
-		#so we have to compile in the static one
-		#.PA_ABS_PATH := $(shell readlink -f ../../tools/portaudio/install/lib )
-		#EXTRA_LDLIBS = -L ../../tools/portaudio/install/lib/ -Wl,-rpath=$(.PA_ABS_PATH) -lportaudio
-    EXTRA_LDLIBS = ../../tools/portaudio/install/lib/libportaudio.a
-else
-    EXTRA_LDLIBS = ../../tools/portaudio/install/lib/libportaudio.a
-endif
-ifneq ($(wildcard ../../tools/portaudio/install/include/pa_linux_alsa.h),)
-    EXTRA_LDLIBS += -lasound
-else
-    EXTRA_LDLIBS += -lrt
-endif
-else
-    EXTRA_LDLIBS = -L ../../tools/portaudio/install/lib/ -lportaudio
-endif
+clean:
+	@# removing build directory
+	-python setup.py clean --all
+	rm -rf dist
+	@# Do not want to use wildcards and rm -rf
+	rm -f *.egg-info/* *.egg-info/.[a-zA-Z]*
+	-rmdir *.egg-info
+	
 
-BINFILES = 
-
-TESTFILES = compute-wer-test pykaldi-gmm-decode-faster-test
-
-OBJFILES = compute-wer.o pykaldi-gmm-decode-faster.o pykaldi-audio-source.o
-
-PYTHON_LIB = libpykaldi.so
-
-# HACK I want to create just the $(PYTHON_LIB) 
-LIBNAME = just_for_simple_linking_in_makefile_with_LDFLAGS_and_LDLIBS_FLAGS
-LIBFILE = lib$(LIBNAME).so
-
-# Consequency of HACK:
-# For PASSing the "make test" you need to run manually the make $(PYTHON_LIB) 
-# or run alternatively
-mytest: $(PYTHON_LIB) 
-	$(MAKE) test
-
-
-ADDLIBS = ../decoder/kaldi-decoder.a ../online/kaldi-online.a ../thread/kaldi-thread.a \
-		  ../lat/kaldi-lat.a ../hmm/kaldi-hmm.a ../transform/kaldi-transform.a ../gmm/kaldi-gmm.a \
-		  ../fstext/kaldi-fstext.a ../tree/kaldi-tree.a ../matrix/kaldi-matrix.a \
-		  ../feat/kaldi-feat.a ../util/kaldi-util.a ../base/kaldi-base.a
-
-# FIXME LINUX ONLY
-$(PYTHON_LIB): $(OBJFILES) $(ADDLIBS) $(LIBFILE)
-ifneq ($(KALDI_FLAVOR), dynamic)
-	$(warning The following command will probably fail, in that run configure with --shared flag and remake all.)
-endif
-	# Building shared library from static one. The static one was compiled with -fPIC.
-	$(CXX) -shared -o $@ -Wl,-soname=$@,--whole-archive $^ -Wl,--no-whole-archive $(EXTRA_LDLIBS) $(LDFLAGS) $(LDLIBS)
-
-
-include ../makefiles/default_rules.mk
+cleanall: clean
+	# recursive make clean
+	$(MAKE) -C pykaldi clean
+	$(MAKE) -C pykaldi/binutils clean
+	$(MAKE) -C pykaldi/audio clean

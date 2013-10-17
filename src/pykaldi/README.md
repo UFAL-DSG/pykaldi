@@ -1,51 +1,47 @@
-Intro
------
-The goal of this project is to interface Kaldi decoders from Python. 
-Subgoals:
- * Build shared libraries for Kaldi
- * Python/C interface for Kaldi using [cffi](http://cffi.readthedocs.org/en/release-0.6/).
- * _Online_ interface to decoders which can be fed with audio data frame by frame. 
- * Make the _Online_ iterface available also from Python
+Install & Dependencies
+============
+ * The [../dec-wrap](../dec-wrap) directory: The pykaldi currently interfaces
+    the online decoders already wrapped in C code from [../dec-wrap](../dec-wrap).
+    Run the `make` to build that directory.
+ * [cffi](http://cffi.readthedocs.org/en/latest/) which further requires Python and FFI headers.
 
-Content
--------
- * C and C++ files for testing shared libraries compliation
- * `pykaldi` directory containing C/Python interface to Kaldi
+   On Ubuntu install them by:
+   ```bash
+   sudo apt-get install python-dev libffi-dev
+   ```
 
-Prerequisites
---------------
-UPDATE 2013 07 02
-`Kaldi/sandbox/sharedlibs` now support compiling Kaldi with shared libraries.
- *Shared library support* is needed for `cffi`. 
- 
-I hope the sandbox will be merged soon into kaldi/trunk.
+ * See [setup.py](./setup.py) `install_requires` variable for full list of Python dependencies.
 
-Apart the Kaldi stuff (OpenFST, OpenBLAS, PortAudio) you need to install obviously `cffi`.
-In the `sanbox/oplatek/tools/extras/` you can find `install_cffi.sh` installation script.
+   The [setup.py](./setup.py) INSTALL ALL THE DEPENDENCIES BY ITSELF. See the section below!.
 
-I recommend to install `cffi` via you system package manager and use it for other stuff too.
-However, you can always install it by running `install_cffi.sh` from `tools` directory.
+   Note: In the `sanbox/oplatek/tools/extras/` you can find `install_cffi.sh` installation script.
 
 
 Running and building examples
 -----------------------------
+The Python [setuptools](http://pythonhosted.org/an_example_pypi_project/setuptools.html#installing-setuptools-and-easy-install) is used instead of Makefile
+for "Installing" and running tests.
 
-In order to build shared libraries and run C test binaries run following commands from this directory.
-```sh
-$make
-```
-For details and running other commands run tests and check the `Makefile`
-```sh
-make test
-```
+Surprisingly the most used `python setup.py install` command does not work.
+It is so, because the `Pykaldi` depends on Kaldi libraries and they are not used as system libraries. You have probably noticed no 'make install' or anything similar.
+If the it changes it will work. In fact, it does not matter.
+
+Commands you SHOULD USE:
+ * `pip install --user cffi`  # install cffi
+ * `python setup.py develop --user` an its undo `python setup.py develop --uninstall`
+
+    The command links pykaldi directory to PYTHONPATH (at Ubuntu to `$HOME/.local/lib/python2.7/site-packages/`),
+    so you can use pykaldi system wide.
+
+    ```python
+    import pykaldi
+    print pykaldi.__version__
+    ```
+ * `python setup.py nosetests` runs all test for `pykaldi`
 
 
+Commands you SHOULD NOT USE:
+ * `python setup.py install [--user]` and its undo `pip uninstall pykaldi`
 
-Remarks on linking
--------
- * [How to use dlopen](http://www.isotton.com/devel/docs/C++-dlopen-mini-HOWTO/C++-dlopen-mini-HOWTO.html)
- * [Stackoverflow little off topic explanation](http://stackoverflow.com/questions/12762910/c-undefined-symbols-when-loading-shared-library-with-dlopen)
- * [http://kaldi.sourceforge.net/matrixwrap.html](See Missing the ATLAS implementation of  CLAPACK)
- * I spent a lot of time to set right linking. 
-    I was linking `lapack` libraries instead of `lapack_atlas`.
-    I was getting error `undefined symbol: clapack_dgetrf`
+    This command fails due to missing headers of Kaldi. There are no headers for Kaldi in system paths.
+
