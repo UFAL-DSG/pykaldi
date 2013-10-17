@@ -1,13 +1,13 @@
 #!/bin/bash
 
-data_lang=en
+# data_lang=en
 # Vystadial data 1 channel 16000 16-bit
-export DATA_ROOT="/ha/projects/vystadial/data/asr/en/voip/"
+# export DATA_ROOT="/ha/projects/vystadial/data/asr/en/voip/"
 # export DATA_ROOT=/ha/work/people/oplatek/kaldi/egs/kaldi-vystadial-recipe/s5/Results/vystadial-sample/data
 
-# data_lang=cs
+data_lang=cs
     # # Vystadial data correct? 16000? or 8000? 16-bit
-# # export DATA_ROOT=/ha/projects/vystadial/data/asr/cs/voip_fj
+# export DATA_ROOT=/ha/projects/vystadial/data/asr/cs/voip_fj_op
 # export DATA_ROOT=/ha/work/people/oplatek/kaldi/egs/kaldi-vystadial-recipe/s5/Results/vystadial-sample-cs/data
 
 export test_sets="dev test"

@@ -5,31 +5,10 @@ source conf/train_conf.sh
 locdata=$1; shift
 locdict=$1; shift
 
-
-if [ ! -z "${DICTIONARY}" ]; then
-  echo "Using predefined dictionary: ${DICTIONARY}"
-  echo '</s>' > $locdata/vocab-full.txt
-  tail -n +3 $DICTIONARY | cut -f 1 |\
-    sort -u >> $locdata/vocab-full.txt 
-else 
-  cut -d' ' -f2- data/train/text | tr ' ' '\n' | sort -u > $locdata/vocab-full.txt
-fi
-
-if [ ! -z "${NOOOV}" ]; then
-  # NOT ALLOWING OOV WORDS training & also in decoding
-  echo; echo "REMOVING OOV WORD FROM LANGUAGE MODEL"; echo
-  pushd data/local
-  grep -v -w OOV lm.arpa > lm.arpa_NO_OOV 
-  mv lm.arpa_NO_OOV lm.arpa
-  popd
-else
-  echo; echo "KEEPING OOV WORD IN LANGUAGE MODEL"; echo
-fi
-
+mkdir -p $locdict 
 
 if [ ! -f $locdict/cmudict/cmudict.0.7a ]; then
   echo "--- Downloading CMU dictionary ..."
-  mkdir -p $locdict 
   svn co http://svn.code.sf.net/p/cmusphinx/code/trunk/cmudict \
     $locdict/cmudict || exit 1;
 fi
