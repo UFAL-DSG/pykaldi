@@ -7,12 +7,12 @@
 
 data_lang=cs
     # # Vystadial data correct? 16000? or 8000? 16-bit
-# export DATA_ROOT=/ha/projects/vystadial/data/asr/cs/voip_fj_op
+export DATA_ROOT=/ha/projects/vystadial/data/asr/cs/voip_fj_op
 # export DATA_ROOT=/ha/work/people/oplatek/kaldi/egs/kaldi-vystadial-recipe/s5/Results/vystadial-sample-cs/data
 
 export test_sets="dev test"
 
-export LM_ORDER=3
+export LM_ORDER=2
 # Unset or empty ARPA_MODEL variable means that the script will build the LM itself
 # export ARPA_MODEL="/ha/projects/vystadial/git/alex/resources/lm/caminfo/arpa_trigram"
 # unset ARPA_MODEL

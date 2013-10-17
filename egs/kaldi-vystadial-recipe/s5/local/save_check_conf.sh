@@ -16,7 +16,7 @@
 
 
 if [ ! -d "$DATA_ROOT" ]; then
-  echo "You need to set \"DATA_ROOT\" variable in path.sh to point to the directory to host data"
+  echo "You need to set \"DATA_ROOT\" variable in your configs to point to the directory to host data"
   exit 1
 fi
 
