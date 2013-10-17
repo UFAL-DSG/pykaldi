@@ -124,12 +124,12 @@ if __name__ == "__main__":
     parser.add_argument('expath', type=str, action='store')
     p = parser.parse_args()
 
-    d = extractResults(p.expath)
+    raw_d = extractResults(p.expath)
 
     conn = sqlite3.connect(':memory:')
     c = conn.cursor()
     c.execute('''CREATE TABLE results (exp text, dataset text, lm_w int, wer float, ser float)''')
-    c.executemany('INSERT INTO results VALUES (?, ?, ?, ?, ?)', d)
+    c.executemany('INSERT INTO results VALUES (?, ?, ?, ?, ?)', raw_d)
     # # get all results sorted
     # c.execute("SELECT * FROM results ORDER BY exp, lm_w, dataset")
     # d = c.fetchall()
@@ -140,7 +140,7 @@ if __name__ == "__main__":
     # c.execute(
     #     "SELECT exp, dataset, lm_w,  MIN(wer), ser FROM results GROUP BY exp, dataset ORDER BY exp, dataset")
     # d = c.fetchall()
-    # tradicni pouziti devsetu
+    # traditional usage of devset
     c.execute("SELECT exp, lm_w,  MIN(wer) FROM results WHERE dataset=='dev' GROUP BY exp")
     d = []
     for exp, lm_w, min_dev_wer in c.fetchall():
