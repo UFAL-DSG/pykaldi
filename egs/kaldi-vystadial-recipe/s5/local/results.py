@@ -40,7 +40,7 @@ def extractResults(path):
     table = []
     for wf in wer_files:
         try:
-            _, exp, decode_dir, wer_f = wf.split('/')
+            exp, decode_dir, wer_f = wf.split('/')[-3:]
             # last split: decode_it3_dev  -> dev
             dataset = decode_dir.split('_')[-1]
             lm_w = int(wer_f[4:])  # strip wer_ from wer_19
