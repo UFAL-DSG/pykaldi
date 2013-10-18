@@ -12,6 +12,8 @@ srcdir=data/local
 lmdir=data/local/
 tmpdir=data/local/lm_tmp
 lexicon=data/local/dict/lexicon.txt
+local_arpa_lm0=data/local/lm0.arpa
+test_lm="DEFAULT_should_be_set_in_script"
 
 # Next, for each type of language model, create the corresponding FST
 # and the corresponding lang_test_* directory.
@@ -28,12 +30,29 @@ for t in $test_sets ; do
  cat $lmdir/lm.arpa | \
     utils/find_arpa_oovs.pl $test/words.txt > $tmpdir/oovs.txt
  
+ if [[ -z "$TEST_ZERO_GRAMS" ]]; then
+  echo "=== Test data will use LM of order {LM_ORDER}"
+  test_lm=$lmdir/lm.arpa
+ else
+  echo "=== Building ZERO GRAM for testing data..."
+  [ -z "$IRSTLM" ] && echo "Set IRSTLM env variable for building LM" && exit 1;
+  cut -d' ' -f2- data/test/text | sed -e 's:^:<s> :' -e 's:$: </s>:' | \
+      grep -v '_INHALE_\|_LAUGH_\|_EHM_HMM_\|_NOISE_' \
+      > $lmdir/lm_test.txt
+
+  # Launching irstlm script; See tools/INSTALL for installing irstlm
+  build-lm.sh -i "$lmdir/lm_test.txt" -n 0 -o "$lmdir/lm_phone_zero.ilm.gz"
+  # Launching irstlm script; See tools/INSTALL for installing irstlm
+  compile-lm "$lmdir/lm_phone_zero.ilm.gz" --text $local_arpa_lm0
+
+  test_lm=$local_arpa_lm0
+ fi
  # grep -v '<s> <s>' because the LM seems to have some strange and useless
  # stuff in it with multiple <s>'s in the history.  Encountered some other similar
  # things in a LM from Geoff.  Removing all "illegal" combinations of <s> and </s>,
  # which are supposed to occur only at being/end of utt.  These can cause 
  # determinization failures of CLG [ends up being epsilon cycles].
- cat $lmdir/lm.arpa | \
+ cat $test_lm | \
    grep -v '<s> <s>' | \
    grep -v '</s> <s>' | \
    grep -v '</s> </s>' | \
