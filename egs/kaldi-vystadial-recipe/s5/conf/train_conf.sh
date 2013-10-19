@@ -1,12 +1,12 @@
 #!/bin/bash
 
-data_lang=en
+# data_lang=en
 # export DATA_ROOT="/ha/projects/vystadial/nobackup/VYSTADIAL-2013/data_voip_en"
 # export DATA_ROOT=/ha/work/people/oplatek/kaldi/egs/kaldi-vystadial-recipe/s5/Results/vystadial-sample/data
 
 data_lang=cs
-# export DATA_ROOT=/ha/projects/vystadial/nobackup/VYSTADIAL-2013/data_voip_cs
-export DATA_ROOT=/ha/work/people/oplatek/kaldi/egs/kaldi-vystadial-recipe/s5/Results/vystadial-sample-cs/data
+export DATA_ROOT=/ha/projects/vystadial/nobackup/VYSTADIAL-2013/data_voip_cs
+# export DATA_ROOT=/ha/work/people/oplatek/kaldi/egs/kaldi-vystadial-recipe/s5/Results/vystadial-sample-cs/data
 
 export test_sets="dev test"
 
