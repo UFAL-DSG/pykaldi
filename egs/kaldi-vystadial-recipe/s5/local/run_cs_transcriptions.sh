@@ -6,15 +6,6 @@ locdata=$1; shift
 locdict=$1; shift
 
 
-if [ ! -z "${DICTIONARY}" ]; then
-  echo "Using predefined dictionary: ${DICTIONARY}"
-  echo '</s>' > $locdata/vocab-full.txt
-  tail -n +3 $DICTIONARY | cut -f 1 |\
-    sort -u >> $locdata/vocab-full.txt 
-else 
-  cut -d' ' -f2- data/train/text | tr ' ' '\n' | sort -u > $locdata/vocab-full.txt
-fi
-
 echo "The results are stored in $locdata/vocab-full.txt"
 echo "Should be utf-8 and words in CAPITALS"
 echo "CHECK the ENCODING!"; echo

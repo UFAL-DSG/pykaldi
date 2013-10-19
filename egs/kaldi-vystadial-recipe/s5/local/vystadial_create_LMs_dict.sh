@@ -90,6 +90,17 @@ fi
 
 echo "=== Preparing the dictionary ..."
 
+mkdir -p $locdict 
+
+if [ ! -z "${DICTIONARY}" ]; then
+  echo "Using predefined dictionary: ${DICTIONARY}"
+  echo '</s>' > $locdata/vocab-full.txt
+  tail -n +3 $DICTIONARY | cut -f 1 |\
+    sort -u >> $locdata/vocab-full.txt 
+else 
+  cut -d' ' -f2- data/train/text | tr ' ' '\n' | sort -u > $locdata/vocab-full.txt
+fi
+
 if [ "$data_lang" == "en" ] ; then
     local/prepare_cmu_dict.sh $locdata $locdict
 elif [ "$data_lang" == "cs" ] ; then
