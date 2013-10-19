@@ -2,7 +2,7 @@ Summary
 -------
  * KALDI recipe based on voxforge KALDI recipe http://vpanayotov.blogspot.cz/2012/07/voxforge-scripts-for-kaldi.html .
  * Requires KALDI installation and Linux environment. (Tested on Ubuntu 10.04, 12.04 and 12.10.)
- * Written in Bash an Python 2.7.3.
+ * Kaldi recipes are located in `KALDI_ROOT/egs/name_of_recipe/s5/'. This recipe expects that you copy the directory which contains this README under `KALDI_ROOT/egs`.
 
 
 
@@ -23,8 +23,10 @@ Before running the experiments check the following files:
  * `conf` directory contains different configuration related for the training
  * `path.sh` just set up path for running Kaldi binaries and path to data.
     You should also setup `njobs` according your computer capabalities.
- * `cmd.sh` set training commands e.g. for SGE grid.
- * If you set up everything right, just launch `run.sh` It will create `mfcc`, `data` and `exp` directories.
+ * `cmd.sh` you can switch to run the training on SGE grid(disabled by default)
+
+Start the recipe from s5 directory by running `run.sh`.
+It will create `mfcc`, `data` and `exp` directories.
    If any of them exists, it will ask you if you want them to be overwritten.
  ```bash
  ./run.sh | tee mylog.log # I always store the output to the log
