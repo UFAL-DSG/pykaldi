@@ -98,7 +98,9 @@ if [ ! -z "${DICTIONARY}" ]; then
   tail -n +3 $DICTIONARY | cut -f 1 |\
     sort -u >> $locdata/vocab-full.txt 
 else 
-  cut -d' ' -f2- data/train/text | tr ' ' '\n' | sort -u > $locdata/vocab-full.txt
+  # grep -v _ throws away _NOISE_ _SIL_ etc
+  cut -d' ' -f2- data/train/text | tr ' ' '\n' | \
+      grep -v '_' | sort -u > $locdata/vocab-full.txt
 fi
 
 if [ "$data_lang" == "en" ] ; then
