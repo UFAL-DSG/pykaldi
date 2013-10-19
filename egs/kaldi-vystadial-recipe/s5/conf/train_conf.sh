@@ -18,8 +18,8 @@ export LM_ORDER=2
 # unset ARPA_MODEL
 
 # Should I create and use 0-gram LM for decoding from testing data?
-export TEST_ZERO_GRAMS="yes"
-# unset TEST_ZERO_GRAMS
+# export TEST_ZERO_GRAMS="yes"
+unset TEST_ZERO_GRAMS
 
 
 # Unset or empty DICTIONARY variable means that the script will build the DICTIONARY itself

@@ -17,7 +17,7 @@ renice 20 $$
 
 # If using zero grams for testing create
 # additional lang_test_dir_0 with _0 suffix
-if [[ ! -z "TEST_ZERO_GRAMS" ]] ; then
+if [[ ! -z "$TEST_ZERO_GRAMS" ]] ; then
     test_sets_ext=""
     for t in $test_sets ; do test_sets_ext="$test_sets_ext $t ${t}_0" ; done
 else
@@ -51,7 +51,7 @@ fi
 if [ ! "$(ls -A ${MFCC_DIR} 2>/dev/null)" ]; then
 
   # Creating MFCC features and storing at ${MFCC_DIR} (Could be large).
-  for x in train $test_sets_ext ; do 
+  for x in train $test_sets ; do 
     steps/make_mfcc.sh --mfcc-config conf/mfcc.conf --cmd \
       "$train_cmd" --nj $njobs data/$x exp/make_mfcc/$x ${MFCC_DIR} || exit 1;
     # CMVN does not have sense for us

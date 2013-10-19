@@ -23,10 +23,10 @@ for t in $test_sets_ext ; do
     mkdir -p $test
     mkdir -p $tmpdir
 
-    if [[ ${t:(-1)} == '0' ]] ; then  # last character is 0
-        test_lm=$lmdir/lm_train_${LM_ORDER}.arpa
-    else
+    if [[ ${t:(-1)} == '0' ]] ; then  # last character is 0 (dir with 0-gram LM)
         test_lm=$lmdir/lm_test_0.arpa
+    else
+        test_lm=$lmdir/lm_train_${LM_ORDER}.arpa
     fi
 
     for f in phones.txt words.txt phones.txt L.fst L_disambig.fst phones/; do
@@ -42,9 +42,7 @@ for t in $test_sets_ext ; do
      # determinization failures of CLG [ends up being epsilon cycles].
 
     cat $test_lm | \
-      grep -v '<s> <s>' | \
-      grep -v '</s> <s>' | \
-      grep -v '</s> </s>' | \
+      grep -v '<s> <s>\|</s> <s>\|</s> </s>' | \
       arpa2fst - | fstprint | \
       utils/remove_oovs.pl $tmpdir/oovs.txt | \
       utils/eps2disambig.pl | utils/s2eps.pl | fstcompile --isymbols=$test/words.txt \
@@ -72,6 +70,6 @@ for t in $test_sets_ext ; do
       echo "Language model has cycles with empty words" && exit 1
 
     rm -rf $tmpdir
-    echo "*** Succeeded in formatting data for $test"
+    echo "*** Succeeded in creating G.fst for $test"
 
 done # for test in $test_sets
