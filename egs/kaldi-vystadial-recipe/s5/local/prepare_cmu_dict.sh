@@ -15,17 +15,6 @@ else
   cut -d' ' -f2- data/train/text | tr ' ' '\n' | sort -u > $locdata/vocab-full.txt
 fi
 
-if [ ! -z "${NOOOV}" ]; then
-  # NOT ALLOWING OOV WORDS training & also in decoding
-  echo; echo "REMOVING OOV WORD FROM LANGUAGE MODEL"; echo
-  pushd data/local
-  grep -v -w OOV lm.arpa > lm.arpa_NO_OOV 
-  mv lm.arpa_NO_OOV lm.arpa
-  popd
-else
-  echo; echo "KEEPING OOV WORD IN LANGUAGE MODEL"; echo
-fi
-
 
 if [ ! -f $locdict/cmudict/cmudict.0.7a ]; then
   echo "--- Downloading CMU dictionary ..."

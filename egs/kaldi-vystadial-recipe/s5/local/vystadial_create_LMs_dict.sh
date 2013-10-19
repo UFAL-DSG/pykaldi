@@ -55,6 +55,17 @@ else
 
 fi
 
+if [ ! -z "${NOOOV}" ]; then
+  echo; echo "REMOVING OOV WORD FROM LANGUAGE MODEL"; echo
+  pushd data/local
+  grep -v -w OOV lm_train_${LM_ORDER}.arpa > lm.arpa_NO_OOV 
+  mv lm.arpa_NO_OOV lm_train_${LM_ORDER}.arpa
+  popd
+else
+  echo; echo "KEEPING OOV WORD IN LANGUAGE MODEL"; echo
+fi
+
+
 
 if [[ ! -z "$TEST_ZERO_GRAMS" ]]; then
     echo "=== Building ZERO GRAM for testing data..."
@@ -64,13 +75,15 @@ if [[ ! -z "$TEST_ZERO_GRAMS" ]]; then
 
     cp $locdata/vocab-test.txt ${local_lm}_test_0.arpa
     echo "<unk>" >> ${local_lm}_test_0.arpa
+    echo "<s>" >> ${local_lm}_test_0.arpa
+    echo "</s>" >> ${local_lm}_test_0.arpa
     python -c """
 import math
 with open('${local_lm}_test_0.arpa', 'r+') as f: 
     lines = f.readlines() 
     p = math.log10(1/float(len(lines))); 
     lines = ['%f\\t%s'%(p,l) for l in lines]
-    f.seek(0); f.write('\\n\\\\data\\\\\\nngram\\t1=\t%d\\n\\n\\\\1-grams:\n' % len(lines)) 
+    f.seek(0); f.write('\\n\\\\data\\\\\\nngram  1=       %d\\n\\n\\\\1-grams:\\n' % len(lines)) 
     f.write(''.join(lines) + '\\\\end\\\\')
 """
 fi

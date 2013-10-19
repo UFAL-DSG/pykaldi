@@ -15,13 +15,11 @@ renice 20 $$
 # Load few variables for changing the parameters of the training
 . ./conf/train_conf.sh
 
+test_sets_ext=$test_sets
 # If using zero grams for testing create
 # additional lang_test_dir_0 with _0 suffix
 if [[ ! -z "$TEST_ZERO_GRAMS" ]] ; then
-    test_sets_ext=""
-    for t in $test_sets ; do test_sets_ext="$test_sets_ext $t ${t}_0" ; done
-else
-    test_sets_ext=$test_sets
+    for t in $test_sets ; do test_sets_ext="$test_sets_ext ${t}_0" ; done
 fi
 
 # Copy the configuration files to exp directory.
@@ -49,13 +47,16 @@ fi
   
 # With save_check_conf.sh it ask about rewriting the ${MFCC_DIR} directory
 if [ ! "$(ls -A ${MFCC_DIR} 2>/dev/null)" ]; then
-
   # Creating MFCC features and storing at ${MFCC_DIR} (Could be large).
   for x in train $test_sets ; do 
     steps/make_mfcc.sh --mfcc-config conf/mfcc.conf --cmd \
       "$train_cmd" --nj $njobs data/$x exp/make_mfcc/$x ${MFCC_DIR} || exit 1;
-    # CMVN does not have sense for us
+    # CMVN is turn off by default but the scripts require it 
     steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x ${MFCC_DIR} || exit 1;
+    if [[ ! -z "$TEST_ZERO_GRAMS" ]] ; then
+        cp data/$x/feats.scp data/${x}_0/feats.scp
+        cp data/$x/cmvn.scp data/${x}_0/cmvn.scp
+    fi
   done
 fi
 

@@ -89,6 +89,13 @@ for d in $test_sets train ; do
     cp $locdata/${d}_trans.txt data/$d/text || exit 1;
     cp $locdata/$d.spk2utt data/$d/spk2utt || exit 1;
     cp $locdata/$d.utt2spk data/$d/utt2spk || exit 1;
+    if [[ ! -z "$TEST_ZERO_GRAMS" ]] ; then
+        mkdir -p data/${d}_0
+        for f in wav.scp text spk2utt utt2spk ; do
+            cp data/$d/$f data/${d}_0
+        done
+    fi
+
 done # for in $test_sets train
 
 # set 1:1 relation for spk2utt: spk in $test_sets AND train
