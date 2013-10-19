@@ -29,15 +29,16 @@ source conf/train_conf.sh
 
 locdata=data/local
 locdict=$locdata/dict
-local_arpa_lm=data/local/lm.arpa
+local_lm=data/local/lm  # appending arpa in the script
 
 mkdir -p $locdata
 
 echo "=== Preparing the LM ..."
 echo debugging_${ARPA_MODEL}_
 
+echo "=== Preparing the LMs ..."
 if [[ ! -z "$ARPA_MODEL" ]] ; then
-    cp -f $ARPA_MODEL $local_arpa_lm
+    cp -f $ARPA_MODEL ${local_lm}_train_${LM_ORDER}.arpa
     echo "Using predefined LM in arpa format: ${ARPA_MODEL}"
 else
     echo "=== Building LM of order ${LM_ORDER}..."
@@ -47,10 +48,33 @@ else
         > $locdata/lm_train.txt
 
     # Launching irstlm script; See tools/INSTALL for installing irstlm
-    build-lm.sh -i "$locdata/lm_train.txt" -n ${LM_ORDER} -o "$locdata/lm_phone_${LM_ORDER}.ilm.gz"
+    builded_lm="$locdata/lm_phone_train_${LM_ORDER}.ilm.gz"
+    build-lm.sh -i "$locdata/lm_train.txt" -n ${LM_ORDER} -o $builded_lm
     # Launching irstlm script; See tools/INSTALL for installing irstlm
-    compile-lm "$locdata/lm_phone_${LM_ORDER}.ilm.gz" --text $local_arpa_lm
+    compile-lm "$builded_lm" --text ${local_lm}_train_${LM_ORDER}.arpa
+
 fi
+
+
+if [[ ! -z "$TEST_ZERO_GRAMS" ]]; then
+    echo "=== Building ZERO GRAM for testing data..."
+    cut -d' ' -f2- data/test/text | tr ' ' '\n' | \
+      grep -v '_INHALE_\|_LAUGH_\|_EHM_HMM_\|_NOISE_' | \
+      sort -u > $locdata/vocab-test.txt
+
+    cp $locdata/vocab-test.txt ${local_lm}_test_0.arpa
+    echo "<unk>" >> ${local_lm}_test_0.arpa
+    python -c """
+import math
+with open('${local_lm}_test_0.arpa', 'r+') as f: 
+    lines = f.readlines() 
+    p = math.log10(1/float(len(lines))); 
+    lines = ['%f\\t%s'%(p,l) for l in lines]
+    f.seek(0); f.write('\\n\\\\data\\\\\\nngram\\t1=\t%d\\n\\n\\\\1-grams:\n' % len(lines)) 
+    f.write(''.join(lines) + '\\\\end\\\\')
+"""
+fi
+
 
 echo "=== Preparing the dictionary ..."
 

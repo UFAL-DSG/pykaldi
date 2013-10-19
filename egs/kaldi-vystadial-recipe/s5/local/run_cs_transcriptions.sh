@@ -12,9 +12,7 @@ if [ ! -z "${DICTIONARY}" ]; then
   tail -n +3 $DICTIONARY | cut -f 1 |\
     sort -u >> $locdata/vocab-full.txt 
 else 
-  # Do uppercasing but the data should be uppercased already
-  cut -d' ' -f2- data/train/text | tr ' ' '\n' | \
-   PERLIO=:utf8 perl -pe '$_=uc' | sort -u > $locdata/vocab-full.txt
+  cut -d' ' -f2- data/train/text | tr ' ' '\n' | sort -u > $locdata/vocab-full.txt
 fi
 
 echo "The results are stored in $locdata/vocab-full.txt"
