@@ -40,8 +40,9 @@ def extractResults(path):
     table = []
     for wf in wer_files:
         try:
-            _, exp, decode_dir, wer_f = wf.split('/')
-            dataset = decode_dir[7:]  # strip decode_ from decode_expname
+            exp, decode_dir, wer_f = wf.split('/')[-3:]
+            # last split: decode_it3_dev  -> dev
+            dataset = decode_dir.split('_')[-1]
             lm_w = int(wer_f[4:])  # strip wer_ from wer_19
             wer, ser = extract_stat(wf)
             table.append((exp, dataset, lm_w, wer, ser))
@@ -123,22 +124,29 @@ if __name__ == "__main__":
     parser.add_argument('expath', type=str, action='store')
     p = parser.parse_args()
 
-    d = extractResults(p.expath)
+    raw_d = extractResults(p.expath)
 
     conn = sqlite3.connect(':memory:')
     c = conn.cursor()
     c.execute('''CREATE TABLE results (exp text, dataset text, lm_w int, wer float, ser float)''')
-    c.executemany('INSERT INTO results VALUES (?, ?, ?, ?, ?)', d)
+    c.executemany('INSERT INTO results VALUES (?, ?, ?, ?, ?)', raw_d)
     # # get all results sorted
     # c.execute("SELECT * FROM results ORDER BY exp, lm_w, dataset")
+    # d = c.fetchall()
     # best experiment
     # c.execute("SELECT exp, dataset, lm_w,  MIN(wer), ser FROM results ORDER BY exp, lm_w, dataset")
+    # d = c.fetchall()
     # compare dev and test set by picking up the best experiment
-    c.execute("SELECT exp, dataset, lm_w,  MIN(wer), ser FROM results GROUP BY exp, dataset ORDER BY exp, dataset")
-    # TODO tradicni pouziti devsetu
-    # c.execute("SELECT exp, dataset, lm_w,  MIN(wer), ser FROM results WHERE dataset=='dev' GROUP BY exp, dataset ORDER BY exp, dataset")
-    d = c.fetchall()
-    print d
+    # c.execute(
+    #     "SELECT exp, dataset, lm_w,  MIN(wer), ser FROM results GROUP BY exp, dataset ORDER BY exp, dataset")
+    # d = c.fetchall()
+    # traditional usage of devset
+    c.execute("SELECT exp, lm_w,  MIN(wer) FROM results WHERE dataset=='dev' GROUP BY exp")
+    d = []
+    for exp, lm_w, min_dev_wer in c.fetchall():
+        c.execute("SELECT * FROM results WHERE dataset='test' and exp='%s' and lm_w=%s" % (exp, lm_w))
+        d.append(c.fetchone())  # there should be only one row
+
     c.close()
     conn.close()
     t = Table(data=d, colnames=['exp', 'set', 'LMW', 'WER', 'SER'])

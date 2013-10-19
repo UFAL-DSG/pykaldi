@@ -7,6 +7,15 @@ locdict=$1; shift
 
 mkdir -p $locdict 
 
+if [ ! -z "${DICTIONARY}" ]; then
+  echo "Using predefined dictionary: ${DICTIONARY}"
+  echo '</s>' > $locdata/vocab-full.txt
+  tail -n +3 $DICTIONARY | cut -f 1 |\
+    sort -u >> $locdata/vocab-full.txt 
+else 
+  cut -d' ' -f2- data/train/text | tr ' ' '\n' | sort -u > $locdata/vocab-full.txt
+fi
+
 if [ ! -f $locdict/cmudict/cmudict.0.7a ]; then
   echo "--- Downloading CMU dictionary ..."
   svn co http://svn.code.sf.net/p/cmusphinx/code/trunk/cmudict \
