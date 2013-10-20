@@ -72,13 +72,13 @@ if [[ ! -z "$TEST_ZERO_GRAMS" ]]; then
       grep -v '_INHALE_\|_LAUGH_\|_EHM_HMM_\|_NOISE_' | \
       sort -u > $locdata/vocab-test.txt
 
-    cp $locdata/vocab-test.txt ${local_lm}_test_0.arpa
-    echo "<unk>" >> ${local_lm}_test_0.arpa
-    echo "<s>" >> ${local_lm}_test_0.arpa
-    echo "</s>" >> ${local_lm}_test_0.arpa
+    cp $locdata/vocab-test.txt ${local_lm}_test0.arpa
+    echo "<unk>" >> ${local_lm}_test0.arpa
+    echo "<s>" >> ${local_lm}_test0.arpa
+    echo "</s>" >> ${local_lm}_test0.arpa
     python -c """
 import math
-with open('${local_lm}_test_0.arpa', 'r+') as f: 
+with open('${local_lm}_test0.arpa', 'r+') as f: 
     lines = f.readlines() 
     p = math.log10(1/float(len(lines))); 
     lines = ['%f\\t%s'%(p,l) for l in lines]

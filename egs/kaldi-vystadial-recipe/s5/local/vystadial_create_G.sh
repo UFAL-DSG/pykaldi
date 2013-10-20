@@ -24,7 +24,7 @@ for t in $test_sets_ext ; do
     mkdir -p $tmpdir
 
     if [[ ${t:(-1)} == '0' ]] ; then  # last character is 0 (dir with 0-gram LM)
-        test_lm=$lmdir/lm_test_0.arpa
+        test_lm=$lmdir/lm_test0.arpa
     else
         test_lm=$lmdir/lm_train_${LM_ORDER}.arpa
     fi

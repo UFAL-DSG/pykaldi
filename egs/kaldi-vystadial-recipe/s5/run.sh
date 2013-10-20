@@ -17,9 +17,9 @@ renice 20 $$
 
 test_sets_ext=$test_sets
 # If using zero grams for testing create
-# additional lang_test_dir_0 with _0 suffix
+# additional lang_test_dir0 with 0 suffix
 if [[ ! -z "$TEST_ZERO_GRAMS" ]] ; then
-    for t in $test_sets ; do test_sets_ext="$test_sets_ext ${t}_0" ; done
+    for t in $test_sets ; do test_sets_ext="$test_sets_ext ${t}0" ; done
 fi
 
 # Copy the configuration files to exp directory.
@@ -54,8 +54,8 @@ if [ ! "$(ls -A ${MFCC_DIR} 2>/dev/null)" ]; then
     # CMVN is turn off by default but the scripts require it 
     steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x ${MFCC_DIR} || exit 1;
     if [[ ! -z "$TEST_ZERO_GRAMS" ]] ; then
-        cp data/$x/feats.scp data/${x}_0/feats.scp
-        cp data/$x/cmvn.scp data/${x}_0/cmvn.scp
+        cp data/$x/feats.scp data/${x}0/feats.scp
+        cp data/$x/cmvn.scp data/${x}0/cmvn.scp
     fi
   done
 fi

@@ -90,9 +90,9 @@ for d in $test_sets train ; do
     cp $locdata/$d.spk2utt data/$d/spk2utt || exit 1;
     cp $locdata/$d.utt2spk data/$d/utt2spk || exit 1;
     if [[ ! -z "$TEST_ZERO_GRAMS" ]] ; then
-        mkdir -p data/${d}_0
+        mkdir -p data/${d}0
         for f in wav.scp text spk2utt utt2spk ; do
-            cp data/$d/$f data/${d}_0
+            cp data/$d/$f data/${d}0
         done
     fi
 
