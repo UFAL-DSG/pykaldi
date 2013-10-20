@@ -12,7 +12,7 @@ export test_sets="dev test"
 
 export LM_ORDER=2
 # Unset or empty ARPA_MODEL variable means that the script will build the LM itself
-# export ARPA_MODEL="/ha/projects/vystadial/git/alex/resources/lm/caminfo/arpa_trigram"
+export ARPA_MODEL="/ha/projects/vystadial/data/asr/cs/voip_fj/arpa_bigram"
 # unset ARPA_MODEL
 
 # Should I create and use 0-gram LM for decoding from testing data?
@@ -44,7 +44,7 @@ unset monoTrainData  # use full data
 pdf=1200
 
 # Maximum number of Gaussians used for training
-gauss=19200
+gauss=41000
 
 # if run Cepstral Mean Normalisation: true/false
 cmn=false
