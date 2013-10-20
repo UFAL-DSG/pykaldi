@@ -1,18 +1,18 @@
 #!/bin/bash
 
-# data_lang=en
-# export DATA_ROOT="/ha/projects/vystadial/nobackup/VYSTADIAL-2013/data_voip_en"
+data_lang=en
+export DATA_ROOT="/ha/projects/vystadial/nobackup/VYSTADIAL-2013/data_voip_en"
 # export DATA_ROOT=/ha/work/people/oplatek/kaldi/egs/kaldi-vystadial-recipe/s5/Results/vystadial-sample/data
 
-data_lang=cs
-export DATA_ROOT=/ha/projects/vystadial/nobackup/VYSTADIAL-2013/data_voip_cs
+# data_lang=cs
+# export DATA_ROOT=/ha/projects/vystadial/nobackup/VYSTADIAL-2013/data_voip_cs
 # export DATA_ROOT=/ha/work/people/oplatek/kaldi/egs/kaldi-vystadial-recipe/s5/Results/vystadial-sample-cs/data
 
 export test_sets="dev test"
 
 export LM_ORDER=2
 # Unset or empty ARPA_MODEL variable means that the script will build the LM itself
-# export ARPA_MODEL="/ha/projects/vystadial/git/alex/resources/lm/caminfo/arpa_trigram"
+export ARPA_MODEL="/ha/projects/vystadial/data/asr/en/voip_fj/arpa_bigram"
 # unset ARPA_MODEL
 
 # Should I create and use 0-gram LM for decoding from testing data?
@@ -44,7 +44,7 @@ unset monoTrainData  # use full data
 pdf=1200
 
 # Maximum number of Gaussians used for training
-gauss=19200
+gauss=27000
 
 # if run Cepstral Mean Normalisation: true/false
 cmn=false
