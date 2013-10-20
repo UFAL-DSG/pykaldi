@@ -146,11 +146,18 @@ if __name__ == "__main__":
     for exp, lm_w, min_dev_wer in c.fetchall():
         c.execute("SELECT * FROM results WHERE dataset='test' and exp='%s' and lm_w=%s" % (exp, lm_w))
         d.append(c.fetchone())  # there should be only one row
+    t = Table(data=d, colnames=['exp', 'set', 'LMW', 'WER', 'SER'])
+    print '%s\n==================' % str(t)
 
+    # traditional usage of dev set with 0 grams
+    c.execute("SELECT exp, lm_w,  MIN(wer) FROM results WHERE dataset=='dev0' GROUP BY exp")
+    d = []
+    for exp, lm_w, min_dev_wer in c.fetchall():
+        c.execute("SELECT * FROM results WHERE dataset='test0' and exp='%s' and lm_w=%s" % (exp, lm_w))
+        d.append(c.fetchone())  # there should be only one row
+    t = Table(data=d, colnames=['exp', 'set', 'LMW', 'WER', 'SER'])
+    print '%s\n==================' % str(t)
+    # t2 = Table2LatexTable(t)
+    # print '%s\n==================' % str(t2)
     c.close()
     conn.close()
-    t = Table(data=d, colnames=['exp', 'set', 'LMW', 'WER', 'SER'])
-    print t
-    print '=================='
-    t2 = Table2LatexTable(t)
-    print t2
