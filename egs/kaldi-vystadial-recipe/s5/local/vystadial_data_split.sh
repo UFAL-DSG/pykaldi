@@ -32,7 +32,7 @@
 # _EHM_HMM_
 # _SIL_
 
-renice 20 $$
+# renice 20 $$
 
 every_n=1
 [ -f path.sh ] && . ./path.sh # source the path.
