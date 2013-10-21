@@ -109,6 +109,8 @@ int GmmLatgenWrapper_GetRawLattice(GmmLatgenWrapper *w) {
   std::vector<std::vector<int> > dummy;
   lattice2nbest(*lat, 10, dummy);
 
+  KALDI_WARN << "DEBUG";
+
   delete lat;
   return ok;
 }

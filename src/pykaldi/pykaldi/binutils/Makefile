@@ -9,7 +9,7 @@ voxforge:
 	echo "Broken: TODO"
 
 $(VYSTADIAL_SCP):
-	 python -c "import pykaldi.utils; pykaldi.utils.get_vystadial_data('/net/work/people/oplatek/kaldi/egs/kaldi-vystadial-recipe/s5/Results/vystadial-sample-test.tar.bz2')"
+	 python -c "import pykaldi.utils; pykaldi.utils.get_vystadial_data('../../../../egs/kaldi-vystadial-recipe/s5/Results/vystadial-sample-test.tar.bz2')"
 
 pykaldi_faster: $(VYSTADIAL_SCP)
 	./run_pykaldi-faster-decoder.sh

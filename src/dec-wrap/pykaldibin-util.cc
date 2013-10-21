@@ -70,6 +70,7 @@ namespace kaldi {
 
 void lattice2nbest(const Lattice &lat, int n, 
     std::vector<std::vector<int> > &out_nbest) {
+  KALDI_WARN << "DEBUG";
 
   std::vector<Lattice> nbest_lats;
   fst::NbestAsFsts(lat, n, &nbest_lats);
