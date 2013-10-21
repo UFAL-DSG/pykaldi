@@ -95,39 +95,43 @@ int GmmLatgenWrapper_GetBestPath(void *decoder, void *out_fst) {
 
 int GmmLatgenWrapper_GetRawLattice(GmmLatgenWrapper *w) {
   // TODO no output parameter just for debugging
-  fst::VectorFst<LatticeArc> *fst = new fst::VectorFst<LatticeArc>();
-  bool ok = reinterpret_cast<PykaldiLatticeFasterDecoder*>(w->decoder)->GetRawLattice(fst);
+  Lattice *lat = new Lattice();
+  bool ok = reinterpret_cast<PykaldiLatticeFasterDecoder*>(w->decoder)->GetRawLattice(lat);
 
-  fst::Connect(fst); // Will get rid of this later... shouldn't have any
+  fst::Connect(lat); // Will get rid of this later... shouldn't have any
 
   PykaldiDecodableDiagGmmScaled* dec = reinterpret_cast<PykaldiDecodableDiagGmmScaled*>(w->decodable);
   BaseFloat acoustic_scale = dec->GetAcousticScale();
   if (acoustic_scale != 0.0) // We'll write the lattice without acoustic scaling
-    fst::ScaleLattice(fst::AcousticLatticeScale(1.0 / acoustic_scale), fst); 
+    fst::ScaleLattice(fst::AcousticLatticeScale(1.0 / acoustic_scale), lat); 
 
+  // debug
+  std::vector<std::vector<int> > dummy;
+  lattice2nbest(*lat, 10, dummy);
 
-  delete fst;
+  delete lat;
   return ok;
 }
 
 int GmmLatgenWrapper_GetLattice(GmmLatgenWrapper *w) {
   // TODO no output parameter just for debugging
-  fst::VectorFst<CompactLatticeArc> *fst = new fst::VectorFst<CompactLatticeArc>();
-  bool ok = reinterpret_cast<PykaldiLatticeFasterDecoder*>(w->decoder)->GetLattice(fst);
+  CompactLattice *lat = new CompactLattice();
+  bool ok = reinterpret_cast<PykaldiLatticeFasterDecoder*>(w->decoder)->GetLattice(lat);
   PykaldiDecodableDiagGmmScaled* dec = reinterpret_cast<PykaldiDecodableDiagGmmScaled*>(w->decodable);
   BaseFloat acoustic_scale = dec->GetAcousticScale();
 
   if (acoustic_scale != 0.0) // We'll write the lattice without acoustic scaling
-    fst::ScaleLattice(fst::AcousticLatticeScale(1.0 / acoustic_scale), fst); 
+    fst::ScaleLattice(fst::AcousticLatticeScale(1.0 / acoustic_scale), lat); 
 
+  // DEBUG
   if (ok) {
     std::ofstream f;
     f.open("last.lat", std::ios::binary);
     fst::FstWriteOptions opts;  // in fst/fst.h
-    fst->Write(f, opts);
+    lat->Write(f, opts);
     f.close();
   }
-  delete fst;
+  delete lat;
   return ok;
 }
 

@@ -46,7 +46,8 @@ def decode(d, pcm):
             dec_t = d.decode(max_frames=10)
     d.prune_final()
     # d.get_best_path()   # segfaults
-    d.get_lattice()
+    # d.get_lattice()
+    d.get_raw_lattice()
     print >> sys.stderr, 'Decoded frames: %d' % decoded_frames
 
     # FIXME interface fst to python
