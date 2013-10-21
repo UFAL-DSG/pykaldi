@@ -23,7 +23,7 @@
 # _EHM_HMM_
 # _SIL_
 
-renice 20 $$
+# renice 20 $$
 
 source conf/train_conf.sh
 
