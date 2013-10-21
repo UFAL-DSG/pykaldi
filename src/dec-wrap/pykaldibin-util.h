@@ -50,8 +50,12 @@ const char* pykaldi_git_revision();
 
 #include "base/kaldi-common.h"
 #include "fstext/fstext-lib.h"
+#include "lat/kaldi-lattice.h"
 
 namespace kaldi {
+
+void lattice2nbest(const Lattice &lat, int n,
+    std::vector<std::vector<int> > &out_nbest);
 
 // Reads a decoding graph from a file
 fst::Fst<fst::StdArc> *ReadDecodeGraph(std::string filename);

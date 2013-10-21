@@ -68,6 +68,26 @@ const char* pykaldi_git_revision() {
 
 namespace kaldi {
 
+void lattice2nbest(const Lattice &lat, int n, 
+    std::vector<std::vector<int> > &out_nbest) {
+
+  std::vector<Lattice> nbest_lats;
+  fst::NbestAsFsts(lat, n, &nbest_lats);
+  for (int32 k = 0; k < static_cast<int32>(nbest_lats.size()); k++) {
+    CompactLattice nbest_clat;
+    ConvertLattice(nbest_lats[k], &nbest_clat); // write in compact form.
+    // TODO replace wrinting 
+    std::ofstream f;
+    f.open("nbest.lat", std::ios::binary);
+    fst::FstWriteOptions opts;  // in fst/fst.h
+    nbest_clat.Write(f, opts);
+    f.close();
+  }
+}
+
+
+
+
 fst::Fst<fst::StdArc> *ReadDecodeGraph(std::string filename) {
   // read decoding network FST
   Input ki(filename); // use ki.Stream() instead of is.
