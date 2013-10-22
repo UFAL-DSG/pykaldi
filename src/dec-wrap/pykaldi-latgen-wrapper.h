@@ -14,59 +14,13 @@
  * MERCHANTABLITY OR NON-INFRINGEMENT.
  * See the Apache 2 License for the specific language governing permissions and
  * limitations under the License. */
-
 #ifndef KALDI_PYKALDI_LATGEN_WRAPPER_H_
 #define KALDI_PYKALDI_LATGEN_WRAPPER_H_
-
-/*****************
- *  C interface  *
- *****************/
-#include <stdio.h>
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include <stdlib.h>
-
-typedef struct {
-  void *audio;
-  void *mfcc;
-  void *feat_input;
-  void *feat_transform;
-  void *feat_matrix;
-  void *decodable;
-  void *trans_model;
-  void *amm;
-  void *decoder;
-  void *decode_fst;
-} GmmLatgenWrapper;
-
-GmmLatgenWrapper *new_GmmLatgenWrapper();
-void del_GmmLatgenWrapper(GmmLatgenWrapper *w);
-size_t GmmLatgenWrapper_Decode(void *decoder, void *decodableItf, size_t max_frames);
-void GmmLatgenWrapper_FrameIn(void *audio_source, unsigned char *frame, size_t frame_len);
-int GmmLatgenWrapper_GetBestPath(void *decoder, void *fst);
-int GmmLatgenWrapper_GetRawLattice(GmmLatgenWrapper *w);
-int GmmLatgenWrapper_GetLattice(GmmLatgenWrapper *w);
-void GmmLatgenWrapper_PruneFinal(void *decoder);
-void GmmLatgenWrapper_Reset(GmmLatgenWrapper *w, int keep_buffer_data);
-int GmmLatgenWrapper_Setup(int argc, char **argv, GmmLatgenWrapper *w);
-
-#ifdef __cplusplus
-}
-#endif
-
-
-#ifdef __cplusplus
-
-/*******************
- *  C++ interface  *
- *******************/
 #include <string>
 #include <vector>
 #include "pykaldi-feat-input.h"
+#include "pykaldi-decodable.h"
+#include "pykaldi-latgen-decoder.h"
 
 
 namespace kaldi {
@@ -93,8 +47,37 @@ struct KaldiDecoderGmmLatgenWrapperOptions  {
   }
 };
 
-} // namespace kaldi
 
-#endif  // __cplusplus
+class GmmLatgenWrapper {
+  public:
+    GmmLatgenWrapper() {}
+
+    virtual ~GmmLatgenWrapper();
+    size_t Decode(size_t max_frames);
+    void FrameIn(unsigned char *frame, size_t frame_len);
+    // TODO change to OPENFST object
+    int GetBestPath(std::vector<int> &v_out);
+    int GetRawLattice(Lattice &lat);
+    int GetLattice(CompactLattice & clat);
+    void PruneFinal();
+    void Reset(bool keep_buffer_data);
+    int Setup(int argc, char **argv);
+  protected:
+    PykaldiBuffSource *audio;
+    Mfcc *mfcc;
+    PykaldiFeInput<Mfcc> *feat_input;
+    PykaldiFeatInputItf *feat_transform;
+    PykaldiFeatureMatrix *feat_matrix;
+    PykaldiDecodableDiagGmmScaled *decodable;
+    TransitionModel *trans_model;
+    AmDiagGmm *amm;
+    PykaldiLatticeFasterDecoder *decoder;
+    fst::Fst<fst::StdArc> *decode_fst;
+    GmmLatgenWrapper *new_GmmLatgenWrapper();
+  private:
+    void Deallocate();
+};
+
+} // namespace kaldi
 
 #endif  // #ifdef KALDI_PYKALDI_LATGEN_WRAPPER_H_
