@@ -65,13 +65,20 @@ void GmmLatgenWrapper::FrameIn(unsigned char *frame, size_t frame_len) {
 }
 
 
-int GmmLatgenWrapper::GetBestPath(std::vector<int> &v_out) {
+bool GmmLatgenWrapper::GetBestPath(std::vector<int> &v_out) {
   Lattice lat;
   int num_frames = decoder->GetBestPath(&lat);
   return num_frames; 
 }
 
-int GmmLatgenWrapper::GetRawLattice(Lattice & lat) {
+bool GmmLatgenWrapper::GetNbest(int n, std::vector<std::vector<int> > &v_out) {
+  Lattice lat;
+  bool ok = decoder->GetRawLattice(&lat);
+  lattice2nbest(lat, n, v_out);
+  return ok;
+}
+
+bool GmmLatgenWrapper::GetRawLattice(Lattice & lat) {
   bool ok = decoder->GetRawLattice(&lat);
   fst::Connect(&lat); // Will get rid of this later... shouldn't have any
 
@@ -82,7 +89,7 @@ int GmmLatgenWrapper::GetRawLattice(Lattice & lat) {
   return ok;
 }
 
-int GmmLatgenWrapper::GetLattice(CompactLattice &clat) {
+bool GmmLatgenWrapper::GetLattice(CompactLattice &clat) {
   bool ok = decoder->GetLattice(&clat);
 
   BaseFloat acoustic_scale = decodable->GetAcousticScale();
