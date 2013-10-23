@@ -18,41 +18,18 @@
 // MERCHANTABLITY OR NON-INFRINGEMENT.
 // See the Apache 2 License for the specific language governing permissions and
 // limitations under the License.
-
 #ifndef KALDI_PYKALDI_PYKALDIBIN_UTIL_H_
 #define KALDI_PYKALDI_PYKALDIBIN_UTIL_H_
-
-
-/*****************
- *  C interface  *
- *****************/
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
-void* new_fst_VectorFstLatticeArc();
-void del_fst_VectorFstLatticeArc(void *fst);
-void print_fstMutableLatticeArc(void *fst);
-
-void pykaldi_version(int *out_major, int * out_minor, int *patch);
-const char* pykaldi_git_revision();
-
-#ifdef __cplusplus
-}
-#endif
-
-
-#ifdef __cplusplus
-/*******************
- *  C++ interface  *
- *******************/
-
+#include <string>
 #include "base/kaldi-common.h"
 #include "fstext/fstext-lib.h"
 #include "lat/kaldi-lattice.h"
 
 namespace kaldi {
+
+void pykaldi_version(int *out_major, int * out_minor, int *patch);
+
+void build_git_revision(std::string & pykaldi_git_revision);
 
 void lattice2nbest(const Lattice &lat, int n,
     std::vector<std::vector<int> > &out_nbest);
@@ -70,5 +47,4 @@ std::vector<int32> phones_to_vector(const std::string & s);
 
 } // namespace kaldi
 
-#endif // __cplusplus
 #endif // KALDI_PYKALDI_PYKALDIBIN_UTIL_H_

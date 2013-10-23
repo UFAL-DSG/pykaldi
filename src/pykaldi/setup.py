@@ -1,46 +1,55 @@
 #!/usr/bin/env python
 # encoding: utf-8
-
-
-from setuptools import setup, find_packages
+# On Windows, you need to execute:
+# set VS90COMNTOOLS=%VS100COMNTOOLS%
+# python setup.py build_ext --compiler=msvc
+from setuptools import setup
 from sys import version_info as python_version
 from os import path
-from pykaldi import ffidec
+from Cython.Distutils import build_ext
+from distutils.extension import Extension
 
+include_dirs = []
+library_dirs = [path.abspath('../lib')]
 
-install_requires = ['cffi >=0.7']  # cffi transitively requires pycparser
-
-
+install_requires = []
 if python_version < (2, 7):
     new_27 = ['ordereddict', 'argparse']
     install_requires.extend(new_27)
 
 long_description = open(path.join(path.dirname(__file__), 'README.md')).read()
 
+ext_modules = [Extension('decoders',
+                         language='c++',
+                         include_dirs=[
+                             path.abspath('../dec-wrap'), ],
+                         library_dirs=[path.abspath('../dec-wrap')],
+                         libraries=['pykaldi'],
+                         sources=['pykaldi/decoders.pyx'],
+                         ), ]
+
+
 setup(
     name='pykaldi',
     version='0.0',
+    cmdclass={'build_ext': build_ext},
     install_requires=install_requires,
-    packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
-    # based on cffi docs: http://cffi.readthedocs.org/en/release-0.7/
-    zip_safe=False,
-    # get extension from cffi if using verify
+    setup_requires=['cython>=0.19.1'],
     ext_package='pykaldi',
-    ext_modules=[ffidec.verifier.get_extension()],
+    ext_modules=ext_modules,
     test_suite="nose.collector",
     tests_require=['nose>=1.0', 'pykaldi'],
-    entry_points={
-        'console_scripts': [
-            'live_demo=pykaldi.binutils.main',
-            'online_decode=pykaldi.binutils.main',
-        ],
-    },
+    # entry_points={
+    #     'console_scripts': [
+    #         'live_demo=pykaldi.binutils.main',
+    #     ],
+    # },
     author='Ondrej Platek',
     author_email='ondrej.platek@seznam.cz',
     url='https://github.com/oplatek/pykaldi',
     license='Apache, Version 2.0',
     keywords='Kaldi speech recognition Python bindings',
-    description='C and Python wrapper for Kaldi decoders',
+    description='C++/Python wrapper for Kaldi decoders',
     long_description=long_description,
     classifiers='''
         Programming Language :: Python :: 2

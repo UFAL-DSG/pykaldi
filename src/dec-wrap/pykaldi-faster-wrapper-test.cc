@@ -62,46 +62,47 @@ int main(int argc, char **argv) {
     return 0;
   }
 
-  unsigned char * pcm;
-  std::string filename("binutils/online-data/audio/test1.wav");
-  size_t pcm_size = read_16bitpcm_file(filename, &pcm);
-  
-  // send data in at once, use the buffering capabilities
-  size_t frame_len = 2120, pcm_position = 0;
-  // reading 16bit audio into char array -> 1 sample == 2 chars
-  size_t frame_size = frame_len * 2; 
-  unsigned char *frame = new unsigned char[frame_size];
-  while(pcm_position + frame_size < pcm_size) {
-    pcm_position = next_frame(frame, frame_size, pcm, pcm_position);
-    frame_in(d, frame, frame_len);
-  }
-  delete[] frame;
+  // TODO rewrite without data dependency
+  // unsigned char * pcm;
+  // std::string filename("binutils/online-data/audio/test1.wav");
+  // size_t pcm_size = read_16bitpcm_file(filename, &pcm);
+  // 
+  // // send data in at once, use the buffering capabilities
+  // size_t frame_len = 2120, pcm_position = 0;
+  // // reading 16bit audio into char array -> 1 sample == 2 chars
+  // size_t frame_size = frame_len * 2; 
+  // unsigned char *frame = new unsigned char[frame_size];
+  // while(pcm_position + frame_size < pcm_size) {
+  //   pcm_position = next_frame(frame, frame_size, pcm, pcm_position);
+  //   frame_in(d, frame, frame_len);
+  // }
+  // delete[] frame;
 
 
-  // decode() returns false if there are no more features for decoder
-  size_t total_words = 0;
-  for(size_t i = 0; i < 100; ++i) {
-      size_t num_words = decode(d, false);
-      int * word_ids = new int[num_words];
-      pop_hyp(d, word_ids, num_words);
-      printHyp(word_ids, num_words);
-      delete[] word_ids;
+  // // decode() returns false if there are no more features for decoder
+  // size_t total_words = 0;
+  // for(size_t i = 0; i < 100; ++i) {
+  //     size_t num_words = decode(d, false);
+  //     int * word_ids = new int[num_words];
+  //     pop_hyp(d, word_ids, num_words);
+  //     printHyp(word_ids, num_words);
+  //     delete[] word_ids;
 
-      total_words += num_words;
-  } 
-  // Obtain last hypothesis
-  {
-      size_t num_words = decode(d, true);
-      int * word_ids = new int[num_words];
-      pop_hyp(d, word_ids, num_words);
-      printHyp(word_ids, num_words);
-      delete[] word_ids;
+  //     total_words += num_words;
+  // } 
+  // // Obtain last hypothesis
+  // {
+  //     size_t num_words = decode(d, true);
+  //     int * word_ids = new int[num_words];
+  //     pop_hyp(d, word_ids, num_words);
+  //     printHyp(word_ids, num_words);
+  //     delete[] word_ids;
 
-      total_words += num_words;
-  }
-  del_Decoder(d);
+  //     total_words += num_words;
+  // }
+  // del_Decoder(d);
 
-  std::cout << "Totally decoded words: " << total_words << std::endl;
+  // std::cout << "Totally decoded words: " << total_words << std::endl;
   dlclose(lib);
   return 0;
 }

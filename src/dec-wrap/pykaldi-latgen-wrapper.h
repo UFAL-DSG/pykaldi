@@ -18,9 +18,9 @@
 #define KALDI_PYKALDI_LATGEN_WRAPPER_H_
 #include <string>
 #include <vector>
-#include "pykaldi-feat-input.h"
-#include "pykaldi-decodable.h"
-#include "pykaldi-latgen-decoder.h"
+#include "dec-wrap/pykaldi-feat-input.h"
+#include "dec-wrap/pykaldi-decodable.h"
+#include "dec-wrap/pykaldi-latgen-decoder.h"
 
 
 namespace kaldi {

@@ -22,12 +22,12 @@ ADDLIBS = ../decoder/kaldi-decoder.a ../thread/kaldi-thread.a \
 
 BINFILES =
 
-TESTFILES = compute-wer-test pykaldi-faster-wrapper-test pykaldi-feat-input-test \
+TESTFILES = pykaldi-faster-wrapper-test pykaldi-feat-input-test \
 			pykaldi-audio-source-test read-wav-test
 
-OBJFILES = compute-wer.o pykaldi-latgen-decoder.o pykaldi-latgen-wrapper.o \
+OBJFILES = pykaldi-latgen-decoder.o pykaldi-latgen-wrapper.o \
 		   pykaldi-faster-wrapper.o pykaldi-faster-decoder.o \
-		   pykaldi-audio-source.o  pykaldibin-util.o \
+		   pykaldi-audio-source.o  pykaldi-utils.o \
 		   pykaldi-decodable.o pykaldi-feat-input.o \
 
 LIBNAME = pykaldi

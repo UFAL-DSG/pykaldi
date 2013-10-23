@@ -16,13 +16,13 @@
  * limitations under the License. */
 
 #include "feat/feature-mfcc.h"
-#include "pykaldibin-util.h"
-#include "pykaldi-audio-source.h"
-#include "pykaldi-latgen-wrapper.h"
-#include "pykaldi-feat-input.h"
-#include "pykaldi-decodable.h"
-#include "pykaldi-latgen-wrapper.h"
-#include "pykaldi-latgen-decoder.h"
+#include "dec-wrap/pykaldi-utils.h"
+#include "dec-wrap/pykaldi-audio-source.h"
+#include "dec-wrap/pykaldi-latgen-wrapper.h"
+#include "dec-wrap/pykaldi-feat-input.h"
+#include "dec-wrap/pykaldi-decodable.h"
+#include "dec-wrap/pykaldi-latgen-wrapper.h"
+#include "dec-wrap/pykaldi-latgen-decoder.h"
 #include "fstext/fstext-lib.h"
 // debug
 #include <fstream>
