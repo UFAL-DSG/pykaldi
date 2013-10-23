@@ -2,7 +2,7 @@ Summary
 -------
  * KALDI recipe based on voxforge KALDI recipe http://vpanayotov.blogspot.cz/2012/07/voxforge-scripts-for-kaldi.html .
  * Requires KALDI installation and Linux environment. (Tested on Ubuntu 10.04, 12.04 and 12.10.)
- * Recipes Kaldi toolkit are located `KALDI_ROOT/egs/name_of_recipe/s5/'. 
+ * Recipes Kaldi toolkit are located `KALDI_ROOT/egs/name_of_recipe/s5/`. 
    This recipe also expects that you copy the directory which contains this README under `KALDI_ROOT/egs`,
    or that you have Kaldi binaries and in your path.
 
