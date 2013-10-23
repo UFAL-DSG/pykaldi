@@ -32,37 +32,40 @@ typedef void (*CKDW_pop_hyp_t)(CKaldiDecoderWrapper*, int *, size_t);
 typedef int (*CKDW_setup_t)(CKaldiDecoderWrapper*, int, char **);
 
 int main(int argc, char **argv) {
+  // TODO rewrite without data dependency and shared library dependancy
+  return 0;
+
+
   // open the library
-  char nameLib[] = "libpykaldi.so";
-  void *lib = dlopen(nameLib, RTLD_NOW);
-  if (!lib) {
-      printf("Cannot open library: %s\n", dlerror());
-      return 1;
-  }   
-  // load functions from shared library
-  CKDW_constructor_t new_Decoder = load_function<CKDW_constructor_t>("new_KaldiDecoderWrapper", lib);
-  if (!new_Decoder) return 2;
-  CKDW_void_t del_Decoder = load_function<CKDW_void_t>("del_KaldiDecoderWrapper", lib);
-  if (!del_Decoder) return 3;
-  CKDW_setup_t setup = load_function<CKDW_setup_t>("Setup", lib);
-  if (!setup) return 4;
-  CKDW_frame_in_t frame_in = load_function<CKDW_frame_in_t>("FrameIn", lib);
-  if (!frame_in) return 5;
-  CKDW_size_t decode = load_function<CKDW_size_t>("Decode", lib);
-  if (!decode) return 6;
-  CKDW_pop_hyp_t pop_hyp = load_function<CKDW_pop_hyp_t>("PopHyp", lib);
-  if (!pop_hyp) return 10;
+  // char nameLib[] = "libpykaldi.so";
+  // void *lib = dlopen(nameLib, RTLD_NOW);
+  // if (!lib) {
+  //     printf("Cannot open library: %s\n", dlerror());
+  //     return 1;
+  // }   
+  // // load functions from shared library
+  // CKDW_constructor_t new_Decoder = load_function<CKDW_constructor_t>("new_KaldiDecoderWrapper", lib);
+  // if (!new_Decoder) return 2;
+  // CKDW_void_t del_Decoder = load_function<CKDW_void_t>("del_KaldiDecoderWrapper", lib);
+  // if (!del_Decoder) return 3;
+  // CKDW_setup_t setup = load_function<CKDW_setup_t>("Setup", lib);
+  // if (!setup) return 4;
+  // CKDW_frame_in_t frame_in = load_function<CKDW_frame_in_t>("FrameIn", lib);
+  // if (!frame_in) return 5;
+  // CKDW_size_t decode = load_function<CKDW_size_t>("Decode", lib);
+  // if (!decode) return 6;
+  // CKDW_pop_hyp_t pop_hyp = load_function<CKDW_pop_hyp_t>("PopHyp", lib);
+  // if (!pop_hyp) return 10;
 
-  // use the loaded functions
-  CKaldiDecoderWrapper *d = new_Decoder();
-  int retval = setup(d, argc, argv);
-  if(retval != 0) {
-    std::cout << "\nWrong arguments!\n"
-      "Return code 0 because it is mainly used as test!\n" << std::endl;
-    return 0;
-  }
+  // // use the loaded functions
+  // CKaldiDecoderWrapper *d = new_Decoder();
+  // int retval = setup(d, argc, argv);
+  // if(retval != 0) {
+  //   std::cout << "\nWrong arguments!\n"
+  //     "Return code 0 because it is mainly used as test!\n" << std::endl;
+  //   return 0;
+  // }
 
-  // TODO rewrite without data dependency
   // unsigned char * pcm;
   // std::string filename("binutils/online-data/audio/test1.wav");
   // size_t pcm_size = read_16bitpcm_file(filename, &pcm);
@@ -103,7 +106,7 @@ int main(int argc, char **argv) {
   // del_Decoder(d);
 
   // std::cout << "Totally decoded words: " << total_words << std::endl;
-  dlclose(lib);
-  return 0;
+  // dlclose(lib);
+  // return 0;
 }
 
