@@ -3,19 +3,19 @@ Summary
  * KALDI recipe based on voxforge KALDI recipe http://vpanayotov.blogspot.cz/2012/07/voxforge-scripts-for-kaldi.html .
  * Requires KALDI installation and Linux environment. (Tested on Ubuntu 10.04, 12.04 and 12.10.)
  * Recipes Kaldi toolkit are located `KALDI_ROOT/egs/name_of_recipe/s5/`. 
-   This recipe also expects that you copy the directory which contains this README under `KALDI_ROOT/egs`,
+   This recipe also expects that you copy the directory which contains this `README.rst` under `KALDI_ROOT/egs`,
    or that you have Kaldi binaries and in your path.
 
 
 
 Details
 -----------
- * Our scripts prepare the data to expected format in s5/data. 
+ * Our scripts prepare the data to expected format in s5/data
  * Stores experiments in s5/exp
- * steps/ contains common scripts from wsj/s5/utils
- * utils/ cotains common scritps from wsj/s5/utils
- * local/ contains scripts for data preparation to prepare s5/data structure
- * path.sh, cmd.sh and  conf/ contain configurations for the recipe
+ * steps is a symlink to `KALDI_ROOT/wsj/s5/utils`
+ * utils is a symlink to `KALDI_ROOT/wsj/s5/utils`
+ * Directory `local` contains scripts for data preparation to prepare `s5/data` structure.
+ * `path.sh`, `cmd.sh` and  `conf/*` contain configurations for the recipe
  * Language Model (LM) is either built from the training data using [IRSTLM](http://sourceforge.net/projects/irstlm/)  or we supply one in ARPA format
 
 
