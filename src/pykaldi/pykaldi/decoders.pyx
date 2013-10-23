@@ -8,7 +8,7 @@ from libcpp cimport bool
 # include "dec-wrap/pykaldi-faster-wrapper.h"
 # include "dec-wrap/pykaldibin-util.h"
 cdef extern from "dec-wrap/pykaldi-latgen-wrapper.h" namespace "kaldi":
-    cdef cppclass _GmmLatgenWrapper "GmmLatgenWrapper":
+    cdef cppclass GmmLatgenWrapper:
         size_t Decode(size_t max_frames)
         void FrameIn(unsigned char *frame, size_t frame_len)
         int GetBestPath(vector[int] v_out)
@@ -16,18 +16,17 @@ cdef extern from "dec-wrap/pykaldi-latgen-wrapper.h" namespace "kaldi":
         void Reset(bool keep_buffer_data)
         int Setup(int argc, char **argv) except +
 
-cdef class GmmLatgenWrapper:
-    cdef _GmmLatgenWrapper * thisptr
+cdef class PyGmmLatgenWrapper:
+    cdef GmmLatgenWrapper * thisptr
 
     def __cinit__(self):
-        self.thisptr = new _GmmLatgenWrapper()
+        self.thisptr = new GmmLatgenWrapper()
 
     def decode(self, max_frames):
         return self.thisptr.Decode(max_frames)
 
     def frame_in(self, bytes frame_str, int num_samples):
-        # TODO REMOVE
-        assert len(frame_str) == (2 * num_samples), "Check for 16bit audio"
+        assert len(frame_str) == (2 * num_samples), "Check for 16bit audio" # TODO REMOVE
         self.thisptr.FrameIn(frame_str, num_samples)
     
     def get_best_path(self):

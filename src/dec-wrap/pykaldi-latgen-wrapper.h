@@ -18,12 +18,46 @@
 #define KALDI_PYKALDI_LATGEN_WRAPPER_H_
 #include <string>
 #include <vector>
-#include "dec-wrap/pykaldi-feat-input.h"
-#include "dec-wrap/pykaldi-decodable.h"
-#include "dec-wrap/pykaldi-latgen-decoder.h"
+#include "base/kaldi-types.h"
 
+// forward declarations from Fst
+namespace fst{
+  template <typename Arc> class Fst;
+  template <typename Weight> class ArcTpl; 
+  template <class W> class TropicalWeightTpl;
+  typedef TropicalWeightTpl<float> TropicalWeight;
+  typedef ArcTpl<TropicalWeight> StdArc;
+  typedef Fst<StdArc> StdFst;
+  template<class FloatType> class LatticeWeightTpl;
+  template <class A> class VectorFst;
+  template<class WeightType, class IntType> class CompactLatticeWeightTpl; 
 
+}
+
+namespace kaldi{ 
+  typedef fst::LatticeWeightTpl<BaseFloat> LatticeWeight;
+  typedef fst::ArcTpl<LatticeWeight> LatticeArc;
+  typedef fst::VectorFst<LatticeArc> Lattice;
+
+  typedef fst::CompactLatticeWeightTpl<LatticeWeight, kaldi::int32> CompactLatticeWeight;
+  typedef fst::ArcTpl<CompactLatticeWeight> CompactLatticeArc;
+  typedef fst::VectorFst<CompactLatticeArc> CompactLattice;
+}
 namespace kaldi {
+
+// forward declarations
+class PykaldiBuffSource;
+class Mfcc;
+template<typename Mfcc> class PykaldiFeInput;
+class PykaldiFeInput_Mfcc;
+class PykaldiFeatInputItf;
+class PykaldiFeatureMatrix;
+class PykaldiDecodableDiagGmmScaled;
+class TransitionModel;
+class AmDiagGmm;
+class PykaldiLatticeFasterDecoder;
+class GmmLatgenWrapper;
+struct OptionsItf;
 
 struct KaldiDecoderGmmLatgenWrapperOptions  {
   /// Input sampling frequency is fixed to 16KHz
@@ -39,12 +73,7 @@ struct KaldiDecoderGmmLatgenWrapperOptions  {
   std::string word_syms_filename; // FIXME remove it from po options
   std::string lda_mat_rspecifier;
   std::vector<int32> silence_phones;
-  void Register(OptionsItf *po) {
-    po->Register("left-context", &left_context, "Number of frames of left context");
-    po->Register("right-context", &right_context, "Number of frames of right context");
-    po->Register("acoustic-scale", &acoustic_scale,
-                "Scaling factor for acoustic likelihoods");
-  }
+  void Register(OptionsItf *po);
 };
 
 
@@ -72,8 +101,7 @@ class GmmLatgenWrapper {
     TransitionModel *trans_model;
     AmDiagGmm *amm;
     PykaldiLatticeFasterDecoder *decoder;
-    fst::Fst<fst::StdArc> *decode_fst;
-    GmmLatgenWrapper *new_GmmLatgenWrapper();
+    fst::StdFst *decode_fst;
   private:
     void Deallocate();
 };

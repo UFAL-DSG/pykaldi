@@ -31,6 +31,13 @@
 
 namespace kaldi {
 
+void KaldiDecoderGmmLatgenWrapperOptions::Register(OptionsItf *po) {
+  po->Register("left-context", &left_context, "Number of frames of left context");
+  po->Register("right-context", &right_context, "Number of frames of right context");
+  po->Register("acoustic-scale", &acoustic_scale,
+              "Scaling factor for acoustic likelihoods");
+}
+
 void GmmLatgenWrapper::Deallocate() {
   delete audio; audio = NULL;
   delete mfcc; mfcc = NULL;

@@ -21,10 +21,9 @@ long_description = open(path.join(path.dirname(__file__), 'README.md')).read()
 
 ext_modules = [Extension('decoders',
                          language='c++',
-                         include_dirs=[
-                             path.abspath('../dec-wrap'), ],
-                         library_dirs=[path.abspath('../dec-wrap')],
-                         libraries=['pykaldi'],
+                         include_dirs=['..', ],
+                         library_dirs=['..'],
+                         extra_objects=['../dec-wrap/pykaldi.a'],
                          sources=['pykaldi/decoders.pyx'],
                          ), ]
 
@@ -34,7 +33,7 @@ setup(
     version='0.0',
     cmdclass={'build_ext': build_ext},
     install_requires=install_requires,
-    setup_requires=['cython>=0.19.1'],
+    # setup_requires=['cython>=0.19.1'],
     ext_package='pykaldi',
     ext_modules=ext_modules,
     test_suite="nose.collector",
