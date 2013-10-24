@@ -33,7 +33,7 @@ setup(
     version='0.0',
     cmdclass={'build_ext': build_ext},
     install_requires=install_requires,
-    # setup_requires=['cython>=0.19.1'],
+    setup_requires=['cython>=0.19.1'],
     ext_package='pykaldi',
     ext_modules=ext_modules,
     test_suite="nose.collector",
