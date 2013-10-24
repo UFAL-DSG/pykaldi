@@ -39,6 +39,7 @@ void KaldiDecoderGmmLatgenWrapperOptions::Register(OptionsItf *po) {
 }
 
 void GmmLatgenWrapper::Deallocate() {
+  initialized_ = false;
   delete audio; audio = NULL;
   delete mfcc; mfcc = NULL;
   delete feat_input; feat_input = NULL;
@@ -73,8 +74,8 @@ bool GmmLatgenWrapper::GetBestPath(std::vector<int> &v_out) {
   if (! initialized_)
     return false;
   Lattice lat;
-  int num_frames = decoder->GetBestPath(&lat);
-  return num_frames; 
+  bool ok = decoder->GetBestPath(&lat);
+  return ok; 
 }
 
 bool GmmLatgenWrapper::GetNbest(int n, std::vector<std::vector<int> > &v_out) {
