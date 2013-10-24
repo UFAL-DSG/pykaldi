@@ -18,7 +18,7 @@ if python_version < (2, 7):
     new_27 = ['ordereddict', 'argparse']
     install_requires.extend(new_27)
 
-long_description = open(path.join(path.dirname(__file__), 'README.md')).read()
+long_description = open(path.join(path.dirname(__file__), 'README.rst')).read()
 
 ext_modules = []
 ext_modules.append(Extension('decoders',

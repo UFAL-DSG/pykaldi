@@ -40,7 +40,7 @@ def decode(d, pcm):
     for i in xrange(it):
         audio_chunk = pcm[i * frame_len:(i + 1) * frame_len]
         d.frame_in(audio_chunk)
-        dec_t = d.decode(10)  # max frames 
+        dec_t = d.decode(10)  # max frames
         while dec_t > 0:
             decoded_frames += dec_t
             dec_t = d.decode(max_frames=10)

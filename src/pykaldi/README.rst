@@ -1,3 +1,4 @@
+DEPRECATED- REWRITE
 Install & Dependencies
 ============
  * The [../dec-wrap](../dec-wrap) directory: The pykaldi currently interfaces

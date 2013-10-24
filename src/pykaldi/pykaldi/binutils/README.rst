@@ -1,3 +1,7 @@
+DEPRECATED - TODO REWRITE
+=========================
+
+
 Known bugs
 ==========
  * The demo was tested with `Python 2.7.*` and should run for `Python 2.6.6` as well

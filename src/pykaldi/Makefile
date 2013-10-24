@@ -2,20 +2,17 @@ LIBNAME=pykaldi
 LIBFILE=lib$(LIBNAME).so
 SOURCEDIR=../dec-wrap
 
-$(LIBFILE):
-	$(MAKE) -C $(SOURCEDIR) $(LIBFILE)
-	# TODO how to use the LIBFILE -> add it as dependancy to setup.py?
-	cp $(SOURCEDIR)/$(LIBFILE) .
 
-all: $(LIBFILE)
-	python setup.py develop --user
+all:
+	$(MAKE) -C $(SOURCEDIR) $(LIBFILE)
+	python setup.py build_ext --inplace
 
 clean:
 	@# removing build directory
 	-python setup.py clean --all
 	rm -rf dist
 	@# Do not want to use wildcards and rm -rf
-	rm -f *.egg-info/* *.egg-info/.[a-zA-Z]*
+	rm -f *.egg-info/* *.egg-info/.[a-zA-Z]* build
 	-rmdir *.egg-info
 	
 
