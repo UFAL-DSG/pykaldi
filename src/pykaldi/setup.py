@@ -22,8 +22,9 @@ long_description = open(path.join(path.dirname(__file__), 'README.md')).read()
 ext_modules = [Extension('decoders',
                          language='c++',
                          include_dirs=['..', ],
-                         library_dirs=['..'],
-                         extra_objects=['../dec-wrap/pykaldi.a'],
+                         library_dirs=['../dec-wrap'],
+                         libraries=['pykaldi'],
+                         # extra_objects=['../dec-wrap/pykaldi.a'],
                          sources=['pykaldi/decoders.pyx'],
                          ), ]
 
