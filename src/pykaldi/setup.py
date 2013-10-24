@@ -9,8 +9,9 @@ from os import path
 from Cython.Distutils import build_ext
 from distutils.extension import Extension
 
-include_dirs = []
-library_dirs = [path.abspath('../lib')]
+INC_DIRS = ['..', ]
+LIB_DIRS = ['../dec-wrap']
+LIBS = ['pykaldi']
 
 install_requires = []
 if python_version < (2, 7):
@@ -19,14 +20,24 @@ if python_version < (2, 7):
 
 long_description = open(path.join(path.dirname(__file__), 'README.md')).read()
 
-ext_modules = [Extension('decoders',
-                         language='c++',
-                         include_dirs=['..', ],
-                         library_dirs=['../dec-wrap'],
-                         libraries=['pykaldi'],
-                         # extra_objects=['../dec-wrap/pykaldi.a'],
-                         sources=['pykaldi/decoders.pyx'],
-                         ), ]
+ext_modules = []
+ext_modules.append(Extension('decoders',
+                             language='c++',
+                             include_dirs=INC_DIRS,
+                             library_dirs=LIB_DIRS,
+                             libraries=LIBS,
+                             # extra_objects=['../dec-wrap/pykaldi.a'],
+                             sources=['pykaldi/decoders.pyx'],
+                             ))
+
+# ext_modules.append(Extension('__init__',
+#                              language='c++',
+#                              include_dirs=INC_DIRS,
+#                              library_dirs=LIB_DIRS,
+#                              libraries=LIBS,
+#                              # extra_objects=['../dec-wrap/pykaldi.a'],
+#                              sources=['pykaldi/init.pyx'],
+#                              ))
 
 
 setup(

@@ -79,7 +79,9 @@ struct KaldiDecoderGmmLatgenWrapperOptions  {
 
 class GmmLatgenWrapper {
   public:
-    GmmLatgenWrapper() {}
+    GmmLatgenWrapper(): audio(NULL), mfcc(NULL), feat_input(NULL),
+    feat_transform(NULL), feat_matrix(NULL), decodable(NULL),
+    trans_model(NULL), amm(NULL), decoder(NULL), decode_fst(NULL) {}
 
     virtual ~GmmLatgenWrapper();
     size_t Decode(size_t max_frames);
@@ -91,7 +93,7 @@ class GmmLatgenWrapper {
     bool GetLattice(CompactLattice & clat);
     void PruneFinal();
     void Reset(bool keep_buffer_data);
-    int Setup(int argc, char **argv);
+    bool Setup(int argc, char **argv);
   protected:
     PykaldiBuffSource *audio;
     Mfcc *mfcc;
@@ -104,6 +106,7 @@ class GmmLatgenWrapper {
     PykaldiLatticeFasterDecoder *decoder;
     fst::StdFst *decode_fst;
   private:
+    bool initialized_;
     void Deallocate();
 };
 

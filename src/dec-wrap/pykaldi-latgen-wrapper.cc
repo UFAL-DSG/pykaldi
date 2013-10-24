@@ -56,22 +56,30 @@ GmmLatgenWrapper::~GmmLatgenWrapper() {
 }
 
 size_t GmmLatgenWrapper::Decode(size_t max_frames) {
+  if (! initialized_)
+    return 0;
   return decoder->Decode(decodable, max_frames);
 }
 
 
 void GmmLatgenWrapper::FrameIn(unsigned char *frame, size_t frame_len) {
+  if (! initialized_)
+    return;
   audio->Write(frame, frame_len);
 }
 
 
 bool GmmLatgenWrapper::GetBestPath(std::vector<int> &v_out) {
+  if (! initialized_)
+    return false;
   Lattice lat;
   int num_frames = decoder->GetBestPath(&lat);
   return num_frames; 
 }
 
 bool GmmLatgenWrapper::GetNbest(int n, std::vector<std::vector<int> > &v_out) {
+  if (! initialized_)
+    return false;
   Lattice lat;
   bool ok = decoder->GetRawLattice(&lat);
   lattice2nbest(lat, n, v_out);
@@ -79,6 +87,8 @@ bool GmmLatgenWrapper::GetNbest(int n, std::vector<std::vector<int> > &v_out) {
 }
 
 bool GmmLatgenWrapper::GetRawLattice(Lattice & lat) {
+  if (! initialized_)
+    return false;
   bool ok = decoder->GetRawLattice(&lat);
   fst::Connect(&lat); // Will get rid of this later... shouldn't have any
 
@@ -90,6 +100,8 @@ bool GmmLatgenWrapper::GetRawLattice(Lattice & lat) {
 }
 
 bool GmmLatgenWrapper::GetLattice(CompactLattice &clat) {
+  if (! initialized_)
+    return false;
   bool ok = decoder->GetLattice(&clat);
 
   BaseFloat acoustic_scale = decodable->GetAcousticScale();
@@ -109,11 +121,15 @@ bool GmmLatgenWrapper::GetLattice(CompactLattice &clat) {
 
 
 void GmmLatgenWrapper::PruneFinal() {
+  if (! initialized_)
+    return;
   decoder->PruneFinal();
 }
 
 
 void GmmLatgenWrapper::Reset(bool keep_buffer_data) {
+  if (! initialized_)
+    return;
   if (!keep_buffer_data) {
     audio->Reset();
     feat_input->Reset();
@@ -125,7 +141,8 @@ void GmmLatgenWrapper::Reset(bool keep_buffer_data) {
 }
 
 
-int GmmLatgenWrapper::Setup(int argc, char **argv) {
+bool GmmLatgenWrapper::Setup(int argc, char **argv) {
+  initialized_ = false;
   try {
     KaldiDecoderGmmLatgenWrapperOptions wrapper_opts;
     PykaldiFeatureMatrixOptions feature_reading_opts;
@@ -151,8 +168,9 @@ int GmmLatgenWrapper::Setup(int argc, char **argv) {
 
     po.Read(argc, argv);
     if (po.NumArgs() != 4 && po.NumArgs() != 5) {
+      // throw std::invalid_argument("Specify 4 or 5 arguments. See the usage in stderr");
       po.PrintUsage();
-      return 1;
+      return false;
     }
     if (po.NumArgs() == 4)
       if (wrapper_opts.left_context % delta_feat_opts.order != 0 ||
@@ -209,11 +227,13 @@ int GmmLatgenWrapper::Setup(int argc, char **argv) {
                                             wrapper_opts.acoustic_scale, feat_matrix);
 
   } catch(const std::exception& e) {
-    std::cerr << e.what();
     Deallocate();
-    return 2;
+    // throw e;
+    std::cerr << e.what() << std::endl;
+    return false;
   }
-  return 0;
+  initialized_ = true;
+  return initialized_;
 }
 
 } // namespace kaldi

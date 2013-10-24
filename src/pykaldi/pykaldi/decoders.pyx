@@ -21,7 +21,7 @@ cdef extern from "dec-wrap/pykaldi-latgen-wrapper.h" namespace "kaldi":
 
 
 class DecoderCloser:
-    '''A context manager for decoders'''
+    """A context manager for decoders"""
 
     def __init__(self, dec):
         self.dec = dec
@@ -30,16 +30,21 @@ class DecoderCloser:
         return self.dec
 
     def __exit__(self, exception_type, exception_val, trace):
+        """ __exit__(self, exception_type, exception_val, trace)"""
         self.dec.close()
 
 
 cdef class PyGmmLatgenWrapper:
+    """PyGmmLatgenWrapper"""
     cdef GmmLatgenWrapper * thisptr
+    cdef long fs
+    cdef int nchan, bits
 
     def __cinit__(self):
         self.thisptr = new GmmLatgenWrapper()
 
     def __init__(self, fs=16000, nchan=1, bits=16):
+        """ __init__(self, fs=16000, nchan=1, bits=16)"""
         self.fs, self.nchan, self.bits = fs, nchan, bits
         assert(self.bits % 8 == 0)
 
@@ -47,13 +52,18 @@ cdef class PyGmmLatgenWrapper:
         del self.thisptr
 
     def decode(self, max_frames):
+        """decode(self, max_frames)"""
         return self.thisptr.Decode(max_frames)
 
-    def frame_in(self, bytes frame_str, int num_samples):
-        assert len(frame_str) == ((self.bits / 8) * num_samples), "Length of audio and bits mismatch"
+    def frame_in(self, bytes frame_str):
+        """frame_in(self, bytes frame_str, int num_samples)"""
+        num_bytes = (self.bits / 8)
+        num_samples = len(frame_str) / num_bytes 
+        assert(num_samples * num_bytes == len(frame_str)), "Not align audio to for %d bits" % self.bits
         self.thisptr.FrameIn(frame_str, num_samples)
 
     def get_best_path(self):
+        """get_best_path(self)"""
         cdef vector[int] t
         self.thisptr.GetBestPath(t)
         return [t[i] for i in xrange(t.size())]
@@ -68,12 +78,15 @@ cdef class PyGmmLatgenWrapper:
         pass
 
     def prune_final(self):
+        """prune_final(self)"""
         self.thisptr.PruneFinal()
 
     def reset(self, keep_buffer_data):
+        """reset(self, keep_buffer_data)"""
         self.thisptr.Reset(keep_buffer_data)
 
     def setup(self, args):
+        """setup(self, args)"""
         args = ['PyGmmLatgenWrapper'] + args
         cdef char **string_buf = <char**>malloc(len(args) * sizeof(char*))
         if string_buf is NULL:
@@ -89,11 +102,16 @@ cdef class PyGmmLatgenWrapper:
 class DummyDecoder(object):
     """For debugging purposes."""
 
-    def __init__(self, *args, **kwargs):
-        print 'arg:\n%s\nkwargs:%s\n' % str(*args, **kwargs)
+    def __init__(self):
+        print 'DummyDecoder initialized'
 
-    def rec_in(self, frame):
+    def frame_in(self, frame):
+        """rec_in(self, frame)"""
         print 'Dummy enqueing frame of length %d' % len(frame)
 
     def decode(self):
-        return [(1.0, 'My first dummy answer')]
+        """decode(self)"""
+        pass
+
+    def get_Nbest(self):
+        return [(1.0, 'answer')]
