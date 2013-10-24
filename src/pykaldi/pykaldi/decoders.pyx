@@ -9,14 +9,14 @@ from libcpp cimport bool
 # include "dec-wrap/pykaldi-utils.h"
 cdef extern from "dec-wrap/pykaldi-latgen-wrapper.h" namespace "kaldi":
     cdef cppclass GmmLatgenWrapper:
-        size_t Decode(size_t max_frames)
-        void FrameIn(unsigned char *frame, size_t frame_len)
-        int GetBestPath(vector[int] v_out)
-        int GetNbest(n, vector[vector[int]] v_out)
+        size_t Decode(size_t max_frames) except +
+        void FrameIn(unsigned char *frame, size_t frame_len) except +
+        int GetBestPath(vector[int] v_out) except +
+        int GetNbest(n, vector[vector[int]] v_out) except +
         #int GetRawLattice(Lattice lat_out)
         #int GetLattice(CompactLattice clat_out)
-        void PruneFinal()
-        void Reset(bool keep_buffer_data)
+        void PruneFinal() except +
+        void Reset(bool keep_buffer_data) except +
         int Setup(int argc, char **argv) except +
 
 
