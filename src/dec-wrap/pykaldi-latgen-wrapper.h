@@ -81,7 +81,7 @@ class GmmLatgenWrapper {
   public:
     GmmLatgenWrapper(): audio(NULL), mfcc(NULL), feat_input(NULL),
     feat_transform(NULL), feat_matrix(NULL), decodable(NULL),
-    trans_model(NULL), amm(NULL), decoder(NULL), decode_fst(NULL) {}
+    trans_model(NULL), amm(NULL), decoder(NULL), decode_fst(NULL) { }
 
     virtual ~GmmLatgenWrapper();
     size_t Decode(size_t max_frames);

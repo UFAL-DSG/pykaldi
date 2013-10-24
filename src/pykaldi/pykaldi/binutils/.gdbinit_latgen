@@ -40,11 +40,8 @@ directory ../../../feat
 # decode - decoder
 # b pykaldi-faster-decoder.cc:46
 
-# b pykaldi-latgen-wrapper.cc:GmmLatgenWrapper_Setup
-# b pykaldi-latgen-wrapper.cc:GmmLatgenWrapper_Reset
-# b pykaldi-latgen-wrapper.cc:GmmLatgenWrapper_FrameIn
-b pykaldi-latgen-wrapper.cc:GmmLatgenWrapper_GetLattice
-b pykaldi-latgen-wrapper.cc:GmmLatgenWrapper_GetBestPath
+b pykaldi-latgen-wrapper.cc:GmmLatgenWrapper::Decode
+b pykaldi-latgen-wrapper.cc:60
 # b lattice-faster-decoder.cc:317
 # b pykaldi-feat-input.cc:70
 
