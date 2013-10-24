@@ -6,9 +6,13 @@ SOURCEDIR=../dec-wrap
 all:
 	$(MAKE) -C $(SOURCEDIR) $(LIBFILE)
 	python setup.py build_ext --inplace
+	python setup.py develop --user
 
 test:
-	python setup.py nosetests
+	# TODO debug
+	# python setup.py nosetests
+	nosetests -s
+
 clean:
 	@# removing build directory
 	-python setup.py clean --all
