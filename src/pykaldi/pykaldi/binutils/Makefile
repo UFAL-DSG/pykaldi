@@ -1,7 +1,5 @@
 VYSTADIAL_SCP=vystadial-sample-test/data/test/input.scp
 
-test: run_voxforge
-
 vorforge_data:
 	 python -c "import pykaldi.utils; pykaldi.utils.get_voxforge_data()"
 
@@ -15,7 +13,7 @@ pykaldi_faster: $(VYSTADIAL_SCP)
 	./run_pykaldi-faster-decoder.sh
 
 pykaldi_latgen_faster: $(VYSTADIAL_SCP)
-	./run_pykaldi-faster-decoder.sh
+	./run_pykaldi-latgen-faster-decoder.sh
 
 gmm_latgen: $(VYSTADIAL_SCP)
 	./run_gmm_latgen_faster.sh

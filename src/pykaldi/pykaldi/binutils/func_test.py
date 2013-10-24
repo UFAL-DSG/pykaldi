@@ -1,6 +1,6 @@
 import unittest
 from pykaldi.utils import load_wav
-from decoders import PyGmmLatgenWrapper, DecoderCloser
+from decoders import PyGmmLatgenWrapper
 
 
 class PyGmmLatgenWrapperFucnTest(unittest.TestCase):

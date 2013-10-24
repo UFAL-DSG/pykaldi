@@ -20,20 +20,6 @@ cdef extern from "dec-wrap/pykaldi-latgen-wrapper.h" namespace "kaldi":
         int Setup(int argc, char **argv) except +
 
 
-class DecoderCloser:
-    """A context manager for decoders"""
-
-    def __init__(self, dec):
-        self.dec = dec
-
-    def __enter__(self):
-        return self.dec
-
-    def __exit__(self, exception_type, exception_val, trace):
-        """ __exit__(self, exception_type, exception_val, trace)"""
-        self.dec.close()
-
-
 cdef class PyGmmLatgenWrapper:
     """PyGmmLatgenWrapper"""
     cdef GmmLatgenWrapper * thisptr
