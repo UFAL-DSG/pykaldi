@@ -7,6 +7,8 @@ all:
 	$(MAKE) -C $(SOURCEDIR) $(LIBFILE)
 	python setup.py build_ext --inplace
 
+test:
+	python setup.py nosetests
 clean:
 	@# removing build directory
 	-python setup.py clean --all
@@ -14,7 +16,6 @@ clean:
 	@# Do not want to use wildcards and rm -rf
 	rm -f *.egg-info/* *.egg-info/.[a-zA-Z]* build
 	-rmdir *.egg-info
-	
 
 cleanall: clean
 	# recursive make clean

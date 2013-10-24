@@ -27,6 +27,6 @@ run_live: vorforge_data
 
 	
 clean:
-	rm -rf online-data online-data.tar.bz2 *.pyc  __pycache__ work
+	rm -rf online-data online-data.tar.bz2 *.pyc work
 
 .PHONY: run_live pykaldi gmm_latgen test clean
