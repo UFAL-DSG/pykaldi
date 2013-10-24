@@ -15,7 +15,7 @@ pykaldi_faster: $(VYSTADIAL_SCP)
 	./run_pykaldi-faster-decoder.sh
 
 pykaldi_latgen_faster: $(VYSTADIAL_SCP)
-	./run_pykaldi-faster-decoder.sh
+	./run_pykaldi-latgen-faster-decoder.sh
 
 gmm_latgen: $(VYSTADIAL_SCP)
 	./run_gmm_latgen_faster.sh
