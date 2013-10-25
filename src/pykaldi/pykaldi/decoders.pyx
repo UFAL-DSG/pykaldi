@@ -38,7 +38,7 @@ cdef class PyGmmLatgenWrapper:
     def __dealloc__(self):
         del self.thisptr
 
-    def decode(self, max_frames):
+    def decode(self, max_frames=10):
         """decode(self, max_frames)"""
         return self.thisptr.Decode(max_frames)
 
@@ -57,7 +57,8 @@ cdef class PyGmmLatgenWrapper:
         ids = [t[i] for i in xrange(t.size())]
         return (prob, ids)
 
-    def get_nbest(self, n):
+    def get_nbest(self, n=1):
+        """get_nbest(self, n=1)"""
         cdef vector[vector[int]] t
         cdef vector[float] prob
         self.thisptr.GetNbest(n, t, prob)
@@ -79,7 +80,7 @@ cdef class PyGmmLatgenWrapper:
         """prune_final(self)"""
         self.thisptr.PruneFinal()
 
-    def reset(self, keep_buffer_data):
+    def reset(self, keep_buffer_data=True):
         """reset(self, keep_buffer_data)"""
         self.thisptr.Reset(keep_buffer_data)
 
