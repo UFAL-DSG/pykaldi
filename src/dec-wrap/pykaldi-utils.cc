@@ -36,21 +36,38 @@ void build_git_revision(std::string & pykaldi_git_revision) {
   KALDI_ASSERT((pykaldi_git_revision.size() == 40) && "Git SHA has length 40 size");
 }
 
+void lattice2row(const Lattice&lat, 
+                std::vector<int> &out_ids, BaseFloat *prob) {
+  CompactLattice clat;
+  ConvertLattice(lat, &clat); // write in compact form.
+  // TODO extract the data from clat
+  // DEBUG
+  out_ids.push_back(99);
+  *prob = 1.0;
+}
+
 void lattice2nbest(const Lattice &lat, int n, 
-    std::vector<std::vector<int> > &out_nbest) {
+        std::vector<std::vector<int> > &out_nbest, 
+        std::vector<BaseFloat> & out_prob) {
   KALDI_WARN << "DEBUG";
 
   std::vector<Lattice> nbest_lats;
   fst::NbestAsFsts(lat, n, &nbest_lats);
-  for (int32 k = 0; k < static_cast<int32>(nbest_lats.size()); k++) {
-    CompactLattice nbest_clat;
-    ConvertLattice(nbest_lats[k], &nbest_clat); // write in compact form.
-    // TODO replace wrinting 
-    std::ofstream f;
-    f.open("nbest.lat", std::ios::binary);
-    fst::FstWriteOptions opts;  // in fst/fst.h
-    nbest_clat.Write(f, opts);
-    f.close();
+  for (int32 k = 0; k < static_cast<int32>(nbest_lats.size()); ++k) {
+    std::vector<int> row;
+    BaseFloat prob;
+    lattice2row(nbest_lats[k], row, &prob);
+    out_nbest.push_back(row);  // copying the vector
+    out_prob.push_back(prob);
+
+    // TODO DEBUGGING replace wrinting 
+      CompactLattice nbest_clat;
+      ConvertLattice(nbest_lats[k], &nbest_clat); // write in compact form.
+      std::ofstream f;
+      f.open("nbest.lat", std::ios::binary);
+      fst::FstWriteOptions opts;  // in fst/fst.h
+      nbest_clat.Write(f, opts);
+      f.close();
   }
 }
 

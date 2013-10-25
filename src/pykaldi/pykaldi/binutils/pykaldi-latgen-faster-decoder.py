@@ -23,6 +23,7 @@ import sys
 
 
 def write_decoded(f, wav_name, word_ids, wst):
+    print 'DEBUG', word_ids
     if wst is not None:
         decoded = [wst[str(w)] for w in word_ids]
     else:
@@ -34,7 +35,7 @@ def write_decoded(f, wav_name, word_ids, wst):
 
 def decode(d, pcm):
     frame_len = (2 * audio_batch_size)  # 16-bit audio so 1 sample = 2 chars
-    it, decoded = (len(pcm) / frame_len), []
+    it = (len(pcm) / frame_len)
     print >> sys.stderr, 'NUMBER of audio input chunks: %d' % it
     decoded_frames = 0
     for i in xrange(it):
@@ -45,11 +46,10 @@ def decode(d, pcm):
             decoded_frames += dec_t
             dec_t = d.decode(10)
     d.prune_final()
-    decoded = d.get_best_path()
+    prob, words = d.get_best_path()
+    print 'probability %d words: %s' % (prob, words)
     d.get_lattice()
-    # print >> sys.stderr, 'Decoded frames: %d' % decoded_frames
-    print 'DEBUG' , decoded
-    return decoded
+    return words
 
 
 def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst=None):

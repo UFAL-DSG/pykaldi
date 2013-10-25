@@ -70,20 +70,22 @@ void GmmLatgenWrapper::FrameIn(unsigned char *frame, size_t frame_len) {
 }
 
 
-bool GmmLatgenWrapper::GetBestPath(std::vector<int> &v_out) {
+bool GmmLatgenWrapper::GetBestPath(std::vector<int> &v_out, BaseFloat *prob) {
   if (! initialized_)
     return false;
   Lattice lat;
   bool ok = decoder->GetBestPath(&lat);
+  lattice2row(lat, v_out, prob);
   return ok; 
 }
 
-bool GmmLatgenWrapper::GetNbest(int n, std::vector<std::vector<int> > &v_out) {
+bool GmmLatgenWrapper::GetNbest(int n, std::vector<std::vector<int> > &v_out,
+                                       std::vector<BaseFloat> &prob_out) {
   if (! initialized_)
     return false;
   Lattice lat;
   bool ok = decoder->GetRawLattice(&lat);
-  lattice2nbest(lat, n, v_out);
+  lattice2nbest(lat, n, v_out, prob_out);
   return ok;
 }
 

@@ -87,8 +87,9 @@ class GmmLatgenWrapper {
     size_t Decode(size_t max_frames);
     void FrameIn(unsigned char *frame, size_t frame_len);
     // TODO change to OPENFST object
-    bool GetBestPath(std::vector<int> &v_out);
-    bool GetNbest(int n, std::vector<std::vector<int> > &v_out);
+    bool GetBestPath(std::vector<int> &v_out, BaseFloat *prob);
+    bool GetNbest(int n, std::vector<std::vector<int> > &v_out,
+                         std::vector<BaseFloat> &prob_out);
     bool GetRawLattice(Lattice &lat);
     bool GetLattice(CompactLattice & clat);
     void PruneFinal();

@@ -1,5 +1,6 @@
 # encoding: utf-8
 # distutils: language = c++
+from cython cimport address
 from libc.stdlib cimport malloc, free
 from libcpp.vector cimport vector
 from libcpp cimport bool
@@ -11,8 +12,8 @@ cdef extern from "dec-wrap/pykaldi-latgen-wrapper.h" namespace "kaldi":
     cdef cppclass GmmLatgenWrapper:
         size_t Decode(size_t max_frames) except +
         void FrameIn(unsigned char *frame, size_t frame_len) except +
-        int GetBestPath(vector[int] v_out) except +
-        int GetNbest(n, vector[vector[int]] v_out) except +
+        int GetBestPath(vector[int] v_out, float *prob) except +
+        int GetNbest(n, vector[vector[int]] v_out, vector[float] prob_out) except +
         #int GetRawLattice(Lattice lat_out)
         #int GetLattice(CompactLattice clat_out)
         void PruneFinal() except +
@@ -51,11 +52,13 @@ cdef class PyGmmLatgenWrapper:
     def get_best_path(self):
         """get_best_path(self)"""
         cdef vector[int] t
-        self.thisptr.GetBestPath(t)
-        return [t[i] for i in xrange(t.size())]
+        cdef float prob
+        self.thisptr.GetBestPath(t, address(prob))
+        ids = [t[i] for i in xrange(t.size())]
+        return (prob, ids)
 
     def get_Nbest(self):
-        pass
+        cdef vector[vector[int]] t
 
     def get_lattice(self):
         pass
