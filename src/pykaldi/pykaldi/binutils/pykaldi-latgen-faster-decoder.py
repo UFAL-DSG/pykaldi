@@ -61,6 +61,7 @@ def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst=None):
     for wav_name, wav_path in wav_paths:
         # 16-bit audio so 1 sample_width = 2 chars
         pcm = load_wav(wav_path, def_sample_width=2, def_sample_rate=16000)
+        d.reset(False)
         word_ids = decode(d, pcm)
         write_decoded(file_output, wav_name, word_ids, wst)
 
