@@ -61,13 +61,13 @@ void lattice2nbest(const Lattice &lat, int n,
     out_prob.push_back(prob);
 
     // TODO DEBUGGING replace wrinting 
-      CompactLattice nbest_clat;
-      ConvertLattice(nbest_lats[k], &nbest_clat); // write in compact form.
-      std::ofstream f;
-      f.open("nbest.lat", std::ios::binary);
-      fst::FstWriteOptions opts;  // in fst/fst.h
-      nbest_clat.Write(f, opts);
-      f.close();
+      // CompactLattice nbest_clat;
+      // ConvertLattice(nbest_lats[k], &nbest_clat); // write in compact form.
+      // std::ofstream f;
+      // f.open("nbest.lat", std::ios::binary);
+      // fst::FstWriteOptions opts;  // in fst/fst.h
+      // nbest_clat.Write(f, opts);
+      // f.close();
   }
 }
 

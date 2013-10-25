@@ -46,8 +46,11 @@ def decode(d, pcm):
             decoded_frames += dec_t
             dec_t = d.decode(10)
     d.prune_final()
-    prob, words = d.get_best_path()
-    print 'probability %d words: %s' % (prob, words)
+    # prob, words = d.get_best_path()
+    # print 'probability %d words: %s' % (prob, words)
+    decoded = d.get_nbest(10)
+    print decoded
+    prob, words = decoded[0]
     d.get_lattice()
     return words
 

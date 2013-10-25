@@ -13,7 +13,7 @@ cdef extern from "dec-wrap/pykaldi-latgen-wrapper.h" namespace "kaldi":
         size_t Decode(size_t max_frames) except +
         void FrameIn(unsigned char *frame, size_t frame_len) except +
         int GetBestPath(vector[int] v_out, float *prob) except +
-        int GetNbest(n, vector[vector[int]] v_out, vector[float] prob_out) except +
+        int GetNbest(int n, vector[vector[int]] v_out, vector[float] prob_out) except +
         #int GetRawLattice(Lattice lat_out)
         #int GetLattice(CompactLattice clat_out)
         void PruneFinal() except +
@@ -57,8 +57,17 @@ cdef class PyGmmLatgenWrapper:
         ids = [t[i] for i in xrange(t.size())]
         return (prob, ids)
 
-    def get_Nbest(self):
+    def get_nbest(self, n):
         cdef vector[vector[int]] t
+        cdef vector[float] prob
+        self.thisptr.GetNbest(n, t, prob)
+        r = []
+        assert(t.size() == prob.size())
+        for i in xrange(prob.size()):
+            p = prob[i]
+            ids = [t[i][j] for j in xrange(t[i].size())]
+            r.append((p, ids))
+        return r
 
     def get_lattice(self):
         pass
