@@ -1,8 +1,8 @@
 import unittest
 from pykaldi.utils import load_wav
-from decoders import PyGmmLatgenWrapper
+from pykaldi.decoders import PyGmmLatgenWrapper
 
-
+@unittest.skip("Not finished")
 class PyGmmLatgenWrapperFucnTest(unittest.TestCase):
 
     def setUp(self):

@@ -9,9 +9,7 @@ all:
 	python setup.py develop --user
 
 test:
-	# TODO debug
-	# python setup.py nosetests
-	nosetests -s
+	python setup.py nosetests
 
 clean:
 	@# removing build directory
