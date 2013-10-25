@@ -24,6 +24,7 @@
 #include "dec-wrap/pykaldi-latgen-wrapper.h"
 #include "dec-wrap/pykaldi-latgen-decoder.h"
 #include "fstext/fstext-lib.h"
+#include "fstext/fstext-utils.h"
 // debug
 #include <fstream>
 #include <iostream>
@@ -70,13 +71,20 @@ void GmmLatgenWrapper::FrameIn(unsigned char *frame, size_t frame_len) {
 }
 
 
-bool GmmLatgenWrapper::GetBestPath(std::vector<int> &v_out, BaseFloat *prob) {
+bool GmmLatgenWrapper::GetBestPath(std::vector<int> &out_ids, BaseFloat *prob) {
+  *prob = -1.0;  // default value for failures
   if (! initialized_)
     return false;
   Lattice lat;
+  // TODO is ConvertLattice needed?
   bool ok = decoder->GetBestPath(&lat);
-  lattice2row(lat, v_out, prob);
-  return ok; 
+  // ConvertLattice(lat, &clat); // write in compact form.
+  // TODO extract *prob from LatticeArc::Weight
+  fst::GetLinearSymbolSequence(lat,
+                               static_cast<vector<int32> *>(0),
+                               &out_ids,
+                               static_cast<LatticeArc::Weight*>(0));
+  return ok;
 }
 
 bool GmmLatgenWrapper::GetNbest(int n, std::vector<std::vector<int> > &v_out,
@@ -97,7 +105,7 @@ bool GmmLatgenWrapper::GetRawLattice(Lattice & lat) {
 
   BaseFloat acoustic_scale = decodable->GetAcousticScale();
   if (acoustic_scale != 0.0) // We'll write the lattice without acoustic scaling
-    fst::ScaleLattice(fst::AcousticLatticeScale(1.0 / acoustic_scale), &lat); 
+    fst::ScaleLattice(fst::AcousticLatticeScale(1.0 / acoustic_scale), &lat);
 
   return ok;
 }
@@ -109,7 +117,7 @@ bool GmmLatgenWrapper::GetLattice(CompactLattice &clat) {
 
   BaseFloat acoustic_scale = decodable->GetAcousticScale();
   if (acoustic_scale != 0.0) // We'll write the lattice without acoustic scaling
-    fst::ScaleLattice(fst::AcousticLatticeScale(1.0 / acoustic_scale), &clat); 
+    fst::ScaleLattice(fst::AcousticLatticeScale(1.0 / acoustic_scale), &clat);
 
   // DEBUG
   if (ok) {

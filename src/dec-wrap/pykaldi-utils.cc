@@ -20,6 +20,7 @@
 #include <string>
 #include "dec-wrap/pykaldi-utils.h"
 #include "lat/kaldi-lattice.h"
+#include "fstext/fstext-utils.h"
 
 
 namespace kaldi {
@@ -36,15 +37,6 @@ void build_git_revision(std::string & pykaldi_git_revision) {
   KALDI_ASSERT((pykaldi_git_revision.size() == 40) && "Git SHA has length 40 size");
 }
 
-void lattice2row(const Lattice&lat, 
-                std::vector<int> &out_ids, BaseFloat *prob) {
-  CompactLattice clat;
-  ConvertLattice(lat, &clat); // write in compact form.
-  // TODO extract the data from clat
-  // DEBUG
-  out_ids.push_back(99);
-  *prob = 1.0;
-}
 
 void lattice2nbest(const Lattice &lat, int n, 
         std::vector<std::vector<int> > &out_nbest, 
@@ -55,8 +47,13 @@ void lattice2nbest(const Lattice &lat, int n,
   fst::NbestAsFsts(lat, n, &nbest_lats);
   for (int32 k = 0; k < static_cast<int32>(nbest_lats.size()); ++k) {
     std::vector<int> row;
-    BaseFloat prob;
-    lattice2row(nbest_lats[k], row, &prob);
+    BaseFloat prob = -1.0;  // default value for failures
+    // TODO is ConvertLattice needed?
+    // ConvertLattice(lat, &clat); // write in compact form.
+    fst::GetLinearSymbolSequence(nbest_lats[k],
+                                 static_cast<vector<int32> *>(0),
+                                 &row,
+                                 static_cast<LatticeArc::Weight*>(0));
     out_nbest.push_back(row);  // copying the vector
     out_prob.push_back(prob);
 
