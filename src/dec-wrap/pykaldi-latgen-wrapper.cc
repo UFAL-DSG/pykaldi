@@ -80,10 +80,21 @@ bool GmmLatgenWrapper::GetBestPath(std::vector<int> &out_ids, BaseFloat *prob) {
   bool ok = decoder->GetBestPath(&lat);
   // ConvertLattice(lat, &clat); // write in compact form.
   // TODO extract *prob from LatticeArc::Weight
+  LatticeWeight weight;
   fst::GetLinearSymbolSequence(lat,
                                static_cast<vector<int32> *>(0),
                                &out_ids,
-                               static_cast<LatticeArc::Weight*>(0));
+                               &weight);
+
+    *prob = weight.Value1() + weight.Value2();
+    // TODO DEBUGGING replace wrinting 
+    // CompactLattice best_clat;
+    // ConvertLattice(lat, &best_clat); // write in compact form.
+    // std::ofstream f;
+    // f.open("nbest.lat", std::ios::binary);
+    // fst::FstWriteOptions opts;  // in fst/fst.h
+    // best_clat.Write(f, opts);
+    // f.close();
   return ok;
 }
 

@@ -1,6 +1,10 @@
 # http://about.travis-ci.org/docs/user/ci-environment/
 # http://about.travis-ci.org/docs/user/build-configuration/
 # Travis uses Ubuntu 64 12.04
+branches:
+    only:
+        -master
+        -svn-mirror
 
 language: python
 python:
