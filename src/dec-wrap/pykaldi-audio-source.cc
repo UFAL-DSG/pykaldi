@@ -20,7 +20,7 @@
 #include <cmath>
 #include <unistd.h>
 
-#include "pykaldi-audio-source.h"
+#include "dec-wrap/pykaldi-audio-source.h"
 
 namespace kaldi {
 

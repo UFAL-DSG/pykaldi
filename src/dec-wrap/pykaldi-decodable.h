@@ -23,7 +23,7 @@
 #ifndef KALDI_PYKALDI_PYKALDI_DECODABLE_H_
 #define KALDI_PYKALDI_PYKALDI_DECODABLE_H_
 
-#include "pykaldi-feat-input.h"
+#include "dec-wrap/pykaldi-feat-input.h"
 #include "gmm/decodable-am-diag-gmm.h"
 
 namespace kaldi {

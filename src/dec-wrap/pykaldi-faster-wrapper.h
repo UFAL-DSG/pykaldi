@@ -54,10 +54,10 @@ int Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
 #include <string>
 #include <vector>
 #include "feat/feature-mfcc.h"
-#include "pykaldi-faster-decoder.h"
-#include "pykaldi-feat-input.h"
-#include "pykaldi-decodable.h"
-#include "pykaldi-audio-source.h"
+#include "dec-wrap/pykaldi-faster-decoder.h"
+#include "dec-wrap/pykaldi-feat-input.h"
+#include "dec-wrap/pykaldi-decodable.h"
+#include "dec-wrap/pykaldi-audio-source.h"
 
 
 namespace kaldi {

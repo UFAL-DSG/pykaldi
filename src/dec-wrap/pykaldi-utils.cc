@@ -17,41 +17,13 @@
 // MERCHANTABLITY OR NON-INFRINGEMENT.
 // See the Apache 2 License for the specific language governing permissions and
 // limitations under the License.
-
 #include <string>
-#include "pykaldibin-util.h"
+#include "dec-wrap/pykaldi-utils.h"
 #include "lat/kaldi-lattice.h"
+#include "fstext/fstext-utils.h"
 
 
-void* new_fst_VectorFstLatticeArc() {
-  using namespace kaldi;
-  return new fst::VectorFst<LatticeArc>();
-}
-
-
-void print_fstMutableLatticeArc(void * fst_void) {
-   fst::MutableFst<kaldi::LatticeArc> *fst = reinterpret_cast<fst::MutableFst<kaldi::LatticeArc>*>(fst_void);
-    std::vector<int32> alignment;
-    std::vector<int32> words;
-    kaldi::LatticeWeight weight;
-    fst::GetLinearSymbolSequence(*fst, &alignment, &words, &weight);
-
-    std::cout << "words_id ";
-    for (size_t i = 0; i < words.size(); i++)
-      std::cout << words[i] << ' ';
-    std::cout << std::endl;
-
-    std::cout << "alignments ";
-    for (size_t i = 0; i < alignment.size(); i++)
-      std::cout << alignment[i] << ' ';
-    std::cout << std::endl;
-
-    std::cout << "likelihood " << -(weight.Value1() + weight.Value2()) << std::endl;
-}
-
-void del_fst_VectorFstLatticeArc(void * fst) {
-   delete reinterpret_cast<fst::VectorFst<kaldi::LatticeArc>*>(fst);
-}
+namespace kaldi {
 
 void pykaldi_version(int *out_major, int * out_minor, int *patch) {
   *out_major = PYKALDI_MAJOR;
@@ -59,14 +31,39 @@ void pykaldi_version(int *out_major, int * out_minor, int *patch) {
   *patch = PYKALDI_PATCH;
 }
 
-const char* pykaldi_git_revision() {
-  std::string git_sha(PYKALDI_GIT_VERSION);
-  KALDI_ASSERT((git_sha.size() == 40) && "Git SHA has length 40 size");
-  return git_sha.c_str();
+void build_git_revision(std::string & pykaldi_git_revision) {
+  pykaldi_git_revision.clear();
+  pykaldi_git_revision.append(PYKALDI_GIT_VERSION);
+  KALDI_ASSERT((pykaldi_git_revision.size() == 40) && "Git SHA has length 40 size");
 }
 
 
-namespace kaldi {
+void lattice2nbest(const Lattice &lat, int n, 
+        std::vector<std::vector<int> > &out_nbest, 
+        std::vector<BaseFloat> & out_prob) {
+  KALDI_WARN << "DEBUG";
+
+  std::vector<Lattice> nbest_lats;
+  // FIXME state-level nbest from state level lattice
+  fst::NbestAsFsts(lat, n, &nbest_lats);
+  for (int32 k = 0; k < static_cast<int32>(nbest_lats.size()); ++k) {
+    std::vector<int> words;
+    BaseFloat prob = -1.0;  // default value for failures
+    LatticeWeight weight;
+    // TODO is ConvertLattice needed?
+    // ConvertLattice(lat, &clat); // write in compact form.
+    fst::GetLinearSymbolSequence(nbest_lats[k],
+                                 static_cast<vector<int32> *>(0),
+                                 &words,
+                                 &weight);
+    prob = weight.Value1() + weight.Value2();
+    std::cout << "DEBUG same values?" << prob << std::endl;
+    out_nbest.push_back(words);  // copying the vector
+    out_prob.push_back(prob);
+
+  }
+}
+
 
 fst::Fst<fst::StdArc> *ReadDecodeGraph(std::string filename) {
   // read decoding network FST

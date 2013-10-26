@@ -19,7 +19,7 @@
 // See the Apache 2 License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pykaldi-faster-decoder.h"
+#include "dec-wrap/pykaldi-faster-decoder.h"
 #include "fstext/fstext-utils.h"
 #include "hmm/hmm-utils.h"
 

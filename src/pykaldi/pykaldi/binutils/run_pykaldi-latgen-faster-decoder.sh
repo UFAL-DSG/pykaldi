@@ -11,6 +11,8 @@ cat $decode_config $mfcc_config > $tmp_config
 echo 1>&2; echo Using config $tmp_config 1>&2 ; echo 1>&2
 cat $tmp_config 1>&2 ; echo 1>&2
 
+export LD_LIBRARY_PATH=`pwd`/../../../dec-wrap:$LD_LIBRARY_PATH
+
 # cgdb -q -x .gdbinit_latgen --args \
 python pykaldi-latgen-faster-decoder.py $wav_scp $batch_size $pykaldi_latgen_tra \
     --verbose=2 --acoustic-scale=0.1 --config=$tmp_config \
@@ -19,11 +21,10 @@ python pykaldi-latgen-faster-decoder.py $wav_scp $batch_size $pykaldi_latgen_tra
 # # reference is named based on wav_scp
 ./build_reference.py $wav_scp $decode_dir
 reference=$decode_dir/`basename $wav_scp`.tra
-# FIXME write output in sensible way
-# compute-wer --text --mode=present ark:$reference ark,p:$pykaldi_latgen_tra
+FIXME write output in sensible way
+compute-wer --text --mode=present ark:$reference ark,p:$pykaldi_latgen_tra
 
 echo; echo "Reference"; echo
 cat $reference
-# FIXME
-# echo; echo "Decoded"; echo
-# cat $pykaldi_latgen_tra
+echo; echo "Decoded"; echo
+cat $pykaldi_latgen_tra

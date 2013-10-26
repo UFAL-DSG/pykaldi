@@ -21,7 +21,7 @@
 #define KALDI_PYKALDI_PYKALDI_FEAT_INPUT_H_
 
 #include "feat/feature-functions.h"
-#include "pykaldi-audio-source.h"
+#include "dec-wrap/pykaldi-audio-source.h"
 
 
 namespace kaldi {

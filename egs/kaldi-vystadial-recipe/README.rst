@@ -1,6 +1,13 @@
+IMPORTANT
+---------
+Use irstlm 5.8 and higher! 
+TODO 
+Choose another LM tool since Kaldi already uses patched IRSTLM 5.6,
+which does not correctly create arpa model in textual represenattion!
+
 Summary
 -------
- * KALDI recipe based on voxforge KALDI recipe http://vpanayotov.blogspot.cz/2012/07/voxforge-scripts-for-kaldi.html .
+ * This KALDI recipe is based on Voxforge KALDI recipe http://vpanayotov.blogspot.cz/2012/07/voxforge-scripts-for-kaldi.html .
  * Requires KALDI installation and Linux environment. (Tested on Ubuntu 10.04, 12.04 and 12.10.)
  * Recipes Kaldi toolkit are located `KALDI_ROOT/egs/name_of_recipe/s5/`. 
    This recipe also expects that you copy the directory which contains this `README.rst` under `KALDI_ROOT/egs`,
@@ -38,7 +45,7 @@ After running the experiments the `exp` directory will be backup to `Results` di
 
 Extracting the results and trained models
 -------------------------------------------
-The main `s5/run.sh` script perform not only training the acoustic models,
+The main `s5/run.sh` script performs not only training the acoustic models,
 but also decoding.
 The acoustic models are evaluated during running the scripts and are printed to the standard output.
 

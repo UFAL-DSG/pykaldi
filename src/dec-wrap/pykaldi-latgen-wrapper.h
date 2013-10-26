@@ -14,62 +14,50 @@
  * MERCHANTABLITY OR NON-INFRINGEMENT.
  * See the Apache 2 License for the specific language governing permissions and
  * limitations under the License. */
-
 #ifndef KALDI_PYKALDI_LATGEN_WRAPPER_H_
 #define KALDI_PYKALDI_LATGEN_WRAPPER_H_
-
-/*****************
- *  C interface  *
- *****************/
-#include <stdio.h>
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include <stdlib.h>
-
-typedef struct {
-  void *audio;
-  void *mfcc;
-  void *feat_input;
-  void *feat_transform;
-  void *feat_matrix;
-  void *decodable;
-  void *trans_model;
-  void *amm;
-  void *decoder;
-  void *decode_fst;
-} GmmLatgenWrapper;
-
-GmmLatgenWrapper *new_GmmLatgenWrapper();
-void del_GmmLatgenWrapper(GmmLatgenWrapper *w);
-size_t GmmLatgenWrapper_Decode(void *decoder, void *decodableItf, size_t max_frames);
-void GmmLatgenWrapper_FrameIn(void *audio_source, unsigned char *frame, size_t frame_len);
-int GmmLatgenWrapper_GetBestPath(void *decoder, void *fst);
-int GmmLatgenWrapper_GetRawLattice(GmmLatgenWrapper *w);
-int GmmLatgenWrapper_GetLattice(GmmLatgenWrapper *w);
-void GmmLatgenWrapper_PruneFinal(void *decoder);
-void GmmLatgenWrapper_Reset(GmmLatgenWrapper *w, int keep_buffer_data);
-int GmmLatgenWrapper_Setup(int argc, char **argv, GmmLatgenWrapper *w);
-
-#ifdef __cplusplus
-}
-#endif
-
-
-#ifdef __cplusplus
-
-/*******************
- *  C++ interface  *
- *******************/
 #include <string>
 #include <vector>
-#include "pykaldi-feat-input.h"
+#include "base/kaldi-types.h"
 
+// forward declarations from Fst
+namespace fst{
+  template <typename Arc> class Fst;
+  template <typename Weight> class ArcTpl; 
+  template <class W> class TropicalWeightTpl;
+  typedef TropicalWeightTpl<float> TropicalWeight;
+  typedef ArcTpl<TropicalWeight> StdArc;
+  typedef Fst<StdArc> StdFst;
+  template<class FloatType> class LatticeWeightTpl;
+  template <class A> class VectorFst;
+  template<class WeightType, class IntType> class CompactLatticeWeightTpl; 
 
+}
+
+namespace kaldi{ 
+  typedef fst::LatticeWeightTpl<BaseFloat> LatticeWeight;
+  typedef fst::ArcTpl<LatticeWeight> LatticeArc;
+  typedef fst::VectorFst<LatticeArc> Lattice;
+
+  typedef fst::CompactLatticeWeightTpl<LatticeWeight, kaldi::int32> CompactLatticeWeight;
+  typedef fst::ArcTpl<CompactLatticeWeight> CompactLatticeArc;
+  typedef fst::VectorFst<CompactLatticeArc> CompactLattice;
+}
 namespace kaldi {
+
+// forward declarations
+class PykaldiBuffSource;
+class Mfcc;
+template<typename Mfcc> class PykaldiFeInput;
+class PykaldiFeInput_Mfcc;
+class PykaldiFeatInputItf;
+class PykaldiFeatureMatrix;
+class PykaldiDecodableDiagGmmScaled;
+class TransitionModel;
+class AmDiagGmm;
+class PykaldiLatticeFasterDecoder;
+class GmmLatgenWrapper;
+struct OptionsItf;
 
 struct KaldiDecoderGmmLatgenWrapperOptions  {
   /// Input sampling frequency is fixed to 16KHz
@@ -85,16 +73,44 @@ struct KaldiDecoderGmmLatgenWrapperOptions  {
   std::string word_syms_filename; // FIXME remove it from po options
   std::string lda_mat_rspecifier;
   std::vector<int32> silence_phones;
-  void Register(OptionsItf *po) {
-    po->Register("left-context", &left_context, "Number of frames of left context");
-    po->Register("right-context", &right_context, "Number of frames of right context");
-    po->Register("acoustic-scale", &acoustic_scale,
-                "Scaling factor for acoustic likelihoods");
-  }
+  void Register(OptionsItf *po);
+};
+
+
+class GmmLatgenWrapper {
+  public:
+    GmmLatgenWrapper(): audio(NULL), mfcc(NULL), feat_input(NULL),
+    feat_transform(NULL), feat_matrix(NULL), decodable(NULL),
+    trans_model(NULL), amm(NULL), decoder(NULL), decode_fst(NULL) { }
+
+    virtual ~GmmLatgenWrapper();
+    size_t Decode(size_t max_frames);
+    void FrameIn(unsigned char *frame, size_t frame_len);
+    // TODO change to OPENFST object
+    bool GetBestPath(std::vector<int> &v_out, BaseFloat *prob);
+    bool GetNbest(int n, std::vector<std::vector<int> > &v_out,
+                         std::vector<BaseFloat> &prob_out);
+    bool GetRawLattice(Lattice &lat);
+    bool GetLattice(CompactLattice & clat);
+    void PruneFinal();
+    void Reset(bool keep_buffer_data);
+    bool Setup(int argc, char **argv);
+  protected:
+    PykaldiBuffSource *audio;
+    Mfcc *mfcc;
+    PykaldiFeInput<Mfcc> *feat_input;
+    PykaldiFeatInputItf *feat_transform;
+    PykaldiFeatureMatrix *feat_matrix;
+    PykaldiDecodableDiagGmmScaled *decodable;
+    TransitionModel *trans_model;
+    AmDiagGmm *amm;
+    PykaldiLatticeFasterDecoder *decoder;
+    fst::StdFst *decode_fst;
+  private:
+    bool initialized_;
+    void Deallocate();
 };
 
 } // namespace kaldi
-
-#endif  // __cplusplus
 
 #endif  // #ifdef KALDI_PYKALDI_LATGEN_WRAPPER_H_

@@ -16,51 +16,54 @@
 
 
 from pykaldi.utils import load_wav, wst2dict
-from pykaldi.decoders import PykaldiLatgenFasterDecoder, DecoderCloser
+from pykaldi.decoders import PyGmmLatgenWrapper
 import sys
 
 # FIXME todo measure time of decode resp decode_once through profiler
 
 
-# def write_decoded(f, wav_name, word_ids, wst):
-#     if wst is not None:
-#         decoded = [wst[str(w)] for w in word_ids]
-#     else:
-#         decoded = [str(w) for w in word_ids]
-#     line = ' '.join([wav_name] + decoded + ['\n'])
-#     print >> sys.stderr, 'DEBUG %s' % line
-#     f.write(line)
+def write_decoded(f, wav_name, word_ids, wst):
+    print 'DEBUG', word_ids
+    if wst is not None:
+        decoded = [wst[str(w)] for w in word_ids]
+    else:
+        decoded = [str(w) for w in word_ids]
+    line = ' '.join([wav_name] + decoded + ['\n'])
+    print >> sys.stderr, 'DEBUG %s' % line
+    f.write(line)
 
 
 def decode(d, pcm):
     frame_len = (2 * audio_batch_size)  # 16-bit audio so 1 sample = 2 chars
-    it, decoded = (len(pcm) / frame_len), []
+    it = (len(pcm) / frame_len)
     print >> sys.stderr, 'NUMBER of audio input chunks: %d' % it
     decoded_frames = 0
     for i in xrange(it):
         audio_chunk = pcm[i * frame_len:(i + 1) * frame_len]
-        d.frame_in(audio_chunk, audio_batch_size)
+        d.frame_in(audio_chunk)
         dec_t = d.decode(max_frames=10)
         while dec_t > 0:
             decoded_frames += dec_t
             dec_t = d.decode(max_frames=10)
     d.prune_final()
-    # d.get_best_path()   # segfaults
+    # prob, words = d.get_best_path()
+    # print 'probability %d words: %s' % (prob, words)
+    decoded = d.get_nbest(n=10)
+    print decoded
+    prob, words = decoded[0]
     d.get_lattice()
-    print >> sys.stderr, 'Decoded frames: %d' % decoded_frames
-
-    # FIXME interface fst to python
-    # return [word_id for word_id in decoded]
+    return words
 
 
 def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst=None):
-    with DecoderCloser(PykaldiLatgenFasterDecoder(argv)) as d:
-        for wav_name, wav_path in wav_paths:
-            # 16-bit audio so 1 sample_width = 2 chars
-            pcm = load_wav(wav_path, def_sample_width=2, def_sample_rate=16000)
-            decode(d, pcm)
-            # word_ids = decode(d, pcm)
-            # write_decoded(file_output, wav_name, word_ids, wst)
+    d = PyGmmLatgenWrapper()
+    d.setup(argv)
+    for wav_name, wav_path in wav_paths:
+        # 16-bit audio so 1 sample_width = 2 chars
+        pcm = load_wav(wav_path, def_sample_width=2, def_sample_rate=16000)
+        d.reset(keep_buffer_data=False)
+        word_ids = decode(d, pcm)
+        write_decoded(file_output, wav_name, word_ids, wst)
 
 
 if __name__ == '__main__':
