@@ -44,27 +44,23 @@ void lattice2nbest(const Lattice &lat, int n,
   KALDI_WARN << "DEBUG";
 
   std::vector<Lattice> nbest_lats;
+  // FIXME state-level nbest from state level lattice
   fst::NbestAsFsts(lat, n, &nbest_lats);
   for (int32 k = 0; k < static_cast<int32>(nbest_lats.size()); ++k) {
-    std::vector<int> row;
+    std::vector<int> words;
     BaseFloat prob = -1.0;  // default value for failures
+    LatticeWeight weight;
     // TODO is ConvertLattice needed?
     // ConvertLattice(lat, &clat); // write in compact form.
     fst::GetLinearSymbolSequence(nbest_lats[k],
                                  static_cast<vector<int32> *>(0),
-                                 &row,
-                                 static_cast<LatticeArc::Weight*>(0));
-    out_nbest.push_back(row);  // copying the vector
+                                 &words,
+                                 &weight);
+    prob = weight.Value1() + weight.Value2();
+    std::cout << "DEBUG same values?" << prob << std::endl;
+    out_nbest.push_back(words);  // copying the vector
     out_prob.push_back(prob);
 
-    // TODO DEBUGGING replace wrinting 
-      // CompactLattice nbest_clat;
-      // ConvertLattice(nbest_lats[k], &nbest_clat); // write in compact form.
-      // std::ofstream f;
-      // f.open("nbest.lat", std::ios::binary);
-      // fst::FstWriteOptions opts;  // in fst/fst.h
-      // nbest_clat.Write(f, opts);
-      // f.close();
   }
 }
 
