@@ -57,10 +57,7 @@ fi
 
 if [ ! -z "${NOOOV}" ]; then
   echo; echo "REMOVING OOV WORD FROM LANGUAGE MODEL"; echo
-  pushd data/local
-  grep -v -w OOV lm_train_${LM_ORDER}.arpa > lm.arpa_NO_OOV 
-  mv lm.arpa_NO_OOV lm_train_${LM_ORDER}.arpa
-  popd
+  sed -i '/\<OOV\>/d' ${local_lm}_train_${LM_ORDER}.arpa
 else
   echo; echo "KEEPING OOV WORD IN LANGUAGE MODEL"; echo
 fi

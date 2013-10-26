@@ -1,3 +1,10 @@
+IMPORTANT
+---------
+Use irstlm 5.8 and higher! 
+TODO 
+Choose another LM tool since Kaldi already uses patched IRSTLM 5.6,
+which does not correctly create arpa model in textual represenattion!
+
 Summary
 -------
  * This KALDI recipe is based on Voxforge KALDI recipe http://vpanayotov.blogspot.cz/2012/07/voxforge-scripts-for-kaldi.html .
