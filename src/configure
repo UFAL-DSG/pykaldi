@@ -248,13 +248,8 @@ function linux_configure_omplibdir {
 
     check_library $mkllibdir "libiomp5" $libext \
     && echo `readlink -f $mkllibdir` && return
-<<<<<<< HEAD
-
-    local testdir=`(cd $mklroot; cd ..; cd lib/intel64;pwd)`
-=======
     
     local testdir=`(cd $mklroot; cd ..; cd lib/intel64;pwd)` 
->>>>>>> svn-mirror
     test -d $testdir && check_library $testdir "libiomp5" $libext && echo `readlink -f $testdir` && return;
     local testdir=`(cd $mklroot; cd ..; cd lib/em64t;pwd)`
     test -d $testdir && check_library $testdir "libiomp5" $libext && echo `readlink -f $testdir` && return;
@@ -302,16 +297,7 @@ function linux_configure_cuda {
     echo CUDATKDIR = $CUDATKDIR >> kaldi.mk
 
     if [ "`uname -m`" == "x86_64" ]; then
-<<<<<<< HEAD
-      if [ "`hostname -d`" == "fit.vutbr.cz" ]; then
-        #BUT machines by default compile 32bits
-        cat makefiles/linux_cuda.mk >> kaldi.mk
-      else
-        cat makefiles/linux_x86_64_cuda.mk >> kaldi.mk
-      fi
-=======
       cat makefiles/linux_x86_64_cuda.mk >> kaldi.mk
->>>>>>> svn-mirror
     else
       cat makefiles/linux_cuda.mk >> kaldi.mk
     fi
