@@ -1,7 +1,9 @@
 // nnetbin/nnet-train-mpe-sequential.cc
 
-// Copyright 2011-2013  Karel Vesely;  Arnab Ghoshal
+// Copyright 2011-2013  Brno University of Technology (author: Karel Vesely);  Arnab Ghoshal
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -98,7 +100,7 @@ int main(int argc, char *argv[]) {
     NnetTrainOptions trn_opts; trn_opts.learn_rate=0.00001;
     trn_opts.Register(&po);
 
-    bool binary = false; 
+    bool binary = true; 
     po.Register("binary", &binary, "Write output in binary mode");
 
     std::string feature_transform;
@@ -131,6 +133,9 @@ int main(int argc, char *argv[]) {
     kaldi::int32 use_gpu_id=-2;
     po.Register("use-gpu-id", &use_gpu_id, "Manually select GPU by its ID "
                 "(-2 automatic selection, -1 disable GPU, 0..N select GPU)");
+#else
+    int32 use_gpu_id=0;
+    po.Register("use-gpu-id", &use_gpu_id, "Unused, kaldi is compiled w/o CUDA");
 #endif
 
     po.Read(argc, argv);
@@ -170,9 +175,9 @@ int main(int argc, char *argv[]) {
     Nnet nnet;
     nnet.Read(model_filename);
     // using activations directly: remove softmax, if present
-    if (nnet.Layer(nnet.LayerCount()-1)->GetType() == Component::kSoftmax) {
+    if (nnet.GetComponent(nnet.NumComponents()-1).GetType() == Component::kSoftmax) {
       KALDI_LOG << "Removing softmax from the nnet " << model_filename;
-      nnet.RemoveLayer(nnet.LayerCount()-1);
+      nnet.RemoveComponent(nnet.NumComponents()-1);
     } else {
       KALDI_LOG << "The nnet was without softmax " << model_filename;
     }
@@ -352,7 +357,7 @@ int main(int argc, char *argv[]) {
 
     // add the softmax layer back before writing
     KALDI_LOG << "Appending the softmax " << target_model_filename;
-    nnet.AppendLayer(new Softmax(nnet.OutputDim(),nnet.OutputDim(),&nnet));
+    nnet.AppendComponent(new Softmax(nnet.OutputDim(),nnet.OutputDim()));
     //store the nnet
     nnet.Write(target_model_filename, binary);
 

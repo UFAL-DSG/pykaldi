@@ -6,6 +6,8 @@
 //                      Frantisek Skala;  Arnab Ghoshal
 // Copyright 2013       Tanel Alumae
 //
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -313,7 +315,8 @@ int ParseOptions::Read(int argc, const char *const argv[]) {
         // a lone "--" marks the end of named options
         break;
       }
-      SplitLongArg(argv[i], &key, &value);
+      bool has_equal_sign;
+      SplitLongArg(argv[i], &key, &value, &has_equal_sign);
       NormalizeArgName(&key);
       Trim(&value);
       if (key.compare("config") == 0) {
@@ -336,10 +339,11 @@ int ParseOptions::Read(int argc, const char *const argv[]) {
         double_dash_seen = true;
         break;
       }
-      SplitLongArg(argv[i], &key, &value);
+      bool has_equal_sign;
+      SplitLongArg(argv[i], &key, &value, &has_equal_sign);
       NormalizeArgName(&key);
       Trim(&value);
-      if (!SetOption(key, value)) {
+      if (!SetOption(key, value, has_equal_sign)) {
         PrintUsage(true);
         KALDI_ERR << "Invalid option " << argv[i];
       }
@@ -453,10 +457,11 @@ void ParseOptions::ReadConfigFile(const std::string &filename) {
     if (line.length() == 0) continue;
 
     // parse option
-    SplitLongArg(line, &key, &value);
+    bool has_equal_sign;
+    SplitLongArg(line, &key, &value, &has_equal_sign);
     NormalizeArgName(&key);
     Trim(&value);
-    if (!SetOption(key, value)) {
+    if (!SetOption(key, value, has_equal_sign)) {
       PrintUsage(true);
       KALDI_ERR << "Invalid option " << line << " in config file " << filename;
     }
@@ -465,17 +470,24 @@ void ParseOptions::ReadConfigFile(const std::string &filename) {
 
 
 
-void ParseOptions::SplitLongArg(std::string in, std::string *key,
-                                std::string *value) {
-  assert(in.substr(0, 2) == "--");  // precondition.
+void ParseOptions::SplitLongArg(std::string in,
+                                std::string *key,
+                                std::string *value,
+                                bool *has_equal_sign) {
+  KALDI_ASSERT(in.substr(0, 2) == "--");  // precondition.
   size_t pos = in.find_first_of('=', 0);
-  if (pos == std::string::npos) {
+  if (pos == std::string::npos) {  // we allow --option for bools
     // defaults to empty.  We handle this differently in different cases.
     *key = in.substr(2, in.size()-2);  // 2 because starts with --.
     *value = "";
-  } else {
+    *has_equal_sign = false;
+  } else if (pos == 2) {  // we also don't allow empty keys: --=value
+    PrintUsage(true);
+    KALDI_ERR << "Invalid option (no key): " << in;
+  } else {  // normal case: --option=value
     *key = in.substr(2, pos-2);  // 2 because starts with --.
     *value = in.substr(pos + 1);
+    *has_equal_sign = true;
   }
 }
 
@@ -496,8 +508,12 @@ void ParseOptions::NormalizeArgName(std::string *str) {
 
 
 
-bool ParseOptions::SetOption(const std::string &key, const std::string &value) {
+bool ParseOptions::SetOption(const std::string &key,
+                             const std::string &value,
+                             bool has_equal_sign) {
   if (bool_map_.end() != bool_map_.find(key)) {
+    if (has_equal_sign && value == "")
+      KALDI_ERR << "Invalid option --" << key << "=";
     *(bool_map_[key]) = ToBool(value);
   } else if (int_map_.end() != int_map_.find(key)) {
     *(int_map_[key]) = ToInt(value);
@@ -508,6 +524,8 @@ bool ParseOptions::SetOption(const std::string &key, const std::string &value) {
   } else if (double_map_.end() != double_map_.find(key)) {
     *(double_map_[key]) = ToDouble(value);
   } else if (string_map_.end() != string_map_.find(key)) {
+    if (!has_equal_sign)
+      KALDI_ERR << "Invalid option --" << key;
     *(string_map_[key]) = value;
   } else {
     return false;

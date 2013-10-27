@@ -2,6 +2,8 @@
 
 // Copyright 2012  Brno University of Technology
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -91,7 +93,7 @@ int main(int argc, char *argv[]) {
 
     //create the shift component
     {
-      AddShift* shift_component = new AddShift(shift.Dim(), shift.Dim(), &nnet);
+      AddShift* shift_component = new AddShift(shift.Dim(), shift.Dim());
       //the pointer will be given to the nnet, so we don't need to call delete
       
       //convert Vector to CuVector
@@ -101,12 +103,12 @@ int main(int argc, char *argv[]) {
       shift_component->SetShiftVec(cu_shift);
 
       //append layer to the nnet
-      nnet.AppendLayer(shift_component);
+      nnet.AppendComponent(shift_component);
     }
 
     //create the scale component
     {
-      Rescale* scale_component = new Rescale(scale.Dim(), scale.Dim(), &nnet);
+      Rescale* scale_component = new Rescale(scale.Dim(), scale.Dim());
       //the pointer will be given to the nnet, so we don't need to call delete
       
       //convert Vector to CuVector
@@ -116,9 +118,8 @@ int main(int argc, char *argv[]) {
       scale_component->SetScaleVec(cu_scale);
 
       //append layer to the nnet
-      nnet.AppendLayer(scale_component);
+      nnet.AppendComponent(scale_component);
     }
-
       
     //write the nnet
     {

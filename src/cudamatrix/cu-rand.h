@@ -2,6 +2,8 @@
 
 // Copyright 2012  Karel Vesely
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -36,7 +38,12 @@ class CuRand {
      host_(NULL), host_size_(0)
   { }
 
-  ~CuRand() { }
+  ~CuRand() {
+#if HAVE_CUDA == 1
+    cudaFree(z1_); cudaFree(z2_); cudaFree(z3_); cudaFree(z4_);
+#endif
+    delete[] host_;
+  }
 
   /// on demand seeding of all the buffers
   void SeedGpu(MatrixIndexT state_size);

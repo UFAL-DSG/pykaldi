@@ -36,15 +36,32 @@ fi
 
 function make_plp {
   t=$1
-  if ! "$use_pitch"; then
-    steps/make_plp.sh --cmd "$decode_cmd" --nj $my_nj data/${t} exp/make_plp/${t} plp
-  else
+
+  if [ "$use_pitch" = "false" ] && [ "$use_ffv" = "false" ]; then
+   steps/make_plp.sh --cmd "$decode_cmd" --nj $my_nj data/${t} exp/make_plp/${t} plp
+  elif [ "$use_pitch" = "true" ] && [ "$use_ffv" = "true" ]; then
+    cp -rT data/${t} data/${t}_plp; cp -rT data/${t} data/${t}_pitch; cp -rT data/${t} data/${t}_ffv
+    steps/make_plp.sh --cmd "$decode_cmd" --nj $my_nj data/${t}_plp exp/make_plp/${t} plp_tmp_${t}
+    local/make_pitch.sh --cmd "$decode_cmd" --nj $my_nj data/${t}_pitch exp/make_pitch/${t} pitch_tmp_${t}
+    local/make_ffv.sh --cmd "$decode_cmd"  --nj $my_nj data/${t}_ffv exp/make_ffv/${t} ffv_tmp_${t}
+    steps/append_feats.sh --cmd "$decode_cmd" --nj $my_nj data/${t}{_plp,_pitch,_plp_pitch} exp/make_pitch/append_${t}_pitch plp_tmp_${t}
+    steps/append_feats.sh --cmd "$decode_cmd" --nj $my_nj data/${t}{_plp_pitch,_ffv,} exp/make_ffv/append_${t}_pitch_ffv plp
+    rm -rf {plp,pitch,ffv}_tmp_${t} data/${t}_{plp,pitch,plp_pitch}
+  elif [ "$use_pitch" = "true" ]; then
     cp -rT data/${t} data/${t}_plp; cp -rT data/${t} data/${t}_pitch
     steps/make_plp.sh --cmd "$decode_cmd" --nj $my_nj data/${t}_plp exp/make_plp/${t} plp_tmp_${t}
-    local/make_pitch.sh --cmd "$decode_cmd" --nj $my_nj data/${t}_pitch exp/make_pitch/${t} plp_tmp_${t}
+    local/make_pitch.sh --cmd "$decode_cmd" --nj $my_nj data/${t}_pitch exp/make_pitch/${t} pitch_tmp_${t}
     steps/append_feats.sh --cmd "$decode_cmd" --nj $my_nj data/${t}{_plp,_pitch,} exp/make_pitch/append_${t} plp
-    rm -rf plp_tmp_${t} data/${t}_{plp,pitch}
+    rm -rf {plp,pitch}_tmp_${t} data/${t}_{plp,pitch}
+  elif [ "$use_ffv" = "true" ]; then
+    cp -rT data/${t} data/${t}_plp; cp -rT data/${t} data/${t}_ffv
+    steps/make_plp.sh --cmd "$decode_cmd" --nj $my_nj data/${t}_plp exp/make_plp/${t} plp_tmp_${t}
+    local/make_ffv.sh --cmd "$decode_cmd" --nj $my_nj data/${t}_ffv exp/make_ffv/${t} ffv_tmp_${t}
+    steps/append_feats.sh --cmd "$decode_cmd" --nj $my_nj data/${t}{_plp,_ffv,} exp/make_ffv/append_${t} plp
+    rm -rf {plp,ffv}_tmp_${t} data/${t}_{plp,ffv}
   fi
+
+  utils/fix_data_dir.sh data/${t}
   steps/compute_cmvn_stats.sh data/${t} exp/make_plp/${t} plp
   utils/fix_data_dir.sh data/${t}
 }
@@ -53,9 +70,13 @@ if [ ${type} == shadow ] ; then
   mandatory_variables=""
   optional_variables=""
 else
-  mandatory_variables="${type}_data_dir ${type}_data_list ${type}_stm_file \
-    ${type}_ecf_file ${type}_kwlist_file ${type}_rttm_file ${type}_nj"
-  optional_variables="${type}_subset_ecf "
+  mandatory_variables="${type}_data_dir ${type}_data_list \
+    ${type}_nj"
+  if ! $skip_kws ; then
+    mandatory_variables="$mandatory_variables \
+      ${type}_ecf_file ${type}_kwlist_file ${type}_rttm_file ${type}_nj"
+  fi
+  optional_variables="${type}_subset_ecf ${type}_stm_file "
 fi
 
 eval my_data_dir=\$${type}_data_dir
@@ -309,6 +330,7 @@ done
 if [ -f exp/tri6_nnet/.done ]; then
   decode=exp/tri6_nnet/decode_${dirid}
   if [ ! -f $decode/.done ]; then
+    mkdir -p $decode
     steps/decode_nnet_cpu.sh --cmd "$decode_cmd" --nj $my_nj \
       --skip-scoring true "${decode_extra_opts[@]}" \
       --transform-dir exp/tri5/decode_${dirid} \

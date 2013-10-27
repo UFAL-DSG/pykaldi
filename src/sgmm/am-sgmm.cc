@@ -6,6 +6,8 @@
 // Copyright 2012-2013  Johns Hopkins University (Author: Daniel Povey)
 //                      Liang Lu;  Arnab Ghoshal
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,18 +21,12 @@
 // See the Apache 2 License for the specific language governing permissions and
 // limitations under the License.
 
-#include <algorithm>
-#include <functional>
-#include <set>
-#include <string>
-#include <utility>
-#include <vector>
-using std::vector;
-
+#include <queue>
 #include "sgmm/am-sgmm.h"
 #include "thread/kaldi-thread.h"
 
 namespace kaldi {
+using std::vector;
 
 void AmSgmm::Read(std::istream &in_stream, bool binary) {
   int32 num_states, feat_dim, num_gauss;

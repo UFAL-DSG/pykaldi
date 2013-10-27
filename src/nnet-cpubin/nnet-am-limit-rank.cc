@@ -2,6 +2,8 @@
 
 // Copyright 2012  Johns Hopkins University (author:  Daniel Povey)
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -72,8 +74,8 @@ int main(int argc, char *argv[]) {
       trans_model.Write(ko.Stream(), binary_write);
       am_nnet.Write(ko.Stream(), binary_write);
     }
-    KALDI_LOG << "Copied neural net from " << nnet_rxfilename
-              << " to " << nnet_wxfilename;
+    KALDI_LOG << "Limited rank of neural net " << nnet_rxfilename
+              << " and copied to " << nnet_wxfilename;
     return 0;
   } catch(const std::exception &e) {
     std::cerr << e.what() << '\n';

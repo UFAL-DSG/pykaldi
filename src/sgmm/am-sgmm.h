@@ -6,6 +6,8 @@
 // Copyright 2012-2013  Johns Hopkins University (author: Daniel Povey)
 //                      Liang Lu;  Arnab Ghoshal
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -23,7 +25,6 @@
 #define KALDI_SGMM_AM_SGMM_H_
 
 #include <vector>
-#include <queue>
 
 #include "base/kaldi-common.h"
 #include "matrix/matrix-lib.h"

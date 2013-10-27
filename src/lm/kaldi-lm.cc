@@ -2,6 +2,8 @@
 //
 // Copyright 2009-2011 Gilles Boulianne.
 //
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -28,7 +30,7 @@
 namespace kaldi {
 // add the string contained in inpline to the current transducer
 // starting at initial state
-StateId LangModelFst::ReadTxtLine(const string &inpline) {
+LangModelFst::StateId LangModelFst::ReadTxtLine(const string &inpline) {
   KALDI_ASSERT(pfst_);
   KALDI_ASSERT(pfst_->InputSymbols());
   KALDI_ASSERT(pfst_->OutputSymbols());

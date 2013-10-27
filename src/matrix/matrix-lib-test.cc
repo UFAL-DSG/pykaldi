@@ -6,6 +6,8 @@
 //                       Johns Hopkins University (Author: Daniel Povey);
 //                       Haihua Xu
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -1168,7 +1170,7 @@ template<class Real> static void UnitTestEig() {
     Pinv.Invert();
     Matrix<Real> D(dimM, dimM);
     CreateEigenvalueMatrix(real_eigs, imag_eigs, &D);
-
+    
     // check that M = P D P^{-1}.
     Matrix<Real> tmp(dimM, dimM);
     tmp.AddMatMat(1.0, P, kNoTrans, D, kNoTrans, 0.0);  // tmp = P * D
@@ -2553,17 +2555,31 @@ template<class Real> static void UnitTestSolve() {
 
     Vector<Real> x(dimM);
     InitRand(&x);
+    Vector<Real> tmp(dimM);
+    tmp.SetRandn();
     Vector<Real> g(dimM);
-    InitRand(&g);
-    Vector<Real> x2(x);
-#if defined(_MSC_VER)
-    SolveQuadraticProblem(H, g, &x2, (Real)1.0E4, (Real)1.0E-40, "unknown", true);
-#else
-    SolveQuadraticProblem(H, g, &x2);
-#endif
-    KALDI_ASSERT(VecVec(x2, g) -0.5* VecSpVec(x2, H, x2) >=
-                 VecVec(x, g) -0.5* VecSpVec(x, H, x));
-    // Check objf not decreased.
+    g.AddSpVec(1.0, H, tmp, 0.0); // Limit to subspace that H is in.
+    Vector<Real> x2(x), x3(x);
+    SolverOptions opts2, opts3;
+    opts2.diagonal_precondition = rand() % 2;
+    opts2.optimize_delta = rand() % 2;
+    opts3.diagonal_precondition = rand() % 2;
+    opts3.optimize_delta = rand() % 2;
+    
+    double ans2 =  SolveQuadraticProblem(H, g, opts2, &x2),
+        ans3 = SolveQuadraticProblem(H, g, opts3, &x3);
+
+    double observed_impr2 = (VecVec(x2, g) -0.5* VecSpVec(x2, H, x2)) -
+        (VecVec(x, g) -0.5* VecSpVec(x, H, x)),
+        observed_impr3 =  (VecVec(x3, g) -0.5* VecSpVec(x3, H, x3)) -
+        (VecVec(x, g) -0.5* VecSpVec(x, H, x));
+    AssertEqual(observed_impr2, ans2);
+    AssertEqual(observed_impr3, ans3);
+    KALDI_ASSERT(ans2 >= 0);
+    KALDI_ASSERT(ans3 >= 0);
+    KALDI_ASSERT(abs(ans2 - ans3) / std::max(ans2, ans3) < 0.01);
+    //AssertEqual(x2, x3);
+    //AssertEqual(ans1, ans2);
   }
 
 
@@ -2590,13 +2606,11 @@ template<class Real> static void UnitTestSolve() {
     SpMatrix<Real> Qinv(Q);
     if (Q.Cond() < 1000.0) Qinv.Invert();
 
-#if defined(_MSC_VER) // compiler bug workaround.
-    SolveQuadraticMatrixProblem(Q, Y, SigmaInv, &M2, (Real)1.0E4, (Real)1.0E-40,
-                                "unknown", true);
-#else
-    SolveQuadraticMatrixProblem(Q, Y, SigmaInv, &M2);
-#endif
-
+    SolverOptions opts;
+    opts.optimize_delta = rand() % 2;
+    opts.diagonal_precondition = rand() % 2;
+    double ans = SolveQuadraticMatrixProblem(Q, Y, SigmaInv, opts, &M2);
+    
     Matrix<Real> M3(M);
     M3.AddMatSp(1.0, Y, kNoTrans, Qinv, 0.0);
     if (Q.Cond() < 1000.0) {
@@ -2612,6 +2626,7 @@ template<class Real> static void UnitTestSolve() {
           a3 = a1 - 0.5 * a2,
           b3 = b1 - 0.5 * b2;
       KALDI_ASSERT(a3 >= b3);
+      AssertEqual(a3 - b3, ans);
       // KALDI_LOG << "a3 = " << a3 << ", b3 = " << b3 << ", c3 = " << c3;
     }  // Check objf not decreased.
   }
@@ -2634,12 +2649,9 @@ template<class Real> static void UnitTestSolve() {
 
     Matrix<Real> M2(M);
 
-#if defined(_MSC_VER) // compiler bug workaround.
-    SolveDoubleQuadraticMatrixProblem(G, P1, P2, Q1, Q2, &M2, (Real)1.0E4,
-                                      (Real)1.0E-40, "unknown");
-#else
-    SolveDoubleQuadraticMatrixProblem(G, P1, P2, Q1, Q2, &M2);
-#endif
+    SolverOptions opts;
+    opts.optimize_delta = rand() % 2;    
+    SolveDoubleQuadraticMatrixProblem(G, P1, P2, Q1, Q2, opts, &M2);
 
     {
       Real a1 = TraceMatMat(M2, G, kTrans),
@@ -2959,7 +2971,6 @@ template<class Real> static void UnitTestTranspose() {
 }
 
 template<class Real> static void UnitTestAddVecToRows() {
-
   Matrix<Real> M(rand() % 5 + 1, rand() % 10 + 1);
   InitRand(&M);
   Vector<float> v(M.NumCols());
@@ -2971,6 +2982,27 @@ template<class Real> static void UnitTestAddVecToRows() {
   N.AddVecVec(0.5, ones, v);
   AssertEqual(M, N);
 }
+
+
+template<class Real> static void UnitTestAddVec2Sp() {
+  for (int32 i = 0; i < 10; i++) {
+    int32 dim = rand() % 5;
+    SpMatrix<Real> S(dim);
+    S.SetRandn();
+    Vector<Real> v(dim);
+    v.SetRandn();
+    Matrix<Real> M(dim, dim);
+    M.CopyDiagFromVec(v);
+    
+    SpMatrix<Real> T1(dim);
+    T1.SetRandn();
+    SpMatrix<Real> T2(T1);
+    Real alpha = 0.33, beta = 4.5;
+    T1.AddVec2Sp(alpha, v, S, beta);
+    T2.AddMat2Sp(alpha, M, kNoTrans, S, beta);
+    AssertEqual(T1, T2);
+  }
+}    
 
 template<class Real> static void UnitTestAddVecToCols() {
   Matrix<Real> M(rand() % 5 + 1, rand() % 10 + 1);
@@ -3557,6 +3589,22 @@ template<class Real> static void UnitTestCompressedMatrix() {
     Matrix<Real> diff(M2);
     diff.AddMat(-1.0, M);
 
+    { // Check that when compressing a matrix that has already been compressed,
+      // and uncompressing, we get the same answer.
+      CompressedMatrix cmat2(M2);
+      Matrix<Real> M3(cmat.NumRows(), cmat.NumCols());
+      cmat2.CopyToMat(&M3);
+      if (!M2.ApproxEqual(M3, 1.0e-05)) {
+        KALDI_LOG << "cmat is: ";
+        cmat.Write(std::cout, false);
+        KALDI_LOG << "cmat2 is: ";
+        cmat2.Write(std::cout, false);
+        KALDI_ERR << "Matrices differ " << M2 << " vs. " << M3 << ", M2 range is "
+                  << M2.Min() << " to " << M2.Max() << ", M3 range is " 
+                  << M3.Min() << " to " << M3.Max();
+      }
+    }
+    
     // test CopyRowToVec
     for (MatrixIndexT i = 0; i < num_rows; i++) {
       Vector<Real> V(num_cols);
@@ -3610,6 +3658,36 @@ template<class Real> static void UnitTestCompressedMatrix() {
         InitKaldiInputStream(ins, &binary_in);
         cmat2.Read(ins, binary_in);
       }
+#if 1
+      { // check that compressed-matrix can be read as matrix.
+        bool binary_in;
+        std::ifstream ins("tmpf", std::ios_base::in | std::ios_base::binary);
+        InitKaldiInputStream(ins, &binary_in);
+        Matrix<Real> mat1;
+        mat1.Read(ins, binary_in);
+        Matrix<Real> mat2(cmat2);
+        AssertEqual(mat1, mat2);
+      }
+#endif
+
+
+      { // check that matrix can be read as compressed-matrix.
+        Matrix<Real> mat1(cmat);
+        {
+          std::ofstream outs("tmpf", std::ios_base::out |std::ios_base::binary);
+          InitKaldiOutputStream(outs, binary);
+          mat1.Write(outs, binary);
+        }
+        bool binary_in;
+        std::ifstream ins("tmpf", std::ios_base::in | std::ios_base::binary);
+        InitKaldiInputStream(ins, &binary_in);
+        CompressedMatrix cmat2;
+        cmat2.Read(ins, binary_in);
+        Matrix<Real> mat2(cmat2);
+        AssertEqual(mat1, mat2);
+      }
+      
+      
       Matrix<Real> M3(cmat2.NumRows(), cmat2.NumCols());
       cmat2.CopyToMat(&M3);
       AssertEqual(M2, M3); // tests I/O of CompressedMatrix.
@@ -3646,6 +3724,27 @@ static void UnitTestTridiag() {
   A(0, 2) = 0.0;
   A(0, 1) = 1.0;
   KALDI_ASSERT(A.IsTridiagonal());
+}
+
+template<class Real>
+static void UnitTestRandCategorical() {
+  int32 N = 1 + rand()  % 10;
+  Vector<Real> vec(N);
+  for (int32 n = 0; n < N; n++)
+    vec(n) = rand() % 3;
+  if (vec.Sum() == 0)
+    vec(0) = 2.0;
+  Real sum = vec.Sum();
+  int32 num_samples = 100000;
+  std::vector<int32> counts(N, 0);
+  for (int32 i = 0; i < num_samples; i++)
+    counts[vec.RandCategorical()]++;
+  for (int32 n = 0; n < N; n++) {
+    Real a = counts[n] / (1.0 * num_samples),
+        b = vec(n) / sum;
+    KALDI_LOG << "a = " << a << ", b = " << b;
+    KALDI_ASSERT(fabs(a - b) <= 0.1); // pretty arbitrary.  Will increase #samp if fails.
+  }
 }
 
 template<class Real>
@@ -3798,6 +3897,7 @@ template<class Real> static void MatrixUnitTest(bool full_test) {
   KALDI_LOG << " Point J";
   UnitTestTraceSpSpLower<Real>();
   UnitTestTranspose<Real>();
+  UnitTestAddVec2Sp<Real>();
   UnitTestAddVecToRows<Real>();
   UnitTestAddVecToCols<Real>();
   UnitTestAddVecCross();
@@ -3806,6 +3906,7 @@ template<class Real> static void MatrixUnitTest(bool full_test) {
   UnitTestAddDiagMat2<Real>();
   UnitTestOrthogonalizeRows<Real>();
   UnitTestTopEigs<Real>();
+  UnitTestRandCategorical<Real>();
   UnitTestTridiag<Real>();
   //  SlowMatMul<Real>();
   UnitTestMaxAbsEig<Real>();

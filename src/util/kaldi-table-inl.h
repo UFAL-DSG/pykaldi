@@ -2,6 +2,8 @@
 
 // Copyright 2009-2011     Microsoft Corporation
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -679,7 +681,7 @@ class TableWriterArchiveImpl: public TableWriterImplBase<Holder> {
       KALDI_ERR << "TableWriter: using invalid key " << key;
     output_.Stream() << key << ' ';
     if (!Holder::Write(output_.Stream(), opts_.binary, value)) {
-      KALDI_WARN << "TableWriter: write failure to"
+      KALDI_WARN << "TableWriter: write failure to "
                  << PrintableWxfilename(archive_wxfilename_);
       state_ = kWriteError;
       return false;

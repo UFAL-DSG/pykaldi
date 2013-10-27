@@ -3,6 +3,8 @@
 // Copyright 2012  Johns Hopkins University (author: Daniel Povey)
 
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -345,8 +347,8 @@ void OptimizeLbfgs<Real>::StepSizeIteration(Real function_value,
                     << "will restart computation.";
       iteration_action = kRestart;
     }
-    if (new_x_.ApproxEqual(temp_, 1.0e-04) &&
-        std::abs(f_ - function_value) < 1.0e-04 *
+    if (new_x_.ApproxEqual(temp_, 1.0e-08) &&
+        std::abs(f_ - function_value) < 1.0e-08 *
         std::abs(f_) && iteration_action == kDecreaseStep) {
       // This is common and due to roundoff.
       KALDI_VLOG(3) << "We appear to be backtracking while we are extremely "

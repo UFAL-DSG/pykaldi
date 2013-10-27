@@ -2,6 +2,8 @@
 //
 // Copyright 2009-2011  Gilles Boulianne.
 //
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -45,9 +47,7 @@ int main(int argc, char *argv[]) {
     }
     std::string arpa_filename = po.GetArg(1),
         fst_filename = po.GetOptArg(2);
-    if (arpa_filename == "-")
-      arpa_filename = "";
-
+    
     kaldi::LangModelFst lm;
     // read from standard input and write to standard output
     lm.Read(arpa_filename, kaldi::kArpaLm, NULL, natural_base);

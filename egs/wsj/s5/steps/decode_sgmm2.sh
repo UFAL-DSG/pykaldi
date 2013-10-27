@@ -21,7 +21,10 @@ first_pass_gselect=3 # Use a smaller number of Gaussian-selection indices in
             # the 1st pass of decoding (lattice generation).
 max_active=7000
 max_arcs=-1
-lat_beam=6.0 # Beam we use in lattice generation.
+
+#WARNING: This option is renamed lat_beam (it was renamed to follow the naming 
+#         in the other scripts
+lattice_beam=6.0 # Beam we use in lattice generation.
 vecs_beam=4.0 # Beam we use to prune lattices while getting posteriors for 
     # speaker-vector computation.  Can be quite tight (actually we could
     # probably just do best-path.
@@ -87,11 +90,17 @@ case $feat_type in
   *) echo "$0: invalid feature type $feat_type" && exit 1;
 esac
 if [ ! -z "$transform_dir" ]; then
-  echo "$0: using transforms from $transform_dir"
-  [ ! -f $transform_dir/trans.1 ] && echo "$0: no such file $transform_dir/trans.1" && exit 1;
   [ "$nj" -ne "`cat $transform_dir/num_jobs`" ] \
     && echo "$0: #jobs mismatch with transform-dir." && exit 1;
-  feats="$feats transform-feats --utt2spk=ark:$sdata/JOB/utt2spk ark,s,cs:$transform_dir/trans.JOB ark:- ark:- |"
+  if [ -f $transform_dir/trans.1 ]; then
+    echo "$0: using transforms from $transform_dir"
+    feats="$feats transform-feats --utt2spk=ark:$sdata/JOB/utt2spk ark,s,cs:$transform_dir/trans.JOB ark:- ark:- |"
+  elif [ -f $transform_dir/raw_trans.1 ]; then
+    feats="ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- | transform-feats --utt2spk=ark:$sdata/JOB/utt2spk ark,s,cs:$transform_dir/raw_trans.JOB ark:- ark:- | splice-feats $splice_opts ark:- ark:- | transform-feats $srcdir/final.mat ark:- ark:- |"    
+  else
+    echo "$0: no such file $transform_dir/trans.1 or $transform_dir/raw_trans.1, invalid --transform-dir option?"
+    exit 1;
+  fi
 elif grep 'transform-feats --utt2spk' $srcdir/log/acc.0.1.log 2>/dev/null; then
   echo "$0: **WARNING**: you seem to be using an SGMM system trained with transforms,"
   echo "  but you are not providing the --transform-dir option in test time."
@@ -112,7 +121,7 @@ fi
 # model and no speaker-vectors.
 if [ $stage -le 2 ]; then
   $cmd $parallel_opts JOB=1:$nj $dir/log/decode_pass1.JOB.log \
-    sgmm2-latgen-faster$thread_string --max-active=$max_active --beam=$beam --lattice-beam=$lat_beam \
+    sgmm2-latgen-faster$thread_string --max-active=$max_active --beam=$beam --lattice-beam=$lattice_beam \
     --max-arcs=$max_arcs --acoustic-scale=$acwt --determinize-lattice=false --allow-partial=true \
     --word-symbol-table=$graphdir/words.txt "$gselect_opt_1stpass" $srcdir/final.alimdl \
     $graphdir/HCLG.fst "$feats" "ark:|gzip -c > $dir/pre_lat.JOB.gz" || exit 1;
@@ -182,7 +191,7 @@ if [ $stage -le 6 ]; then
   $cmd $parallel_opts JOB=1:$nj $dir/log/rescore.JOB.log \
     sgmm2-rescore-lattice "$gselect_opt" --utt2spk=ark:$sdata/JOB/utt2spk --spk-vecs=ark:$dir/vecs.JOB \
     $srcdir/final.mdl "ark:gunzip -c $dir/pre_lat.JOB.gz|" "$feats" ark:- \| \
-    lattice-determinize-pruned$thread_string --acoustic-scale=$acwt --beam=$lat_beam ark:- \
+    lattice-determinize-pruned$thread_string --acoustic-scale=$acwt --beam=$lattice_beam ark:- \
     "ark:|gzip -c > $dir/lat.JOB.gz" || exit 1;
 fi
 rm $dir/pre_lat.*.gz

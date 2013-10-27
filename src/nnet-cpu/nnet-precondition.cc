@@ -2,6 +2,8 @@
 
 // Copyright 2012   Johns Hopkins University (author: Daniel Povey)
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -67,7 +69,10 @@ void PreconditionDirections(const MatrixBase<BaseFloat> &R,
     SubVector<BaseFloat> r(R, n), q(Q, n);
     BaseFloat gamma = VecVec(r, q), // gamma_n = r_n^T q_n.
                beta = 1 + gamma / (N - 1 - gamma);
-    KALDI_ASSERT(gamma >= 0.0 && beta > 0.0);
+    if (!(gamma >= 0.0 && beta > 0.0)) {
+      KALDI_ERR << "Bad values encountered in preconditioning: gamma = " << gamma
+                << ", beta = " << beta;
+    }
     // Q and P share the same memory.  The result of the
     // scaling below will be output as P.
     q.Scale(beta);

@@ -5,7 +5,7 @@
 # This is supposed to be the "new" version of the switchboard recipe,
 # after the s5/ one became a bit messy.  It is not 100% checked-through yet.
 
-exit 1;
+#exit 1;
 # This is a shell script, but it's recommended that you run the commands one by
 # one by copying and pasting into the shell.
 # Caution: some of the graph creation steps use quite a bit of memory, so you
@@ -32,6 +32,8 @@ fisher_opt="--fisher /export/corpora3/LDC/LDC2004T19/fe_03_p1_tran/"
 #fisher_opt="--fisher /data/corpora0/LDC2004T19/fe_03_p1_tran/"
 # edinburgh:
 # fisher_opt="--fisher /exports/work/inf_hcrc_cstr_general/corpora/fisher/transcripts"
+# brno:
+# fisher_opt="--fisher /mnt/matylda2/data/FISHER/fe_03_p1_tran" # BUT
 local/swbd1_train_lms.sh $fisher_opt \
   data/local/train/text data/local/dict/lexicon.txt data/local/lm
 # We don't really need all these options for SRILM, since the LM training script
@@ -48,7 +50,7 @@ utils/format_lm_sri.sh --srilm-opts "$srilm_opts" \
 # For some funny reason we are still using IRSTLM for doing LM pruning :)
 export PATH=$PATH:../../../tools/irstlm/bin/
 prune-lm --threshold=1e-7 data/local/lm/sw1_fsh.o3g.kn.gz /dev/stdout \
-  | gzip -c > data/local/lm/sw1_fsh.o3g.pr1-7.kn.gz
+  | gzip -c > data/local/lm/sw1_fsh.o3g.pr1-7.kn.gz || exit 1
 LM=data/local/lm/sw1_fsh.o3g.pr1-7.kn.gz
 utils/format_lm_sri.sh --srilm-opts "$srilm_opts" \
   data/lang $LM data/local/dict/lexicon.txt data/lang_sw1_fsh_tgpr
@@ -176,6 +178,7 @@ done
 steps/align_fmllr.sh --nj 30 --cmd "$train_cmd" \
   data/train_100k_nodup data/lang exp/tri3b exp/tri3b_ali_100k_nodup || exit 1;
 
+
 steps/train_sat.sh  --cmd "$train_cmd" \
   5500 90000 data/train_100k_nodup data/lang exp/tri3b_ali_100k_nodup \
    exp/tri4a || exit 1;
@@ -190,14 +193,18 @@ for lm_suffix in tg fsh_tgpr; do
   ) &
 done
 
+
+#local/run_resegment.sh
+
 # Now train a LDA+MLLT+SAT model on the entire training data (train_nodup; 
 # 286 hours)
 # Train tri4b, which is LDA+MLLT+SAT, on train_nodup data.
 steps/align_fmllr.sh --nj 30 --cmd "$train_cmd" \
-  data/train_nodup data/lang exp/tri3b exp/tri3b_ali_all || exit 1;
+  data/train_nodup data/lang exp/tri3b exp/tri3b_ali_nodup || exit 1;
+
 
 steps/train_sat.sh  --cmd "$train_cmd" \
-  11500 200000 data/train_nodup data/lang exp/tri3b_ali_all exp/tri4b || exit 1;
+  11500 200000 data/train_nodup data/lang exp/tri3b_ali_nodup exp/tri4b || exit 1;
 
 for lm_suffix in tg fsh_tgpr; do
   (
@@ -210,7 +217,9 @@ for lm_suffix in tg fsh_tgpr; do
        $graph_dir data/train_dev exp/tri4b/decode_train_dev_sw1_${lm_suffix}
   ) &
 done
-
+wait
+steps/lmrescore.sh --mode 3 --cmd "$mkgraph_cmd" data/lang_sw1_fsh_tgpr data/lang_sw1_fsh_tg data/eval2000 \
+  exp/tri4b/decode_eval2000_sw1_fsh_tgpr exp/tri4b/decode_eval2000_sw1_fsh_tg.3 || exit 1
 
 
 # MMI training starting from the LDA+MLLT+SAT systems on both the 
@@ -219,7 +228,7 @@ steps/align_fmllr.sh --nj 50 --cmd "$train_cmd" \
   data/train_100k_nodup data/lang exp/tri4a exp/tri4a_ali_100k_nodup || exit 1
 
 steps/align_fmllr.sh --nj 100 --cmd "$train_cmd" \
-  data/train_nodup data/lang exp/tri4b exp/tri4b_ali_all || exit 1
+  data/train_nodup data/lang exp/tri4b exp/tri4b_ali_nodup || exit 1
 
 steps/make_denlats.sh --nj 50 --cmd "$decode_cmd" --config conf/decode.config \
   --transform-dir exp/tri4a_ali_100k_nodup \
@@ -227,8 +236,8 @@ steps/make_denlats.sh --nj 50 --cmd "$decode_cmd" --config conf/decode.config \
   || exit 1;
 
 steps/make_denlats.sh --nj 100 --cmd "$decode_cmd" --config conf/decode.config \
-  --transform-dir exp/tri4b_ali_all \
-  data/train_nodup data/lang exp/tri4b exp/tri4b_denlats_all || exit 1;
+  --transform-dir exp/tri4b_ali_nodup \
+  data/train_nodup data/lang exp/tri4b exp/tri4b_denlats_nodup || exit 1;
 
 # 4 iterations of MMI seems to work well overall. The number of iterations is
 # used as an explicit argument even though train_mmi.sh will use 4 iterations by
@@ -239,7 +248,7 @@ steps/train_mmi.sh --cmd "$decode_cmd" --boost 0.1 --num-iters $num_mmi_iters \
   exp/tri4a_mmi_b0.1 || exit 1;
 
 steps/train_mmi.sh --cmd "$decode_cmd" --boost 0.1 --num-iters $num_mmi_iters \
-  data/train_nodup data/lang exp/tri4b_{ali,denlats}_all \
+  data/train_nodup data/lang exp/tri4b_{ali,denlats}_nodup \
   exp/tri4b_mmi_b0.1 || exit 1;
 
 for iter in 1 2 3 4; do
@@ -274,15 +283,15 @@ steps/train_diag_ubm.sh --silence-weight 0.5 --nj 50 --cmd "$train_cmd" \
   700 data/train_100k_nodup data/lang exp/tri4a_ali_100k_nodup exp/tri4a_dubm
 
 steps/train_diag_ubm.sh --silence-weight 0.5 --nj 100 --cmd "$train_cmd" \
-  700 data/train_nodup data/lang exp/tri4b_ali_all exp/tri4b_dubm
+  700 data/train_nodup data/lang exp/tri4b_ali_nodup exp/tri4b_dubm
 
 steps/train_mmi_fmmi.sh --learning-rate 0.005 --boost 0.1 --cmd "$train_cmd" \
   data/train_100k_nodup data/lang exp/tri4a_ali_100k_nodup exp/tri4a_dubm \
   exp/tri4a_denlats_100k_nodup exp/tri4a_fmmi_b0.1 || exit 1;
 
 steps/train_mmi_fmmi.sh --learning-rate 0.005 --boost 0.1 --cmd "$train_cmd" \
-  data/train_nodup data/lang exp/tri4b_ali_all exp/tri4b_dubm \
-  exp/tri4b_denlats_all exp/tri4b_fmmi_b0.1 || exit 1;
+  data/train_nodup data/lang exp/tri4b_ali_nodup exp/tri4b_dubm \
+  exp/tri4b_denlats_nodup exp/tri4b_fmmi_b0.1 || exit 1;
 
 for iter in 4 5 6 7 8; do
   for lm_suffix in tg fsh_tgpr; do

@@ -5,6 +5,8 @@
 //   Modifications to the original contribution by Cisco Systems made by:
 //   Vassil Panayotov
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -90,7 +92,7 @@ class OnlineFasterDecoder : public FasterDecoder {
         state_(kEndFeats), frame_(0), utt_frames_(0) {}
 
   DecodeState Decode(DecodableInterface *decodable);
-
+  
   // Makes a linear graph, by tracing back from the last "immortal" token
   // to the previous one
   bool PartialTraceback(fst::MutableFst<LatticeArc> *out_fst);

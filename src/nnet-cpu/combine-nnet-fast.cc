@@ -2,6 +2,8 @@
 
 // Copyright 2012   Johns Hopkins University (author: Daniel Povey)
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -135,7 +137,7 @@ class FastNnetCombiner {
     
     ComputeCurrentNnet(nnet_out_, true); // create the output neural net,
     // and prints out the scaling factors.
-    KALDI_LOG << "Combining nnets, validation objf per frame changed from "
+    KALDI_LOG << "Combining nnets, objf per frame changed from "
               << initial_objf << " to " << objf;
   }    
   

@@ -2,6 +2,8 @@
 
 // Copyright 2012  Johns Hopkins University (author: Daniel Povey)
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -49,7 +51,9 @@ struct NnetLimitRankOpts {
 /// "parameter_proportion" to set the proportion of parameters to remove.
 void LimitRankParallel(const NnetLimitRankOpts &opts,
                        Nnet *nnet);
-                            
+
+
+/// Also see the function LimitRankOfLastLayer in class Nnet.                            
 
 
 } // namespace nnet2

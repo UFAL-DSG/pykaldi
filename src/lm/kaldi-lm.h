@@ -1,6 +1,8 @@
 // lm/kaldi-lm.h
 // Copyright 2009-2011 Gilles Boulianne.
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -36,7 +38,9 @@
 #include "fst/fstlib.h"
 #include "fst/fst-decl.h"
 #include "base/kaldi-common.h"
+#include "util/common-utils.h"
 #include "lm/kaldi-lmtable.h"
+
 
 namespace kaldi {
 
@@ -54,8 +58,11 @@ enum GrammarType {
 /// LangModelFst is a standard vector FST that also provides
 /// Read() and Write() functions for file-based language models
 /// or text files defining strings and grammars.
-class LangModelFst : public fst::VectorFst<fst::StdArc> {
+class LangModelFst: public fst::VectorFst<fst::StdArc> {
  public:
+  typedef fst::StdArc::Weight LmWeight;
+  typedef fst::StdArc::StateId StateId;
+  
 
   LangModelFst() {
     pfst_ = new fst::VectorFst<fst::StdArc>;
@@ -84,29 +91,24 @@ class LangModelFst : public fst::VectorFst<fst::StdArc> {
     return(pfst_ ? true : false);
   }
 
-  /// Reads from a named input file. Empty filename reads from standard input.
-  bool Read(const string &filename,
+  bool Read(const string &rxfilename,
             GrammarType gtype,
             fst::SymbolTable *pst = 0,
             bool useNaturalLog = true,
             const string startSent = "<s>",
             const string endSent = "</s>") {
     if (pfst_) { delete pfst_; pfst_ = NULL; }
-    if (filename != "") {
-      std::ifstream strm(filename.c_str(), std::ifstream::in);
-      if (!strm) {
-        KALDI_ERR << "LangModelFst: Can't open file: " << filename;
-      }
-      pfst_ = ReadStream(strm, filename,
-                         gtype, pst,
-                         useNaturalLog,
-                         startSent, endSent);
-    } else {
-      pfst_ = ReadStream(std::cin, "standard input",
-                         gtype, pst,
-                         useNaturalLog,
-                         startSent, endSent);
+    if (rxfilename == "") {
+      KALDI_ERR << "arpa2fst and similar programs no longer support empty filename "
+                << "for standard input; use '-'";
     }
+    Input ki(rxfilename);
+    
+    pfst_ = ReadStream(ki.Stream(),
+                       PrintableRxfilename(rxfilename),
+                       gtype, pst,
+                       useNaturalLog,
+                       startSent, endSent);
     return(pfst_ ? true : false);
   }
 
@@ -118,9 +120,14 @@ class LangModelFst : public fst::VectorFst<fst::StdArc> {
   fst::VectorFst<fst::StdArc>* GetFst() {return pfst_;}
 
   /// Writes language model FST to named output file, return false on error.
-  // TODO : make verify optional rather than mandatory
-  bool Write(const string &filename) {
-    return (/*fst::Verify(*pfst_) && */ pfst_->Write(filename));
+  bool Write(std::string wxfilename) {
+    if (wxfilename == "") wxfilename = "-"; // interpret "" as stdout,
+    // for compatibility with OpenFst conventions.
+    bool write_binary = true, write_header = false;
+    kaldi::Output ko(wxfilename, write_binary, write_header);
+    fst::FstWriteOptions wopts(kaldi::PrintableWxfilename(wxfilename));
+    return /* fst::Verify(*pfst_) && */
+        pfst_->Write(ko.Stream(), wopts);
   }
 
  private:

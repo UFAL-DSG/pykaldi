@@ -1,7 +1,9 @@
 // nnetbin/nnet-concat.cc
 
-// Copyright 2012  Karel Vesely
+// Copyright 2012-2013  Brno University of Technology (Author: Karel Vesely)
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -33,7 +35,7 @@ int main(int argc, char *argv[]) {
     
     ParseOptions po(usage);
     
-    bool binary_write = false;
+    bool binary_write = true;
     po.Register("binary", &binary_write, "Write output in binary mode");
 
     po.Read(argc, argv);
@@ -68,7 +70,7 @@ int main(int argc, char *argv[]) {
         nnet_next.Read(ki.Stream(), binary_read);
       }
       //append nnet_next to the network nnet
-      nnet.Concatenate(&nnet_next);
+      nnet.AppendNnet(nnet_next);
     }
 
     //finally write the nnet to disk

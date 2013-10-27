@@ -2,6 +2,8 @@
 
 // Copyright 2013 Johns Hopkins University (Author: Daniel Povey)
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -292,6 +294,13 @@ class LatticeLexiconWordAligner {
       partial_word_label_(partial_word_label == 0 ?
                           kTemporaryEpsilon : partial_word_label),
       error_(false) {
+    bool test = true;
+    uint64 props = lat_in_.Properties(fst::kIDeterministic|fst::kIEpsilons, test);
+    if (props != fst::kIDeterministic) {
+      KALDI_WARN << "[Lattice has input epsilons and/or is not input-deterministic "
+                 << "(in Mohri sense)]-- i.e. lattice is not deterministic.  "
+                 << "Word-alignment may be slow and-or blow up in memory.";
+    }
     fst::CreateSuperFinal(&lat_in_); // Creates a super-final state, so the
     // only final-probs are One().  Note: the member lat_in_ is not a reference.
     

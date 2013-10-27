@@ -2,6 +2,8 @@
 
 // Copyright 2009-2012  Karel Vesely
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -32,6 +34,12 @@
 
 namespace kaldi {
 
+
+template<typename Real>
+CuVector<Real>::CuVector(const CuVector<Real> &v) {
+  this->Resize(v.dim_);
+  this->CopyFromVec(v);
+}
 
 template<typename Real>
 CuVector<Real>::CuVector(const CuVectorBase<Real> &v) {

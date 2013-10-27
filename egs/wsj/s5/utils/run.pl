@@ -49,7 +49,7 @@ if (@ARGV > 0) {
       }
     }
   }
-  if ($ARGV[0] =~ m/^([\w_][\w\d_]*)+=(\d+):(\d+)$/) {
+  if ($ARGV[0] =~ m/^([\w_][\w\d_]*)+=(\d+):(\d+)$/) { # e.g. JOB=1:10
     $jobname = $1;
     $jobstart = $2;
     $jobend = $3;
@@ -116,6 +116,7 @@ for ($jobid = $jobstart; $jobid <= $jobend; $jobid++) {
     open(F, ">>$logfile") || die "Error opening log file $logfile (again)";
     $enddate = `date`;
     chop $enddate;
+    print F "# Accounting: time=" . ($endtime - $starttime) . " threads=1\n";
     print F "# Ended (code $ret) at " . $enddate . ", elapsed time " . ($endtime-$starttime) . " seconds\n";
     close(F);
     exit($ret == 0 ? 0 : 1);
@@ -133,9 +134,13 @@ for ($jobid = $jobstart; $jobid <= $jobend; $jobid++) {
 if ($ret != 0) {
   $njobs = $jobend - $jobstart + 1;
   if ($njobs == 1) { 
+    if (defined $jobname) {
+      $logfile =~ s/$jobname/$jobstart/; # only one numbered job, so replace name with
+                                         # that job.
+    }
     print STDERR "run.pl: job failed, log is in $logfile\n";
     if ($logfile =~ m/JOB/) {
-      print STDERR "queue.pl: probably you forgot to put JOB=1:\$nj in your script.\n";
+      print STDERR "queue.pl: probably you forgot to put JOB=1:\$nj in your script.";
     }
   }
   else {

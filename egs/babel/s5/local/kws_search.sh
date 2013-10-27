@@ -26,6 +26,7 @@ word_ins_penalty=0
 extraid=
 silence_word=  # specify this if you did to in kws_setup.sh, it's more accurate.
 ntrue_scale=1.0
+max_silence_frames=50
 # End configuration section.
 
 echo "$0 $@"  # Print the command line for logging
@@ -113,7 +114,7 @@ if [ $stage -le 0 ] ; then
         [ ! -z $silence_word ] && silence_opt="--silence-word $silence_word"
         steps/make_index.sh $silence_opt --cmd "$cmd" --acwt $acwt $model_flags\
           --skip-optimization $skip_optimization --max-states $max_states \
-          --word-ins-penalty $word_ins_penalty \
+          --word-ins-penalty $word_ins_penalty --max-silence-frames $max_silence_frames\
           $kwsdatadir $langdir $decodedir $indices  || exit 1
     done
     touch $kwsoutdir/.done.index
@@ -138,10 +139,10 @@ if [ $stage -le 2 ]; then
   $cmd LMWT=$min_lmwt:$max_lmwt $kwsoutdir/write_normalized.LMWT.log \
     set -e ';' set -o pipefail ';'\
     cat ${kwsoutdir}_LMWT/result.* \| \
-      utils/write_kwslist.pl --Ntrue-scale=$ntrue_scale --flen=0.01 --duration=$duration \
-        --segments=$datadir/segments --normalize=true --duptime $duptime --remove-dup=true\
+      utils/write_kwslist.pl  --Ntrue-scale=$ntrue_scale --flen=0.01 --duration=$duration \
+        --segments=$datadir/segments --normalize=true --duptime=$duptime --remove-dup=true\
         --map-utter=$kwsdatadir/utter_map --digits=3 \
-        - - \| local/filter_kwslist.pl $duptime '>' ${kwsoutdir}_LMWT/kwslist.xml || exit 1
+        - ${kwsoutdir}_LMWT/kwslist.xml || exit 1
 fi
 
 if [ $stage -le 3 ]; then
@@ -150,9 +151,9 @@ if [ $stage -le 3 ]; then
     set -e ';' set -o pipefail ';'\
     cat ${kwsoutdir}_LMWT/result.* \| \
         utils/write_kwslist.pl --Ntrue-scale=$ntrue_scale --flen=0.01 --duration=$duration \
-          --segments=$datadir/segments --normalize=false \
+          --segments=$datadir/segments --normalize=false --duptime=$duptime --remove-dup=true\
           --map-utter=$kwsdatadir/utter_map \
-          - - \| local/filter_kwslist.pl $duptime '>' ${kwsoutdir}_LMWT/kwslist.unnormalized.xml || exit 1;
+          - ${kwsoutdir}_LMWT/kwslist.unnormalized.xml || exit 1;
 fi
 
 if [ -z $extraid ] ; then

@@ -4,6 +4,8 @@
 //           2013 Brno University of Technology (Author: Karel Vesely)
 //           2013 Johns Hopkins University (Author: Daniel Povey)
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -95,7 +97,7 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
     
-    if (ClassifyRspecifier(po.GetArg(po.NumArgs()), NULL, NULL)
+    if (ClassifyRspecifier(po.GetArg(1), NULL, NULL)
         != kNoRspecifier) {
       // We're operating on tables, e.g. archives.
       

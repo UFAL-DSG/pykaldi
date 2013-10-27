@@ -3,8 +3,11 @@
 // Copyright 2009-2011  Microsoft Corporation;
 //                      Saarland University (Author: Arnab Ghoshal);
 //                      Georg Stemmer;  Jan Silovsky
-// Copyright 2012       Arnab Ghoshal
+//           2012       Arnab Ghoshal
+//           2013       Johns Hopkins University (author: Daniel Povey)
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -48,6 +51,9 @@ class DiagGmm {
     CopyFromDiagGmm(gmm);
   }
 
+  /// Copies from DiagGmmNormal; does not resize.
+  void CopyFromNormal(const DiagGmmNormal &diag_gmm_normal);
+  
   DiagGmm(int32 nMix, int32 dim): valid_gconsts_(false) { Resize(nMix, dim); }
 
   /// Constructor that allows us to merge GMMs with weights.  Weights must sum
@@ -82,6 +88,22 @@ class DiagGmm {
   void LogLikelihoodsPreselect(const VectorBase<BaseFloat> &data,
                                const std::vector<int32> &indices,
                                Vector<BaseFloat> *loglikes) const;
+
+  /// Get gaussian selection information for one frame.  Returns log-like for
+  /// this frame.  Output is the best "num_gselect" indices, sorted from best to
+  /// worst likelihood.  If "num_gselect" > NumGauss(), sets it to NumGauss().
+  BaseFloat GaussianSelection(const VectorBase<BaseFloat> &data,
+                              int32 num_gselect,
+                              std::vector<int32> *output) const;
+
+  /// Get gaussian selection information for one frame.  Returns log-like for
+  /// this frame.  Output is the best "num_gselect" indices that were
+  /// preselected, sorted from best to worst likelihood.  If "num_gselect" >
+  /// NumGauss(), sets it to NumGauss().
+  BaseFloat GaussianSelectionPreselect(const VectorBase<BaseFloat> &data,
+                                       const std::vector<int32> &preselect,
+                                       int32 num_gselect,
+                                       std::vector<int32> *output) const;    
 
   /// Computes the posterior probabilities of all Gaussian components given
   /// a data point. Returns the log-likehood of the data given the GMM.

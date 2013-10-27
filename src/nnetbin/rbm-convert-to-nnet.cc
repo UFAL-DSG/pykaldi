@@ -2,6 +2,8 @@
 
 // Copyright 2009-2011  Microsoft Corporation
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -33,7 +35,7 @@ int main(int argc, char *argv[]) {
         " rbm-convert-to-nnet --binary=false rbm.mdl nnet.mdl\n";
 
 
-    bool binary_write = false;
+    bool binary_write = true;
     
     ParseOptions po(usage);
     po.Register("binary", &binary_write, "Write output in binary mode");
@@ -55,9 +57,9 @@ int main(int argc, char *argv[]) {
       nnet.Read(ki.Stream(), binary_read);
     }
     
-    KALDI_ASSERT(nnet.LayerCount() == 1);
-    KALDI_ASSERT(nnet.Layer(0)->GetType() == Component::kRbm);
-    RbmBase& rbm = dynamic_cast<RbmBase&>(*nnet.Layer(0));
+    KALDI_ASSERT(nnet.NumComponents() == 1);
+    KALDI_ASSERT(nnet.GetComponent(0).GetType() == Component::kRbm);
+    RbmBase& rbm = dynamic_cast<RbmBase&>(nnet.GetComponent(0));
 
     {
       Output ko(model_out_filename, binary_write);

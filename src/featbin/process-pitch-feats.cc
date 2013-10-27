@@ -3,6 +3,8 @@
 // Copyright 2013   Bagher BabaAli
 //                  Johns Hopkins University (author: Daniel Povey)
 //
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -113,7 +115,7 @@ int main(int argc, char *argv[]) {
     // construct all the global objects
     ParseOptions po(usage);
 
-    int32 normalization_window_size = 151; //should be odd number
+    int32 normalization_window_size = 151; // should be odd number
     int32 average_window_size = 5;
     
     // Register the options

@@ -2,6 +2,8 @@
 
 // Copyright 2009-2012  Stefan Kombrink  Johns Hopkins University (Author: Daniel Povey)
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -31,7 +33,7 @@ int main(int argc, char *argv[]) {
     using fst::StdArc;
 
     const char *usage =
-        "Compute best path through latties and write out as FSTs\n"
+        "Compute best path through lattices and write out as FSTs\n"
         "Note: differs from lattice-nbest with --n=1 because we won't\n"
         "append -1 to the utterance-ids.  Differs from lattice-best-path\n"
         "because output is FST.\n"

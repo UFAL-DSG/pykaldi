@@ -4,6 +4,8 @@
 // Copyright 2009-2011 Microsoft Corporation
 //                2013 Johns Hopkins University
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -93,6 +95,9 @@ make[1]: *** No rule to make target `/usr/include/foo/bar', needed by `baz.o'.  
       .a (archive) files.
     - "make valgrind" will run the test programs under valgrind to check
       for memory leaks.
+    - "make cudavalgrind" will run the test program (in cudamatrix) to 
+      check for memory leaks for machine with GPU card which support NVIDIA 
+      CUDA and OS with CUDA installation.
 
  \section build_setup_output Where do the compiled binaries go?
 
@@ -139,6 +144,6 @@ preprocessor variables, setting compile options, linking with libraries, and so 
 \section build_setup_platforms Which platforms has Kaldi been compiled on?
 
 We have compiled Kaldi on Windows, Cygwin, various flavors of Linux (including
-Ubuntu and CentOS), and Darwin.
+Ubuntu, CentOS, Debian and SUSE), and Darwin.
 
 */

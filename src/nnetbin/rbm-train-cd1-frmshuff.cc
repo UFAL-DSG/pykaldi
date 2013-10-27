@@ -2,6 +2,8 @@
 
 // Copyright 2012  Brno University of Technology (Author: Karel Vesely)
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -66,6 +68,9 @@ int main(int argc, char *argv[]) {
 #if HAVE_CUDA==1
     int32 use_gpu_id=-2 ;
     po.Register("use-gpu-id", &use_gpu_id, "Manually select GPU by its ID (-2 automatic selection, -1 disable GPU, 0..N select GPU)");
+#else
+    int32 use_gpu_id=0;
+    po.Register("use-gpu-id", &use_gpu_id, "Unused, kaldi is compiled w/o CUDA");
 #endif
 
     po.Read(argc, argv);
@@ -98,9 +103,9 @@ int main(int argc, char *argv[]) {
 
     Nnet nnet;
     nnet.Read(model_filename);
-    KALDI_ASSERT(nnet.LayerCount()==1);
-    KALDI_ASSERT(nnet.Layer(0)->GetType() == Component::kRbm);
-    RbmBase &rbm = dynamic_cast<RbmBase&>(*nnet.Layer(0));
+    KALDI_ASSERT(nnet.NumComponents()==1);
+    KALDI_ASSERT(nnet.GetComponent(0).GetType() == Component::kRbm);
+    RbmBase &rbm = dynamic_cast<RbmBase&>(nnet.GetComponent(0));
 
     // Configure the RBM
     // first get make some options easy to access:

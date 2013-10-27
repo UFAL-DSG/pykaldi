@@ -2,6 +2,7 @@
 
 . cmd.sh
 
+
 # call the next line with the directory where the RM data is
 # (the argument below is just an example).  This should contain
 # subdirectories named as follows:
@@ -13,14 +14,17 @@ local/rm_data_prep.sh /export/corpora5/LDC/LDC93S3A/rm_comp || exit 1;
 
 utils/prepare_lang.sh data/local/dict '!SIL' data/local/lang data/lang || exit 1;
 
-local/rm_prepare_grammar.sh || exit 1;
+local/rm_prepare_grammar.sh || exit 1; # Traditional RM grammar (bigram word-pair)
+local/rm_prepare_grammar_ug.sh || exit 1; # Unigram grammar (gives worse results, but
+                                          # changes in WER will be more significant.)
 
 # mfccdir should be some place with a largish disk where you
 # want to store MFCC features.
 featdir=mfcc
 
+
 for x in test_mar87 test_oct87 test_feb89 test_oct89 test_feb91 test_sep92 train; do
-  steps/make_mfcc.sh --nj 8 --cmd "run.pl" data/$x exp/make_mfcc/$x $featdir  || exit 1;
+  steps/make_mfcc.sh --compress true --nj 8 --cmd "run.pl" data/$x exp/make_mfcc/$x $featdir  || exit 1;
   steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x $featdir  || exit 1;
   #steps/make_plp.sh data/$x exp/make_plp/$x $featdir 4
 done
@@ -34,6 +38,7 @@ steps/compute_cmvn_stats.sh data/test exp/make_mfcc/test $featdir
 
 utils/subset_data_dir.sh data/train 1000 data/train.1k  || exit 1;
 
+
 steps/train_mono.sh --nj 4 --cmd "$train_cmd" data/train.1k data/lang exp/mono  || exit 1;
 
 #show-transitions data/lang/phones.txt exp/tri2a/final.mdl  exp/tri2a/final.occs | perl -e 'while(<>) { if (m/ sil /) { $l = <>; $l =~ m/pdf = (\d+)/|| die "bad line $l";  $tot += $1; }} print "Total silence count $tot\n";'
@@ -41,6 +46,9 @@ steps/train_mono.sh --nj 4 --cmd "$train_cmd" data/train.1k data/lang exp/mono  
 
 
 utils/mkgraph.sh --mono data/lang exp/mono exp/mono/graph
+
+
+
 
 steps/decode.sh --config conf/decode.config --nj 20 --cmd "$decode_cmd" \
   exp/mono/graph data/test exp/mono/decode
@@ -79,6 +87,7 @@ steps/train_lda_mllt.sh --cmd "$train_cmd" \
   --splice-opts "--left-context=3 --right-context=3" \
  1800 9000 data/train data/lang exp/tri1_ali exp/tri2b || exit 1;
 utils/mkgraph.sh data/lang exp/tri2b exp/tri2b/graph
+
 steps/decode.sh --config conf/decode.config --nj 20 --cmd "$decode_cmd" \
    exp/tri2b/graph data/test exp/tri2b/decode
 
@@ -117,6 +126,11 @@ utils/mkgraph.sh data/lang exp/tri3b exp/tri3b/graph || exit 1;
 steps/decode_fmllr.sh --config conf/decode.config --nj 20 --cmd "$decode_cmd" \
   exp/tri3b/graph data/test exp/tri3b/decode || exit 1;
 
+(
+ utils/mkgraph.sh data/lang_ug exp/tri3b exp/tri3b/graph_ug || exit 1;
+ steps/decode_fmllr.sh --config conf/decode.config --nj 20 --cmd "$decode_cmd" \
+   exp/tri3b/graph_ug data/test exp/tri3b/decode_ug || exit 1;
+)
 
 
 # Align all data with LDA+MLLT+SAT system (tri3b)
@@ -174,10 +188,11 @@ done
 # Demo of "raw fMLLR"
 # local/run_raw_fmllr.sh
 
-# You don't have to run all 3 of the below, e.g. you can just run the run_sgmm2x.sh
-local/run_sgmm.sh
+# You don't have to run all 3 of the below, e.g. you can just run the run_sgmm2.sh
+#local/run_sgmm.sh
 local/run_sgmm2.sh
-local/run_sgmm2x.sh
+#local/run_sgmm2x.sh
 
-# you can do:
-# local/run_nnet_cpu.sh
+# The following script depends on local/run_raw_fmllr.sh having been run.
+#
+# local/run_nnet2.sh

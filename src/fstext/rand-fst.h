@@ -2,6 +2,8 @@
 
 // Copyright 2009-2011  Microsoft Corporation
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -121,7 +123,7 @@ template<class Arc> VectorFst<Arc>* RandPairFst(RandFstOptions opts = RandFstOpt
     all_states.push_back(this_state);
   }
   // Set final states.
-  for (size_t j = 0;j < (size_t)opts.n_final;j++) {
+  for (size_t j = 0; j < (size_t)opts.n_final;j++) {
     StateId id = all_states[rand() % opts.n_states];
     Weight weight (opts.weight_multiplier*(rand() % 5), opts.weight_multiplier*(rand() % 5));
     fst->SetFinal(id, weight);

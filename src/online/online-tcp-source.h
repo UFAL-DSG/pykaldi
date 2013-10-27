@@ -2,6 +2,8 @@
 
 // Copyright 2013 Polish-Japanese Institute of Information Technology (author: Danijel Korzinek)
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,8 +17,8 @@
 // See the Apache 2 License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef KALDI_ONLINE_TCP_SOURCE_H_
-#define KALDI_ONLINE_TCP_SOURCE_H_
+#ifndef KALDI_ONLINE_ONLINE_TCP_SOURCE_H_
+#define KALDI_ONLINE_ONLINE_TCP_SOURCE_H_
 
 #include "online-audio-source.h"
 #include "matrix/kaldi-vector.h"
@@ -67,4 +69,4 @@ class OnlineTcpVectorSource : public OnlineAudioSourceItf {
 
 }  // namespace kaldi
 
-#endif // KALDI_ONLINE_TCP_SOURCE_H_
+#endif // KALDI_ONLINE_ONLINE_TCP_SOURCE_H_

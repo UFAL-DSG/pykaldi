@@ -3,6 +3,8 @@
 // Copyright 2009-2012  Karel Vesely
 //                      Johns Hopkins University (author: Daniel Povey)
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -92,6 +94,7 @@ class CuVector: public CuVectorBase<Real> {
  public:
   CuVector() { }
   CuVector(MatrixIndexT dim, MatrixResizeType t = kSetZero) { Resize(dim, t); }
+  CuVector(const CuVector<Real> &v);
   CuVector(const CuVectorBase<Real> &v);
   CuVector(const VectorBase<Real> &v);  
 

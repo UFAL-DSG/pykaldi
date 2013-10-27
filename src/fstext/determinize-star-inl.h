@@ -2,6 +2,8 @@
 
 // Copyright 2009-2011  Microsoft Corporation;  Jan Silovsky
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -86,7 +88,7 @@ template<class Label, class StringId> class StringRepository {
     else if (id>=single_symbol_start) {
       v->resize(1); (*v)[0] = id - single_symbol_start;
     } else {
-      assert(id>=string_start && id < static_cast<StringId>(vec_.size()));
+      assert(id >= string_start && id < static_cast<StringId>(vec_.size()));
       *v = *(vec_[id]);
     }
   }

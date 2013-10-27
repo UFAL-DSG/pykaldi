@@ -2,6 +2,8 @@
 
 // Copyright 2009-2011     Microsoft Corporation
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -40,6 +42,8 @@ typedef TableWriter<KaldiObjectHolder<Matrix<double> > >  DoubleMatrixWriter;
 typedef SequentialTableReader<KaldiObjectHolder<Matrix<double> > >  SequentialDoubleMatrixReader;
 typedef RandomAccessTableReader<KaldiObjectHolder<Matrix<double> > >  RandomAccessDoubleMatrixReader;
 typedef RandomAccessTableReaderMapped<KaldiObjectHolder<Matrix<double> > >  RandomAccessDoubleMatrixReaderMapped;
+
+typedef TableWriter<KaldiObjectHolder<CompressedMatrix> >  CompressedMatrixWriter;
 
 typedef TableWriter<KaldiObjectHolder<Vector<BaseFloat> > >  BaseFloatVectorWriter;
 typedef SequentialTableReader<KaldiObjectHolder<Vector<BaseFloat> > >  SequentialBaseFloatVectorReader;

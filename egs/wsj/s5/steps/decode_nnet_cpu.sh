@@ -15,7 +15,10 @@ acwt=0.1  # Just a default value, used for adaptation and beam-pruning..
 cmd=run.pl
 beam=15.0
 max_active=7000
-lat_beam=8.0 # Beam we use in lattice generation.
+
+#WARNING: This option is renamed from lat_beam (it was renamed to follow the naming 
+#         in the other scripts
+lattice_beam=8.0 # Beam we use in lattice generation.
 iter=final
 num_threads=1 # if >1, will use gmm-latgen-faster-parallel
 parallel_opts=  # If you supply num-threads, you should supply this too.
@@ -82,10 +85,17 @@ case $feat_type in
 esac
 if [ ! -z "$transform_dir" ]; then
   echo "$0: using transforms from $transform_dir"
-  [ ! -f $transform_dir/trans.1 ] && echo "$0: no such file $transform_dir/trans.1" && exit 1;
-  [ "$nj" -ne "`cat $transform_dir/num_jobs`" ] \
-    && echo "$0: #jobs mismatch with transform-dir." && exit 1;
-  feats="$feats transform-feats --utt2spk=ark:$sdata/JOB/utt2spk ark,s,cs:$transform_dir/trans.JOB ark:- ark:- |"
+  if [ "$feat_type" == "raw" ]; then
+    [ ! -f $transform_dir/raw_trans.1 ] && echo "$0: no such file $transform_dir/raw_trans.1" && exit 1;
+    [ "$nj" -ne "`cat $transform_dir/num_jobs`" ] \
+      && echo "$0: #jobs mismatch with transform-dir." && exit 1;
+    feats="$feats transform-feats --utt2spk=ark:$sdata/JOB/utt2spk ark,s,cs:$transform_dir/raw_trans.JOB ark:- ark:- |"
+  else
+    [ ! -f $transform_dir/trans.1 ] && echo "$0: no such file $transform_dir/trans.1" && exit 1;
+    [ "$nj" -ne "`cat $transform_dir/num_jobs`" ] \
+      && echo "$0: #jobs mismatch with transform-dir." && exit 1;
+    feats="$feats transform-feats --utt2spk=ark:$sdata/JOB/utt2spk ark,s,cs:$transform_dir/trans.JOB ark:- ark:- |"
+  fi
 elif grep 'transform-feats --utt2spk' $srcdir/log/train.1.log >&/dev/null; then
   echo "$0: **WARNING**: you seem to be using a neural net system trained with transforms,"
   echo "  but you are not providing the --transform-dir option in test time."
@@ -95,7 +105,7 @@ fi
 
 if [ $stage -le 1 ]; then
   $cmd $parallel_opts JOB=1:$nj $dir/log/decode.JOB.log \
-    nnet-latgen-faster$thread_string --max-active=$max_active --beam=$beam --lattice-beam=$lat_beam \
+    nnet-latgen-faster$thread_string --max-active=$max_active --beam=$beam --lattice-beam=$lattice_beam \
     --acoustic-scale=$acwt --allow-partial=true --word-symbol-table=$graphdir/words.txt "$model" \
     $graphdir/HCLG.fst "$feats" "ark:|gzip -c > $dir/lat.JOB.gz" || exit 1;
 fi

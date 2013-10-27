@@ -2,6 +2,8 @@
 
 // Copyright 2013        Johns Hopkins University (Author: Daniel Povey)
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -39,7 +41,16 @@ namespace kaldi {
 /// It returns true on success, false if it failed due to TopSort failing,
 /// which should never happen, but we handle it gracefully by just leaving the
 /// lattice the same.
-bool PushCompactLattice(CompactLattice *clat);
+/// This function used to be called just PushCompactLattice.
+bool PushCompactLatticeStrings(CompactLattice *clat);
+
+/// This function pushes the weights in the CompactLattice so that all states
+/// except possibly the start state, have Weight components (of type
+/// LatticeWeight) that "sum to one" in the LatticeWeight (i.e. interpreting the
+/// weights as negated log-probs).  It returns true on success, false if it
+/// failed due to TopSort failing, which should never happen, but we handle it
+/// gracefully by just leaving the lattice the same.
+bool PushCompactLatticeWeights(CompactLattice *clat);
 
 }  // namespace kaldi
 

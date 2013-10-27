@@ -3,6 +3,8 @@
 // Copyright 2009-2011  Microsoft Corporation;  Saarland University;
 //                      Jan Silovsky;   Yanmin Qian
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -144,7 +146,6 @@ void WriteBasicType<bool>(std::ostream &os, bool binary, bool b);
 template <>
 void ReadBasicType<bool>(std::istream &is, bool binary, bool *b);
 
-
 // Declare specializations for float and double.
 template<>
 void WriteBasicType<float>(std::ostream &os, bool binary, float f);
@@ -157,6 +158,21 @@ void ReadBasicType<float>(std::istream &is, bool binary, float *f);
 
 template<>
 void ReadBasicType<double>(std::istream &is, bool binary, double *f);
+
+// Define ReadBasicType that accepts an "add" parameter to add to
+// the destination.  Caution: if used in Read functions, be careful
+// to initialize the parameters concerned to zero in the default
+// constructor.
+template<class T>
+inline void ReadBasicType(std::istream &is, bool binary, T *t, bool add) {
+  if (!add) {
+    ReadBasicType(is, binary, t);
+  } else {
+    T tmp = T(0);
+    ReadBasicType(is, binary, &tmp);
+    *t += tmp;
+  }
+}
 
 /// Function for writing STL vectors of integer types.
 template<class T> inline void WriteIntegerVector(std::ostream &os, bool binary,

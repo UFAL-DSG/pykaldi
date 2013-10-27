@@ -3,6 +3,8 @@
 // Copyright 2012    Johns Hopkins University (author: Daniel Povey)
 //                   Frantisek Skala
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -42,10 +44,11 @@ void CompressedMatrix::CopyFromMat(
   // we need to ensure that the percentile_0 through percentile_100
   // are in strictly increasing order.
   float min_value = mat.Min(), max_value = mat.Max();
-  float safety_margin = 0.001 * (fabs(min_value) + fabs(max_value));
-  if (safety_margin == 0.0) safety_margin = 1.0;
-  min_value -= safety_margin;
-  max_value += safety_margin;
+  if (max_value == min_value)
+    max_value = min_value + (1.0 + fabs(min_value)); // ensure it's strictly
+                                                     // greater than min_value,
+                                                     // even if matrix is
+                                                     // constant.
 
   global_header.min_value = min_value;
   global_header.range = max_value - min_value;
@@ -123,17 +126,25 @@ void CompressedMatrix::ComputeColHeader(
 
   if (num_rows >= 5) {
     int quarter_nr = num_rows/4;
-    // The elements at positions 0, quarter_nr,
     // std::sort(sdata.begin(), sdata.end());
+    // The elements at positions 0, quarter_nr,
     // 3*quarter_nr, and num_rows-1 need to be in sorted order.
-    // Note: the + 1's below are not necessary but may speed things
-    // up slightly.
     std::nth_element(sdata.begin(), sdata.begin() + quarter_nr, sdata.end());
+    // Now, sdata.begin() + quarter_nr contains the element that would appear
+    // in sorted order, in that position.
     std::nth_element(sdata.begin(), sdata.begin(), sdata.begin() + quarter_nr);
+    // Now, sdata.begin() and sdata.begin() + quarter_nr contain the elements
+    // that would appear at those positions in sorted order.
     std::nth_element(sdata.begin() + quarter_nr + 1,
-                     sdata.begin() + (3*quarter_nr) + 1, sdata.end());
-    std::nth_element(sdata.begin() + (3*quarter_nr), sdata.end() - 1,
+                     sdata.begin() + (3*quarter_nr), sdata.end());
+    // Now, sdata.begin(), sdata.begin() + quarter_nr, and sdata.begin() +
+    // 3*quarter_nr, contain the elements that would appear at those positions
+    // in sorted order.
+    std::nth_element(sdata.begin() + (3*quarter_nr) + 1, sdata.end() - 1,
                      sdata.end());
+    // Now, sdata.begin(), sdata.begin() + quarter_nr, and sdata.begin() +
+    // 3*quarter_nr, and sdata.end() - 1, contain the elements that would appear
+    // at those positions in sorted order.
     
     header->percentile_0 = FloatToUint16(global_header, sdata[0]);
     header->percentile_25 = std::max<uint16>(
@@ -226,7 +237,7 @@ void CompressedMatrix::CompressColumn(
     unsigned char *byte_data) {
   ComputeColHeader(global_header, data, stride,
                    num_rows, header);
-
+  
   float p0 = Uint16ToFloat(global_header, header->percentile_0),
       p25 = Uint16ToFloat(global_header, header->percentile_25),
       p75 = Uint16ToFloat(global_header, header->percentile_75),
@@ -246,8 +257,12 @@ void* CompressedMatrix::AllocateData(int32 num_bytes) {
   return reinterpret_cast<void*>(new float[(num_bytes/3) + 4]);
 }
 
+#define DEBUG_COMPRESSED_MATRIX 0 // Must be zero for Kaldi to work; use 1 only
+                                  // for debugging.
+
 void CompressedMatrix::Write(std::ostream &os, bool binary) const {
   if (binary) {  // Binary-mode write:
+    WriteToken(os, binary, "CM");
     if (data_ != NULL) {
       GlobalHeader &h = *reinterpret_cast<GlobalHeader*>(data_);
       MatrixIndexT size = DataSize(h);  // total size of data in data_
@@ -260,6 +275,14 @@ void CompressedMatrix::Write(std::ostream &os, bool binary) const {
       os.write(reinterpret_cast<const char*>(&h), sizeof(h));
     }
   } else {
+    // In text mode, just use the same format as a regular matrix.
+    // This is not compressed.
+#if DEBUG_COMPRESSED_MATRIX == 0
+    Matrix<BaseFloat> temp_mat(this->NumRows(), this->NumCols(),
+                               kUndefined);
+    this->CopyToMat(&temp_mat);
+    temp_mat.Write(os, binary);
+#else
     // Text-mode writing.  Only really useful for debug, but we'll implement it.
     if (data_ == NULL) {
       os << 0.0 << ' ' << 0.0 << ' ' << 0 << ' ' << 0 << '\n';
@@ -280,6 +303,7 @@ void CompressedMatrix::Write(std::ostream &os, bool binary) const {
         os << '\n';
       }
     }
+#endif
   }
   if (os.fail())
     KALDI_ERR << "Error writing compressed matrix to stream.";
@@ -291,19 +315,42 @@ void CompressedMatrix::Read(std::istream &is, bool binary) {
     data_ = NULL;
   }
   if (binary) {  // Binary-mode read.
-    GlobalHeader h;
-    is.read(reinterpret_cast<char*>(&h), sizeof(h));
-    if (is.fail())
-      KALDI_ERR << "Failed to read header";
-    if (h.num_cols == 0) {  // empty matrix.
-      return;
+    // Caution: the following is not back compatible, if you were using
+    // CompressedMatrix before, the old format will not be readable.
+
+    int peekval = Peek(is, binary);
+    if (peekval == 'C') {
+      ExpectToken(is, binary, "CM"); 
+      GlobalHeader h;
+      is.read(reinterpret_cast<char*>(&h), sizeof(h));
+      if (is.fail())
+        KALDI_ERR << "Failed to read header";
+      if (h.num_cols == 0) {  // empty matrix.
+        return;
+      }
+      int32 size = DataSize(h), remaining_size = size - sizeof(GlobalHeader);
+      data_ = AllocateData(size);
+      *(reinterpret_cast<GlobalHeader*>(data_)) = h;
+      is.read(reinterpret_cast<char*>(data_) + sizeof(GlobalHeader),
+              remaining_size);
+    } else {
+      // Assume that what we're reading is a regular Matrix.  This might be the
+      // case if you changed your code, making a Matrix into a CompressedMatrix,
+      // and you want back-compatibility for reading.
+      Matrix<BaseFloat> M;
+      M.Read(is, binary); // This will crash if it was not a Matrix.  This might happen,
+                          // for instance, if the CompressedMatrix was written using the
+                          // older code where we didn't write the token "CM", we just
+                          // wrote the binary data directly.
+      this->CopyFromMat(M);
     }
-    int32 size = DataSize(h), remaining_size = size - sizeof(GlobalHeader);
-    data_ = AllocateData(size);
-    *(reinterpret_cast<GlobalHeader*>(data_)) = h;
-    is.read(reinterpret_cast<char*>(data_) + sizeof(GlobalHeader),
-            remaining_size);
   } else {  // Text-mode read.
+#if DEBUG_COMPRESSED_MATRIX == 0    
+    Matrix<BaseFloat> temp;
+    temp.Read(is, binary);
+    this->CopyFromMat(temp);
+#else
+    // The old reading code...
     GlobalHeader h;
     is >> h.min_value >> h.range >> h.num_rows >> h.num_cols;
     if (is.fail())
@@ -330,6 +377,7 @@ void CompressedMatrix::Read(std::istream &is, bool binary) {
         *c = static_cast<unsigned char>(i);
       }
     }
+#endif
   }
   if (is.fail())
     KALDI_ERR << "Failed to read data.";

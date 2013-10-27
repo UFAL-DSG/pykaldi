@@ -2,6 +2,8 @@
 
 // Copyright 2009-2011 Microsoft Corporation
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -105,7 +107,7 @@ MatrixUnitTest().  Then, inside MatrixUnitTest(), add the line:
   UnitTestAddVec<Real>();
 \endverbatim
 It doesn't matter where in the function you add this.
-Then type "make".  There should be an error (a semicolon that should be
+Then type "make test".  There should be an error (a semicolon that should be
 a comma); fix it and try again.
 Now type "./matrix-lib-test".  This should crash with an assertion failure, 
 because there was another mistake in the unit-test code.  Next we will debug it.

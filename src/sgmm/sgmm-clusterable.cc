@@ -2,6 +2,8 @@
 
 // Copyright 2012  Johns Hopkins University (Author: Daniel Povey)
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -112,7 +114,7 @@ BaseFloat SgmmClusterable::Objf() const {
     // deal with non-invertible matrices.
     KALDI_VLOG(3) << "Backing off to SVD-based objective computation.";
     Vector<double> v(y_.Dim()); // Initialized automatically to zero.
-    ans += SolveQuadraticProblem(my_H_, y_, &v); // The objective function
+    ans += SolveQuadraticProblem(my_H_, y_, SolverOptions(), &v); // The objective function
     // change from estimating this vector.
   }
   return ans;

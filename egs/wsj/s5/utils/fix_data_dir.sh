@@ -55,6 +55,7 @@ function filter_file {
       echo "$0: filtered $file_to_filter from $length1 to $length2 lines based on filter $filter."
     fi
   fi
+  rm $file_to_filter.tmp
 }
 
 function filter_recordings {
@@ -81,9 +82,11 @@ function filter_recordings {
     cp $data/segments{,.tmp}; awk '{print $2, $1, $3, $4}' <$data/segments.tmp >$data/segments
     filter_file $tmpdir/recordings $data/segments
     cp $data/segments{,.tmp}; awk '{print $2, $1, $3, $4}' <$data/segments.tmp >$data/segments
+    rm $data/segments.tmp
 
     filter_file $tmpdir/recordings $data/wav.scp
     [ -f $data/reco2file_and_channel ] && filter_file $tmpdir/recordings $data/reco2file_and_channel
+    
   fi
 }
 
@@ -141,7 +144,7 @@ function filter_utts {
   else
     nfeats=0
   fi
-  ntext=`cat $data/text | wc -l`
+  ntext=`cat $data/text 2>/dev/null | wc -l`
   if [ "$nutts" -ne "$nfeats" -o "$nutts" -ne "$ntext" ]; then
     echo "fix_data_dir.sh: kept $nutts utterances, vs. $nfeats features and $ntext transcriptions."
   else
@@ -150,8 +153,10 @@ function filter_utts {
 
   for x in utt2spk feats.scp text segments $maybe_wav; do
     if [ -f $data/$x ]; then
-      mv $data/$x $data/.backup/$x
-      utils/filter_scp.pl $tmpdir/utts $data/.backup/$x > $data/$x
+      cp $data/$x $data/.backup/$x
+      if ! cmp -s $data/$x <( utils/filter_scp.pl $tmpdir/utts $data/$x ) ; then
+        utils/filter_scp.pl $tmpdir/utts $data/.backup/$x > $data/$x
+      fi
     fi
   done
 

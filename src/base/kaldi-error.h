@@ -3,6 +3,8 @@
 // Copyright 2009-2011  Microsoft Corporation;  Ondrej Glembek;  Lukas Burget;
 //                      Saarland University
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -47,6 +49,10 @@ extern int32 g_kaldi_verbose_level;
 extern const char *g_program_name;
 
 inline int32 GetVerboseLevel() { return g_kaldi_verbose_level; }
+
+/// This should be rarely used; command-line programs set the verbose level
+/// automatically from ParseOptions.
+inline void SetVerboseLevel(int32 i) { g_kaldi_verbose_level = i; }
 
 // Class KaldiLogMessage is invoked from the  KALDI_WARN, KALDI_VLOG and
 // KALDI_LOG macros. It prints the message to stderr.  Note: we avoid

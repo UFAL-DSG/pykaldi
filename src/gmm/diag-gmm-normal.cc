@@ -3,6 +3,8 @@
 // Copyright 2009-2011  Microsoft Corporation;  Saarland University;
 //                      Yanmin Qian
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -52,10 +54,10 @@ void DiagGmmNormal::CopyFromDiagGmm(const DiagGmm &diaggmm) {
   means_.MulElements(vars_);
 }
 
-void DiagGmmNormal::CopyToDiagGmm(DiagGmm *diaggmm, GmmFlagsType flags) {
+void DiagGmmNormal::CopyToDiagGmm(DiagGmm *diaggmm, GmmFlagsType flags) const {
     KALDI_ASSERT((static_cast<int32>(diaggmm->Dim()) == means_.NumCols())
-      && (static_cast<int32>(diaggmm->weights_.Dim()) == weights_.Dim()));
-
+                 && (static_cast<int32>(diaggmm->weights_.Dim()) == weights_.Dim()));
+    
     DiagGmmNormal oldg(*diaggmm);
 
     if (flags & kGmmWeights)

@@ -43,6 +43,7 @@ num_tgt=           # force to use number of outputs in the MLP (default is autod
 # TRAINING SCHEDULER
 learn_rate=0.008   # initial learning rate
 train_opts=        # options, passed to the training script
+train_tool=        # optionally change the training tool
 
 # OTHER
 use_gpu_id= # manually select GPU id to run on, (-1 disables GPU)
@@ -97,15 +98,13 @@ echo
 echo "# PREPARING ALIGNMENTS"
 if [ ! -z $labels ]; then
   echo "Using targets '$labels' (by force)"
+  labels_tr="$labels"
+  labels_cv="$labels"
 else
   echo "Using PDF targets from dirs '$alidir' '$alidir_cv'"
   #define pdf-alignment rspecifiers
   labels_tr="ark:ali-to-pdf $alidir/final.mdl \"ark:gunzip -c $alidir/ali.*.gz |\" ark:- |"
-  if [[ "$alidir" == "$alidir_cv" ]]; then
-    labels="$labels_tr"
-  else
-    labels="ark:ali-to-pdf $alidir/final.mdl \"ark:gunzip -c $alidir/ali.*.gz $alidir_cv/ali.*.gz |\" ark:- |"
-  fi
+  labels_cv="ark:ali-to-pdf $alidir/final.mdl \"ark:gunzip -c $alidir_cv/ali.*.gz |\" ark:- |"
 
   #get the priors, get pdf-counts from alignments
   analyze-counts --binary=false "$labels_tr" $dir/ali_train_pdf.counts || exit 1
@@ -314,9 +313,10 @@ steps/train_nnet_scheduler.sh \
   --learn-rate $learn_rate \
   --seed $seed \
   ${train_opts} \
+  ${train_tool:+ --train-tool "$train_tool"} \
   ${config:+ --config $config} \
   ${use_gpu_id:+ --use-gpu-id $use_gpu_id} \
-  $mlp_init "$feats_tr" "$feats_cv" "$labels" $dir || exit 1
+  $mlp_init "$feats_tr" "$feats_cv" "$labels_tr" "$labels_cv" $dir || exit 1
 
 
 echo "$0 successfuly finished.. $dir"

@@ -2,6 +2,8 @@
 
 // Copyright 2012  Johns Hopkins University (author:  Daniel Povey)
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -40,7 +42,7 @@ int main(int argc, char *argv[]) {
         "Usage:  nnet-combine-fast [options] <model-in1> <model-in2> ... <model-inN> <valid-examples-in> <model-out>\n"
         "\n"
         "e.g.:\n"
-        " nnet-combine 1.1.nnet 1.2.nnet 1.3.nnet ark:valid.egs 2.nnet\n"
+        " nnet-combine-fast 1.1.nnet 1.2.nnet 1.3.nnet ark:valid.egs 2.nnet\n"
         "Caution: the first input neural net must not be a gradient.\n";
     
     bool binary_write = true;

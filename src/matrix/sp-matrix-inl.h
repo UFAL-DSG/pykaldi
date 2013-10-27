@@ -2,6 +2,8 @@
 
 // Copyright 2009-2011  Ondrej Glembek;  Microsoft Corporation;  Haihua Xu
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -28,13 +30,11 @@ namespace kaldi {
 
 template<>
 double SolveQuadraticProblem(const SpMatrix<double> &H, const VectorBase<double> &g,
-                             VectorBase<double> *x, double K, double eps,
-                             const char *debug_str, bool optimizeDelta);
+                             const SolverOptions &opts, VectorBase<double> *x);
 
 template<>
 float SolveQuadraticProblem(const SpMatrix<float> &H, const VectorBase<float> &g,
-                            VectorBase<float> *x, float K, float eps,
-                            const char *debug_str, bool optimizeDelta);
+                            const SolverOptions &opts, VectorBase<float> *x);
 
 }  // namespace kaldi
 

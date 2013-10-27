@@ -3,6 +3,8 @@
 // Copyright 2009-2011  Ondrej Glembek;  Microsoft Corporation;  Yanmin Qian;
 //                      Jan Silovsky;  Saarland University
 //
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -108,6 +110,8 @@ inline float RandGauss() {
 // Take care: this takes time proportinal
 // to lambda.  Faster algorithms exist but are more complex.
 int32 RandPoisson(float lambda);
+
+// Also see Vector<float,double>::RandCategorical().
 
 // This is a randomized pruning mechanism that preserves expectations,
 // that we typically use to prune posteriors.

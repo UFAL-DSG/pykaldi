@@ -4,6 +4,8 @@
 //                      Saarland University (Author: Arnab Ghoshal);
 // Copyright 2012-2013  Frantisek Skala;  Arnab Ghoshal
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -152,10 +154,20 @@ class ParseOptions : public OptionsItf {
   /// Reads the options values from a config file
   void ReadConfigFile(const std::string &filename);
 
-  void SplitLongArg(std::string in, std::string *key, std::string *value);
+  /// SplitLongArg parses an argument of the form --a=b, --a=, or --a,
+  /// and sets "has_equal_sign" to true if an equals-sign was parsed..
+  /// this is needed in order to correctly allow --x for a boolean option
+  /// x, and --y= for a string option y, and to disallow --x= and --y.
+  void SplitLongArg(std::string in, std::string *key, std::string *value,
+                    bool *has_equal_sign);
+  
   void NormalizeArgName(std::string *str);
 
-  bool SetOption(const std::string &key, const std::string &value);
+  /// Set option with name "key" to "value"; will crash if can't do it.
+  /// "has_equal_sign" is used to allow --x for a boolean option x,
+  /// and --y=, for a string option y.
+  bool SetOption(const std::string &key, const std::string &value,
+                 bool has_equal_sign);
 
   bool ToBool(std::string str);
   int32 ToInt(std::string str);

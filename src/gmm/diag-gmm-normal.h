@@ -3,6 +3,8 @@
 // Copyright 2009-2011  Saarland University  Korbinian Riedhammer  Yanmin Qian
 //                      
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -56,7 +58,7 @@ class DiagGmmNormal {
   void CopyFromDiagGmm(const DiagGmm &diaggmm);
 
   /// Copies to DiagGmm the requested parameters
-  void CopyToDiagGmm(DiagGmm *diaggmm, GmmFlagsType flags = kGmmAll);
+  void CopyToDiagGmm(DiagGmm *diaggmm, GmmFlagsType flags = kGmmAll) const;
 
   int32 NumGauss() { return weights_.Dim(); }
   int32 Dim() { return means_.NumCols(); }

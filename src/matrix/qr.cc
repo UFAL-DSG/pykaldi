@@ -2,6 +2,8 @@
 
 // Copyright 2012  Johns Hopkins University (author: Daniel Povey)
 
+// See ../../COPYING for clarification regarding multiple authors
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -514,8 +516,7 @@ void SpMatrix<Real>::TopEigs(VectorBase<Real> *s, MatrixBase<Real> *P,
 }
 
 
-// Instantiate the templates for Eig and TopEig; this will instantiate the
-// other templates defined here because they call the others.
+// Instantiate the templates for Eig and TopEig.
 template
 void SpMatrix<float>::Eig(VectorBase<float>*, MatrixBase<float>*) const;
 template
@@ -526,6 +527,13 @@ void SpMatrix<float>::TopEigs(VectorBase<float>*, MatrixBase<float>*, MatrixInde
 template
 void SpMatrix<double>::TopEigs(VectorBase<double>*, MatrixBase<double>*, MatrixIndexT) const;
 
+// Someone had a problem with the Intel compiler with -O3, with Qr not being
+// defined for some strange reason (should automatically happen when
+// we instantiate Eig and TopEigs), so we explicitly instantiate it here.
+template
+void SpMatrix<float>::Qr(MatrixBase<float> *Q);
+template
+void SpMatrix<double>::Qr(MatrixBase<double> *Q);
 
 
 
