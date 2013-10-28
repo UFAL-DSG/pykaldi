@@ -4,18 +4,18 @@ from cython cimport address
 from libc.stdlib cimport malloc, free
 from libcpp.vector cimport vector
 from libcpp cimport bool
+from libfst cimport StdVectorFst as cStdVectorFst
+#from fst import StdVectorFst
 
 
-# include "dec-wrap/pykaldi-faster-wrapper.h"
-# include "dec-wrap/pykaldi-utils.h"
 cdef extern from "dec-wrap/pykaldi-latgen-wrapper.h" namespace "kaldi":
     cdef cppclass GmmLatgenWrapper:
         size_t Decode(size_t max_frames) except +
         void FrameIn(unsigned char *frame, size_t frame_len) except +
-        int GetBestPath(vector[int] v_out, float *prob) except +
-        int GetNbest(int n, vector[vector[int]] v_out, vector[float] prob_out) except +
-        #int GetRawLattice(Lattice lat_out)
-        #int GetLattice(CompactLattice clat_out)
+        bool GetBestPath(vector[int] v_out, float *prob) except +
+        bool GetNbest(int n, vector[vector[int]] v_out, vector[float] prob_out) except +
+        #bool GetRawLattice(Lattice lat_out)
+        bool GetLattice(cStdVectorFst fst_out)
         void PruneFinal() except +
         void Reset(bool keep_buffer_data) except +
         int Setup(int argc, char **argv) except +
@@ -71,7 +71,10 @@ cdef class PyGmmLatgenWrapper:
         return r
 
     def get_lattice(self):
-        pass
+        cdef cStdVectorFst v
+        self.thisptr.GetLattice(v)
+        # internally copies the source vector
+        #return StdVectorFst(source=v)
 
     def get_raw_lattice(self):
         pass

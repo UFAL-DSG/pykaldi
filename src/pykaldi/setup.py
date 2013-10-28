@@ -19,9 +19,9 @@ if python_version < (2, 7):
 
 
 ext_modules = []
-ext_modules.append(Extension('decoders',
+ext_modules.append(Extension('pykaldi.decoders',
                              language='c++',
-                             include_dirs=['..'],
+                             include_dirs=['..', 'fst'],
                              library_dirs=['../dec-wrap'],
                              libraries=['pykaldi'],
                              # extra_objects=['../dec-wrap/pykaldi.a'],
