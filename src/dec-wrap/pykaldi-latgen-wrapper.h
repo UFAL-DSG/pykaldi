@@ -33,7 +33,6 @@ namespace fst{
   template<class WeightType, class IntType> class CompactLatticeWeightTpl; 
 
 }
-
 namespace kaldi{ 
   typedef fst::LatticeWeightTpl<BaseFloat> LatticeWeight;
   typedef fst::ArcTpl<LatticeWeight> LatticeArc;
@@ -43,6 +42,8 @@ namespace kaldi{
   typedef fst::ArcTpl<CompactLatticeWeight> CompactLatticeArc;
   typedef fst::VectorFst<CompactLatticeArc> CompactLattice;
 }
+
+
 namespace kaldi {
 
 // forward declarations

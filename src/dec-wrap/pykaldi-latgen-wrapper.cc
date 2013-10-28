@@ -15,6 +15,9 @@
  * See the Apache 2 License for the specific language governing permissions and
  * limitations under the License. */
 
+#include "fstext/fstext-lib.h"
+#include "fstext/fstext-utils.h"
+#include "lat/lattice-functions.h"
 #include "feat/feature-mfcc.h"
 #include "dec-wrap/pykaldi-utils.h"
 #include "dec-wrap/pykaldi-audio-source.h"
@@ -23,8 +26,6 @@
 #include "dec-wrap/pykaldi-decodable.h"
 #include "dec-wrap/pykaldi-latgen-wrapper.h"
 #include "dec-wrap/pykaldi-latgen-decoder.h"
-#include "fstext/fstext-lib.h"
-#include "fstext/fstext-utils.h"
 // debug
 #include <fstream>
 #include <iostream>
@@ -114,11 +115,15 @@ bool GmmLatgenWrapper::GetRawLattice(Lattice & lat) {
 bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::StdArc> &fst_out) {
   if (! initialized_)
     return false;
+
+  // TODO add to output parameters
   double lat_like;
   double lat_ac_like; // acoustic likelihood weighted by posterior.
 
   // TODO import lm_scale
   double lm_scale = 0.0;
+
+  // TODO fill fst_out with the posteriors weights!
 
   CompactLattice clat;
   bool ok = decoder->GetLattice(&clat);
@@ -133,6 +138,7 @@ bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::StdArc> &fst_out) {
   ConvertLattice(clat, &lat);
 
   kaldi::Posterior post;
+  TopSortLatticeIfNeeded(&lat);
   lat_like = kaldi::LatticeForwardBackward(lat, &post, &lat_ac_like);
 
   {
@@ -146,13 +152,19 @@ bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::StdArc> &fst_out) {
     fst::Project(&fst_out, fst::PROJECT_OUTPUT);
   }
 
+  // TODO fill fst_out with the posteriors weights!
+
   // DEBUG
   if (ok) {
     std::ofstream f;
-    f.open("last.lat", std::ios::binary);
+    f.open("debug_last.lat", std::ios::binary);
     fst::FstWriteOptions opts;  // in fst/fst.h
     clat.Write(f, opts);
     f.close();
+
+    TableWriter<fst::VectorFstHolder> fst_writer("ark:debug_last.fst");
+    fst_writer.Write("debug_last", fst_out);
+
   }
   return ok;
 }
