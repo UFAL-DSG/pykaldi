@@ -92,7 +92,7 @@ class GmmLatgenWrapper {
     bool GetNbest(int n, std::vector<std::vector<int> > &v_out,
                          std::vector<BaseFloat> &prob_out);
     bool GetRawLattice(Lattice &lat);
-    bool GetLattice(fst::VectorFst<fst::StdArc> & out_fst);
+    bool GetLattice(fst::VectorFst<fst::StdArc> * out_fst);
     void PruneFinal();
     void Reset(bool keep_buffer_data);
     bool Setup(int argc, char **argv);

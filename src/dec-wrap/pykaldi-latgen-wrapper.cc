@@ -112,7 +112,7 @@ bool GmmLatgenWrapper::GetRawLattice(Lattice & lat) {
   return ok;
 }
 
-bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::StdArc> &fst_out) {
+bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::StdArc> *fst_out) {
   if (! initialized_)
     return false;
 
@@ -145,11 +145,11 @@ bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::StdArc> &fst_out) {
     Lattice lat;
     ConvertLattice(clat, &lat); // convert to non-compact form.. won't introduce
     // extra states because already removed alignments.
-    ConvertLattice(lat, &fst_out); // adds up the (lm,acoustic) costs to get
+    ConvertLattice(lat, fst_out); // adds up the (lm,acoustic) costs to get
     // the normal (tropical) costs.
     // in the standard Lattice format,
     // the words are on the output, and we want the word labels.
-    fst::Project(&fst_out, fst::PROJECT_OUTPUT);
+    fst::Project(fst_out, fst::PROJECT_OUTPUT);
   }
 
   // TODO fill fst_out with the posteriors weights!
@@ -163,7 +163,7 @@ bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::StdArc> &fst_out) {
     f.close();
 
     TableWriter<fst::VectorFstHolder> fst_writer("ark:debug_last.fst");
-    fst_writer.Write("debug_last", fst_out);
+    fst_writer.Write("debug_last", *fst_out);
 
   }
   return ok;
