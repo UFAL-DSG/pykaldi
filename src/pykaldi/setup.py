@@ -31,6 +31,7 @@ ext_modules.append(Extension('pykaldi.decoders',
 
 templates = [
     ('fst/_fst.pyx.tpl', 'fst/types.yml', 'fst/_fst.pyx'),
+    ('fst/_fst.pxd.tpl', 'fst/types.yml', 'fst/_fst.pxd'),
     ('fst/libfst.pxd.tpl', 'fst/types.yml', 'fst/libfst.pxd'),
 ]
 

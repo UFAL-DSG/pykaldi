@@ -4,8 +4,10 @@ from cython cimport address
 from libc.stdlib cimport malloc, free
 from libcpp.vector cimport vector
 from libcpp cimport bool
+# TODO Simplify after full wrapping
+from _fst cimport StdVectorFst as StdVectorFstDec
 from libfst cimport StdVectorFst as cStdVectorFst
-#from fst import StdVectorFst
+from fst import StdVectorFst
 
 
 cdef extern from "dec-wrap/pykaldi-latgen-wrapper.h" namespace "kaldi":
@@ -15,7 +17,7 @@ cdef extern from "dec-wrap/pykaldi-latgen-wrapper.h" namespace "kaldi":
         bool GetBestPath(vector[int] v_out, float *prob) except +
         bool GetNbest(int n, vector[vector[int]] v_out, vector[float] prob_out) except +
         #bool GetRawLattice(Lattice lat_out)
-        bool GetLattice(cStdVectorFst fst_out)
+        bool GetLattice(cStdVectorFst *fst_out)
         void PruneFinal() except +
         void Reset(bool keep_buffer_data) except +
         int Setup(int argc, char **argv) except +
@@ -71,10 +73,9 @@ cdef class PyGmmLatgenWrapper:
         return r
 
     def get_lattice(self):
-        cdef cStdVectorFst v
-        self.thisptr.GetLattice(v)
-        # internally copies the source vector
-        #return StdVectorFst(source=v)
+        r = StdVectorFst()
+        self.thisptr.GetLattice((<StdVectorFstDec?>r).fst)
+        return r
 
     def get_raw_lattice(self):
         pass

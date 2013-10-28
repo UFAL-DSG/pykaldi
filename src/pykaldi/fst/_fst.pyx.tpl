@@ -61,7 +61,7 @@ def read_symbols(filename):
     return table
 
 cdef class SymbolTable:
-    cdef sym.SymbolTable* table
+    # cdef sym.SymbolTable* table
 
     def __init__(self, epsilon=EPSILON):
         """SymbolTable() -> new symbol table with \u03b5 <-> 0
@@ -332,8 +332,8 @@ cdef class {{state}}:
         return '<{{state}} #{0} with {1} arcs>'.format(self.stateid, len(self))
 
 cdef class {{fst}}(_Fst):
-    cdef libfst.{{fst}}* fst
-    cdef public SymbolTable isyms, osyms
+    # cdef libfst.{{fst}}* fst
+    # cdef public SymbolTable isyms, osyms
     SEMIRING = {{weight}}
 
     def __init__(self, source=None, isyms=None, osyms=None):
