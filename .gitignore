@@ -28,6 +28,7 @@ src/base/kaldi-error-test
 
 # /src/bin/
 src/bin/.depend.mk
+src/bin/tree-info
 src/bin/post-to-tacc
 src/bin/sum-matrices
 src/bin/align-mapped
@@ -100,6 +101,8 @@ src/feat/feature-fbank-test
 src/feat/.depend.mk
 
 # /src/featbin/
+src/featbin/apply-cmvn-sliding
+src/featbin/compute-cmvn-stats-two-channel
 src/featbin/.depend.mk
 src/featbin/compute-spectrogram-feats
 src/featbin/extract-feature-segments
@@ -130,6 +133,7 @@ src/featbin/reverse-feats
 src/featbin/compute-plp-feats
 
 # /src/fgmmbin/
+src/fgmmbin/fgmm-global-gselect-to-post
 src/fgmmbin/.depend.mk
 src/fgmmbin/fgmm-global-acc-stats
 src/fgmmbin/fgmm-global-sum-accs
@@ -196,6 +200,7 @@ src/gmm/mle-am-diag-gmm-test
 src/gmm/ebw-diag-gmm-test
 
 # /src/gmmbin/
+src/gmmbin/gmm-global-init-from-feats
 src/gmmbin/.depend.mk
 src/gmmbin/gmm-sum-accs
 src/gmmbin/gmm-acc-mllt
@@ -283,6 +288,8 @@ src/lat/.depend.mk
 src/lat/kaldi-lattice-test
 
 # /src/latbin/
+src/latbin/lattice-limit-depth
+src/latbin/lattice-minimize
 src/latbin/.depend.mk
 src/latbin/lattice-prune
 src/latbin/lattice-rmali
@@ -337,6 +344,7 @@ src/nnet-cpu/.depend.mk
 src/nnet-cpu/nnet-component-test
 
 # /src/nnetbin/
+src/nnetbin/nnet-info
 src/nnetbin/.depend.mk
 src/nnetbin/nnet-train-xent-hardlab-perutt
 src/nnetbin/nnet-train-xent-hardlab-frmshuff
@@ -541,6 +549,17 @@ src/latbin/lattice-push
 src/latbin/lattice-rescore-mapped
 src/latbin/lattice-reverse
 src/latbin/lattice-to-smbr-post
+src/nnet-cpubin/nnet-am-widen
+src/nnet-cpubin/nnet-compute
+src/nnet-cpubin/nnet-compute-from-egs
+src/nnet-cpubin/nnet-get-feature-transform
+src/nnet-cpubin/nnet-get-feature-transform-multi
+src/nnet-cpubin/nnet-limit-degradation
+src/nnet-cpubin/nnet-show-progress
+src/nnet-cpubin/nnet-to-raw-nnet
+src/nnet-cpubin/nnet-train-parallel-safe
+src/nnet-cpubin/raw-nnet-concat
+src/nnet-cpubin/raw-nnet-info
 src/nnet-cpubin/nnet-align-compiled
 src/nnet-cpubin/nnet-am-average
 src/nnet-cpubin/nnet-am-combine
@@ -550,6 +569,7 @@ src/nnet-cpubin/nnet-am-fix
 src/nnet-cpubin/nnet-am-info
 src/nnet-cpubin/nnet-am-init
 src/nnet-cpubin/nnet-am-limit-rank
+src/nnet-cpubin/nnet-am-limit-rank-final
 src/nnet-cpubin/nnet-am-mixup
 src/nnet-cpubin/nnet-am-rescale
 src/nnet-cpubin/nnet-am-shrink
@@ -641,3 +661,4 @@ src/util/tmpf.gz
 src/util/tmpf.scp
 tools/atlas3.10.0.tar.bz2
 tools/python/
+no changes added to commit (use "git add" and/or "git commit -a")
