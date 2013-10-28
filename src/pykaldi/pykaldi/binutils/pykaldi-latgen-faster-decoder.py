@@ -48,8 +48,13 @@ def decode(d, pcm):
     d.prune_final()
     # decoded = d.get_nbest(n=10)
     # prob, words = decoded[0]
-    d.get_lattice()
-    words = []  # DEBUG remove
+    fst_lat = d.get_lattice()
+    fst_lat.write('python_debug_last.fst')  # the same fst OK
+    p = fst_lat.shortest_path()  # DEBUG remove
+    words = []
+    for state in p.states:
+        for arc in state.arcs:
+            words.append(arc.ilabel)
     return words
 
 

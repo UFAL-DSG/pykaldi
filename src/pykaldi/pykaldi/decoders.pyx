@@ -5,7 +5,7 @@ from libc.stdlib cimport malloc, free
 from libcpp.vector cimport vector
 from libcpp cimport bool
 # TODO Simplify after full wrapping
-from _fst cimport StdVectorFst as StdVectorFstDec
+from fst._fst cimport StdVectorFst as StdVectorFstDec
 from libfst cimport StdVectorFst as cStdVectorFst
 from fst import StdVectorFst
 

@@ -24,7 +24,6 @@ ext_modules.append(Extension('pykaldi.decoders',
                              include_dirs=['..', 'fst'],
                              library_dirs=['../dec-wrap'],
                              libraries=['pykaldi'],
-                             # extra_objects=['../dec-wrap/pykaldi.a'],
                              sources=['pykaldi/decoders.pyx'],
                              ))
 
