@@ -1,12 +1,13 @@
 LIBNAME=pykaldi
 LIBFILE=lib$(LIBNAME).so
 SOURCEDIR=../dec-wrap
-
+FSTDIR=$(PWD)/../../tools/openfst
 
 all:
 	$(MAKE) -C $(SOURCEDIR) $(LIBFILE)
-	python setup.py build_ext --inplace
-	python setup.py develop --user
+	LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include \
+				  python setup.py build_ext --inplace
+	# python setup.py develop --user
 
 test:
 	python setup.py nosetests

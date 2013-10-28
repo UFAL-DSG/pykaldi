@@ -8,45 +8,69 @@ from sys import version_info as python_version
 from os import path
 from Cython.Distutils import build_ext
 from distutils.extension import Extension
+import yaml
+import pystache
 
-INC_DIRS = ['..', ]
-LIB_DIRS = ['../dec-wrap']
-LIBS = ['pykaldi']
 
 install_requires = []
 if python_version < (2, 7):
     new_27 = ['ordereddict', 'argparse']
     install_requires.extend(new_27)
 
-long_description = open(path.join(path.dirname(__file__), 'README.rst')).read()
 
 ext_modules = []
 ext_modules.append(Extension('decoders',
                              language='c++',
-                             include_dirs=INC_DIRS,
-                             library_dirs=LIB_DIRS,
-                             libraries=LIBS,
+                             include_dirs=['..'],
+                             library_dirs=['../dec-wrap'],
+                             libraries=['pykaldi'],
                              # extra_objects=['../dec-wrap/pykaldi.a'],
                              sources=['pykaldi/decoders.pyx'],
                              ))
 
-# ext_modules.append(Extension('__init__',
-#                              language='c++',
-#                              include_dirs=INC_DIRS,
-#                              library_dirs=LIB_DIRS,
-#                              libraries=LIBS,
-#                              # extra_objects=['../dec-wrap/pykaldi.a'],
-#                              sources=['pykaldi/init.pyx'],
-#                              ))
 
+templates = [
+    ('fst/_fst.pyx.tpl', 'fst/types.yml', 'fst/_fst.pyx'),
+    ('fst/libfst.pxd.tpl', 'fst/types.yml', 'fst/libfst.pxd'),
+]
+
+
+class pre_build_ext(build_ext):
+    def run(self):
+        '''Before building the C++ extension apply the
+        templates substitution'''
+        print 'running pre_build_ext'
+        try:
+            for templ_name, dic_name, result in templates:
+                with open(dic_name, 'r') as d:
+                    with open(templ_name, 'r') as t:
+                        with open(result, 'w') as r:
+                            dic = yaml.load(d)
+                            tmpl = t.read()
+                            r.write(pystache.render(tmpl, dic))
+                            print 'Created template %s' % result
+            build_ext.run(self)
+        except Exception as e:
+            # how to handle bad cases!
+            print e
+            raise e
+
+ext_modules.append(Extension(name='fst._fst',
+                             sources=['fst/_fst.pyx'],
+                             language='c++',
+                             include_dirs=[],
+                             libraries=['fst'],
+                             library_dirs=[],
+                             ))
+
+long_description = open(path.join(path.dirname(__file__), 'README.rst')).read()
 
 setup(
     name='pykaldi',
     version='0.0',
-    cmdclass={'build_ext': build_ext},
+    cmdclass={'build_ext': pre_build_ext},
     install_requires=install_requires,
-    setup_requires=['cython>=0.19.1'],
-    ext_package='pykaldi',
+    setup_requires=['cython>=0.19.1', 'pyyaml', 'pystache'],
     ext_modules=ext_modules,
     test_suite="nose.collector",
     tests_require=['nose>=1.0', 'pykaldi'],
