@@ -1,0 +1,4 @@
+_fst.cpp
+_fst.pxd
+_fst.pyx
+libfst.pxd
