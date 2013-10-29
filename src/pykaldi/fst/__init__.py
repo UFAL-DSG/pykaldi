@@ -1,5 +1,5 @@
 from fst._fst import EPSILON, EPSILON_ID, SymbolTable,\
-        read, read_log, read_std, read_symbols,\
+        read, read_log, read_std, read_symbols, read_symbols_text, \
         LogWeight, LogArc, LogState, LogVectorFst,\
         TropicalWeight, StdArc, StdState, StdVectorFst
 

@@ -1,5 +1,6 @@
 # distutils: language = c++
 from libcpp.string cimport string
+from libcpp cimport bool
 from util cimport istream
 
 cdef extern from "<fst/symbol-table.h>" namespace "fst":    
@@ -10,7 +11,7 @@ cdef extern from "<fst/symbol-table.h>" namespace "fst":
         long AddSymbol(string &symbol)
         string& Name()
         bint Write(string &filename)
-        #WriteText (ostream &strm)
+        bint WriteText (string &filename)
         string Find(long key)
         long Find(const char* symbol)
         unsigned NumSymbols()
@@ -26,3 +27,6 @@ cdef extern from "<fst/symbol-table.h>" namespace "fst":
 
     cdef SymbolTable* SymbolTableRead "fst::SymbolTable::Read" (istream &strm,
             string& source)
+
+    cdef SymbolTable* SymbolTableReadText "fst::SymbolTable::ReadText" (
+            string& source, bool allow_negative)
