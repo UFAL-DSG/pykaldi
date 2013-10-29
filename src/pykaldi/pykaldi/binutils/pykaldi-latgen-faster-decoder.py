@@ -34,6 +34,7 @@ def write_decoded(f, wav_name, word_ids, wst):
 
 
 def decode(d, pcm):
+    nbest, lattice = False, True
     frame_len = (2 * audio_batch_size)  # 16-bit audio so 1 sample = 2 chars
     it = (len(pcm) / frame_len)
     print >> sys.stderr, 'NUMBER of audio input chunks: %d' % it
@@ -46,16 +47,21 @@ def decode(d, pcm):
             decoded_frames += dec_t
             dec_t = d.decode(max_frames=10)
     d.prune_final()
-    # decoded = d.get_nbest(n=10)
-    # prob, words = decoded[0]
-    fst_lat = d.get_lattice()
-    fst_lat.write('python_debug_last.fst')  # the same fst OK
-    p = fst_lat.shortest_path()  # DEBUG remove
-    words = []
-    for state in p.states:
-        for arc in state.arcs:
-            words.append(arc.ilabel)
-    return words
+    if nbest:
+        decoded = d.get_nbest(n=10)
+        prob, words = decoded[0]
+        return words
+    elif lattice:
+        fst_lat = d.get_lattice()
+        fst_lat.write('python_debug_last.fst')  # the same fst OK
+        p = fst_lat.shortest_path()  # DEBUG remove
+        words = []
+        for state in p.states:
+            for arc in state.arcs:
+                words.append(arc.ilabel)
+        return words
+    else:
+        return []
 
 
 def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst=None):
