@@ -107,7 +107,7 @@ def get_vystadial_data(src_tar_path, path=None):
         for n, p, i in zip(wav_names, wav_paths, range(10)):
             input_scp.write('%s %s\n' % (n, p))
     with open(os.path.join(audio_path, 'input_best.scp'), 'wb') as input_scp:
-        best_index = 11
+        best_index = 10
         input_scp.write('%s %s\n' % (wav_names[best_index], wav_paths[best_index]))
 
 
