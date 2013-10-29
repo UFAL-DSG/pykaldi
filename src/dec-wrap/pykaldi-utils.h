@@ -31,10 +31,6 @@ void pykaldi_version(int *out_major, int * out_minor, int *patch);
 
 void build_git_revision(std::string & pykaldi_git_revision);
 
-void lattice2nbest(const Lattice &lat, int n,
-        std::vector<std::vector<int> > &out_nbest, 
-        std::vector<BaseFloat> &out_prob);
-
 // Reads a decoding graph from a file
 fst::Fst<fst::StdArc> *ReadDecodeGraph(std::string filename);
 

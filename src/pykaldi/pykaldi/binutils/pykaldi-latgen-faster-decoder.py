@@ -13,11 +13,10 @@
 # MERCHANTABLITY OR NON-INFRINGEMENT.
 # See the Apache 2 License for the specific language governing permissions and
 # limitations under the License. #
-
-
 from pykaldi.utils import load_wav, wst2dict
 from pykaldi.decoders import PyGmmLatgenWrapper
 import sys
+import fst
 
 # FIXME todo measure time of decode resp decode_once through profiler
 
@@ -32,8 +31,7 @@ def write_decoded(f, wav_name, word_ids, wst):
     f.write(line)
 
 
-def decode(d, pcm, wst):
-    nbest, lattice = True, True
+def decode(d, pcm):
     frame_len = (2 * audio_batch_size)  # 16-bit audio so 1 sample = 2 chars
     it = (len(pcm) / frame_len)
     print >> sys.stderr, 'NUMBER of audio input chunks: %d' % it
@@ -46,34 +44,36 @@ def decode(d, pcm, wst):
             decoded_frames += dec_t
             dec_t = d.decode(max_frames=10)
     d.prune_final()
-
-    # DEBUG
-    words = []
-    if nbest:
-        decoded = d.get_nbest(n=10)
-        prob, words = decoded[0]
-        print [wst[str(w)] for w in words]
-    if lattice:
-        fst_lat = d.get_lattice()
-        fst_lat.write('python_debug_last.fst')  # the same fst OK
-        p = fst_lat.shortest_path()  # DEBUG remove
-        words = []
-        for state in p.states:
-            for arc in state.arcs:
-                words.append(arc.ilabel)
-        print [wst[str(w)] for w in words]
-    return words
+    return d.get_lattice()
 
 
-def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst=None):
+def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
+    wst = wst2dict(wst_path)
     d = PyGmmLatgenWrapper()
     d.setup(argv)
     for wav_name, wav_path in wav_paths:
         # 16-bit audio so 1 sample_width = 2 chars
         pcm = load_wav(wav_path, def_sample_width=2, def_sample_rate=16000)
         d.reset(keep_buffer_data=False)
-        word_ids = decode(d, pcm, wst)
+        lat = decode(d, pcm)
+        lat.isyms = lat.osyms = fst.read_symbols_text(wst_path)
+        p = lat.shortest_path()
+
+        word_ids = []
+        # TODO probably bad extraction of the path
+        for state in p.states:
+            for arc in state.arcs:
+                word_ids.append(arc.ilabel)
+
         write_decoded(file_output, wav_name, word_ids, wst)
+
+        # DEBUG
+        with open('last_lattice.svg', 'w') as f:
+            f.write(lat._repr_svg_())
+
+        with open('last_best_path.svg', 'w') as f:
+            f.write(p._repr_svg_())
+        print [wst[str(w)] for w in word_ids]
 
 
 if __name__ == '__main__':
@@ -82,14 +82,14 @@ if __name__ == '__main__':
     print >> sys.stderr, 'Python args: %s' % str(sys.argv)
 
     # Try to locate and extract wst argument
-    wst = None
+    wst_path = None
     for a in argv:
         if a.endswith('words.txt'):
-            wst = wst2dict(a)
+            wst_path = a
 
     # open audio_scp, decode and write to dec_hypo file
     with open(audio_scp, 'rb') as r:
         with open(dec_hypo, 'wb') as w:
             lines = r.readlines()
             scp = [tuple(line.strip().split(' ', 1)) for line in lines]
-            decode_wrap(argv, audio_batch_size, scp, w, wst)
+            decode_wrap(argv, audio_batch_size, scp, w, wst_path)

@@ -88,18 +88,89 @@ bool GmmLatgenWrapper::GetBestPath(std::vector<int> &out_ids, BaseFloat *prob) {
   return ok;
 }
 
+
 bool GmmLatgenWrapper::GetNbest(int n, std::vector<std::vector<int> > &v_out,
                                        std::vector<BaseFloat> &prob_out) {
-  std::cerr << "DEPRECATED it returns state level n-best list" << std::endl;
   if (! initialized_)
     return false;
-  Lattice lat;
-  bool ok = decoder->GetRawLattice(&lat);
-  lattice2nbest(lat, n, v_out, prob_out);
+  fst::VectorFst<fst::StdArc> lat_t;
+  bool ok = this->GetLattice(&lat_t);
+  fst::VectorFst<fst::StdArc> nbest;
+  ShortestPath(lat_t, &nbest, n); // TODO compute likelihoods and normalize them against each other
+  // TODO extract the vectors from the nbest FST
+
+  return ok;
+}
+
+
+bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::StdArc> *fst_out) {
+  if (! initialized_)
+    return false;
+
+  CompactLattice clat;
+  bool ok = decoder->GetLattice(&clat);
+
+  double lm_scale = 0.0; // TODO import lm_scale
+  BaseFloat acoustic_scale = decodable->GetAcousticScale();
+  if (acoustic_scale != 1.0 || lm_scale != 1.0)
+    fst::ScaleLattice(fst::LatticeScale(lm_scale, acoustic_scale), &clat);
+
+  // {
+  //   Lattice lat;
+  //   ConvertLattice(clat, &lat);  // may itroduce new states
+  //   ConvertLattice(lat, fst_out); // adds up the (lm,acoustic) costs to get
+  //   // the normal (tropical) costs.
+  //   // in the standard Lattice format,
+  //   std::ofstream debug_f;
+  //   debug_f.open ("comp_lat_with_align.fst");
+  //   fst_out->Write(debug_f, fst::FstWriteOptions());
+  //   debug_f.close();
+  // }
+
+  {
+    RemoveAlignmentsFromCompactLattice(&clat);
+    Lattice lat;
+    ConvertLattice(clat, &lat); // convert to non-compact form.. won't introduce
+    // extra states because already removed alignments.
+    {
+      double like;
+      double ac_like; // acoustic likelihood weighted by posterior.
+      kaldi::Posterior post;
+      TopSortLatticeIfNeeded(&lat);
+      like = kaldi::LatticeForwardBackward(lat, &post, &ac_like);
+      KALDI_VLOG(1) << "Posterior LogLikelihood " << like;
+    }
+    ConvertLattice(lat, fst_out); // adds up the (lm,acoustic) costs to get
+    // the normal (tropical) costs.
+    // in the standard Lattice format,
+    fst::Project(fst_out, fst::PROJECT_OUTPUT);  // -> Acceptor with words ids
+    std::ofstream debug_f;
+    debug_f.open ("comp_lat_no_align.fst");
+    fst_out->Write(debug_f, fst::FstWriteOptions());
+    debug_f.close();
+  }
+
+  // {
+  //   Lattice lat;
+  //   CompactLattice clat3(clat); //copy
+  //   fst::Project(&clat3, fst::PROJECT_OUTPUT);
+  //   // the words are on the output, and we want the word labels.
+  //   ConvertLattice(clat3, &lat);  // may itroduce new states
+  //   ConvertLattice(lat, fst_out); // adds up the (lm,acoustic) costs to get
+  //   // the normal (tropical) costs.
+  //   // in the standard Lattice format,
+  //   std::ofstream debug_f;
+  //   debug_f.open ("comp_lat_projected.fst");
+  //   fst_out->Write(debug_f, fst::FstWriteOptions());
+  //   debug_f.close();
+  // }
+
+
   return ok;
 }
 
 bool GmmLatgenWrapper::GetRawLattice(Lattice & lat) {
+  // TODO probably to low level for the API
   if (! initialized_)
     return false;
   bool ok = decoder->GetRawLattice(&lat);
@@ -109,63 +180,6 @@ bool GmmLatgenWrapper::GetRawLattice(Lattice & lat) {
   if (acoustic_scale != 0.0) // We'll write the lattice without acoustic scaling
     fst::ScaleLattice(fst::AcousticLatticeScale(1.0 / acoustic_scale), &lat);
 
-  return ok;
-}
-
-bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::StdArc> *fst_out) {
-  if (! initialized_)
-    return false;
-
-  // TODO add to output parameters
-  double lat_like;
-  double lat_ac_like; // acoustic likelihood weighted by posterior.
-
-  // TODO import lm_scale
-  double lm_scale = 0.0;
-
-  // TODO fill fst_out with the posteriors weights!
-
-  CompactLattice clat;
-  bool ok = decoder->GetLattice(&clat);
-
-  RemoveAlignmentsFromCompactLattice(&clat);
-
-  BaseFloat acoustic_scale = decodable->GetAcousticScale();
-  if (acoustic_scale != 1.0 || lm_scale != 1.0)
-    fst::ScaleLattice(fst::LatticeScale(lm_scale, acoustic_scale), &clat);
-
-  Lattice lat;
-  ConvertLattice(clat, &lat);
-
-  kaldi::Posterior post;
-  TopSortLatticeIfNeeded(&lat);
-  lat_like = kaldi::LatticeForwardBackward(lat, &post, &lat_ac_like);
-
-  {
-    Lattice lat;
-    ConvertLattice(clat, &lat); // convert to non-compact form.. won't introduce
-    // extra states because already removed alignments.
-    ConvertLattice(lat, fst_out); // adds up the (lm,acoustic) costs to get
-    // the normal (tropical) costs.
-    // in the standard Lattice format,
-    // the words are on the output, and we want the word labels.
-    fst::Project(fst_out, fst::PROJECT_OUTPUT);
-  }
-
-  // TODO fill fst_out with the posteriors weights!
-
-  // DEBUG
-  if (ok) {
-    std::ofstream f;
-    f.open("debug_last.lat", std::ios::binary);
-    fst::FstWriteOptions opts;  // in fst/fst.h
-    clat.Write(f, opts);
-    f.close();
-
-    TableWriter<fst::VectorFstHolder> fst_writer("ark:debug_last.fst");
-    fst_writer.Write("debug_last", *fst_out);
-
-  }
   return ok;
 }
 

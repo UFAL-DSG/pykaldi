@@ -21,6 +21,7 @@
 #include "dec-wrap/pykaldi-utils.h"
 #include "lat/kaldi-lattice.h"
 #include "fstext/fstext-utils.h"
+#include "fstext/lattice-utils-inl.h"
 
 
 namespace kaldi {
@@ -35,33 +36,6 @@ void build_git_revision(std::string & pykaldi_git_revision) {
   pykaldi_git_revision.clear();
   pykaldi_git_revision.append(PYKALDI_GIT_VERSION);
   KALDI_ASSERT((pykaldi_git_revision.size() == 40) && "Git SHA has length 40 size");
-}
-
-
-void lattice2nbest(const Lattice &lat, int n, 
-        std::vector<std::vector<int> > &out_nbest, 
-        std::vector<BaseFloat> & out_prob) {
-  KALDI_WARN << "DEBUG";
-
-  std::vector<Lattice> nbest_lats;
-  // FIXME state-level nbest from state level lattice
-  fst::NbestAsFsts(lat, n, &nbest_lats);
-  for (int32 k = 0; k < static_cast<int32>(nbest_lats.size()); ++k) {
-    std::vector<int> words;
-    BaseFloat prob = -1.0;  // default value for failures
-    LatticeWeight weight;
-    // TODO is ConvertLattice needed?
-    // ConvertLattice(lat, &clat); // write in compact form.
-    fst::GetLinearSymbolSequence(nbest_lats[k],
-                                 static_cast<vector<int32> *>(0),
-                                 &words,
-                                 &weight);
-    prob = weight.Value1() + weight.Value2();
-    std::cout << "DEBUG same values?" << prob << std::endl;
-    out_nbest.push_back(words);  // copying the vector
-    out_prob.push_back(prob);
-
-  }
 }
 
 
