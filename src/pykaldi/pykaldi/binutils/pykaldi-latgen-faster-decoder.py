@@ -62,13 +62,13 @@ def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
         lat, raw_lat = decode(d, pcm)
         lat.isyms = lat.osyms = fst.read_symbols_text(wst_path)
         raw_lat.osyms = lat.osyms
-        p = lat.shortest_path()
+        # p = lat.shortest_path()
 
         word_ids = []
-        for state in p.states:
-            for arc in state.arcs:
-                word_ids.append(arc.ilabel)
-        word_ids.reverse()
+        # for state in p.states:
+        #     for arc in state.arcs:
+        #         word_ids.append(arc.ilabel)
+        # word_ids.reverse()
 
         write_decoded(file_output, wav_name, word_ids, wst)
 
@@ -76,8 +76,8 @@ def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
             with open('last_lattice.svg', 'w') as f:
                 f.write(lat._repr_svg_())
             lat.write('last_lattice.fst')
-            with open('last_raw_lattice.svg', 'w') as f:
-                f.write(raw_lat._repr_svg_())
+            # with open('last_raw_lattice.svg', 'w') as f:
+            #     f.write(raw_lat._repr_svg_())  # takes long time
             raw_lat.write('last_raw_lattice.fst')
 
             lat.remove_epsilon()
@@ -86,8 +86,8 @@ def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
                 f.write(lat._repr_svg_())
             lat.write('last_lattice_min.fst')
 
-            with open('last_best_path.svg', 'w') as f:
-                f.write(p._repr_svg_())
+            # with open('last_best_path.svg', 'w') as f:
+            #     f.write(p._repr_svg_())
             print [wst[str(w)] for w in word_ids]
 
 

@@ -93,78 +93,64 @@ bool GmmLatgenWrapper::GetNbest(int n, std::vector<std::vector<int> > &v_out,
                                        std::vector<BaseFloat> &prob_out) {
   if (! initialized_)
     return false;
-  fst::VectorFst<fst::StdArc> lat_t;
-  bool ok = this->GetLattice(&lat_t);
-  fst::VectorFst<fst::StdArc> nbest;
-  ShortestPath(lat_t, &nbest, n); // TODO compute likelihoods and normalize them against each other
+  // fst::VectorFst<fst::StdArc> lat_t;
+  // bool ok = this->GetLattice(&lat_t);
+  // fst::VectorFst<fst::StdArc> nbest;
+  // ShortestPath(lat_t, &nbest, n); // TODO compute likelihoods and normalize them against each other
   // TODO extract the vectors from the nbest FST
 
-  return ok;
+  return false;
 }
 
 
-bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::StdArc> *fst_out) {
+bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::LogArc> *fst_out) {
   if (! initialized_)
     return false;
 
-  CompactLattice clat;
-  bool ok = decoder->GetLattice(&clat);
+  // Creating Word lattice from CompactLattice
+  // CompactLattice clat;
+  // bool ok = decoder->GetLattice(&clat);
 
-  double lm_scale = 0.0; // TODO import lm_scale
-  BaseFloat acoustic_scale = decodable->GetAcousticScale();
-  if (acoustic_scale != 1.0 || lm_scale != 1.0)
-    fst::ScaleLattice(fst::LatticeScale(lm_scale, acoustic_scale), &clat);
+  // double lm_scale = 0.0; // TODO import lm_scale
+  // BaseFloat acoustic_scale = decodable->GetAcousticScale();
+  // if (acoustic_scale != 1.0 || lm_scale != 1.0)
+  //   fst::ScaleLattice(fst::LatticeScale(lm_scale, acoustic_scale), &clat);
 
   // {
+  //   RemoveAlignmentsFromCompactLattice(&clat);
   //   Lattice lat;
-  //   ConvertLattice(clat, &lat);  // may itroduce new states
+  //   ConvertLattice(clat, &lat); // convert to non-compact form.. won't introduce
+  //   // extra states because already removed alignments.
+  //   {
+  //     double like;
+  //     double ac_like; // acoustic likelihood weighted by posterior.
+  //     kaldi::Posterior post;
+  //     TopSortLatticeIfNeeded(&lat);
+  //     like = kaldi::LatticeForwardBackward(lat, &post, &ac_like);
+  //     KALDI_VLOG(1) << "Posterior LogLikelihood " << like;
+  //   }
   //   ConvertLattice(lat, fst_out); // adds up the (lm,acoustic) costs to get
   //   // the normal (tropical) costs.
   //   // in the standard Lattice format,
+  //   fst::Project(fst_out, fst::PROJECT_OUTPUT);  // Acceptor with words ids
   //   std::ofstream debug_f;
-  //   debug_f.open ("comp_lat_with_align.fst");
+  //   debug_f.open ("comp_lat_no_align.fst");
   //   fst_out->Write(debug_f, fst::FstWriteOptions());
   //   debug_f.close();
   // }
 
-  {
-    RemoveAlignmentsFromCompactLattice(&clat);
-    Lattice lat;
-    ConvertLattice(clat, &lat); // convert to non-compact form.. won't introduce
-    // extra states because already removed alignments.
-    {
-      double like;
-      double ac_like; // acoustic likelihood weighted by posterior.
-      kaldi::Posterior post;
-      TopSortLatticeIfNeeded(&lat);
-      like = kaldi::LatticeForwardBackward(lat, &post, &ac_like);
-      KALDI_VLOG(1) << "Posterior LogLikelihood " << like;
-    }
-    ConvertLattice(lat, fst_out); // adds up the (lm,acoustic) costs to get
-    // the normal (tropical) costs.
-    // in the standard Lattice format,
-    fst::Project(fst_out, fst::PROJECT_OUTPUT);  // Acceptor with words ids
-    std::ofstream debug_f;
-    debug_f.open ("comp_lat_no_align.fst");
-    fst_out->Write(debug_f, fst::FstWriteOptions());
-    debug_f.close();
-  }
-
-  // {
-  //   Lattice lat;
-  //   CompactLattice clat3(clat); //copy
-  //   fst::Project(&clat3, fst::PROJECT_OUTPUT);
-  //   // the words are on the output, and we want the word labels.
-  //   ConvertLattice(clat3, &lat);  // may itroduce new states
-  //   ConvertLattice(lat, fst_out); // adds up the (lm,acoustic) costs to get
-  //   // the normal (tropical) costs.
-  //   // in the standard Lattice format,
-  //   std::ofstream debug_f;
-  //   debug_f.open ("comp_lat_projected.fst");
-  //   fst_out->Write(debug_f, fst::FstWriteOptions());
-  //   debug_f.close();
-  // }
-
+  fst::VectorFst<fst::StdArc> t;
+  fst::VectorFst<fst::LogArc> t_log;
+  Lattice lat;
+  bool ok = decoder->GetRawLattice(&lat);
+  ConvertLattice(lat, &t);
+  fst::Project(&t, fst::PROJECT_OUTPUT);
+  fst::RmEpsilon(&t);
+  fst::ILabelCompare<fst::StdArc> ilabel_comp;
+  fst::ArcSort(&t, ilabel_comp);
+  fst::Cast(t, &t_log);
+  fst::Determinize(t_log, fst_out);
+  fst::Connect(fst_out);
 
   return ok;
 }
