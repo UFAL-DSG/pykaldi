@@ -19,6 +19,7 @@ import sys
 import fst
 
 # FIXME todo measure time of decode resp decode_once through profiler
+DEBUG = True
 
 
 def write_decoded(f, wav_name, word_ids, wst):
@@ -27,7 +28,8 @@ def write_decoded(f, wav_name, word_ids, wst):
     else:
         decoded = [str(w) for w in word_ids]
     line = ' '.join([wav_name] + decoded + ['\n'])
-    print >> sys.stderr, 'DEBUG %s' % line
+    if DEBUG:
+        print >> sys.stderr, 'DEBUG %s' % line
     f.write(line)
 
 
@@ -44,7 +46,8 @@ def decode(d, pcm):
             decoded_frames += dec_t
             dec_t = d.decode(max_frames=10)
     d.prune_final()
-    return d.get_lattice()
+    lat = d.get_lattice()
+    return lat
 
 
 def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
@@ -60,20 +63,26 @@ def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
         p = lat.shortest_path()
 
         word_ids = []
-        # TODO probably bad extraction of the path
         for state in p.states:
             for arc in state.arcs:
                 word_ids.append(arc.ilabel)
+        word_ids.reverse()
 
         write_decoded(file_output, wav_name, word_ids, wst)
 
-        # DEBUG
-        with open('last_lattice.svg', 'w') as f:
-            f.write(lat._repr_svg_())
+        if DEBUG:
+            with open('last_lattice.svg', 'w') as f:
+                f.write(lat._repr_svg_())
+            lat.write('last_lattice.fst')
+            lat.remove_epsilon()
+            lat.minimize()
+            with open('last_lattice_min.svg', 'w') as f:
+                f.write(lat._repr_svg_())
+            lat.write('last_lattice_min.fst')
 
-        with open('last_best_path.svg', 'w') as f:
-            f.write(p._repr_svg_())
-        print [wst[str(w)] for w in word_ids]
+            with open('last_best_path.svg', 'w') as f:
+                f.write(p._repr_svg_())
+            print [wst[str(w)] for w in word_ids]
 
 
 if __name__ == '__main__':
