@@ -47,7 +47,8 @@ def decode(d, pcm):
             dec_t = d.decode(max_frames=10)
     d.prune_final()
     lat = d.get_lattice()
-    return lat
+    raw_lat = d.get_raw_lattice()
+    return lat, raw_lat
 
 
 def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
@@ -58,8 +59,9 @@ def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
         # 16-bit audio so 1 sample_width = 2 chars
         pcm = load_wav(wav_path, def_sample_width=2, def_sample_rate=16000)
         d.reset(keep_buffer_data=False)
-        lat = decode(d, pcm)
+        lat, raw_lat = decode(d, pcm)
         lat.isyms = lat.osyms = fst.read_symbols_text(wst_path)
+        raw_lat.osyms = lat.osyms
         p = lat.shortest_path()
 
         word_ids = []
@@ -74,6 +76,10 @@ def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
             with open('last_lattice.svg', 'w') as f:
                 f.write(lat._repr_svg_())
             lat.write('last_lattice.fst')
+            with open('last_raw_lattice.svg', 'w') as f:
+                f.write(raw_lat._repr_svg_())
+            raw_lat.write('last_raw_lattice.fst')
+
             lat.remove_epsilon()
             lat.minimize()
             with open('last_lattice_min.svg', 'w') as f:

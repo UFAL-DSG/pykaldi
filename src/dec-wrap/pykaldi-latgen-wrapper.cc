@@ -143,7 +143,7 @@ bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::StdArc> *fst_out) {
     ConvertLattice(lat, fst_out); // adds up the (lm,acoustic) costs to get
     // the normal (tropical) costs.
     // in the standard Lattice format,
-    fst::Project(fst_out, fst::PROJECT_OUTPUT);  // -> Acceptor with words ids
+    fst::Project(fst_out, fst::PROJECT_OUTPUT);  // Acceptor with words ids
     std::ofstream debug_f;
     debug_f.open ("comp_lat_no_align.fst");
     fst_out->Write(debug_f, fst::FstWriteOptions());
@@ -169,10 +169,11 @@ bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::StdArc> *fst_out) {
   return ok;
 }
 
-bool GmmLatgenWrapper::GetRawLattice(Lattice & lat) {
+bool GmmLatgenWrapper::GetRawLattice(fst::VectorFst<fst::StdArc> *fst_out) {
   // TODO probably to low level for the API
   if (! initialized_)
     return false;
+  Lattice lat;
   bool ok = decoder->GetRawLattice(&lat);
   fst::Connect(&lat); // Will get rid of this later... shouldn't have any
 
@@ -180,6 +181,7 @@ bool GmmLatgenWrapper::GetRawLattice(Lattice & lat) {
   if (acoustic_scale != 0.0) // We'll write the lattice without acoustic scaling
     fst::ScaleLattice(fst::AcousticLatticeScale(1.0 / acoustic_scale), &lat);
 
+  ConvertLattice(lat, fst_out); // adds up the (lm,acoustic) costs to get
   return ok;
 }
 

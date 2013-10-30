@@ -16,8 +16,8 @@ cdef extern from "dec-wrap/pykaldi-latgen-wrapper.h" namespace "kaldi":
         void FrameIn(unsigned char *frame, size_t frame_len) except +
         bool GetBestPath(vector[int] v_out, float *prob) except +
         bool GetNbest(int n, vector[vector[int]] v_out, vector[float] prob_out) except +
-        #bool GetRawLattice(Lattice lat_out)
-        bool GetLattice(cStdVectorFst *fst_out)
+        bool GetRawLattice(cStdVectorFst *fst_out) except +
+        bool GetLattice(cStdVectorFst *fst_out) except +
         void PruneFinal() except +
         void Reset(bool keep_buffer_data) except +
         int Setup(int argc, char **argv) except +
@@ -78,7 +78,9 @@ cdef class PyGmmLatgenWrapper:
         return r
 
     def get_raw_lattice(self):
-        pass
+        r = StdVectorFst()
+        self.thisptr.GetRawLattice((<StdVectorFstDec?>r).fst)
+        return r
 
     def prune_final(self):
         """prune_final(self)"""
