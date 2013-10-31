@@ -101,11 +101,10 @@ bool GmmLatgenWrapper::GetNbest(int n, std::vector<std::vector<int> > &v_out,
 }
 
 
-
-
 template <class FST>
-void LatticeToWordsPost(const FST &lat, fst::VectorFst<fst::LogArc> *pst, 
-                        bool viterbi=false) {
+double LatticeToWordsPost(const FST &lat, 
+                          fst::VectorFst<fst::LogArc> *pst, 
+                          bool viterbi=false) {
   fst::VectorFst<fst::LogArc> t;  // tmp object
   fst::Cast(lat, &t);  // the input FST has to have log-likelihood weights
   fst::Project(&t, fst::PROJECT_OUTPUT);
@@ -115,8 +114,9 @@ void LatticeToWordsPost(const FST &lat, fst::VectorFst<fst::LogArc> *pst,
   fst::Determinize(t, pst);
   fst::Connect(pst);
   std::vector<double> alpha, beta;
-  ComputeLatticeAlphasAndBetas(*pst, viterbi, &alpha, &beta);
-  // TODO my function
+  double tot_prob = ComputeLatticeAlphasAndBetas(*pst, viterbi, &alpha, &beta);
+  MovePostToArcs(pst, alpha, beta); 
+  return tot_prob;
 }
 
 
@@ -134,10 +134,11 @@ bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::LogArc> *fst_out) {
 
   fst::VectorFst<fst::StdArc> t;
   ConvertLattice(lat, &t);
-  LatticeToWordsPost(t, fst_out);
+  LatticeToWordsPost(t, fst_out);  // TODO tot_prob as output
 
   return ok;
 }
+
 
 bool GmmLatgenWrapper::GetRawLattice(fst::VectorFst<fst::StdArc> *fst_out) {
   // TODO probably to low level for the API
