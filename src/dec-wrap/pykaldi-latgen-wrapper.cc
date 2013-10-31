@@ -114,7 +114,9 @@ double LatticeToWordsPost(const FST &lat,
   fst::Determinize(t, pst);
   fst::Connect(pst);
   std::vector<double> alpha, beta;
-  double tot_prob = ComputeLatticeAlphasAndBetas(*pst, viterbi, &alpha, &beta);
+  double tot_prob;
+  fst::TopSort(pst);
+  tot_prob = ComputeLatticeAlphasAndBetas(*pst, viterbi, &alpha, &beta);
   MovePostToArcs(pst, alpha, beta); 
   return tot_prob;
 }
