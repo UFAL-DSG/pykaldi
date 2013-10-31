@@ -112,7 +112,6 @@ static double ComputeLatticeAlphasAndBetas(const LatticeType &lat,
 
 
 // Lattice lat has to have loglikelihoods on weights
-// w(i,i+1) = alpha(i) * w(i, i+1) * beta(i+1) / (alpha(i) * beta(i))
 void MovePostToArcs(fst::VectorFst<fst::LogArc> * lat, 
                           const std::vector<double> &alpha,
                           const std::vector<double> &beta);

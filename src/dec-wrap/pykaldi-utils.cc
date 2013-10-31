@@ -47,13 +47,18 @@ void MovePostToArcs(fst::VectorFst<fst::LogArc> * lat,
   StateId num_states = lat->NumStates();
   for (StateId i = 0; i < num_states; ++i) {
     double alpha_i = alpha[i];
-    double alpha_beta_i = alpha_i * beta[i];
+    double alpha_beta_i = LogAdd(alpha_i , beta[i]);
     for (MutableArcIterator<VectorFst<LogArc> > aiter(lat, i); 
         !aiter.Done();
          aiter.Next()) {
       LogArc arc = aiter.Value();
-      arc.weight = LogWeight((alpha_i * arc.weight.Value() * beta[i+1])
-                      / alpha_beta_i);
+
+      // w(i,i+1) = alpha(i) * w(i, i+1) * beta(i+1) / (alpha(i) * beta(i))
+      double numer = LogAdd(LogAdd(alpha_i, (double)arc.weight.Value()),  
+                            beta[i+1]);
+      double denom = alpha_beta_i;
+      arc.weight = LogWeight(LogSub(numer, denom));
+
       aiter.SetValue(arc);
     }
   }
