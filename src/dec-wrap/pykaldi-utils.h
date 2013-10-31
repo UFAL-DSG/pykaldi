@@ -42,6 +42,22 @@ void PrintPartialResult(const std::vector<int32>& words,
 
 std::vector<int32> phones_to_vector(const std::string & s);
 
+
+template<typename LatticeType>
+static double ComputeLatticeAlphasAndBetas(const LatticeType &lat,
+                                           bool viterbi,
+                                           vector<double> *alpha,
+                                           vector<double> *beta);
+
+// FIXME Copied from lat/lattice-functions.cc 
+// There is no no declaration in lat/lattice-functions.h!
+static inline double LogAddOrMax(bool viterbi, double a, double b) {
+  if (viterbi)
+    return std::max(a, b);
+  else
+    return LogAdd(a, b);
+}
+
 } // namespace kaldi
 
 #endif // KALDI_PYKALDI_PYKALDIBIN_UTIL_H_

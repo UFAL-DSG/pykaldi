@@ -39,6 +39,67 @@ void build_git_revision(std::string & pykaldi_git_revision) {
 }
 
 
+
+// FIXME Copied from lat/lattice-functions.cc 
+// There is no no declaration in lat/lattice-functions.h!
+// Computes (normal or Viterbi) alphas and betas; returns (total-prob, or
+// best-path negated cost) Note: in either case, the alphas and betas are
+// negated costs.  Requires that lat be topologically sorted.  This code
+// will work for either CompactLattice or Latice.
+template<typename LatticeType>
+static double ComputeLatticeAlphasAndBetas(const LatticeType &lat,
+                                           bool viterbi,
+                                           vector<double> *alpha,
+                                           vector<double> *beta) {
+  typedef typename LatticeType::Arc Arc;
+  typedef typename Arc::Weight Weight;
+  typedef typename Arc::StateId StateId;
+
+  StateId num_states = lat.NumStates();
+  KALDI_ASSERT(lat.Properties(fst::kTopSorted, true) == fst::kTopSorted);
+  KALDI_ASSERT(lat.Start() == 0);
+  alpha->resize(num_states, kLogZeroDouble);
+  beta->resize(num_states, kLogZeroDouble);
+
+  double tot_forward_prob = kLogZeroDouble;
+  (*alpha)[0] = 0.0;
+  // Propagate alphas forward.
+  for (StateId s = 0; s < num_states; s++) {
+    double this_alpha = (*alpha)[s];
+    for (fst::ArcIterator<LatticeType> aiter(lat, s); !aiter.Done();
+         aiter.Next()) {
+      const Arc &arc = aiter.Value();
+      double arc_like = -ConvertToCost(arc.weight);
+      (*alpha)[arc.nextstate] = LogAddOrMax(viterbi, (*alpha)[arc.nextstate],
+                                                this_alpha + arc_like);
+    }
+    Weight f = lat.Final(s);
+    if (f != Weight::Zero()) {
+      double final_like = this_alpha - ConvertToCost(f);
+      tot_forward_prob = LogAddOrMax(viterbi, tot_forward_prob, final_like);
+    }
+  }
+  for (StateId s = num_states-1; s >= 0; s--) { // it's guaranteed signed.
+    double this_beta = -ConvertToCost(lat.Final(s));
+    for (fst::ArcIterator<LatticeType> aiter(lat, s); !aiter.Done();
+         aiter.Next()) {
+      const Arc &arc = aiter.Value();
+      double arc_like = -ConvertToCost(arc.weight),
+          arc_beta = (*beta)[arc.nextstate] + arc_like;
+      this_beta = LogAddOrMax(viterbi, this_beta, arc_beta);
+    }
+    (*beta)[s] = this_beta;
+  }
+  double tot_backward_prob = (*beta)[lat.Start()];
+  if (!ApproxEqual(tot_forward_prob, tot_backward_prob, 1e-8)) {
+    KALDI_WARN << "Total forward probability over lattice = " << tot_forward_prob
+               << ", while total backward probability = " << tot_backward_prob;
+  }
+  // Split the difference when returning... they should be the same.
+  return 0.5 * (tot_backward_prob + tot_forward_prob);
+}
+
+
 fst::Fst<fst::StdArc> *ReadDecodeGraph(std::string filename) {
   // read decoding network FST
   Input ki(filename); // use ki.Stream() instead of is.
