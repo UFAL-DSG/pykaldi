@@ -152,6 +152,9 @@ bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::LogArc> *fst_out) {
   fst::Determinize(t_log, fst_out);
   fst::Connect(fst_out);
 
+  fst::VectorFst<fst::LogArc> path_log;
+  fst::ShortestPath(*fst_out, &path_log, 1); // todo try it out
+
   return ok;
 }
 
