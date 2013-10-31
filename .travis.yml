@@ -4,7 +4,6 @@
 branches:
     only:
         -master
-        -svn-mirror
 
 language: python
 python:
