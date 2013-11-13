@@ -113,6 +113,7 @@ double LatticeToWordsPost(const FST &lat,
   fst::ArcSort(&t, ilabel_comp);
   fst::Determinize(t, pst);
   fst::Connect(pst);
+  fst::Minimize(pst);
   std::vector<double> alpha, beta;
   double tot_prob;
   fst::TopSort(pst);
