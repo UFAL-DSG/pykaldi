@@ -22,7 +22,7 @@ before_install:
     - pushd /usr/include && sudo ln -s atlas/*.h . ; popd  # hack how to make available clapack.h FIXME failing cblas.h exists
 
 install: 
-    - pip install -q cython --use-mirrors
+    - pip install -q cython pystache pyyaml --use-mirrors
     # Openfst: building
     - pushd tools && make -j 4 openfst_tgt && popd
     # Configure with ATLAS (default)

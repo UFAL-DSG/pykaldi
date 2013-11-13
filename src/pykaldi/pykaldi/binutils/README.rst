@@ -1,3 +1,4 @@
+* For drawing you need `dot` binary from graph [http://www.graphviz.org/Download..php](graphviz) library.
 DEPRECATED - TODO REWRITE
 =========================
 
