@@ -46,9 +46,7 @@ def decode(d, pcm):
             decoded_frames += dec_t
             dec_t = d.decode(max_frames=10)
     d.prune_final()
-    lat = d.get_lattice()
-    raw_lat = d.get_raw_lattice()
-    return lat, raw_lat
+    return d.get_lattice()
 
 
 def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
@@ -59,36 +57,26 @@ def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
         # 16-bit audio so 1 sample_width = 2 chars
         pcm = load_wav(wav_path, def_sample_width=2, def_sample_rate=16000)
         d.reset(keep_buffer_data=False)
-        lat, raw_lat = decode(d, pcm)
+        lat = decode(d, pcm)
         lat.isyms = lat.osyms = fst.read_symbols_text(wst_path)
-        raw_lat.osyms = lat.osyms
-        # p = lat.shortest_path()
-
-        word_ids = []
-        # for state in p.states:
-        #     for arc in state.arcs:
-        #         word_ids.append(arc.ilabel)
-        # word_ids.reverse()
-
-        write_decoded(file_output, wav_name, word_ids, wst)
-
         if DEBUG:
             with open('last_lattice.svg', 'w') as f:
                 f.write(lat._repr_svg_())
             lat.write('last_lattice.fst')
-            # with open('last_raw_lattice.svg', 'w') as f:
-            #     f.write(raw_lat._repr_svg_())  # takes long time
-            raw_lat.write('last_raw_lattice.fst')
 
-            lat.remove_epsilon()
-            lat.minimize()
-            with open('last_lattice_min.svg', 'w') as f:
-                f.write(lat._repr_svg_())
-            lat.write('last_lattice_min.fst')
+        # p = lat.shortest_path()
+        word_ids = []
+        # FIXME lat is in log semiring -> no best path
+        # for state in p.states:
+        #     for arc in state.arcs:
+        #         word_ids.append(arc.ilabel)
+        # word_ids.reverse()
+        # if DEBUG:
+        #     with open('last_best_path.svg', 'w') as f:
+        #         f.write(p._repr_svg_())
+        #     print [wst[str(w)] for w in word_ids]
 
-            # with open('last_best_path.svg', 'w') as f:
-            #     f.write(p._repr_svg_())
-            print [wst[str(w)] for w in word_ids]
+        write_decoded(file_output, wav_name, word_ids, wst)
 
 
 if __name__ == '__main__':
