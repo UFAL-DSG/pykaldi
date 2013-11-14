@@ -32,6 +32,7 @@ void pykaldi_version(int *out_major, int * out_minor, int *patch) {
   *patch = PYKALDI_PATCH;
 }
 
+
 void build_git_revision(std::string & pykaldi_git_revision) {
   pykaldi_git_revision.clear();
   pykaldi_git_revision.append(PYKALDI_GIT_VERSION);
@@ -63,8 +64,6 @@ void MovePostToArcs(fst::VectorFst<fst::LogArc> * lat,
     }
   }
 }
-
-
 
 
 fst::Fst<fst::StdArc> *ReadDecodeGraph(std::string filename) {

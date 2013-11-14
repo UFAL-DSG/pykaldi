@@ -116,6 +116,30 @@ void MovePostToArcs(fst::VectorFst<fst::LogArc> * lat,
                           const std::vector<double> &alpha,
                           const std::vector<double> &beta);
 
+
+template <class FST>
+double LatticeToWordsPost(const FST &lat, 
+    fst::VectorFst<fst::LogArc> *pst) {
+  fst::VectorFst<fst::LogArc> t;  // tmp object
+  // the input FST has to have log-likelihood weights
+  fst::Cast(lat, &t);  // reinterpret the inner implementations
+  fst::Project(&t, fst::PROJECT_OUTPUT);
+  fst::RmEpsilon(&t);
+  fst::ILabelCompare<fst::LogArc> ilabel_comp;
+  fst::ArcSort(&t, ilabel_comp);
+  fst::Determinize(t, pst);
+  fst::Connect(pst);
+  fst::Minimize(pst);
+  std::vector<double> alpha, beta;
+  double tot_prob;
+  fst::TopSort(pst);
+  bool viterbi = false; // Uses LogAdd as apropriete in Log semiring
+  tot_prob = ComputeLatticeAlphasAndBetas(*pst, viterbi, &alpha, &beta);
+  MovePostToArcs(pst, alpha, beta); 
+  return tot_prob;
+}
+
+
 } // namespace kaldi
 
 #endif // KALDI_PYKALDI_PYKALDIBIN_UTIL_H_

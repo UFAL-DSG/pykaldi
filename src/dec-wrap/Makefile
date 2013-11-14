@@ -23,7 +23,7 @@ ADDLIBS = ../decoder/kaldi-decoder.a ../thread/kaldi-thread.a \
 BINFILES =
 
 TESTFILES = pykaldi-faster-wrapper-test pykaldi-feat-input-test \
-			pykaldi-audio-source-test read-wav-test
+			pykaldi-audio-source-test read-wav-test pykaldi-utils-test
 
 OBJFILES = pykaldi-latgen-decoder.o pykaldi-latgen-wrapper.o \
 		   pykaldi-faster-wrapper.o pykaldi-faster-decoder.o \

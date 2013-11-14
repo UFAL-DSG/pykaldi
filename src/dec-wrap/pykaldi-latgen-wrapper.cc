@@ -101,28 +101,6 @@ bool GmmLatgenWrapper::GetNbest(int n, std::vector<std::vector<int> > &v_out,
 }
 
 
-template <class FST>
-double LatticeToWordsPost(const FST &lat, 
-                          fst::VectorFst<fst::LogArc> *pst, 
-                          bool viterbi=false) {
-  fst::VectorFst<fst::LogArc> t;  // tmp object
-  fst::Cast(lat, &t);  // the input FST has to have log-likelihood weights
-  fst::Project(&t, fst::PROJECT_OUTPUT);
-  fst::RmEpsilon(&t);
-  fst::ILabelCompare<fst::LogArc> ilabel_comp;
-  fst::ArcSort(&t, ilabel_comp);
-  fst::Determinize(t, pst);
-  fst::Connect(pst);
-  fst::Minimize(pst);
-  std::vector<double> alpha, beta;
-  double tot_prob;
-  fst::TopSort(pst);
-  tot_prob = ComputeLatticeAlphasAndBetas(*pst, viterbi, &alpha, &beta);
-  MovePostToArcs(pst, alpha, beta); 
-  return tot_prob;
-}
-
-
 bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::LogArc> *fst_out) {
   if (! initialized_)
     return false;
