@@ -92,7 +92,6 @@ for set_name in $test_sets_ext ; do
    exp/tri1/graph_${set_name} data/$set_name exp/tri1/decode_$set_name
 done
  
-# TODO improve to draw reasonable
 # draw-tree data/lang/phones.txt exp/tri1/tree | dot -Tsvg -Gsize=8,10.5  > graph.svg
   
 #align tri1 
