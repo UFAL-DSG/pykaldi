@@ -54,10 +54,10 @@ void MovePostToArcs(fst::VectorFst<fst::LogArc> * lat,
          aiter.Next()) {
       LogArc arc = aiter.Value();
 
-      // w(i,i+1) = alpha(i) * w(i, i+1) * beta(i+1) / (alpha(i) * beta(i))
+      // w(i,j) = alpha(i) * w(i, j) * beta(j) / (alpha(i) * beta(i))
       double numer = LogAdd(LogAdd(alpha_i, (double)arc.weight.Value()),  
-                            beta[i+1]);
-      double denom = alpha_beta_i;
+                            beta[arc.nextstate]);
+      double denom = alpha_beta_i; // FIXME does not normalise
       arc.weight = LogWeight(LogSub(numer, denom));
 
       aiter.SetValue(arc);

@@ -38,14 +38,30 @@ void test_MovePostToArc() {
 }
 
 void test_LatticeToWordsPost() {
-  // TODO
-  KALDI_ASSERT(1==2);
+  VectorFst<LogArc> *t = VectorFst<LogArc>::Read("T.fst");
+  VectorFst<LogArc> post_t;
+  LatticeToWordsPost(*t, &post_t);
+  delete t;
+}
+
+void test_ComputeLatticeAlphasAndBetas() {
+  VectorFst<StdArc> *t = VectorFst<StdArc>::Read("T.fst");
+  std::vector<double> alpha;
+  std::vector<double> beta;
+  double tot_post;
+  tot_post = ComputeLatticeAlphasAndBetas(*t, false, &alpha, &beta);
+  std::cout << "total posterior probability is " << tot_post << std::endl;
+  for (size_t i = 0; i < alpha.size(); ++i) {
+    std::cout << "a[" << i << "] = " << alpha[i] << " beta[" << i << "] = "
+      << beta[i] << std::endl;
+  }
 }
 
 int main() {
   if(!system(NULL) || system("./testing_fst.sh"))
     std::cerr << "Maybe the testing FSTs are not created" << std::endl;
   test_fst_equal();
+  test_ComputeLatticeAlphasAndBetas();
   // test_MovePostToArc();
   // test_LatticeToWordsPost();
   return 0;
