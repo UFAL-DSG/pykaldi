@@ -52,6 +52,7 @@ static inline double LogAddOrMax(bool viterbi, double a, double b) {
 }
 
 // FIXME Copied from lat/lattice-functions.cc 
+// FIXME does it work with multiple final states?
 // There is no no declaration in lat/lattice-functions.h!
 // Computes (normal or Viterbi) alphas and betas; returns (total-prob, or
 // best-path negated cost) Note: in either case, the alphas and betas are
@@ -80,7 +81,7 @@ static double ComputeLatticeAlphasAndBetas(const LatticeType &lat,
     for (fst::ArcIterator<LatticeType> aiter(lat, s); !aiter.Done();
          aiter.Next()) {
       const Arc &arc = aiter.Value();
-      double arc_like = -ConvertToCost(arc.weight);
+      double arc_like = -ConvertToCost(arc.weight);  // FIXME probably the problem
       (*alpha)[arc.nextstate] = LogAddOrMax(viterbi, (*alpha)[arc.nextstate],
                                                 this_alpha + arc_like);
     }
