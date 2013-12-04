@@ -13,13 +13,15 @@
 # MERCHANTABLITY OR NON-INFRINGEMENT.
 # See the Apache 2 License for the specific language governing permissions and
 # limitations under the License. #
+# FIXME todo measure time of decode resp decode_once through profiler
 from pykaldi.utils import load_wav, wst2dict
 from pykaldi.decoders import PyGmmLatgenWrapper
 import sys
 import fst
 
-# FIXME todo measure time of decode resp decode_once through profiler
 DEBUG = True
+if DEBUG:
+    import datetime
 
 
 def write_decoded(f, wav_name, word_ids, wst):
@@ -60,21 +62,20 @@ def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
         lat = decode(d, pcm)
         lat.isyms = lat.osyms = fst.read_symbols_text(wst_path)
         if DEBUG:
-            with open('last_lattice.svg', 'w') as f:
+            timestamp = datetime.datetime.now().isoformat()
+            with open('last_lattice_%s.svg' % timestamp, 'w') as f:
                 f.write(lat._repr_svg_())
-            lat.write('last_lattice.fst')
+            lat.write('last_lattice_%s.fst' % timestamp)
 
-        # p = lat.shortest_path()
-        word_ids = []
         # FIXME lat is in log semiring -> no best path
-        # for state in p.states:
-        #     for arc in state.arcs:
-        #         word_ids.append(arc.ilabel)
-        # word_ids.reverse()
-        # if DEBUG:
-        #     with open('last_best_path.svg', 'w') as f:
-        #         f.write(p._repr_svg_())
-        #     print [wst[str(w)] for w in word_ids]
+        # Converting the lattice to tropical semiring
+        std_v = fst.StdVectorFst(lat)
+        p = std_v.shortest_path()
+        word_ids = []
+        for state in p.states:
+            for arc in state.arcs:
+                word_ids.append(arc.ilabel)
+        word_ids.reverse()
 
         write_decoded(file_output, wav_name, word_ids, wst)
 
