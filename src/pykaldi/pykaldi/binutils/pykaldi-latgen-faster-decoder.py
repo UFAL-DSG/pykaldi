@@ -20,8 +20,6 @@ import sys
 import fst
 
 DEBUG = True
-if DEBUG:
-    import datetime
 
 
 def write_decoded(f, wav_name, word_ids, wst):
@@ -62,10 +60,9 @@ def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
         lat = decode(d, pcm)
         lat.isyms = lat.osyms = fst.read_symbols_text(wst_path)
         if DEBUG:
-            timestamp = datetime.datetime.now().isoformat()
-            with open('last_lattice_%s.svg' % timestamp, 'w') as f:
+            with open('lattice_%s.svg' % wav_name, 'w') as f:
                 f.write(lat._repr_svg_())
-            lat.write('last_lattice_%s.fst' % timestamp)
+            lat.write('lattice_%s.fst' % wav_name)
 
         # FIXME lat is in log semiring -> no best path
         # Converting the lattice to tropical semiring

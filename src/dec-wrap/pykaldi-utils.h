@@ -135,10 +135,13 @@ double LatticeToWordsPost(const FST &lat,
   fst::TopSort(pst);
   bool viterbi = false; // Uses LogAdd as apropriete in Log semiring
   tot_prob = ComputeLatticeAlphasAndBetas(*pst, viterbi, &alpha, &beta);
+
+  // DEBUG
   for (size_t i = 0; i < alpha.size(); ++i) {
-    std::cout << "a[" << i << "] = " << alpha[i] << " beta[" << i << "] = "
+    std::cerr << "a[" << i << "] = " << alpha[i] << " beta[" << i << "] = "
       << beta[i] << std::endl;
   }
+
   MovePostToArcs(pst, alpha, beta); 
   fst::Minimize(pst);
   return tot_prob;
