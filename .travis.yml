@@ -31,5 +31,6 @@ install:
     - pushd src/dec-wrap && make -j 4 && popd
 
 script:
-    - pushd src/dec-wrap && make -j 4 test && popd
+    # the PATH is necessary for fstcompilation TODO get rid of it
+    - pushd src/dec-wrap && PATH=../../tools/openfst/bin make -j 4 test && popd  
     - pushd src/pykaldi && LD_LIBRARY_PATH=../dec-wrap python setup.py nosetests && popd
