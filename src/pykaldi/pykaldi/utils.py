@@ -128,19 +128,20 @@ def lattice_to_nbest(lat, n=1):
         arc = p[arc.nextstate].arcs.next()
         # second arc is also epsilon arc
         assert(arc.ilabel == 0 and arc.olabel == 0)
+        # assuming logarithmic semiring
+        path, weight = [], 0
+        # start with third arc
         arc = p[arc.nextstate].arcs.next()
-        # the third arc stores the weight of the path
-        weight = arc.weight
-        path = []
         try:
             while arc.olabel != 0:
                 path.append(arc.olabel)
+                weight += float(arc.weight)  # TODO use the Weights class explicitly
                 arc = p[arc.nextstate].arcs.next()
         except StopIteration:
             pass
 
         word_ids.append((float(weight), path))
-    sorted(word_ids)
+    sorted(word_ids)  # TODO is it necessary? // probably not
     return word_ids
 
 
