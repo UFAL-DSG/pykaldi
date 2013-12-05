@@ -13,19 +13,28 @@ cat $tmp_config 1>&2 ; echo 1>&2
 
 export LD_LIBRARY_PATH=`pwd`/../../../dec-wrap:$LD_LIBRARY_PATH
 
+# Below, there are various commands for debugging, profiling and always
+# running the python wrapper around decoder. 
+# Uncomment convenient prefix for you and put it after other alternatives.
+#
 # cgdb -q -x .gdbinit_latgen --args python \
-# python \
-kernprof.py -l -v  \
+# kernprof.py -l -v  \
+# valgrind --tool=callgrind -v --dump-instr=yes --trace-jump=yes --callgrind-out-file=callgrind.log python \
+python \
 pykaldi-latgen-faster-decoder.py $wav_scp $batch_size $pykaldi_latgen_tra \
     --verbose=0 --acoustic-scale=0.1 --config=$tmp_config \
     $model $hclg $wst 1:2:3:4:5
 
-# # reference is named based on wav_scp
+# If using callgrind display the results by running kcachegrind
+# kcachegrind callgrind.log
+
+# reference is named based on wav_scp
 ./build_reference.py $wav_scp $decode_dir
 reference=$decode_dir/`basename $wav_scp`.tra
-compute-wer --text --mode=present ark:$reference ark,p:$pykaldi_latgen_tra
 
 echo; echo "Reference"; echo
 cat $reference
 echo; echo "Decoded"; echo
 cat $pykaldi_latgen_tra
+
+compute-wer --text --mode=present ark:$reference ark,p:$pykaldi_latgen_tra
