@@ -13,8 +13,10 @@ cat $tmp_config 1>&2 ; echo 1>&2
 
 export LD_LIBRARY_PATH=`pwd`/../../../dec-wrap:$LD_LIBRARY_PATH
 
-# cgdb -q -x .gdbinit_latgen --args \
-python pykaldi-latgen-faster-decoder.py $wav_scp $batch_size $pykaldi_latgen_tra \
+# cgdb -q -x .gdbinit_latgen --args python \
+# python \
+kernprof.py -l -v  \
+pykaldi-latgen-faster-decoder.py $wav_scp $batch_size $pykaldi_latgen_tra \
     --verbose=0 --acoustic-scale=0.1 --config=$tmp_config \
     $model $hclg $wst 1:2:3:4:5
 

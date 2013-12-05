@@ -33,6 +33,7 @@ def write_decoded(f, wav_name, word_ids, wst):
     f.write(line)
 
 
+@profile
 def decode(d, pcm):
     frame_len = (2 * audio_batch_size)  # 16-bit audio so 1 sample = 2 chars
     it = (len(pcm) / frame_len)
@@ -49,6 +50,21 @@ def decode(d, pcm):
     return d.get_lattice()
 
 
+@profile
+def lattice_to_nbest(lat, n=1):
+    # FIXME lat is in log semiring -> no best path
+    # Converting the lattice to tropical semiring
+    std_v = fst.StdVectorFst(lat)
+    p = std_v.shortest_path(n=10)
+    # FIXME writing nonsense - assuming only best path n==1
+    word_ids = []
+    for state in p.states:
+        for arc in state.arcs:
+            word_ids.append(arc.ilabel)
+    word_ids.reverse()
+    return word_ids
+
+
 def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
     wst = wst2dict(wst_path)
     d = PyGmmLatgenWrapper()
@@ -56,6 +72,9 @@ def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
     for wav_name, wav_path in wav_paths:
         # 16-bit audio so 1 sample_width = 2 chars
         pcm = load_wav(wav_path, def_sample_width=2, def_sample_rate=16000)
+        if DEBUG:
+            print >> sys.stderr, '%s wav length in sec %f' % (
+                wav_path, (float(len(pcm)) / 2) / 16000)
         d.reset(keep_buffer_data=False)
         lat = decode(d, pcm)
         lat.isyms = lat.osyms = fst.read_symbols_text(wst_path)
@@ -64,16 +83,7 @@ def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
                 f.write(lat._repr_svg_())
             lat.write('lattice_%s.fst' % wav_name)
 
-        # FIXME lat is in log semiring -> no best path
-        # Converting the lattice to tropical semiring
-        std_v = fst.StdVectorFst(lat)
-        p = std_v.shortest_path()
-        word_ids = []
-        for state in p.states:
-            for arc in state.arcs:
-                word_ids.append(arc.ilabel)
-        word_ids.reverse()
-
+        word_ids = lattice_to_nbest(lat, n=10)
         write_decoded(file_output, wav_name, word_ids, wst)
 
 
