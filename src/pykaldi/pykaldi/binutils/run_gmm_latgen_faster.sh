@@ -30,24 +30,17 @@ gmm-latgen-faster --config=$decode_config \
 lattice-best-path --lm-scale=15 --word-symbol-table=$wst \
     "ark:gunzip -c $lattice|" ark,t:$gmm_latgen_faster_tra || exit 1;
 
-lattice-best-path --lm-scale=15 --word-symbol-table=$wst \
-    "ark:gunzip -c ${decode_dir}/last.lat.gz|" ark,t:$pykaldi_latgen_tra || exit 1;
-
 cat $gmm_latgen_faster_tra | ./int2sym.pl -f 2- $wst \
     > $gmm_latgen_faster_tra_txt || exit 1
-
-cat $pykaldi_latgen_tra | ./int2sym.pl -f 2- $wst \
-    > $pykaldi_latgen_tra_txt || exit 1
 
 # reference is named based on wav_scp
 ./build_reference.py $wav_scp $decode_dir
 reference=$decode_dir/`basename $wav_scp`.tra
-compute-wer --text --mode=present ark:$reference ark,p:$gmm_latgen_faster_tra_txt
-compute-wer --text --mode=present ark:$reference ark,p:$pykaldi_latgen_tra_txt
 
 echo; echo "Reference"; echo
 cat $reference
 echo; echo "Decoded"; echo
 cat $gmm_latgen_faster_tra_txt
-echo; echo "Decoded pykaldi"; echo
-cat $pykaldi_latgen_tra_txt
+
+compute-wer --text --mode=present ark:$reference ark,p:$gmm_latgen_faster_tra_txt
+
