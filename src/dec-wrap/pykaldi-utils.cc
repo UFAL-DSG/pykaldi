@@ -65,6 +65,21 @@ void MovePostToArcs(fst::VectorFst<fst::LogArc> * lat,
   }
 }
 
+double LatticeToNbest(const fst::VectorFst<fst::StdArc> &lat, 
+                     std::vector<std::vector<int> > &nbest, 
+                     std::vector<BaseFloat> &prob_out,
+                     int n) {
+  // TODO compute likelihoods and normalize them against each other
+  // There are n - eps arcs from 0 state which mark beginning of each list
+  // Following one path there are 2 eps arcs at beginning
+  // and one at the end before final state
+
+  // using namespace fst;
+  // VectorFst<StdArc> p;
+  // ShortestPath(lat, &p, n); 
+  return 1.0;
+}
+
 
 fst::Fst<fst::StdArc> *ReadDecodeGraph(std::string filename) {
   // read decoding network FST

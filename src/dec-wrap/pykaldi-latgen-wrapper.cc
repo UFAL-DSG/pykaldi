@@ -94,14 +94,20 @@ bool GmmLatgenWrapper::GetNbest(int n, std::vector<std::vector<int> > &v_out,
                                        std::vector<BaseFloat> &prob_out) {
   if (! initialized_)
     return false;
-  // ShortestPath(lat_t, &nbest, n); // TODO compute likelihoods and normalize them against each other
-  // TODO extract the vectors from the nbest FST
+  fst::VectorFst<fst::LogArc> log_fst;
+  double tot_prob;
 
-  return false;
+  bool ok = GetLattice(&log_fst, &tot_prob);
+  fst::VectorFst<fst::StdArc> std_fst;
+  fst::Cast(log_fst, &std_fst);  // reinterpret the inner implementations
+  // double nbest_prob = LatticeToNbest(std_fst, v_out, prob_out, n); 
+  LatticeToNbest(std_fst, v_out, prob_out, n); 
+  return ok;
 }
 
 
-bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::LogArc> *fst_out) {
+bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::LogArc> *fst_out, 
+                                  double *tot_prob) {
   if (! initialized_)
     return false;
 
@@ -115,7 +121,7 @@ bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::LogArc> *fst_out) {
 
   fst::VectorFst<fst::StdArc> t;
   ConvertLattice(lat, &t);
-  LatticeToWordsPost(t, fst_out);  // TODO tot_prob as output
+  *tot_prob = LatticeToWordsPost(t, fst_out);  // TODO tot_prob as output
 
   return ok;
 }

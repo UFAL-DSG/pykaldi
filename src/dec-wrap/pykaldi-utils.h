@@ -40,6 +40,14 @@ void PrintPartialResult(const std::vector<int32>& words,
                         const fst::SymbolTable *word_syms,
                         bool line_break);
 
+// Extract n-best lists from lattice in Tropical semiring.
+// Tropical semiring is needed for shortest-path algorithm ?TODO?
+double LatticeToNbest(const fst::VectorFst<fst::StdArc> &lat, 
+                     std::vector<std::vector<int> > &nbest, 
+                     std::vector<BaseFloat> &prob_out,
+                     int n);
+
+
 std::vector<int32> phones_to_vector(const std::string & s);
 
 // FIXME Copied from lat/lattice-functions.cc 

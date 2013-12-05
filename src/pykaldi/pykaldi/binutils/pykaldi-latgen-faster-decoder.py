@@ -49,7 +49,8 @@ def decode(d, pcm):
             decoded_frames += dec_t
             dec_t = d.decode(max_frames=10)
     d.prune_final()
-    return d.get_lattice()
+    lat, prob = d.get_lattice()
+    return lat
 
 
 def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):

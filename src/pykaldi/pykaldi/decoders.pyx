@@ -16,7 +16,7 @@ cdef extern from "dec-wrap/pykaldi-latgen-wrapper.h" namespace "kaldi":
         bool GetBestPath(vector[int] v_out, float *prob) except +
         bool GetNbest(int n, vector[vector[int]] v_out, vector[float] prob_out) except +
         bool GetRawLattice(libfst.StdVectorFst *fst_out) except +
-        bool GetLattice(libfst.LogVectorFst *fst_out) except +
+        bool GetLattice(libfst.LogVectorFst *fst_out, double *tot_prob) except +
         void PruneFinal() except +
         void Reset(bool keep_buffer_data) except +
         int Setup(int argc, char **argv) except +
@@ -46,7 +46,7 @@ cdef class PyGmmLatgenWrapper:
     def frame_in(self, bytes frame_str):
         """frame_in(self, bytes frame_str, int num_samples)"""
         num_bytes = (self.bits / 8)
-        num_samples = len(frame_str) / num_bytes 
+        num_samples = len(frame_str) / num_bytes
         assert(num_samples * num_bytes == len(frame_str)), "Not align audio to for %d bits" % self.bits
         self.thisptr.FrameIn(frame_str, num_samples)
 
@@ -72,9 +72,10 @@ cdef class PyGmmLatgenWrapper:
         return r
 
     def get_lattice(self):
+        cdef double prob
         r = fst.LogVectorFst()
-        self.thisptr.GetLattice((<fst._fst.LogVectorFst?>r).fst)
-        return r
+        self.thisptr.GetLattice((<fst._fst.LogVectorFst?>r).fst, address(prob))
+        return (r, prob)
 
     def get_raw_lattice(self):
         r = fst.StdVectorFst()
