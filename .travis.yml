@@ -3,7 +3,7 @@
 # Travis uses Ubuntu 64 12.04
 branches:
     only:
-        -master
+        - master
 
 language: python
 python:
