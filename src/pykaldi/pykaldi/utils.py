@@ -26,6 +26,7 @@ from urllib2 import URLError, HTTPError
 import tarfile
 import glob
 from sys import stderr
+import fst
 
 
 def get_voxforge_data(path=None, workdir='work'):
@@ -109,6 +110,38 @@ def get_vystadial_data(src_tar_path, path=None):
     with open(os.path.join(audio_path, 'input_best.scp'), 'wb') as input_scp:
         best_index = 10
         input_scp.write('%s %s\n' % (wav_names[best_index], wav_paths[best_index]))
+
+
+def lattice_to_nbest(lat, n=1):
+    # Log semiring -> no best path
+    # Converting the lattice to tropical semiring
+    std_v = fst.StdVectorFst(lat)
+    p = std_v.shortest_path(n=10)
+    # There are n - eps arcs from 0 state which mark beginning of each list
+    # Following one path there are 2 eps arcs at beginning
+    # and one at the end before final state
+    first_arcs = [a for a in p[0].arcs]
+    word_ids = []
+    for arc in first_arcs:
+        # first arc is epsilon arc
+        assert(arc.ilabel == 0 and arc.olabel == 0)
+        arc = p[arc.nextstate].arcs.next()
+        # second arc is also epsilon arc
+        assert(arc.ilabel == 0 and arc.olabel == 0)
+        arc = p[arc.nextstate].arcs.next()
+        # the third arc stores the weight of the path
+        weight = arc.weight
+        path = []
+        try:
+            while arc.olabel != 0:
+                path.append(arc.olabel)
+                arc = p[arc.nextstate].arcs.next()
+        except StopIteration:
+            pass
+
+        word_ids.append((float(weight), path))
+    sorted(word_ids)
+    return word_ids
 
 
 def load_wav(file_name, def_sample_width=2, def_sample_rate=16000):

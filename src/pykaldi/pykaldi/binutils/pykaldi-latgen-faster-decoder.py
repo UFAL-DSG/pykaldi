@@ -13,23 +13,25 @@
 # MERCHANTABLITY OR NON-INFRINGEMENT.
 # See the Apache 2 License for the specific language governing permissions and
 # limitations under the License. #
-# FIXME todo measure time of decode resp decode_once through profiler
-from pykaldi.utils import load_wav, wst2dict
+from pykaldi.utils import load_wav, wst2dict, lattice_to_nbest
 from pykaldi.decoders import PyGmmLatgenWrapper
 import sys
 import fst
 
 DEBUG = True
+# DEBUG = False
 
 
 def write_decoded(f, wav_name, word_ids, wst):
+    assert(len(word_ids) > 0)
+    best_weight, best_path = word_ids[0]
     if wst is not None:
-        decoded = [wst[str(w)] for w in word_ids]
+        decoded = [wst[str(w)] for w in best_path]
     else:
-        decoded = [str(w) for w in word_ids]
+        decoded = [str(w) for w in best_path]
     line = ' '.join([wav_name] + decoded + ['\n'])
     if DEBUG:
-        print >> sys.stderr, 'DEBUG %s' % line
+        print >> sys.stderr, '%s best path %s' % (wav_name, decoded)
     f.write(line)
 
 
@@ -48,21 +50,6 @@ def decode(d, pcm):
             dec_t = d.decode(max_frames=10)
     d.prune_final()
     return d.get_lattice()
-
-
-# @profile
-def lattice_to_nbest(lat, n=1):
-    # FIXME lat is in log semiring -> no best path
-    # Converting the lattice to tropical semiring
-    std_v = fst.StdVectorFst(lat)
-    p = std_v.shortest_path(n=10)
-    # FIXME writing nonsense - assuming only best path n==1
-    word_ids = []
-    for state in p.states:
-        for arc in state.arcs:
-            word_ids.append(arc.ilabel)
-    word_ids.reverse()
-    return word_ids
 
 
 def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
