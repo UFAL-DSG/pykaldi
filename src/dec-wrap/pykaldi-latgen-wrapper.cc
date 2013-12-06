@@ -131,15 +131,18 @@ bool GmmLatgenWrapper::GetRawLattice(fst::VectorFst<fst::StdArc> *fst_out) {
   // TODO probably to low level for the API
   if (! initialized_)
     return false;
+
   Lattice lat;
   bool ok = decoder->GetRawLattice(&lat);
   fst::Connect(&lat); // Will get rid of this later... shouldn't have any
 
+  double lm_scale = 0.0; // TODO import lm_scale
   BaseFloat acoustic_scale = decodable->GetAcousticScale();
-  if (acoustic_scale != 0.0) // We'll write the lattice without acoustic scaling
-    fst::ScaleLattice(fst::AcousticLatticeScale(1.0 / acoustic_scale), &lat);
+  if (acoustic_scale != 1.0 || lm_scale != 1.0)
+    fst::ScaleLattice(fst::LatticeScale(lm_scale, acoustic_scale), &lat);
 
   ConvertLattice(lat, fst_out); // adds up the (lm,acoustic) costs to get
+
   return ok;
 }
 
