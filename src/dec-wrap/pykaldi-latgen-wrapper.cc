@@ -121,7 +121,7 @@ bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::LogArc> *fst_out,
 
   fst::VectorFst<fst::StdArc> t;
   ConvertLattice(lat, &t);
-  *tot_prob = LatticeToWordsPost(t, fst_out);  // TODO tot_prob as output
+  *tot_prob = LatticeToWordsPost(t, fst_out);  // TODO tot_prob is sensible?
 
   return ok;
 }

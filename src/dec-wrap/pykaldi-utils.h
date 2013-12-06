@@ -25,6 +25,10 @@
 #include "fstext/fstext-lib.h"
 #include "lat/kaldi-lattice.h"
 
+#ifdef DEBUG
+#include <fstream>
+#endif // DEBUG
+
 namespace kaldi {
 
 void pykaldi_version(int *out_major, int * out_minor, int *patch);
@@ -42,15 +46,15 @@ void PrintPartialResult(const std::vector<int32>& words,
 
 // Extract n-best lists from lattice in Tropical semiring.
 // Tropical semiring is needed for shortest-path algorithm ?TODO?
-double LatticeToNbest(const fst::VectorFst<fst::StdArc> &lat, 
-                     std::vector<std::vector<int> > &nbest, 
+double LatticeToNbest(const fst::VectorFst<fst::StdArc> &lat,
+                     std::vector<std::vector<int> > &nbest,
                      std::vector<BaseFloat> &prob_out,
                      int n);
 
 
 std::vector<int32> phones_to_vector(const std::string & s);
 
-// FIXME Copied from lat/lattice-functions.cc 
+// FIXME Copied from lat/lattice-functions.cc
 // There is no no declaration in lat/lattice-functions.h!
 static inline double LogAddOrMax(bool viterbi, double a, double b) {
   if (viterbi)
@@ -59,7 +63,7 @@ static inline double LogAddOrMax(bool viterbi, double a, double b) {
     return LogAdd(a, b);
 }
 
-// FIXME Copied from lat/lattice-functions.cc 
+// FIXME Copied from lat/lattice-functions.cc
 // FIXME does it work with multiple final states?
 // There is no no declaration in lat/lattice-functions.h!
 // Computes (normal or Viterbi) alphas and betas; returns (total-prob, or
@@ -121,36 +125,61 @@ static double ComputeLatticeAlphasAndBetas(const LatticeType &lat,
 
 
 // Lattice lat has to have loglikelihoods on weights
-void MovePostToArcs(fst::VectorFst<fst::LogArc> * lat, 
+void MovePostToArcs(fst::VectorFst<fst::LogArc> * lat,
                           const std::vector<double> &alpha,
                           const std::vector<double> &beta);
 
 
 template <class FST>
-double LatticeToWordsPost(const FST &lat, 
+double LatticeToWordsPost(const FST &lat,
     fst::VectorFst<fst::LogArc> *pst) {
   fst::VectorFst<fst::LogArc> t;  // tmp object
   // the input FST has to have log-likelihood weights
   fst::Cast(lat, &t);  // reinterpret the inner implementations
   fst::Project(&t, fst::PROJECT_OUTPUT);
   fst::RmEpsilon(&t);
+#ifdef DEBUG
+  {
+    std::ofstream logfile;
+    logfile.open("after_RmEpsilon.fst");
+    t.Write(logfile, fst::FstWriteOptions());
+    logfile.close();
+  }
+#endif // DEBUG
   fst::ILabelCompare<fst::LogArc> ilabel_comp;
   fst::ArcSort(&t, ilabel_comp);
   fst::Determinize(t, pst);
   fst::Connect(pst);
+#ifdef DEBUG
+  {
+    std::ofstream logfile;
+    logfile.open("after_Determinize.fst");
+    pst->Write(logfile, fst::FstWriteOptions());
+    logfile.close();
+  }
+#endif // DEBUG
   std::vector<double> alpha, beta;
   double tot_prob;
   fst::TopSort(pst);
   bool viterbi = false; // Uses LogAdd as apropriete in Log semiring
   tot_prob = ComputeLatticeAlphasAndBetas(*pst, viterbi, &alpha, &beta);
 
-  // // DEBUG
-  // for (size_t i = 0; i < alpha.size(); ++i) {
-  //   std::cerr << "a[" << i << "] = " << alpha[i] << " beta[" << i << "] = "
-  //     << beta[i] << std::endl;
-  // }
+#ifdef DEBUG
+  for (size_t i = 0; i < alpha.size(); ++i) {
+    std::cerr << "a[" << i << "] = " << alpha[i] << " beta[" << i << "] = "
+      << beta[i] << std::endl;
+  }
+#endif // DEBUG
 
-  MovePostToArcs(pst, alpha, beta); 
+  MovePostToArcs(pst, alpha, beta);
+#ifdef DEBUG
+  {
+    std::ofstream logfile;
+    logfile.open("after_post_before_min.fst");
+    pst->Write(logfile, fst::FstWriteOptions());
+    logfile.close();
+  }
+#endif // DEBUG
   fst::Minimize(pst);
   return tot_prob;
 }
