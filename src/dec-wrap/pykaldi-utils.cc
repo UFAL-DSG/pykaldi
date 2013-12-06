@@ -55,10 +55,17 @@ void MovePostToArcs(fst::VectorFst<fst::LogArc> * lat,
       LogArc arc = aiter.Value();
 
       // w(i,j) = alpha(i) * w(i, j) * beta(j) / (alpha(i) * beta(i))
-      double numer = LogAdd(LogAdd(alpha_i, (double)arc.weight.Value()),  
-                            beta[arc.nextstate]);
-      double denom = alpha_beta_i; //  does not normalise
-      arc.weight = LogWeight(LogSub(numer, denom));
+      double orig_w = (double)arc.weight.Value();
+      double numer = LogAdd(LogAdd(alpha_i, orig_w), beta[arc.nextstate]);
+      double new_w = LogSub(numer, alpha_beta_i); //  does not normalise
+      arc.weight = LogWeight(new_w);
+
+#ifdef DEBUG
+      std::cerr << "arc orig: " << orig_w << " new: " << new_w;
+      std::cerr << " alpha_i: " << alpha_i << " beta[j]: " << beta[arc.nextstate];
+      std::cerr << " alpha_beta_i: " << alpha_beta_i ;
+      std::cerr << " numer: " << numer << std::endl;
+#endif // DEBUG
 
       aiter.SetValue(arc);
     }
