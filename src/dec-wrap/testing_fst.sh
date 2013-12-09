@@ -2,6 +2,7 @@
 
 ### FSTs ###
 
+
 # FST T
 cat > T.txt << FST
 0 1 a x 0.5
@@ -21,6 +22,18 @@ x 1
 y 2
 z 3
 SYM
+
+# FST V
+cat > V.txt << FST
+0 1 a x 0.5
+0 1 b y 1.5
+1 2 c z 2.5
+1 -0.5
+2 3.5
+FST
+
+cp T.isyms V.isyms
+cp T.osyms V.osyms
 
 # FST S
 cat > S.txt << FST
@@ -44,10 +57,10 @@ SYM
 
 
 ### script ###
-fsts="T S"
+fsts="T S V"
 
 for name in $fsts; do
-    fstcompile -isymbols=${name}.isyms -osymbols=${name}.osyms \
+    fstcompile --arc_type=log -isymbols=${name}.isyms -osymbols=${name}.osyms \
         ${name}.txt ${name}.fst
     fstdraw --portrait=true -isymbols=${name}.isyms -osymbols=${name}.osyms \
         ${name}.fst | dot -Tsvg  > ${name}.svg

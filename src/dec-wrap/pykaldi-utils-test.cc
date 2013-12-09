@@ -23,11 +23,11 @@ using namespace kaldi;
 using namespace fst;
 
 void test_fst_equal() {
-  VectorFst<StdArc> *t = VectorFst<StdArc>::Read("T.fst");
-  VectorFst<StdArc> *t2 = VectorFst<StdArc>::Read("T.fst");
+  VectorFst<LogArc> *t = VectorFst<LogArc>::Read("T.fst");
+  VectorFst<LogArc> *t2 = VectorFst<LogArc>::Read("T.fst");
   KALDI_ASSERT(Equal(*t, *t2, 0.001));
   delete t2;
-  VectorFst<StdArc> *s = VectorFst<StdArc>::Read("S.fst");
+  VectorFst<LogArc> *s = VectorFst<LogArc>::Read("S.fst");
   KALDI_ASSERT(!Equal(*t, *s, 0.001));
   delete t;
 }
@@ -45,15 +45,20 @@ void test_LatticeToWordsPost() {
 }
 
 void test_ComputeLatticeAlphasAndBetas() {
-  VectorFst<StdArc> *t = VectorFst<StdArc>::Read("T.fst");
-  std::vector<double> alpha;
-  std::vector<double> beta;
-  double tot_post;
-  tot_post = ComputeLatticeAlphasAndBetas(*t, false, &alpha, &beta);
-  std::cout << "total posterior probability is " << tot_post << std::endl;
-  for (size_t i = 0; i < alpha.size(); ++i) {
-    std::cout << "a[" << i << "] = " << alpha[i] << " beta[" << i << "] = "
-      << beta[i] << std::endl;
+  std::vector<std::string> tests;
+  tests.push_back("T.fst");
+  tests.push_back("V.fst");
+  for (size_t k = 0; k < tests.size(); ++k) {
+    VectorFst<LogArc> *t = VectorFst<LogArc>::Read(tests[k]);
+    std::vector<double> alpha;
+    std::vector<double> beta;
+    double tot_post;
+    tot_post = ComputeLatticeAlphasAndBetas(*t, false, &alpha, &beta);
+    std::cout << "total posterior probability is " << tot_post << std::endl;
+    for (size_t i = 0; i < alpha.size(); ++i) {
+      std::cout << tests[k] << ": alpha[" << i << "] = " << alpha[i] 
+        << " beta[" << i << "] = " << beta[i] << std::endl;
+    }
   }
 }
 
