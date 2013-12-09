@@ -67,8 +67,9 @@ static inline double LogAddOrMax(bool viterbi, double a, double b) {
 // FIXME does it work with multiple final states?
 // There is no no declaration in lat/lattice-functions.h!
 // Computes (normal or Viterbi) alphas and betas; returns (total-prob, or
-// best-path negated cost) Note: in either case, the alphas and betas are
-// negated costs.  Requires that lat be topologically sorted.  This code
+// best-path negated cost) 
+// Note: in either case, the alphas and betas are negated costs.
+// Requires that lat be topologically sorted.  This code
 // will work for either CompactLattice or Latice.
 template<typename LatticeType>
 static double ComputeLatticeAlphasAndBetas(const LatticeType &lat,
@@ -93,7 +94,7 @@ static double ComputeLatticeAlphasAndBetas(const LatticeType &lat,
     for (fst::ArcIterator<LatticeType> aiter(lat, s); !aiter.Done();
          aiter.Next()) {
       const Arc &arc = aiter.Value();
-      double arc_like = -ConvertToCost(arc.weight);  // FIXME probably the problem
+      double arc_like = -ConvertToCost(arc.weight);
       (*alpha)[arc.nextstate] = LogAddOrMax(viterbi, (*alpha)[arc.nextstate],
                                                 this_alpha + arc_like);
     }
@@ -158,29 +159,27 @@ double LatticeToWordsPost(const FST &lat,
     logfile.close();
   }
 #endif // DEBUG
+  fst::Minimize(pst);
+#ifdef DEBUG
+  {
+    std::ofstream logfile;
+    logfile.open("after_minimize.fst");
+    pst->Write(logfile, fst::FstWriteOptions());
+    logfile.close();
+  }
+#endif // DEBUG
   std::vector<double> alpha, beta;
   double tot_prob;
   fst::TopSort(pst);
   bool viterbi = false; // Uses LogAdd as apropriete in Log semiring
   tot_prob = ComputeLatticeAlphasAndBetas(*pst, viterbi, &alpha, &beta);
-
 #ifdef DEBUG
   for (size_t i = 0; i < alpha.size(); ++i) {
     std::cerr << "a[" << i << "] = " << alpha[i] << " beta[" << i << "] = "
       << beta[i] << std::endl;
   }
 #endif // DEBUG
-
   MovePostToArcs(pst, alpha, beta);
-#ifdef DEBUG
-  {
-    std::ofstream logfile;
-    logfile.open("after_post_before_min.fst");
-    pst->Write(logfile, fst::FstWriteOptions());
-    logfile.close();
-  }
-#endif // DEBUG
-  fst::Minimize(pst);
   return tot_prob;
 }
 

@@ -47,25 +47,25 @@ void MovePostToArcs(fst::VectorFst<fst::LogArc> * lat,
   typedef typename LogArc::StateId StateId;
   StateId num_states = lat->NumStates();
   for (StateId i = 0; i < num_states; ++i) {
-    double alpha_i = alpha[i];
-    double alpha_beta_i = LogAdd(alpha_i , beta[i]);
+    double alpha_i = -alpha[i];
+    double alpha_beta_i = LogAdd(alpha_i , -beta[i]);
     for (MutableArcIterator<VectorFst<LogArc> > aiter(lat, i); 
         !aiter.Done();
          aiter.Next()) {
       LogArc arc = aiter.Value();
-
       // w(i,j) = alpha(i) * w(i, j) * beta(j) / (alpha(i) * beta(i))
-      double orig_w = (double)arc.weight.Value();
+      double orig_w = ConvertToCost(arc.weight);
       double numer = LogAdd(LogAdd(alpha_i, orig_w), beta[arc.nextstate]);
-      double new_w = LogSub(numer, alpha_beta_i); //  does not normalise
-      arc.weight = LogWeight(new_w);
-
 #ifdef DEBUG
-      std::cerr << "arc orig: " << orig_w << " new: " << new_w;
+      std::cerr << " alpha_beta_i: " << alpha_beta_i;
       std::cerr << " alpha_i: " << alpha_i << " beta[j]: " << beta[arc.nextstate];
-      std::cerr << " alpha_beta_i: " << alpha_beta_i ;
       std::cerr << " numer: " << numer << std::endl;
 #endif // DEBUG
+      double new_w = LogSub(numer, alpha_beta_i);
+#ifdef DEBUG
+      std::cerr << "arc orig: " << orig_w << " new: " << new_w << std::endl;
+#endif // DEBUG
+      arc.weight = LogWeight(new_w);
 
       aiter.SetValue(arc);
     }
