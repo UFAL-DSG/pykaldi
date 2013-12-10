@@ -32,42 +32,57 @@ void test_fst_equal() {
   delete t;
 }
 
-void test_MovePostToArc() {
-  // TODO
-  KALDI_ASSERT(1==2);
-}
-
-void test_LatticeToWordsPost() {
-  VectorFst<LogArc> *t = VectorFst<LogArc>::Read("T.fst");
-  VectorFst<LogArc> post_t;
-  LatticeToWordsPost(*t, &post_t);
-  delete t;
-}
-
-void test_ComputeLatticeAlphasAndBetas() {
-  std::vector<std::string> tests;
-  tests.push_back("T.fst");
-  tests.push_back("V.fst");
+void test_MovePostToArc(const std::vector<std::string> &tests) {
   for (size_t k = 0; k < tests.size(); ++k) {
     VectorFst<LogArc> *t = VectorFst<LogArc>::Read(tests[k]);
     std::vector<double> alpha;
     std::vector<double> beta;
     double tot_post;
     tot_post = ComputeLatticeAlphasAndBetas(*t, false, &alpha, &beta);
-    std::cout << "total posterior probability is " << tot_post << std::endl;
+    MovePostToArcs(t, alpha, beta);
+
+    // save the file with posteriors 
+    std::cerr << tests[k] << "writing posterior lattice " << std::endl;
+    std::ofstream logfile;
+    std::string prefix("posterior_");
+    std::string post_name = prefix + tests[k];
+    logfile.open(post_name.c_str());
+    t->Write(logfile, fst::FstWriteOptions());
+    logfile.close();
+
+    // TODO compare the file with precomputed results(TODO)
+  }
+}
+
+
+void test_ComputeLatticeAlphasAndBetas(const std::vector<std::string> &tests) {
+  for (size_t k = 0; k < tests.size(); ++k) {
+    VectorFst<LogArc> *t = VectorFst<LogArc>::Read(tests[k]);
+    std::vector<double> alpha;
+    std::vector<double> beta;
+    double tot_post;
+    tot_post = ComputeLatticeAlphasAndBetas(*t, false, &alpha, &beta);
+    std::cerr << tests[k] << "posterior probability: " << tot_post << std::endl;
     for (size_t i = 0; i < alpha.size(); ++i) {
-      std::cout << tests[k] << ": alpha[" << i << "] = " << alpha[i] 
+      std::cerr << tests[k] << ": alpha[" << i << "] = " << alpha[i] 
         << " beta[" << i << "] = " << beta[i] << std::endl;
     }
   }
 }
 
 int main() {
-  if(!system(NULL) || system("./testing_fst.sh"))
-    std::cerr << "Maybe the testing FSTs are not created" << std::endl;
-  test_fst_equal();
-  test_ComputeLatticeAlphasAndBetas();
-  // test_MovePostToArc();
-  // test_LatticeToWordsPost();
+  if(!system(NULL) || system("./testing_fst.sh")) {
+    std::cerr << "The testing FSTs are not created" << std::endl;
+    exit(1);
+  }
+  // read generated fst from testing_fst - names must match
+  std::vector<std::string> test_fst;
+  test_fst.push_back("symetric.fst");
+  test_fst.push_back("negative.fst");
+
+  // launching tests
+  test_ComputeLatticeAlphasAndBetas(test_fst);
+  test_MovePostToArc(test_fst);
+  // test_fst_equal();
   return 0;
 }

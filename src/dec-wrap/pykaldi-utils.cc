@@ -61,6 +61,7 @@ void MovePostToArcs(fst::VectorFst<fst::LogArc> * lat,
       std::cerr << " alpha_i: " << alpha_i << " beta[j]: " << beta[arc.nextstate];
       std::cerr << " numer: " << numer << std::endl;
 #endif // DEBUG
+      // FIXME normalization is wrong -> should normalize alpha_ij*beta_ij for every edge ij!
       double new_w = LogSub(numer, alpha_beta_i);
 #ifdef DEBUG
       std::cerr << "arc orig: " << orig_w << " new: " << new_w << std::endl;

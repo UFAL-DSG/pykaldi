@@ -138,6 +138,7 @@ double LatticeToWordsPost(const FST &lat,
   // the input FST has to have log-likelihood weights
   fst::Cast(lat, &t);  // reinterpret the inner implementations
   fst::Project(&t, fst::PROJECT_OUTPUT);
+
   fst::RmEpsilon(&t);
 #ifdef DEBUG
   {
@@ -147,6 +148,7 @@ double LatticeToWordsPost(const FST &lat,
     logfile.close();
   }
 #endif // DEBUG
+
   fst::ILabelCompare<fst::LogArc> ilabel_comp;
   fst::ArcSort(&t, ilabel_comp);
   fst::Determinize(t, pst);
@@ -159,7 +161,27 @@ double LatticeToWordsPost(const FST &lat,
     logfile.close();
   }
 #endif // DEBUG
-  fst::Minimize(pst);
+
+  std::vector<double> alpha, beta;
+  double tot_prob;
+  fst::TopSort(pst);
+  bool viterbi = false; // Uses LogAdd as apropriete in Log semiring
+  tot_prob = ComputeLatticeAlphasAndBetas(*pst, viterbi, &alpha, &beta);
+  MovePostToArcs(pst, alpha, beta);
+#ifdef DEBUG
+  for (size_t i = 0; i < alpha.size(); ++i) {
+    std::cerr << "a[" << i << "] = " << alpha[i] << " beta[" << i << "] = "
+      << beta[i] << std::endl;
+  }
+  {
+    std::ofstream logfile;
+    logfile.open("after_post.fst");
+    pst->Write(logfile, fst::FstWriteOptions());
+    logfile.close();
+  }
+#endif // DEBUG
+
+fst::Minimize(pst);
 #ifdef DEBUG
   {
     std::ofstream logfile;
@@ -168,18 +190,7 @@ double LatticeToWordsPost(const FST &lat,
     logfile.close();
   }
 #endif // DEBUG
-  std::vector<double> alpha, beta;
-  double tot_prob;
-  fst::TopSort(pst);
-  bool viterbi = false; // Uses LogAdd as apropriete in Log semiring
-  tot_prob = ComputeLatticeAlphasAndBetas(*pst, viterbi, &alpha, &beta);
-#ifdef DEBUG
-  for (size_t i = 0; i < alpha.size(); ++i) {
-    std::cerr << "a[" << i << "] = " << alpha[i] << " beta[" << i << "] = "
-      << beta[i] << std::endl;
-  }
-#endif // DEBUG
-  MovePostToArcs(pst, alpha, beta);
+
   return tot_prob;
 }
 
