@@ -11,6 +11,8 @@ all:
 	python setup.py develop --user
 
 test:
+	LD_LIBRARY_PATH=$(SOURCEDIR):../../tools/openfst/lib:../../tools/openfst/lib/fst \
+	LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include \
 	python setup.py nosetests
 
 clean:
