@@ -54,17 +54,9 @@ double LatticeToNbest(const fst::VectorFst<fst::StdArc> &lat,
 
 std::vector<int32> phones_to_vector(const std::string & s);
 
-// FIXME Copied from lat/lattice-functions.cc
-// There is no no declaration in lat/lattice-functions.h!
-static inline double LogAddOrMax(bool viterbi, double a, double b) {
-  if (viterbi)
-    return std::max(a, b);
-  else
-    return LogAdd(a, b);
-}
 
 // FIXME Copied from lat/lattice-functions.cc
-// FIXME does it work with multiple final states?
+// FIXME does it work with multiple final states? With negated costs?..
 // There is no no declaration in lat/lattice-functions.h!
 // Computes (normal or Viterbi) alphas and betas; returns (total-prob, or
 // best-path negated cost) 
@@ -73,7 +65,6 @@ static inline double LogAddOrMax(bool viterbi, double a, double b) {
 // will work for either CompactLattice or Latice.
 template<typename LatticeType>
 static double ComputeLatticeAlphasAndBetas(const LatticeType &lat,
-                                           bool viterbi,
                                            vector<double> *alpha,
                                            vector<double> *beta) {
   typedef typename LatticeType::Arc Arc;
@@ -95,13 +86,13 @@ static double ComputeLatticeAlphasAndBetas(const LatticeType &lat,
          aiter.Next()) {
       const Arc &arc = aiter.Value();
       double arc_like = -ConvertToCost(arc.weight);
-      (*alpha)[arc.nextstate] = LogAddOrMax(viterbi, (*alpha)[arc.nextstate],
-                                                this_alpha + arc_like);
+      (*alpha)[arc.nextstate] = LogAdd((*alpha)[arc.nextstate], 
+                                        this_alpha + arc_like);
     }
     Weight f = lat.Final(s);
     if (f != Weight::Zero()) {
       double final_like = this_alpha - ConvertToCost(f);
-      tot_forward_prob = LogAddOrMax(viterbi, tot_forward_prob, final_like);
+      tot_forward_prob = LogAdd(tot_forward_prob, final_like);
     }
   }
   for (StateId s = num_states-1; s >= 0; s--) { // it's guaranteed signed.
@@ -111,7 +102,7 @@ static double ComputeLatticeAlphasAndBetas(const LatticeType &lat,
       const Arc &arc = aiter.Value();
       double arc_like = -ConvertToCost(arc.weight),
           arc_beta = (*beta)[arc.nextstate] + arc_like;
-      this_beta = LogAddOrMax(viterbi, this_beta, arc_beta);
+      this_beta = LogAdd(this_beta, arc_beta);
     }
     (*beta)[s] = this_beta;
   }
@@ -165,8 +156,7 @@ double LatticeToWordsPost(const FST &lat,
   std::vector<double> alpha, beta;
   double tot_prob;
   fst::TopSort(pst);
-  bool viterbi = false; // Uses LogAdd as apropriete in Log semiring
-  tot_prob = ComputeLatticeAlphasAndBetas(*pst, viterbi, &alpha, &beta);
+  tot_prob = ComputeLatticeAlphasAndBetas(*pst, &alpha, &beta);
   MovePostToArcs(pst, alpha, beta);
 #ifdef DEBUG
   for (size_t i = 0; i < alpha.size(); ++i) {

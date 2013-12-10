@@ -37,15 +37,14 @@ void test_MovePostToArc(const std::vector<std::string> &tests) {
     VectorFst<LogArc> *t = VectorFst<LogArc>::Read(tests[k]);
     std::vector<double> alpha;
     std::vector<double> beta;
-    double tot_post;
-    tot_post = ComputeLatticeAlphasAndBetas(*t, false, &alpha, &beta);
+    ComputeLatticeAlphasAndBetas(*t, &alpha, &beta);
     MovePostToArcs(t, alpha, beta);
 
     // save the file with posteriors 
-    std::cerr << tests[k] << "writing posterior lattice " << std::endl;
     std::ofstream logfile;
     std::string prefix("posterior_");
     std::string post_name = prefix + tests[k];
+    std::cerr << "writing posterior lattice " << post_name << std::endl;
     logfile.open(post_name.c_str());
     t->Write(logfile, fst::FstWriteOptions());
     logfile.close();
@@ -60,8 +59,7 @@ void test_ComputeLatticeAlphasAndBetas(const std::vector<std::string> &tests) {
     VectorFst<LogArc> *t = VectorFst<LogArc>::Read(tests[k]);
     std::vector<double> alpha;
     std::vector<double> beta;
-    double tot_post;
-    tot_post = ComputeLatticeAlphasAndBetas(*t, false, &alpha, &beta);
+    double tot_post = ComputeLatticeAlphasAndBetas(*t, &alpha, &beta);
     std::cerr << tests[k] << "posterior probability: " << tot_post << std::endl;
     for (size_t i = 0; i < alpha.size(); ++i) {
       std::cerr << tests[k] << ": alpha[" << i << "] = " << alpha[i] 
@@ -79,6 +77,7 @@ int main() {
   std::vector<std::string> test_fst;
   test_fst.push_back("symetric.fst");
   test_fst.push_back("negative.fst");
+  test_fst.push_back("negative_end.fst");
 
   // launching tests
   test_ComputeLatticeAlphasAndBetas(test_fst);

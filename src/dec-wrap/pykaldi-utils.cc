@@ -47,22 +47,23 @@ void MovePostToArcs(fst::VectorFst<fst::LogArc> * lat,
   typedef typename LogArc::StateId StateId;
   StateId num_states = lat->NumStates();
   for (StateId i = 0; i < num_states; ++i) {
-    double alpha_i = -alpha[i];
-    double alpha_beta_i = LogAdd(alpha_i , -beta[i]);
     for (MutableArcIterator<VectorFst<LogArc> > aiter(lat, i); 
         !aiter.Done();
          aiter.Next()) {
       LogArc arc = aiter.Value();
-      // w(i,j) = alpha(i) * w(i, j) * beta(j) / (alpha(i) * beta(i))
+      StateId j = arc.nextstate;
+      // w(i,j) = alpha(i) * w(i,j) * beta(j) / (alpha(i) * beta(i))
+      // w(i,j) = w(i,j) * beta(j) / beta(i)
       double orig_w = ConvertToCost(arc.weight);
-      double numer = LogAdd(LogAdd(alpha_i, orig_w), beta[arc.nextstate]);
+      double numer = orig_w + -beta[j];
 #ifdef DEBUG
-      std::cerr << " alpha_beta_i: " << alpha_beta_i;
-      std::cerr << " alpha_i: " << alpha_i << " beta[j]: " << beta[arc.nextstate];
-      std::cerr << " numer: " << numer << std::endl;
+      std::cerr << "arc(" << i << ',' << j << ')' << std::endl;
+      std::cerr << "orig_w:" << orig_w 
+        << " beta[j=" << j << "]:" << -beta[j]
+        << " beta[i=" << i << "]:" << -beta[i] 
+        << " numer:" << numer << std::endl;
 #endif // DEBUG
-      // FIXME normalization is wrong -> should normalize alpha_ij*beta_ij for every edge ij!
-      double new_w = LogSub(numer, alpha_beta_i);
+      double new_w = numer - (-beta[i]);
 #ifdef DEBUG
       std::cerr << "arc orig: " << orig_w << " new: " << new_w << std::endl;
 #endif // DEBUG

@@ -56,9 +56,17 @@ cat > negative.txt << FST
 2 3.5
 FST
 
+cat > negative_end.txt << FST
+0 1 0 1 0.5
+0 1 0 1 1.5
+1 2 1 2 2.5
+1 3.5 
+2 -2.0
+FST
+
 
 ### script ###
-fsts="symetric negative fair_bet"
+fsts="symetric negative negative_end fair_bet"
 
 for name in $fsts; do
     fstcompile --arc_type=log ${name}.txt ${name}.fst

@@ -49,7 +49,7 @@ def decode(d, pcm):
             decoded_frames += dec_t
             dec_t = d.decode(max_frames=10)
     d.prune_final()
-    lat, prob = d.get_lattice()
+    prob, lat = d.get_lattice()
     return lat
 
 

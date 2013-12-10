@@ -87,10 +87,7 @@ class GmmLatgenWrapper {
     virtual ~GmmLatgenWrapper();
     size_t Decode(size_t max_frames);
     void FrameIn(unsigned char *frame, size_t frame_len);
-    // TODO change to OPENFST object
     bool GetBestPath(std::vector<int> &v_out, BaseFloat *prob);
-    bool GetNbest(int n, std::vector<std::vector<int> > &v_out,
-                         std::vector<BaseFloat> &prob_out);
     bool GetRawLattice(fst::VectorFst<fst::StdArc> *fst_out);
     bool GetLattice(fst::VectorFst<fst::LogArc> * out_fst, double *tot_prob);
     void PruneFinal();

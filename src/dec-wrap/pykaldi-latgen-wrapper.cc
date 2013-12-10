@@ -90,22 +90,6 @@ bool GmmLatgenWrapper::GetBestPath(std::vector<int> &out_ids, BaseFloat *prob) {
 }
 
 
-bool GmmLatgenWrapper::GetNbest(int n, std::vector<std::vector<int> > &v_out,
-                                       std::vector<BaseFloat> &prob_out) {
-  if (! initialized_)
-    return false;
-  fst::VectorFst<fst::LogArc> log_fst;
-  double tot_prob;
-
-  bool ok = GetLattice(&log_fst, &tot_prob);
-  fst::VectorFst<fst::StdArc> std_fst;
-  fst::Cast(log_fst, &std_fst);  // reinterpret the inner implementations
-  // double nbest_prob = LatticeToNbest(std_fst, v_out, prob_out, n); 
-  LatticeToNbest(std_fst, v_out, prob_out, n); 
-  return ok;
-}
-
-
 bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::LogArc> *fst_out, 
                                   double *tot_prob) {
   if (! initialized_)

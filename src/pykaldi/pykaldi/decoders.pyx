@@ -7,6 +7,7 @@ from libcpp cimport bool
 cimport fst._fst
 cimport libfst
 import fst
+from pykaldi.utils import lattice_to_nbest
 
 
 cdef extern from "dec-wrap/pykaldi-latgen-wrapper.h" namespace "kaldi":
@@ -14,7 +15,6 @@ cdef extern from "dec-wrap/pykaldi-latgen-wrapper.h" namespace "kaldi":
         size_t Decode(size_t max_frames) except +
         void FrameIn(unsigned char *frame, size_t frame_len) except +
         bool GetBestPath(vector[int] v_out, float *prob) except +
-        bool GetNbest(int n, vector[vector[int]] v_out, vector[float] prob_out) except +
         bool GetRawLattice(libfst.StdVectorFst *fst_out) except +
         bool GetLattice(libfst.LogVectorFst *fst_out, double *tot_prob) except +
         void PruneFinal() except +
@@ -60,22 +60,14 @@ cdef class PyGmmLatgenWrapper:
 
     def get_nbest(self, n=1):
         """get_nbest(self, n=1)"""
-        cdef vector[vector[int]] t
-        cdef vector[float] prob
-        self.thisptr.GetNbest(n, t, prob)
-        r = []
-        assert(t.size() == prob.size())
-        for i in xrange(prob.size()):
-            p = prob[i]
-            ids = [t[i][j] for j in xrange(t[i].size())]
-            r.append((p, ids))
-        return r
+        prob, lat = self.get_lattice()
+        return lattice_to_nbest(lat, n)
 
     def get_lattice(self):
         cdef double prob
         r = fst.LogVectorFst()
         self.thisptr.GetLattice((<fst._fst.LogVectorFst?>r).fst, address(prob))
-        return (r, prob)
+        return (prob, r)
 
     def get_raw_lattice(self):
         r = fst.StdVectorFst()
