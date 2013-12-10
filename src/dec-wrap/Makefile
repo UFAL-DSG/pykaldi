@@ -51,7 +51,7 @@ test: test_compile
 
 
 clean:
-	rm -rf $(TESTFILES) *.o *.so
+	rm -rf $(TESTFILES) *.o *.so *.svg *.fst *.txt
 
 depend:
 	-$(CXX) -M $(CXXFLAGS) *.cc > .depend.mk
