@@ -128,6 +128,14 @@ double LatticeToWordsPost(const FST &lat,
   fst::VectorFst<fst::LogArc> t;  // tmp object
   // the input FST has to have log-likelihood weights
   fst::Cast(lat, &t);  // reinterpret the inner implementations
+#ifdef DEBUG
+  {
+    std::ofstream logfile;
+    logfile.open("after_Cast.fst");
+    t.Write(logfile, fst::FstWriteOptions());
+    logfile.close();
+  }
+#endif // DEBUG
   fst::Project(&t, fst::PROJECT_OUTPUT);
 
   fst::RmEpsilon(&t);
