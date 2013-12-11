@@ -30,5 +30,5 @@ install:
 
 script:
     # Setting the PATH variable is necessary for fstcompilation TODO get rid of it
-    - pushd src/dec-wrap && PATH=../../tools/openfst/bin:$PATH make -j 4 test ; RET=$?; popd ; exit $RET
-    - pushd src/pykaldi && make test ; RET=$? ; popd ; exit $RET
+    - pushd src/dec-wrap && PATH=../../tools/openfst/bin:$PATH make -j 4 test ; RET=$?; popd ; (exit $RET)
+    - pushd src/pykaldi && make test ; RET=$? ; popd ; (exit $RET)
