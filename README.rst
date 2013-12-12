@@ -2,16 +2,16 @@ Description
 =====
  * Goal: Create a Python wrapper suitable for real-time decoding in a dialog systems.
  * Based on: the [Svn trunk of Kaldi project](svn://svn.code.sf.net/p/kaldi/code/trunk) which is mirrored to branch `svn-mirror`.
- * The [cffi](http://cffi.readthedocs.org/en/latest/) library is used for interfacing C from Python.
+ * The [pyfst](http://pyfst.github.io) and [cython](http://www.cython.org) in general is used to transfer audio into decoder and lattice or (n)best path from decoder to from Python.
  * There is also a new Kaldi recipe for training acoustic models. See [egs/kaldi-vystadial-recipe](egs/kaldi-vystadial-recipe) and [README.md](egs/kaldi-vystadial-recipe/README.md)!
- * The python wrapper is at [src/pykaldi](src/pykaldi). Read the [README.md](./src/pykaldi/README.md)!
+ * The python wrapper is at [src/pykaldi](src/pykaldi). Read the [README.rst](./src/pykaldi/README.rst)!
 
 
 Install
 -------
 [![Build Status](https://travis-ci.org/oplatek/pykaldi.png)](https://travis-ci.org/oplatek/pykaldi)
- * Read [INSTALL.md](./INSTALL.md) and [INSTALL](./INSTALL) first!
- * [INSTALL.md](./INSTALL.md) contains instructions specific for Pykaldi. [INSTALL](./INSTALL) stores general instructions for Kaldi.
+ * Read [INSTALL.rst](./INSTALL.rst) and [INSTALL](./INSTALL) first!
+ * [INSTALL.rst](./INSTALL.rst) contains instructions specific for Pykaldi. [INSTALL](./INSTALL) stores general instructions for Kaldi.
 
 
 Other info

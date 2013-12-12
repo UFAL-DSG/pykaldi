@@ -1,24 +1,14 @@
-DEPRECATED- REWRITE
 Install & Dependencies
 ============
  * The [../dec-wrap](../dec-wrap) directory: The pykaldi currently interfaces
     the online decoders already wrapped in C code from [../dec-wrap](../dec-wrap).
     Run the `make` to build that directory.
- * [cffi](http://cffi.readthedocs.org/en/latest/) which further requires Python and FFI headers.
-
-   On Ubuntu install them by:
-   ```bash
-   sudo apt-get install python-dev libffi-dev
-   ```
+ * The [pyfst](http://pyfst.github.io) which source code I copied in into pykaldi/fst *TODO remove it*.
 
  * See [setup.py](./setup.py) `install_requires` variable for full list of Python dependencies.
 
-   The [setup.py](./setup.py) INSTALL ALL THE DEPENDENCIES BY ITSELF. See the section below!.
 
-   Note: In the `sanbox/oplatek/tools/extras/` you can find `install_cffi.sh` installation script.
-
-
-Running and building examples
+DEPRECATED- REWRITE - Running and building examples
 -----------------------------
 The Python [setuptools](http://pythonhosted.org/an_example_pypi_project/setuptools.html#installing-setuptools-and-easy-install) is used instead of Makefile
 for "Installing" and running tests.
@@ -28,7 +18,6 @@ It is so, because the `Pykaldi` depends on Kaldi libraries and they are not used
 If the it changes it will work. In fact, it does not matter.
 
 Commands you SHOULD USE:
- * `pip install --user cffi`  # install cffi
  * `python setup.py develop --user` an its undo `python setup.py develop --uninstall`
 
     The command links pykaldi directory to PYTHONPATH (at Ubuntu to `$HOME/.local/lib/python2.7/site-packages/`),
