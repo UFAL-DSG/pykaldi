@@ -68,13 +68,65 @@ void MovePostToArcs(fst::VectorFst<fst::LogArc> * lat,
   }
 }
 
+double CompactLatticeToWordsPost(CompactLattice &clat, fst::VectorFst<fst::LogArc> *pst) {
+  {
+    Lattice lat;
+    fst::VectorFst<fst::StdArc> t_std;
+    RemoveAlignmentsFromCompactLattice(&clat); // remove the alignments
+    ConvertLattice(clat, &lat); // convert to non-compact form... no new states
+    ConvertLattice(lat, &t_std); // this adds up the (lm,acoustic) costs to tropical fst
+    fst::Cast(t_std, pst);  // reinterpret the inner implementations
+  }
+#ifdef DEBUG
+  {
+    std::ofstream logfile;
+    logfile.open("c_after_Cast.fst");
+    pst->Write(logfile, fst::FstWriteOptions());
+    logfile.close();
+  }
+#endif // DEBUG
+  fst::Project(pst, fst::PROJECT_OUTPUT);
+
+
+  fst::Minimize(pst);
+#ifdef DEBUG
+  {
+    std::ofstream logfile;
+    logfile.open("c_after_minimize.fst");
+    pst->Write(logfile, fst::FstWriteOptions());
+    logfile.close();
+  }
+#endif // DEBUG
+
+  std::vector<double> alpha, beta;
+  double tot_prob;
+  fst::TopSort(pst);
+  tot_prob = ComputeLatticeAlphasAndBetas(*pst, &alpha, &beta);
+  MovePostToArcs(pst, alpha, beta);
+#ifdef DEBUG
+  for (size_t i = 0; i < alpha.size(); ++i) {
+    std::cerr << "a[" << i << "] = " << alpha[i] << " beta[" << i << "] = "
+      << beta[i] << std::endl;
+  }
+  {
+    std::ofstream logfile;
+    logfile.open("c_after_post.fst");
+    pst->Write(logfile, fst::FstWriteOptions());
+    logfile.close();
+  }
+#endif // DEBUG
+
+  return tot_prob;
+}
+
+
 
 double LatticeToWordsPost(Lattice &lat, fst::VectorFst<fst::LogArc> *pst) {
   // the input lattice has to have log-likelihood weights
   fst::VectorFst<fst::LogArc> t;  // tmp object
   {
     fst::VectorFst<fst::StdArc> t_std;
-    ConvertLattice(lat, &t_std);
+    ConvertLattice(lat, &t_std); // Does it convert to tropical? If yes that is not nice
     fst::Cast(t_std, &t);  // reinterpret the inner implementations
   }
 #ifdef DEBUG
@@ -87,7 +139,9 @@ double LatticeToWordsPost(Lattice &lat, fst::VectorFst<fst::LogArc> *pst) {
 #endif // DEBUG
   fst::Project(&t, fst::PROJECT_OUTPUT);
 
-  fst::RmEpsilon(&t);
+  // TODO http://kaldi.sourceforge.net/fst_algo.html
+  // fst::RemoveEpsLocal(&t); // kaldi alternative TODO extremaly slow
+  fst::RmEpsilon(&t); // original fst
 #ifdef DEBUG
   {
     std::ofstream logfile;

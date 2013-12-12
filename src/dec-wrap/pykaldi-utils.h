@@ -122,7 +122,11 @@ void MovePostToArcs(fst::VectorFst<fst::LogArc> * lat,
                           const std::vector<double> &beta);
 
 
+// the input lattice has to have log-likelihood weights
 double LatticeToWordsPost(Lattice &lat, fst::VectorFst<fst::LogArc> *pst);
+
+// the input lattice has to have log-likelihood weights
+double CompactLatticeToWordsPost(CompactLattice &lat, fst::VectorFst<fst::LogArc> *pst);
 
 
 } // namespace kaldi

@@ -95,15 +95,18 @@ bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::LogArc> *fst_out,
   if (! initialized_)
     return false;
 
-  Lattice lat;
-  bool ok = decoder->GetRawLattice(&lat);
+  // Lattice lat;
+  // bool ok = decoder->GetRawLattice(&lat);
+  CompactLattice lat;
+  bool ok = decoder->GetLattice(&lat);
 
   double lm_scale = 0.0; // TODO import lm_scale
   BaseFloat acoustic_scale = decodable->GetAcousticScale();
   if (acoustic_scale != 1.0 || lm_scale != 1.0)
     fst::ScaleLattice(fst::LatticeScale(lm_scale, acoustic_scale), &lat);
 
-  *tot_prob = LatticeToWordsPost(lat, fst_out);  // TODO tot_prob is sensible?
+  // *tot_prob = LatticeToWordsPost(lat, fst_out);  // TODO tot_prob is sensible?
+  *tot_prob = CompactLatticeToWordsPost(lat, fst_out);  // TODO tot_prob is sensible?
 
   return ok;
 }
