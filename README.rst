@@ -1,14 +1,15 @@
 Description
 =====
- * Goal: Create a Python wrapper suitable for real-time decoding in a dialog systems.
- * Based on: the `Svn trunk of Kaldi project <svn://svn.code.sf.net/p/kaldi/code/trunk>`_ which is mirrored to branch ``svn-mirror``.
- * The `pyfst <http://pyfst.github.io>`_ and [cython](http://www.cython.org) in general is used to transfer audio into decoder and lattice or (n)best path from decoder to from Python.
- * There is also a new Kaldi recipe for training acoustic models. See [egs/kaldi-vystadial-recipe](egs/kaldi-vystadial-recipe) and [README.md](egs/kaldi-vystadial-recipe/README.md)!
- * The python wrapper is at [src/pykaldi](src/pykaldi). Read the [README.rst](./src/pykaldi/README.rst)!
+* Goal: Create a Python wrapper suitable for real-time decoding in a dialog systems.
+* Based on: the `Svn trunk of Kaldi project <svn://svn.code.sf.net/p/kaldi/code/trunk>`_ which is mirrored to branch ``svn-mirror``.
+* The `pyfst <http://pyfst.github.io>`_ and `cython <http://www.cython.org>` in general is used to transfer audio into decoder and lattice or (n)best path from decoder to from Python.
+* There is also a new Kaldi recipe for training acoustic models. See `egs/kaldi-vystadial-recipe <egs/kaldi-vystadial-recipe>`_ and `README.rst <egs/kaldi-vystadial-recipe/README.rst>`_!
+* The python wrapper is at [src/pykaldi](src/pykaldi). Read the [README.rst](./src/pykaldi/README.rst)!
 
 
 Install
 -------
+
 ..  image:: https://travis-ci.org/oplatek/pykaldi.png
     :target: https://travis-ci.org/oplatek/pykaldi
 
