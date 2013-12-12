@@ -14,8 +14,8 @@ Install
     :target: https://travis-ci.org/oplatek/pykaldi
 
 
-* Read [INSTALL.rst](./INSTALL.rst) and [INSTALL](./INSTALL) first!
-* [INSTALL.rst](./INSTALL.rst) contains instructions specific for Pykaldi. [INSTALL](./INSTALL) stores general instructions for Kaldi.
+* Read `INSTALL.rst` and `INSTALL` first!
+* `./INSTALL.rst` contains instructions specific for Pykaldi. `./INSTALL` stores general instructions for Kaldi.
 
 
 Other info
