@@ -2,9 +2,9 @@ Description
 =====
 * Goal: Create a Python wrapper suitable for real-time decoding in a dialog systems.
 * Based on: the `Svn trunk of Kaldi project <svn://svn.code.sf.net/p/kaldi/code/trunk>`_ which is mirrored to branch ``svn-mirror``.
-* The `pyfst <http://pyfst.github.io>`_ and `cython <http://www.cython.org>` in general is used to transfer audio into decoder and lattice or (n)best path from decoder to from Python.
+* The `pyfst <http://pyfst.github.io>`_ and `cython <http://www.cython.org>`_ in general is used to transfer audio into decoder and lattice or (n)best path from decoder to from Python.
 * There is also a new Kaldi recipe for training acoustic models. See `egs/kaldi-vystadial-recipe <egs/kaldi-vystadial-recipe>`_ and `README.rst <egs/kaldi-vystadial-recipe/README.rst>`_!
-* The python wrapper is at [src/pykaldi](src/pykaldi). Read the [README.rst](./src/pykaldi/README.rst)!
+* The python wrapper is at `src/pykaldi <src/pykaldi>`_. Read the `README.rst <src/pykaldi/README.rst>`_!
 
 
 Install
@@ -14,17 +14,17 @@ Install
     :target: https://travis-ci.org/oplatek/pykaldi
 
 
- * Read [INSTALL.rst](./INSTALL.rst) and [INSTALL](./INSTALL) first!
- * [INSTALL.rst](./INSTALL.rst) contains instructions specific for Pykaldi. [INSTALL](./INSTALL) stores general instructions for Kaldi.
+* Read [INSTALL.rst](./INSTALL.rst) and [INSTALL](./INSTALL) first!
+* [INSTALL.rst](./INSTALL.rst) contains instructions specific for Pykaldi. [INSTALL](./INSTALL) stores general instructions for Kaldi.
 
 
 Other info
 ----------
- * Pykaldi is developed under [Vystadial project](https://sites.google.com/site/filipjurcicek/projects/vystadial).
- * The svn trunk is mirrored via ``git svn``. Checkout tutorials: [Intro to git svn](http://viget.com/extend/effectively-using-git-with-subversion), 
- [Git svn branch in git repo](http://ivanz.com/2009/01/15/selective-import-of-svn-branches-into-a-gitgit-svn-repository/)
+* Pykaldi is developed under `Vystadial project <https://sites.google.com/site/filipjurcicek/projects/vystadial>`_.
+* The svn trunk is mirrored via ``git svn``. Checkout tutorials: `Intro to git svn <http://viget.com/extend/effectively-using-git-with-subversion>`_, 
+ `Git svn branch in git repo <http://ivanz.com/2009/01/15/selective-import-of-svn-branches-into-a-gitgit-svn-repository>`_
 
 LICENSE
 --------
- * Pykaldi is released under the [Apache license, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0), which is also used by Kaldi itself. 
+ * Pykaldi is released under the `Apache license, Version 2.0 <http://www.apache.org/licenses/LICENSE-2.0>`_, which is also used by Kaldi itself. 
  * We also want to publicly release the training data for the recipe in the autumn 2013.
