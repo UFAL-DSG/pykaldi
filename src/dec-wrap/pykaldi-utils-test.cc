@@ -118,9 +118,6 @@ int main() {
   test_fst.push_back("negative.fst");
   test_fst.push_back("negative_end.fst");
 
-  std::cerr << "LogAdd(10) " << LogAdd(1.0, 10.0) << std::endl;
-  std::cerr << "log(10) " << log(10.0) << std::endl;
-
   // launching tests
   test_ComputeLatticeAlphasAndBetas(test_fst);
   test_MovePostToArc(test_fst);
@@ -129,7 +126,6 @@ int main() {
   test_post_sum.push_back("non_symetric.fst");
   test_post_sum.push_back("symetric.fst");
   test_post_sum.push_back("symetric_end.fst");
-  // TODO nesymetric test
   // test_post_sum.push_back("symetric_middle.fst"); // failing as expected :(
   // test_post_sum.push_back("negative.fst"); // failing as expected
   test_post_sum.push_back("negative_end.fst"); // TODO passing but correct?

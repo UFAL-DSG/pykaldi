@@ -104,7 +104,7 @@ FST
 
 
 ### script ###
-fsts="non_symetric symetric_end symetric_middle negative negative_end fair_bet"
+fsts="non_symetric symetric symetric_end symetric_middle negative negative_end fair_bet"
 
 for name in $fsts; do
     fstcompile --arc_type=log ${name}.txt ${name}.fst
