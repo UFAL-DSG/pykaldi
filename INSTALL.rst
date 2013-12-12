@@ -37,15 +37,10 @@ make depend && make ext_depend && make && make ext
 make test && make ext_test
 ```
 
-How do I install [cffi](http://cffi.readthedocs.org/en/latest/)?
-----------------------------------------------------------------
+How have I installed cython?
+--------------------------
 ```bash
-pip install --user cffi
-```
-If it does not work for you the script `tools/install_cffi.sh` should help you.
-```bash
-cd tools
-./install_cffi.sh
+pip install --user cython
 ```
 
 
