@@ -56,17 +56,11 @@ void MovePostToArcs(fst::VectorFst<fst::LogArc> * lat,
       // w(i,j) = w(i,j) * beta(j) / beta(i)
       double orig_w = ConvertToCost(arc.weight);
       double numer = orig_w + -beta[j];
-#ifdef DEBUG
-      std::cerr << "arc(" << i << ',' << j << ')' << std::endl;
-      std::cerr << "orig_w:" << orig_w 
-        << " beta[j=" << j << "]:" << -beta[j]
-        << " beta[i=" << i << "]:" << -beta[i] 
-        << " numer:" << numer << std::endl;
-#endif // DEBUG
+      KALDI_VLOG(3) << "arc(" << i << ',' << j << ')' << std::endl << 
+        "orig_w:" << orig_w << " beta[j=" << j << "]:" << -beta[j] << 
+        " beta[i=" << i << "]:" << -beta[i] << " numer:" << numer << std::endl;
       double new_w = numer - (-beta[i]);
-#ifdef DEBUG
-      std::cerr << "arc orig: " << orig_w << " new: " << new_w << std::endl;
-#endif // DEBUG
+      KALDI_VLOG(3) << "arc orig: " << orig_w << " new: " << new_w << std::endl;
       arc.weight = LogWeight(new_w);
 
       aiter.SetValue(arc);

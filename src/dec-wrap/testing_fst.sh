@@ -36,6 +36,19 @@ cat > fair_bet.txt << FST
 1 3 
 FST
 
+
+cat > non_symetric.txt << FST
+0 1 0 1 10.0
+0 2 0 2 10.0
+1 3 1 3 15.0
+1 4 1 4 5.0
+2 3 2 3 20.0
+2 4 2 4 50.0
+3 5 3 5 20.0
+4 5 4 5 10.0
+5 0.0 
+FST
+
 cat > symetric.txt << FST
 0 1 0 1 10.0
 0 2 0 2 10.0
@@ -91,7 +104,7 @@ FST
 
 
 ### script ###
-fsts="symetric symetric_end symetric_middle negative negative_end fair_bet"
+fsts="non_symetric symetric_end symetric_middle negative negative_end fair_bet"
 
 for name in $fsts; do
     fstcompile --arc_type=log ${name}.txt ${name}.fst

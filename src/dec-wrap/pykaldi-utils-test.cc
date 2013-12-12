@@ -111,6 +111,7 @@ int main() {
   }
   // generated fst from testing_fst - names must match
   std::vector<std::string> test_fst;
+  test_fst.push_back("non_symetric.fst");
   test_fst.push_back("symetric.fst");
   test_fst.push_back("symetric_end.fst");
   test_fst.push_back("symetric_middle.fst");
@@ -125,8 +126,10 @@ int main() {
   test_MovePostToArc(test_fst);
 
   std::vector<std::string> test_post_sum;
+  test_post_sum.push_back("non_symetric.fst");
   test_post_sum.push_back("symetric.fst");
   test_post_sum.push_back("symetric_end.fst");
+  // TODO nesymetric test
   // test_post_sum.push_back("symetric_middle.fst"); // failing as expected :(
   // test_post_sum.push_back("negative.fst"); // failing as expected
   test_post_sum.push_back("negative_end.fst"); // TODO passing but correct?
