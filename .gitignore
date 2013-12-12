@@ -27,6 +27,7 @@ src/base/io-funcs-test
 src/base/kaldi-error-test
 
 # /src/bin/
+src/bin/am-info
 src/bin/.depend.mk
 src/bin/tree-info
 src/bin/post-to-tacc
@@ -101,6 +102,10 @@ src/feat/feature-fbank-test
 src/feat/.depend.mk
 
 # /src/featbin/
+src/featbin/compare-feats
+src/featbin/compute-kaldi-pitch-feats
+src/featbin/process-kaldi-pitch-feats
+src/featbin/wav-to-duration
 src/featbin/apply-cmvn-sliding
 src/featbin/compute-cmvn-stats-two-channel
 src/featbin/.depend.mk
@@ -133,6 +138,7 @@ src/featbin/reverse-feats
 src/featbin/compute-plp-feats
 
 # /src/fgmmbin/
+src/fgmmbin/fgmm-global-info
 src/fgmmbin/fgmm-global-gselect-to-post
 src/fgmmbin/.depend.mk
 src/fgmmbin/fgmm-global-acc-stats
@@ -200,6 +206,7 @@ src/gmm/mle-am-diag-gmm-test
 src/gmm/ebw-diag-gmm-test
 
 # /src/gmmbin/
+src/gmmbin/gmm-global-info
 src/gmmbin/gmm-global-init-from-feats
 src/gmmbin/.depend.mk
 src/gmmbin/gmm-sum-accs
@@ -288,6 +295,7 @@ src/lat/.depend.mk
 src/lat/kaldi-lattice-test
 
 # /src/latbin/
+src/latbin/lattice-depth-per-frame
 src/latbin/lattice-limit-depth
 src/latbin/lattice-minimize
 src/latbin/.depend.mk
@@ -661,4 +669,68 @@ src/util/tmpf.gz
 src/util/tmpf.scp
 tools/atlas3.10.0.tar.bz2
 tools/python/
-no changes added to commit (use "git add" and/or "git commit -a")
+
+
+
+# src/nnet2bin
+src/nnet2bin/nnet-align-compiled
+src/nnet2bin/nnet-am-average
+src/nnet2bin/nnet-am-combine
+src/nnet2bin/nnet-am-compute
+src/nnet2bin/nnet-am-copy
+src/nnet2bin/nnet-am-fix
+src/nnet2bin/nnet-am-info
+src/nnet2bin/nnet-am-init
+src/nnet2bin/nnet-am-limit-rank
+src/nnet2bin/nnet-am-limit-rank-final
+src/nnet2bin/nnet-am-mixup
+src/nnet2bin/nnet-am-rescale
+src/nnet2bin/nnet-am-shrink
+src/nnet2bin/nnet-am-stats
+src/nnet2bin/nnet-am-widen
+src/nnet2bin/nnet-combine
+src/nnet2bin/nnet-combine-a
+src/nnet2bin/nnet-combine-egs-discriminative
+src/nnet2bin/nnet-combine-fast
+src/nnet2bin/nnet-compare-hash-discriminative
+src/nnet2bin/nnet-compute
+src/nnet2bin/nnet-compute-from-egs
+src/nnet2bin/nnet-compute-prob
+src/nnet2bin/nnet-copy-egs
+src/nnet2bin/nnet-copy-egs-discriminative
+src/nnet2bin/nnet-get-egs
+src/nnet2bin/nnet-get-egs-discriminative
+src/nnet2bin/nnet-get-feature-transform
+src/nnet2bin/nnet-get-feature-transform-multi
+src/nnet2bin/nnet-get-preconditioner
+src/nnet2bin/nnet-gradient
+src/nnet2bin/nnet-init
+src/nnet2bin/nnet-insert
+src/nnet2bin/nnet-latgen-faster
+src/nnet2bin/nnet-latgen-faster-parallel
+src/nnet2bin/nnet-limit-degradation
+src/nnet2bin/nnet-logprob
+src/nnet2bin/nnet-logprob-parallel
+src/nnet2bin/nnet-logprob2
+src/nnet2bin/nnet-logprob2-parallel
+src/nnet2bin/nnet-modify-learning-rates
+src/nnet2bin/nnet-precondition
+src/nnet2bin/nnet-randomize-frames
+src/nnet2bin/nnet-select-egs
+src/nnet2bin/nnet-show-progress
+src/nnet2bin/nnet-shrink
+src/nnet2bin/nnet-shuffle-egs
+src/nnet2bin/nnet-shuffle-egs-discriminative
+src/nnet2bin/nnet-subset-egs
+src/nnet2bin/nnet-to-raw-nnet
+src/nnet2bin/nnet-train-discriminative-parallel
+src/nnet2bin/nnet-train-discriminative-simple
+src/nnet2bin/nnet-train-lbfgs
+src/nnet2bin/nnet-train-parallel
+src/nnet2bin/nnet-train-simple
+src/nnet2bin/nnet-train-transitions
+src/nnet2bin/raw-nnet-concat
+src/nnet2bin/raw-nnet-info
+src/nnetbin/nnet-kl-hmm-acc
+src/nnetbin/nnet-kl-hmm-mat-to-component
+src/nnetbin/nnet-train-frmshuff
