@@ -11,12 +11,12 @@ feat_scp=$mfccdir/raw_mfcc.scp
 
 mkdir -p $mfccdir
 
-compute-mfcc-feats  --verbose=2 --config=$mfcc_config scp:$wav_scp \
+compute-mfcc-feats  --verbose=0 --config=$mfcc_config scp:$wav_scp \
   ark,scp:$mfccdir/raw_mfcc.ark,$feat_scp || exit 1;
 
 # For debugging
 # cgdb -q -x .gdbinit --args \
-compute-mfcc-feats  --verbose=2 --config=$mfcc_config scp:$wav_scp \
+compute-mfcc-feats  --verbose=0 --config=$mfcc_config scp:$wav_scp \
   ark,t,scp:$mfccdir/raw_mfcc.ark.txt,${feat_scp}.txt || exit 1;
 # For debugging
 add-deltas "scp,s,cs:$feat_scp" "ark,t:$mfccdir/dd_mfcc.ark.txt"
