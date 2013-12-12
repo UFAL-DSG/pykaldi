@@ -103,9 +103,7 @@ bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::LogArc> *fst_out,
   if (acoustic_scale != 1.0 || lm_scale != 1.0)
     fst::ScaleLattice(fst::LatticeScale(lm_scale, acoustic_scale), &lat);
 
-  fst::VectorFst<fst::StdArc> t;
-  ConvertLattice(lat, &t);
-  *tot_prob = LatticeToWordsPost(t, fst_out);  // TODO tot_prob is sensible?
+  *tot_prob = LatticeToWordsPost(lat, fst_out);  // TODO tot_prob is sensible?
 
   return ok;
 }

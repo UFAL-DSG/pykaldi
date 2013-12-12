@@ -18,8 +18,8 @@
 // MERCHANTABLITY OR NON-INFRINGEMENT.
 // See the Apache 2 License for the specific language governing permissions and
 // limitations under the License.
-#ifndef KALDI_PYKALDI_PYKALDIBIN_UTIL_H_
-#define KALDI_PYKALDI_PYKALDIBIN_UTIL_H_
+#ifndef KALDI_PYKALDI_UTILS_H_
+#define KALDI_PYKALDI_UTILS_H_
 #include <string>
 #include "base/kaldi-common.h"
 #include "fstext/fstext-lib.h"
@@ -122,77 +122,9 @@ void MovePostToArcs(fst::VectorFst<fst::LogArc> * lat,
                           const std::vector<double> &beta);
 
 
-template <class FST>
-double LatticeToWordsPost(const FST &lat,
-    fst::VectorFst<fst::LogArc> *pst) {
-  fst::VectorFst<fst::LogArc> t;  // tmp object
-  // the input FST has to have log-likelihood weights
-  fst::Cast(lat, &t);  // reinterpret the inner implementations
-#ifdef DEBUG
-  {
-    std::ofstream logfile;
-    logfile.open("after_Cast.fst");
-    t.Write(logfile, fst::FstWriteOptions());
-    logfile.close();
-  }
-#endif // DEBUG
-  fst::Project(&t, fst::PROJECT_OUTPUT);
-
-  fst::RmEpsilon(&t);
-#ifdef DEBUG
-  {
-    std::ofstream logfile;
-    logfile.open("after_RmEpsilon.fst");
-    t.Write(logfile, fst::FstWriteOptions());
-    logfile.close();
-  }
-#endif // DEBUG
-
-  fst::ILabelCompare<fst::LogArc> ilabel_comp;
-  fst::ArcSort(&t, ilabel_comp);
-  fst::Determinize(t, pst);
-  fst::Connect(pst);
-#ifdef DEBUG
-  {
-    std::ofstream logfile;
-    logfile.open("after_Determinize.fst");
-    pst->Write(logfile, fst::FstWriteOptions());
-    logfile.close();
-  }
-#endif // DEBUG
-
-  std::vector<double> alpha, beta;
-  double tot_prob;
-  fst::TopSort(pst);
-  tot_prob = ComputeLatticeAlphasAndBetas(*pst, &alpha, &beta);
-  MovePostToArcs(pst, alpha, beta);
-#ifdef DEBUG
-  for (size_t i = 0; i < alpha.size(); ++i) {
-    std::cerr << "a[" << i << "] = " << alpha[i] << " beta[" << i << "] = "
-      << beta[i] << std::endl;
-  }
-  {
-    std::ofstream logfile;
-    logfile.open("after_post.fst");
-    pst->Write(logfile, fst::FstWriteOptions());
-    logfile.close();
-  }
-#endif // DEBUG
-
-fst::Minimize(pst);
-#ifdef DEBUG
-  {
-    std::ofstream logfile;
-    logfile.open("after_minimize.fst");
-    pst->Write(logfile, fst::FstWriteOptions());
-    logfile.close();
-  }
-#endif // DEBUG
-
-  return tot_prob;
-}
+double LatticeToWordsPost(Lattice &lat, fst::VectorFst<fst::LogArc> *pst);
 
 
 } // namespace kaldi
 
-#endif // KALDI_PYKALDI_PYKALDIBIN_UTIL_H_
+#endif // KALDI_PYKALDI_UTILS_H_
