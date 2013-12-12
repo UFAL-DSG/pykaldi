@@ -21,9 +21,10 @@ randprune=4.0 # This is approximately the ratio by which we will speed up the
               # LDA and MLLT calculations via randomized pruning.
 splice_opts=
 cluster_thresh=-1  # for build-tree control final bottom-up clustering of leaves
+norm_vars=false # false : cmn, true : cmvn
 train_tree=true  # if false, don't actually train the tree.
-run_cmn=true
 use_lda_mat=  # If supplied, use this LDA[+MLLT] matrix.
+run_cmn=true
 # End configuration.
 
 echo "$0 $@"  # Print the command line for logging
@@ -64,11 +65,14 @@ echo $nj >$dir/num_jobs
 echo "$splice_opts" >$dir/splice_opts # keep track of frame-splicing options
            # so that later stages of system building can know what they were.
 
+echo $norm_vars > $dir/norm_vars # keep track of feature normalization type
+           # so that later stages of system building can know what they were.
+
 sdata=$data/split$nj;
 split_data.sh $data $nj || exit 1;
 
 case $run_cmn in
-    true) cmn="ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- ";;
+    true) cmn="ark,s,cs:apply-cmvn --norm-vars=$norm_vars --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- ";;
     false) cmn="ark,s,cs:copy-feats scp:$sdata/JOB/feats.scp ark:- ";;
     *) echo "Invalid boolean value $run_cmn" && exit 1;;
 esac

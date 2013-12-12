@@ -77,12 +77,14 @@ done
 if [ -f $srcdir/final.mat ]; then feat_type=lda; else feat_type=delta; fi
 echo "decode.sh: feature type is $feat_type";
 
-splice_opts=`cat $srcdir/splice_opts 2>/dev/null`
+splice_opts=`cat $srcdir/splice_opts 2>/dev/null` # frame-splicing options.
+norm_vars=`cat $srcdir/norm_vars 2>/dev/null` || norm_vars=false # cmn/cmvn option, default false.
+
 thread_string=
 [ $num_threads -gt 1 ] && thread_string="-parallel --num-threads=$num_threads" 
 
 case $run_cmn in
-    true) cmn="ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- |" ;;
+    true) cmn="ark,s,cs:apply-cmvn --norm-vars=$norm_vars --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- |" ;;
     false) cmn="ark,s,cs:copy-feats scp:$sdata/JOB/feats.scp ark:- |" ;;
     *) echo "Invalid boolean value $run_cmn" && exit 1;;
 esac
@@ -90,7 +92,7 @@ esac
 case $feat_type in
   delta) feats="$cmn add-deltas ark:- ark:- |";;
   lda) feats="$cmn splice-feats $splice_opts ark:- ark:- | transform-feats $srcdir/final.mat ark:- ark:- |";;
-  *) echo "Invalid feature type $feat_type" && exit 1;;
+  *) echo "Invalid feature type $feat_type" && exit 1;
 esac
 if [ ! -z "$transform_dir" ]; then # add transforms to features...
   echo "Using fMLLR transforms from $transform_dir"

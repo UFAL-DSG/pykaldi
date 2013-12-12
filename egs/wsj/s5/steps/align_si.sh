@@ -49,13 +49,16 @@ echo $nj > $dir/num_jobs
 sdata=$data/split$nj
 splice_opts=`cat $srcdir/splice_opts 2>/dev/null` # frame-splicing options.
 cp $srcdir/splice_opts $dir 2>/dev/null # frame-splicing options.
+norm_vars=`cat $srcdir/norm_vars 2>/dev/null` || norm_vars=false # cmn/cmvn option, default false.
+cp $srcdir/norm_vars $dir 2>/dev/null # cmn/cmvn option.
+
 [[ -d $sdata && $data/feats.scp -ot $sdata ]] || split_data.sh $data $nj || exit 1;
 
 cp $srcdir/{tree,final.mdl} $dir || exit 1;
 cp $srcdir/final.occs $dir;
 
 case $run_cmn in
-    true) cmn="ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- ";;
+    true) cmn="ark,s,cs:apply-cmvn --norm-vars=$norm_vars --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- ";;
     false) cmn="ark,s,cs:copy-feats scp:$sdata/JOB/feats.scp ark:- ";;
     *) echo "Invalid boolean value $run_cmn" && exit 1;;
 esac

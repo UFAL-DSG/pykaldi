@@ -21,11 +21,13 @@
 #include "base/kaldi-common.h"
 #include "util/common-utils.h"
 #include "gmm/full-gmm.h"
+#include "hmm/posterior.h"
 
 
 int main(int argc, char *argv[]) {
   try {
     using namespace kaldi;
+    typedef kaldi::int32 int32;
 
     const char *usage =
         "Given features and Gaussian-selection (gselect) information for\n"

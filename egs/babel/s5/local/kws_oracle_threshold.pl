@@ -18,9 +18,9 @@ sub KeywordSort {
 
 my $Usage = <<EOU;
 This script reads a alignment.csv file and computes the ATWV, OTWV, MTWV by
-sweeping the threshold. The duration of the search collection is supposed to be
-provided. In the Babel case, the duration should be half of the total audio
-duration.
+sweeping the threshold. It also computes the lattice recall. The duration of
+the search collection is supposed to be provided. In the Babel case, the
+duration should be half of the total audio duration.
 
 The alignment.csv file is supposed to have the following fields for each line:
 language,file,channel,termid,term,ref_bt,ref_et,sys_bt,sys_et,sys_score,
@@ -56,6 +56,10 @@ open(A, "<$alignment_in") || die "$0: Fail to open alignment file: $alignment_in
 my %Ntrue;
 my %keywords;
 my %alignment;
+my $lattice_miss = 0;
+my $lattice_ref = 0;
+my %keywords_lattice_miss;
+my %keywords_lattice_ref;
 while (<A>) {
   chomp;
   my @col = split(',');
@@ -83,6 +87,8 @@ while (<A>) {
     if (!defined($alignment{$col[3]})) {
       $alignment{$col[3]} = [];
       $Ntrue{$col[3]} = 0;
+      $keywords_lattice_miss{$col[3]} = 0;
+      $keywords_lattice_ref{$col[3]} = 0;
     }
     my $ref = 1;
     my $res = 0;
@@ -94,6 +100,14 @@ while (<A>) {
     }
     $Ntrue{$col[3]} += 1;
     $keywords{$col[3]} = 1;
+
+    # The following is for lattice recall and STWV.
+    $lattice_ref ++;
+    $keywords_lattice_ref{$col[3]} ++;
+    if ($col[11] eq "MISS" && $col[10] eq "") {
+      $lattice_miss ++;
+      $keywords_lattice_miss{$col[3]} ++;
+    }
     next;
   }
 }
@@ -113,7 +127,7 @@ foreach my $kwid (keys %keywords) {
     my @ins = @{$instance};
     my $gain = 1.0 / $Ntrue{$kwid};
     my $cost = $beta / ($duration - $Ntrue{$kwid});
-    # ATWV.
+    # OTWV.
     if ($ins[1] == 1) {
       $local_otwv += $gain;
     } else {
@@ -123,7 +137,7 @@ foreach my $kwid (keys %keywords) {
       $max_local_otwv = $local_otwv;
     }
 
-    # OTWV.
+    # ATWV.
     if ($ins[2] == 1) {
       $local_atwv -= $cost;
     } elsif ($ins[2] == 2) {
@@ -153,12 +167,24 @@ for my $threshold (keys %mtwv_sweep) {
   }
 }
 
+# Works out the STWV.
+my $stwv = 0.0;
+for my $kw (keys %keywords_lattice_miss) {
+  $stwv += $keywords_lattice_miss{$kw} / $keywords_lattice_ref{$kw};
+}
+$stwv = 1 - $stwv / scalar(keys %keywords);
+
 $atwv /= scalar(keys %keywords);
 $atwv = sprintf("%.4f", $atwv);
 $otwv /= scalar(keys %keywords);
 $otwv = sprintf("%.4f", $otwv);
 $mtwv /= scalar(keys %keywords);
 $mtwv = sprintf("%.4f", $mtwv);
+my $lattice_recall = 1 - $lattice_miss / $lattice_ref;
+$lattice_recall = sprintf("%.4f", $lattice_recall);
+$stwv = sprintf("%.4f", $stwv);
 print "ATWV = $atwv\n";
 print "OTWV = $otwv\n";
+print "STWV = $stwv\n";
 print "MTWV = $mtwv, THRESHOLD = $mtwv_threshold\n";
+print "Lattice Recall = $lattice_recall\n";

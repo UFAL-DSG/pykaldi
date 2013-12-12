@@ -324,12 +324,15 @@ local/run_sgmm2.sh
 # You probably wany to run the hybrid recipe as it is complementary:
 local/run_dnn.sh
 
+# You probably want to try KL-HMM 
+#local/run_kl_hmm.sh
 
 # Getting results [see RESULTS file]
 # for x in exp/*/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done
 
 
 # KWS setup. We leave it commented out by default
+
 # $duration is the length of the search collection, in seconds
 #duration=`feat-to-len scp:data/test_eval92/feats.scp  ark,t:- | awk '{x+=$2} END{print x/100;}'`
 #local/generate_example_kws.sh data/test_eval92/ data/kws/

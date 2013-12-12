@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright 2012  Johns Hopkins University (Author: Daniel Povey).  Apache 2.0.
+# Copyright 2012-2013  Johns Hopkins University (Author: Daniel Povey).  Apache 2.0.
 
 # MMI training (or optionally boosted MMI, if you give the --boost option),
 # for SGMMs.  4 iterations (by default) of Extended Baum-Welch update.
@@ -9,7 +9,7 @@ cmd=run.pl
 num_iters=4
 boost=0.0
 cancel=true # if true, cancel num and den counts on each frame.
-zero_if_disjoint=false
+drop_frames=false # this is the same as frame dropping (see Karel's ICASSP2013 paper).
 acwt=0.1
 stage=0
 update_opts=
@@ -50,8 +50,10 @@ nj=`cat $alidir/num_jobs` || exit 1;
 
 sdata=$data/split$nj
 splice_opts=`cat $alidir/splice_opts 2>/dev/null`
+norm_vars=`cat $alidir/norm_vars 2>/dev/null` || norm_vars=false # cmn/cmvn option, default false.
 mkdir -p $dir/log
 cp $alidir/splice_opts $dir 2>/dev/null
+cp $alidir/norm_vars $dir 2>/dev/null # cmn/cmvn option.
 [[ -d $sdata && $data/feats.scp -ot $sdata ]] || split_data.sh $data $nj || exit 1;
 echo $nj > $dir/num_jobs
 
@@ -66,8 +68,8 @@ if [ -f $alidir/final.mat ]; then feat_type=lda; else feat_type=delta; fi
 echo "$0: feature type is $feat_type"
 
 case $feat_type in
-  delta) feats="ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- | add-deltas ark:- ark:- |";;
-  lda) feats="ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- | splice-feats $splice_opts ark:- ark:- | transform-feats $alidir/final.mat ark:- ark:- |"
+  delta) feats="ark,s,cs:apply-cmvn --norm-vars=$norm_vars --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- | add-deltas ark:- ark:- |";;
+  lda) feats="ark,s,cs:apply-cmvn --norm-vars=$norm_vars --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- | splice-feats $splice_opts ark:- ark:- | transform-feats $alidir/final.mat ark:- ark:- |"
     cp $alidir/final.mat $dir    
     ;;
   *) echo "Invalid feature type $feat_type" && exit 1;
@@ -110,9 +112,9 @@ while [ $x -lt $num_iters ]; do
   if [ $stage -le $x ]; then
     $cmd JOB=1:$nj $dir/log/acc.$x.JOB.log \
       test -s $dir/den_acc.$x.JOB.gz -a -s $dir/num_acc.$x.JOB.gz '||' \
-      sgmm2-rescore-lattice "$gselect_opt" $spkvecs_opt $dir/$x.mdl "$lats" "$feats" ark:- \| \
+      sgmm2-rescore-lattice --speedup=true "$gselect_opt" $spkvecs_opt $dir/$x.mdl "$lats" "$feats" ark:- \| \
       lattice-to-post --acoustic-scale=$acwt ark:- ark:- \| \
-      sum-post --zero-if-disjoint=$zero_if_disjoint --merge=$cancel --scale1=-1 \
+      sum-post --drop-frames=$drop_frames --merge=$cancel --scale1=-1 \
       ark:- "ark,s,cs:gunzip -c $alidir/ali.JOB.gz | ali-to-post ark:- ark:- |" ark:- \| \
       sgmm2-acc-stats2 "$gselect_opt" $spkvecs_opt $dir/$x.mdl "$feats" ark,s,cs:- \
       "|gzip -c >$dir/num_acc.$x.JOB.gz" "|gzip -c >$dir/den_acc.$x.JOB.gz" || exit 1;

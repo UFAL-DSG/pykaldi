@@ -22,7 +22,7 @@ tau=200 # For model.  Note: we're doing smoothing "to the previous iteration",
     # sense to use any element of ML.
 cancel=true # if true, cancel num and den counts as described in 
      # the boosted MMI paper. 
-zero_if_disjoint=false # if true, ignore stats from frames where num + den
+drop_frames=false # if true, ignore stats from frames where num + den
                        # have no overlap. 
 acwt=0.1
 stage=-1
@@ -73,8 +73,10 @@ nj=`cat $alidir/num_jobs` || exit 1;
   echo "$alidir and $denlatdir have different num-jobs" && exit 1;
 sdata=$data/split$nj
 splice_opts=`cat $alidir/splice_opts 2>/dev/null` # frame-splicing options.
+norm_vars=`cat $alidir/norm_vars 2>/dev/null` || norm_vars=false # cmn/cmvn option, default false.
 mkdir -p $dir/log
 cp $alidir/splice_opts $dir 2>/dev/null # frame-splicing options.
+cp $alidir/norm_vars $dir 2>/dev/null # cmn/cmvn option.
 [[ -d $sdata && $data/feats.scp -ot $sdata ]] || split_data.sh $data $nj || exit 1;
 
 
@@ -83,8 +85,8 @@ echo "$0: feature type is $feat_type"
 
 # Note: $feats is the features before fMPE.
 case $feat_type in
-  delta) feats="ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- | add-deltas ark:- ark:- |";;
-  lda) feats="ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- | splice-feats $splice_opts ark:- ark:- | transform-feats $alidir/final.mat ark:- ark:- |"
+  delta) feats="ark,s,cs:apply-cmvn --norm-vars=$norm_vars --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- | add-deltas ark:- ark:- |";;
+  lda) feats="ark,s,cs:apply-cmvn --norm-vars=$norm_vars --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- | splice-feats $splice_opts ark:- ark:- | transform-feats $alidir/final.mat ark:- ark:- |"
     cp $alidir/final.mat $dir    
     ;;
   *) echo "Invalid feature type $feat_type" && exit 1;
@@ -137,7 +139,7 @@ while [ $x -lt $num_iters ]; do
     $cmd JOB=1:$nj $dir/log/acc.$x.JOB.log \
       gmm-rescore-lattice $dir/$x.mdl "$lats" "$fmpefeats" ark:- \| \
       lattice-to-post --acoustic-scale=$acwt ark:- ark:- \| \
-      sum-post --merge=$local_cancel --scale1=-1 --zero-if-disjoint=$zero_if_disjoint \
+      sum-post --merge=$local_cancel --scale1=-1 --drop-frames=$drop_frames \
       ark:- "ark,s,cs:gunzip -c $alidir/ali.JOB.gz | ali-to-post ark:- ark:- |" ark:- \| \
       gmm-acc-stats2 $dir/$x.mdl "$fmpefeats" ark,s,cs:- \
       $dir/num_acc.$x.JOB.acc $dir/den_acc.$x.JOB.acc || exit 1;
@@ -170,7 +172,7 @@ while [ $x -lt $num_iters ]; do
       $cmd JOB=1:$nj $dir/log/acc_fmmi.$x.JOB.log \
         gmm-rescore-lattice $dir/$x.mdl "$lats" "$fmpefeats" ark:- \| \
         lattice-to-post --acoustic-scale=$acwt ark:- ark:- \| \
-        sum-post --zero-if-disjoint=$zero_if_disjoint --merge=false --scale1=-1 \
+        sum-post --drop-frames=$drop_frames --merge=false --scale1=-1 \
           ark:- "$numpost" ark:- \| \
         gmm-fmpe-acc-stats --model-derivative=$dir/model_deriv.$x.gmmacc \
           $dir/$x.mdl $dir/$x.fmpe "$feats" \

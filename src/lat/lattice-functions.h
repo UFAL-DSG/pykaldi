@@ -27,7 +27,7 @@
 #include <map>
 
 #include "base/kaldi-common.h"
-#include "util/common-utils.h"
+#include "hmm/posterior.h"
 #include "fstext/fstext-lib.h"
 #include "hmm/transition-model.h"
 #include "lat/kaldi-lattice.h"
@@ -46,7 +46,7 @@ int32 LatticeStateTimes(const Lattice &lat, std::vector<int32> *times);
 /// be topologically sorted.  Returns length of the utterance in frames, which
 /// may not be the same as the maximum time in the lattice, due to frames
 /// in the final-prob.
-int32 CompactLatticeStateTimes(const CompactLattice &lat,
+int32 CompactLatticeStateTimes(const CompactLattice &clat,
                                std::vector<int32> *times);
 
 /// This function does the forward-backward over lattices and computes the
@@ -76,6 +76,12 @@ void TopSortLatticeIfNeeded(Lattice *clat);
 /// Requires that clat is topologically sorted!
 BaseFloat CompactLatticeDepth(const CompactLattice &clat,
                               int32 *num_frames = NULL);
+
+/// This function returns, for each frame, the number of arcs crossing that
+/// frame.
+void CompactLatticeDepthPerFrame(const CompactLattice &clat,
+                                 std::vector<int32> *depth_per_frame);
+
 
 /// This function limits the depth of the lattice, per frame: that means, it
 /// does not allow more than a specified number of arcs active on any given
@@ -122,7 +128,7 @@ void ConvertCompactLatticeToPhones(const TransitionModel &trans_model,
 /// Boosts LM probabilities by b * [#frame errors]; equivalently, adds
 /// -b*[#frame errors] to the graph-component of the cost of each arc/path.
 /// There is a frame error if a particular transition-id on a particular frame
-/// corresponds to a phone not appearining in active_phones for that frame.
+/// corresponds to a phone not matching transcription's alignment for that frame.
 /// This is used in "margin-inspired" discriminative training, esp. Boosted MMI.
 /// The TransitionModel is used to map transition-ids in the lattice
 /// input-side to phones; the phones appearing in
@@ -132,28 +138,50 @@ void ConvertCompactLatticeToPhones(const TransitionModel &trans_model,
 /// Returns true on success, false if there was some kind of mismatch.
 /// At input, silence_phones must be sorted and unique.
 bool LatticeBoost(const TransitionModel &trans,
-                  const std::vector<std::set<int32> > &active_phones,
+                  const std::vector<int32> &alignment,
                   const std::vector<int32> &silence_phones,
                   BaseFloat b,
                   BaseFloat max_silence_error,
                   Lattice *lat);
 
-int32 LatticePhoneFrameAccuracy(const Lattice &hyp, const TransitionModel &trans,
-                               const std::vector< std::map<int32, int32> > &ref,
-                               std::vector< std::map<int32, char> > *arc_accs,
-                               std::vector<int32> *state_times);
 
-BaseFloat LatticeForwardBackwardMpe(const Lattice &lat,
-                                    const TransitionModel &trans,
-                                    const vector< std::map<int32, char> > &arc_accs,
-                                    Posterior *arc_post,
-                                    const std::vector<int32> &silence_phones);
+/**
+   This function implements either the MPFE (minimum phone frame error)
+   or SMBR (state-level minimum bayes risk) forward-backward, depending
+   on whether "criterion" is "mpfe" or "smbr".  It returns the MPFE criterion
+   of SMBR criterion for this file, and outputs the posteriors (which may be
+   positive or negative) into "arc_post".
+*/
+BaseFloat LatticeForwardBackwardMpeVariants(
+    const TransitionModel &trans,
+    const std::vector<int32> &silence_phones,
+    const Lattice &lat,
+    const std::vector<int32> &num_ali,
+    std::string criterion,
+    Posterior *post);
 
-BaseFloat LatticeForwardBackwardSmbr(const Lattice &lat,
-                                     const TransitionModel &trans,
-                                     const vector< std::map<int32, char> > &arc_accs,
-                                     const std::vector<int32> &silence_phones,
-                                     Posterior *arc_post);
+/**
+   This function can be used to compute posteriors for MMI, with a positive contribution
+   for the numerator and a negative one for the denominator.  This function is not actually
+   used in our normal MMI training recipes, where it's instead done using various command
+   line programs that each do a part of the job.  This function was written for use in
+   neural-net MMI training.
+   If drop_frames is true, it will not compute any posteriors on frames where the num and
+   den have disjoint pdf-ids.
+   If "convert_to_pdf_ids" is true, it will convert the output to be at the level of pdf-ids,
+   not transition-ids.
+   If "cancel" is true, it will cancel out any positive and negative parts from
+   the same transition-id (or pdf-id, if convert_to_pdf_ids == true).
+   It returns the forward-backward likelihood of the lattice. */
+BaseFloat LatticeForwardBackwardMmi(
+    const TransitionModel &trans,
+    const Lattice &lat,
+    const std::vector<int32> &num_ali,
+    bool drop_frames,
+    bool convert_to_pdf_ids,
+    bool cancel,
+    Posterior *arc_post);
+
 
 /// This function takes a CompactLattice that should only contain
 /// a single linear sequence (e.g. derived from lattice-1best), and
@@ -188,11 +216,29 @@ void AddWordInsPenToCompactLattice(BaseFloat word_ins_penalty,
 bool RescoreCompactLattice(DecodableInterface *decodable,
                            CompactLattice *clat);
 
+/// This function is like RescoreCompactLattice, but it is modified to avoid
+/// computing probabilities on most frames where all the pdf-ids are the same.
+/// (it needs the transition-model to work out whether two transition-ids map to
+/// the same pdf-id, and it assumes that the lattice has transition-ids on it).
+/// The naive thing would be to just set all probabilities to zero on frames
+/// where all the pdf-ids are the same (because this value won't affect the
+/// lattice posterior).  But this would become confusing when we compute
+/// corpus-level diagnostics such as the MMI objective function.  Instead,
+/// imagine speedup_factor = 100 (it must be >= 1.0)... with probability (1.0 /
+/// speedup_factor) we compute those likelihoods and multiply them by
+/// speedup_factor; otherwise we set them to zero.  This gives the right
+/// expected probability so our corpus-level diagnostics will be about right.
+bool RescoreCompactLatticeSpeedup(
+    const TransitionModel &tmodel,
+    BaseFloat speedup_factor,
+    DecodableInterface *decodable,
+    CompactLattice *clat);
+
 
 /// This function *adds* the negated scores obtained from the Decodable object,
 /// to the acoustic scores on the arcs.  If you want to replace them, you should
 /// use ScaleCompactLattice to first set the acoustic scores to zero.  Returns
-/// true on success, false on error (typically some kind of mismatched inputs).
+/// true on success, false on error (e.g. some kind of mismatched inputs).
 /// The input labels, if nonzero, are interpreted as transition-ids or whatever
 /// other index the Decodable object expects.
 bool RescoreLattice(DecodableInterface *decodable,

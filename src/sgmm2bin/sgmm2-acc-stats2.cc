@@ -24,7 +24,7 @@
 #include "sgmm2/am-sgmm2.h"
 #include "hmm/transition-model.h"
 #include "sgmm2/estimate-am-sgmm2.h"
-
+#include "hmm/posterior.h"
 
 int main(int argc, char *argv[]) {
   using namespace kaldi;
@@ -173,6 +173,8 @@ int main(int argc, char *argv[]) {
           tot_abs_weight_this_file = 0.0;
         
       for (size_t i = 0; i < posterior.size(); i++) {
+        if (posterior[i].empty())
+          continue;
         am_sgmm.ComputePerFrameVars(features.Row(i), gselect[i], spk_vars,
                                     &per_frame_vars);
         

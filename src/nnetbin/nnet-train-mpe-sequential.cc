@@ -129,15 +129,9 @@ int main(int argc, char *argv[]) {
     po.Register("do-smbr", &do_smbr, "Use state-level accuracies instead of "
                 "phone accuracies.");
 
-#if HAVE_CUDA == 1
-    kaldi::int32 use_gpu_id=-2;
-    po.Register("use-gpu-id", &use_gpu_id, "Manually select GPU by its ID "
-                "(-2 automatic selection, -1 disable GPU, 0..N select GPU)");
-#else
-    int32 use_gpu_id=0;
-    po.Register("use-gpu-id", &use_gpu_id, "Unused, kaldi is compiled w/o CUDA");
-#endif
-
+    std::string use_gpu="yes";
+    po.Register("use-gpu", &use_gpu, "yes|no|optional, only has effect if compiled with CUDA");
+     
     po.Read(argc, argv);
 
     if (po.NumArgs() != 6) {
@@ -164,7 +158,7 @@ int main(int argc, char *argv[]) {
 
     // Select the GPU
 #if HAVE_CUDA == 1
-    CuDevice::Instantiate().SelectGpuId(use_gpu_id);
+    CuDevice::Instantiate().SelectGpuId(use_gpu);
 #endif
 
     Nnet nnet_transf;
@@ -248,7 +242,7 @@ int main(int argc, char *argv[]) {
         fst::ScaleLattice(fst::AcousticLatticeScale(old_acoustic_scale),
                           &den_lat);
       }
-      // optionaly sort it topologically
+      // optional sort it topologically
       kaldi::uint64 props = den_lat.Properties(fst::kFstProperties, false);
       if (!(props & fst::kTopSorted)) {
         if (fst::TopSort(&den_lat) == false)
@@ -295,27 +289,14 @@ int main(int argc, char *argv[]) {
       if (acoustic_scale != 1.0 || lm_scale != 1.0)
         fst::ScaleLattice(fst::LatticeScale(lm_scale, acoustic_scale), &den_lat);
 
-      // 5) get the posteriors
-      vector< std::map<int32, char> > arc_accs;
-      arc_accs.resize(ref_ali.size());
       kaldi::Posterior post;
 
       if (do_smbr) {  // use state-level accuracies, i.e. sMBR estimation
-        for (size_t i = 0; i < ref_ali.size(); i++) {
-          int32 pdf = trans_model.TransitionIdToPdf(ref_ali[i]);
-          arc_accs[i][pdf] = 1;
-        }
-        utt_frame_acc = LatticeForwardBackwardSmbr(den_lat, trans_model,
-                                                   arc_accs, silence_phones,
-                                                   &post);
-      } else {  // use phone-level accuracies, i.e. regular MPE
-        for (size_t i = 0; i < ref_ali.size(); i++) {
-          int32 phone = trans_model.TransitionIdToPhone(ref_ali[i]);
-          arc_accs[i][phone] = 1;
-        }
-        utt_frame_acc = kaldi::LatticeForwardBackwardMpe(den_lat, trans_model,
-                                                         arc_accs, &post,
-                                                         silence_phones);
+        utt_frame_acc = LatticeForwardBackwardMpeVariants(
+            trans_model, silence_phones, den_lat, ref_ali, "smbr", &post);
+      } else {  // use phone-level accuracies, i.e. MPFE (minimum phone frame error)
+        utt_frame_acc = LatticeForwardBackwardMpeVariants(
+            trans_model, silence_phones, den_lat, ref_ali, "mpfe", &post);
       }
 
       // 6) convert the Posterior to a matrix

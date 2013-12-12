@@ -8,12 +8,12 @@ TESTFILES = feature-mfcc-test feature-plp-test feature-fbank-test \
          feature-functions-test
 
 OBJFILES = feature-functions.o feature-mfcc.o feature-plp.o feature-fbank.o \
-              feature-spectrogram.o mel-computations.o wave-reader.o
+              feature-spectrogram.o mel-computations.o wave-reader.o pitch-functions.o
 
 LIBNAME = kaldi-feat
 
 ADDLIBS = ../transform/kaldi-transform.a ../gmm/kaldi-gmm.a ../tree/kaldi-tree.a \
-					../util/kaldi-util.a ../matrix/kaldi-matrix.a ../base/kaldi-base.a
+	../util/kaldi-util.a ../matrix/kaldi-matrix.a ../base/kaldi-base.a
 
 include ../makefiles/default_rules.mk
 

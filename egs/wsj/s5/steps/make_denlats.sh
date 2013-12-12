@@ -52,6 +52,7 @@ dir=$4
 
 sdata=$data/split$nj
 splice_opts=`cat $srcdir/splice_opts 2>/dev/null`
+norm_vars=`cat $srcdir/norm_vars 2>/dev/null` || norm_vars=false # cmn/cmvn option, default false.
 thread_string=
 [ $num_threads -gt 1 ] && thread_string="-parallel --num-threads=$num_threads"
 
@@ -85,7 +86,7 @@ else
 fi
 
 case $run_cmn in
-    true) cmn="ark,s,cs:apply-cmvn --norm-vars=false --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- ";;
+    true) cmn="ark,s,cs:apply-cmvn --norm-vars=$norm_vars --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- ";;
     false) cmn="ark,s,cs:copy-feats scp:$sdata/JOB/feats.scp ark:- ";;
     *) echo "Invalid boolean value $run_cmn" && exit 1;;
 esac
@@ -123,7 +124,7 @@ if [ $sub_split -eq 1 ]; then
      $dir/dengraph/HCLG.fst "$feats" "ark:|gzip -c >$dir/lat.JOB.gz" || exit 1;
 else
   for n in `seq $nj`; do
-    if [ -f $dir/.done.$n ] && [ $dir/.done.$n -nt $alidir/final.mdl ]; then
+    if [ -f $dir/.done.$n ] && [ $dir/.done.$n -nt $srcdir/final.mdl ]; then
       echo "Not processing subset $n as already done (delete $dir/.done.$n if not)";
     else 
       sdata2=$data/split$nj/$n/split$sub_split;
