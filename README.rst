@@ -14,17 +14,17 @@ Install
     :target: https://travis-ci.org/oplatek/pykaldi
 
 
-* Read `INSTALL.rst` and `INSTALL` first!
-* `./INSTALL.rst` contains instructions specific for Pykaldi. `./INSTALL` stores general instructions for Kaldi.
+* Read `INSTALL.rst <./INSTALL.rst>`_ and `INSTALL <./INSTALL>`_ first!
+* `INSTALL.rst <./INSTALL.rst>`_ contains instructions specific for Pykaldi. `INSTALL <./INSTALL>`_ stores general instructions for Kaldi.
 
 
 Other info
 ----------
 * Pykaldi is developed under `Vystadial project <https://sites.google.com/site/filipjurcicek/projects/vystadial>`_.
 * The svn trunk is mirrored via ``git svn``. Checkout tutorials: `Intro to git svn <http://viget.com/extend/effectively-using-git-with-subversion>`_, 
- `Git svn branch in git repo <http://ivanz.com/2009/01/15/selective-import-of-svn-branches-into-a-gitgit-svn-repository>`_
+`Git svn branch in git repo <http://ivanz.com/2009/01/15/selective-import-of-svn-branches-into-a-gitgit-svn-repository>`_
 
 LICENSE
 --------
- * Pykaldi is released under the `Apache license, Version 2.0 <http://www.apache.org/licenses/LICENSE-2.0>`_, which is also used by Kaldi itself. 
- * We also want to publicly release the training data for the recipe in the autumn 2013.
+* Pykaldi is released under the `Apache license, Version 2.0 <http://www.apache.org/licenses/LICENSE-2.0>`_, which is also used by Kaldi itself. 
+* We also want to publicly release the training data for the recipe in the autumn 2013.
