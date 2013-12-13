@@ -1,9 +1,7 @@
 #!/bin/bash
 
-. path.sh
-
 format=svg # pdf svg
-mode=save # display save
+mode=display # display save
 
 . utils/parse_options.sh
 
@@ -12,6 +10,8 @@ if [ $# != 3 ]; then
    echo "e.g.:  $0 utt-0001 \"test/lat.*.gz\" tri1/graph/words.txt"
    exit 1;
 fi
+
+. path.sh
 
 uttid=$1
 lat=$2
