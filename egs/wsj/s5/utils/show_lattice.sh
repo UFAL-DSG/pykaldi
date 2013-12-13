@@ -28,12 +28,9 @@ if [ "$(uname)" == "Darwin" ]; then
     doc_open=open
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
     doc_open=xdg-open
-elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]; then
-
-    if [ $mode == "display" ] ; then
-        echo "Can not determine your operating system and open the file"
+elif [ $mode == "display" ] ; then
+        echo "Can not automaticly open file on your operating system"
         mode=save
-    fi
 fi
 
 [ $mode == "display" ] && $doc_open $tmpdir/$uttid.${format}
