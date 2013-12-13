@@ -69,6 +69,14 @@ void MovePostToArcs(fst::VectorFst<fst::LogArc> * lat,
 }
 
 double CompactLatticeToWordsPost(CompactLattice &clat, fst::VectorFst<fst::LogArc> *pst) {
+#ifdef DEBUG
+  std::string lattice_wspecifier("ark:|gzip - c > after_GetLattice.gz");
+  CompactLatticeWriter compact_lattice_writer;
+  compact_lattice_writer.Open(lattice_wspecifier);
+  compact_lattice_writer.Write("unknown", clat);
+  compact_lattice_writer.Close();
+#endif // DEBUG
+
   {
     Lattice lat;
     fst::VectorFst<fst::StdArc> t_std;
@@ -80,7 +88,7 @@ double CompactLatticeToWordsPost(CompactLattice &clat, fst::VectorFst<fst::LogAr
 #ifdef DEBUG
   {
     std::ofstream logfile;
-    logfile.open("c_after_Cast.fst");
+    logfile.open("after_cast_c.fst");
     pst->Write(logfile, fst::FstWriteOptions());
     logfile.close();
   }
@@ -92,7 +100,7 @@ double CompactLatticeToWordsPost(CompactLattice &clat, fst::VectorFst<fst::LogAr
 #ifdef DEBUG
   {
     std::ofstream logfile;
-    logfile.open("c_after_minimize.fst");
+    logfile.open("after_minimize_c.fst");
     pst->Write(logfile, fst::FstWriteOptions());
     logfile.close();
   }
@@ -110,7 +118,7 @@ double CompactLatticeToWordsPost(CompactLattice &clat, fst::VectorFst<fst::LogAr
   }
   {
     std::ofstream logfile;
-    logfile.open("c_after_post.fst");
+    logfile.open("after_post_c.fst");
     pst->Write(logfile, fst::FstWriteOptions());
     logfile.close();
   }

@@ -1,12 +1,12 @@
 #!/bin/bash
 
-format=svg # pdf svg
+format=pdf # pdf svg
 mode=display # display save
 
 . utils/parse_options.sh
 
 if [ $# != 3 ]; then
-   echo "usage: $0 [--mode save|display] [--format pdf|svg] <utt-id> <lattice-ark> <word-list>"
+   echo "usage: $0 [--mode display|save] [--format pdf|svg] <utt-id> <lattice-ark> <word-list>"
    echo "e.g.:  $0 utt-0001 \"test/lat.*.gz\" tri1/graph/words.txt"
    exit 1;
 fi
