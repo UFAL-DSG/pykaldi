@@ -30,6 +30,10 @@
 // debug
 #include <fstream>
 #include <iostream>
+#include <ctime>
+#include <sys/time.h>
+#include <time.h>
+#include <stdio.h>
 
 
 namespace kaldi {
@@ -95,13 +99,19 @@ bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::LogArc> *fst_out,
   if (! initialized_)
     return false;
 
+  // PROFILE BEGIN 
+  clock_t start, end;
+  struct timeval then, now;
+  start = clock();
+  gettimeofday(&then, NULL);
+
   // TODO delete
   // Lattice lat;
   // bool ok = decoder->GetRawLattice(&lat);
   CompactLattice lat;
   bool ok = decoder->GetLattice(&lat);
 
-  double lm_scale = 0.0; // TODO import lm_scale?
+  // double lm_scale = 0.0; // TODO import lm_scale?
   // if (acoustic_scale != 0.0 || lm_scale != 0.0)
   BaseFloat acoustic_scale = decodable->GetAcousticScale();
   if (acoustic_scale != 0.0)
@@ -110,6 +120,14 @@ bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::LogArc> *fst_out,
   // TODO delete
   // *tot_prob = LatticeToWordsPost(lat, fst_out);  // TODO tot_prob is sensible?
   *tot_prob = CompactLatticeToWordsPost(lat, fst_out);  // TODO tot_prob is sensible?
+
+  // PROFILE END
+  end = clock();
+  gettimeofday(&now, NULL);
+  std::cerr << "GmmLatgenWrapper::GetLattice: " << 
+    (double(end - start) / CLOCKS_PER_SEC) << "secs" << std::endl;
+  std::cerr << "GmmLatgenWrapper::GetLattice: " <<
+    now.tv_sec - then.tv_sec + 1e-6 * (now.tv_usec - then.tv_usec) << "secs" << std::endl;
 
   return ok;
 }
