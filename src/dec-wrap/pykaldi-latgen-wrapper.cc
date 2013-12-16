@@ -41,8 +41,12 @@ namespace kaldi {
 void KaldiDecoderGmmLatgenWrapperOptions::Register(OptionsItf *po) {
   po->Register("left-context", &left_context, "Number of frames of left context");
   po->Register("right-context", &right_context, "Number of frames of right context");
-  po->Register("acoustic-scale", &acoustic_scale,
-              "Scaling factor for acoustic likelihoods");
+  po->Register("acoustic-scale", &lat_acoustic_scale,
+              "Scaling factor for acoustic likelihoods for forward decoding");
+  po->Register("lat-acoustic-scale", &lat_acoustic_scale,
+              "Scaling factor for acoustic likelihoods after forward decoding");
+  po->Register("lat-lm-scale", &lat_lm_scale,
+              "Scaling factor for LM likelihoods after forward decoding");
 }
 
 void GmmLatgenWrapper::Deallocate() {
@@ -99,35 +103,13 @@ bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::LogArc> *fst_out,
   if (! initialized_)
     return false;
 
-  // PROFILE BEGIN 
-  clock_t start, end;
-  struct timeval then, now;
-  start = clock();
-  gettimeofday(&then, NULL);
-
-  // TODO delete
-  // Lattice lat;
-  // bool ok = decoder->GetRawLattice(&lat);
   CompactLattice lat;
   bool ok = decoder->GetLattice(&lat);
 
-  // double lm_scale = 0.0; // TODO import lm_scale?
-  // if (acoustic_scale != 0.0 || lm_scale != 0.0)
-  BaseFloat acoustic_scale = decodable->GetAcousticScale();
-  if (acoustic_scale != 0.0)
-    fst::ScaleLattice(fst::AcousticLatticeScale(1.0 / acoustic_scale), &lat);
+  KALDI_ASSERT(lat_acoustic_scale_ != 0.0 || lat_lm_scale_ != 0.0);
+  fst::ScaleLattice(fst::LatticeScale(lat_lm_scale_, lat_acoustic_scale_), &lat);
 
-  // TODO delete
-  // *tot_prob = LatticeToWordsPost(lat, fst_out);  // TODO tot_prob is sensible?
   *tot_prob = CompactLatticeToWordsPost(lat, fst_out);  // TODO tot_prob is sensible?
-
-  // PROFILE END
-  end = clock();
-  gettimeofday(&now, NULL);
-  std::cerr << "GmmLatgenWrapper::GetLattice: " << 
-    (double(end - start) / CLOCKS_PER_SEC) << "secs" << std::endl;
-  std::cerr << "GmmLatgenWrapper::GetLattice: " <<
-    now.tv_sec - then.tv_sec + 1e-6 * (now.tv_usec - then.tv_usec) << "secs" << std::endl;
 
   return ok;
 }
@@ -142,12 +124,9 @@ bool GmmLatgenWrapper::GetRawLattice(fst::VectorFst<fst::StdArc> *fst_out) {
   bool ok = decoder->GetRawLattice(&lat);
   fst::Connect(&lat); // Will get rid of this later... shouldn't have any
 
-  double lm_scale = 0.0; // TODO import lm_scale
-  BaseFloat acoustic_scale = decodable->GetAcousticScale();
-  if (acoustic_scale != 1.0 || lm_scale != 1.0)
-    fst::ScaleLattice(fst::LatticeScale(lm_scale, acoustic_scale), &lat);
-
-  ConvertLattice(lat, fst_out); // adds up the (lm,acoustic) costs to get
+  KALDI_ASSERT(lat_acoustic_scale_ != 0.0 || lat_lm_scale_ != 0.0);
+  fst::ScaleLattice(fst::LatticeScale(lat_lm_scale_, lat_acoustic_scale_), &lat);
+  ConvertLattice(lat, fst_out); // adds up the (lm,acoustic) costs
 
   return ok;
 }
@@ -216,6 +195,9 @@ bool GmmLatgenWrapper::Setup(int argc, char **argv) {
 
     wrapper_opts.silence_phones = phones_to_vector(po.GetArg(4));
     wrapper_opts.lda_mat_rspecifier = po.GetOptArg(5);
+
+    lat_lm_scale_ = wrapper_opts.lat_lm_scale;
+    lat_acoustic_scale_ = wrapper_opts.lat_acoustic_scale;
 
     // Setting up components
     trans_model = new TransitionModel();

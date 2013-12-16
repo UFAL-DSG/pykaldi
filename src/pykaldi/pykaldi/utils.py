@@ -112,37 +112,41 @@ def get_vystadial_data(src_tar_path, path=None):
         input_scp.write('%s %s\n' % (wav_names[best_index], wav_paths[best_index]))
 
 
-def lattice_to_nbest(lat, n=1):
-    # Log semiring -> no best path
-    # Converting the lattice to tropical semiring
-    std_v = fst.StdVectorFst(lat)
-    p = std_v.shortest_path(n=10)
+def fst_shortest_path_to_lists(fst_shortest):
     # There are n - eps arcs from 0 state which mark beginning of each list
     # Following one path there are 2 eps arcs at beginning
     # and one at the end before final state
-    first_arcs = [a for a in p[0].arcs]
+    first_arcs = [a for a in fst_shortest[0].arcs]
     word_ids = []
     for arc in first_arcs:
         # first arc is epsilon arc
         assert(arc.ilabel == 0 and arc.olabel == 0)
-        arc = p[arc.nextstate].arcs.next()
+        arc = fst_shortest[arc.nextstate].arcs.next()
         # second arc is also epsilon arc
         assert(arc.ilabel == 0 and arc.olabel == 0)
         # assuming logarithmic semiring
         path, weight = [], 0
         # start with third arc
-        arc = p[arc.nextstate].arcs.next()
+        arc = fst_shortest[arc.nextstate].arcs.next()
         try:
             while arc.olabel != 0:
                 path.append(arc.olabel)
                 weight += float(arc.weight)  # TODO use the Weights class explicitly
-                arc = p[arc.nextstate].arcs.next()
+                arc = fst_shortest[arc.nextstate].arcs.next()
         except StopIteration:
             pass
 
         word_ids.append((float(weight), path))
     sorted(word_ids)  # TODO is it necessary? // probably not
     return word_ids
+
+
+def lattice_to_nbest(lat, n=1):
+    # Log semiring -> no best path
+    # Converting the lattice to tropical semiring
+    std_v = fst.StdVectorFst(lat)
+    p = std_v.shortest_path(n=10)
+    return fst_shortest_path_to_lists(p)
 
 
 def load_wav(file_name, def_sample_width=2, def_sample_rate=16000):

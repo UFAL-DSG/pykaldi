@@ -44,20 +44,11 @@ void PrintPartialResult(const std::vector<int32>& words,
                         const fst::SymbolTable *word_syms,
                         bool line_break);
 
-// Extract n-best lists from lattice in Tropical semiring.
-// Tropical semiring is needed for shortest-path algorithm ?TODO?
-double LatticeToNbest(const fst::VectorFst<fst::StdArc> &lat,
-                     std::vector<std::vector<int> > &nbest,
-                     std::vector<BaseFloat> &prob_out,
-                     int n);
-
-
 std::vector<int32> phones_to_vector(const std::string & s);
 
 
-// FIXME Copied from lat/lattice-functions.cc
-// FIXME does it work with multiple final states? With negated costs?..
-// There is no no declaration in lat/lattice-functions.h!
+// FIXME Copied from lat/lattice-functions.cc no declaration in header
+// FIXME does it work with multiple final states? Yes-only at the end of paths
 // Computes (normal or Viterbi) alphas and betas; returns (total-prob, or
 // best-path negated cost) 
 // Note: in either case, the alphas and betas are negated costs.
@@ -66,54 +57,7 @@ std::vector<int32> phones_to_vector(const std::string & s);
 template<typename LatticeType>
 static double ComputeLatticeAlphasAndBetas(const LatticeType &lat,
                                            vector<double> *alpha,
-                                           vector<double> *beta) {
-  typedef typename LatticeType::Arc Arc;
-  typedef typename Arc::Weight Weight;
-  typedef typename Arc::StateId StateId;
-
-  StateId num_states = lat.NumStates();
-  KALDI_ASSERT(lat.Properties(fst::kTopSorted, true) == fst::kTopSorted);
-  KALDI_ASSERT(lat.Start() == 0);
-  alpha->resize(num_states, kLogZeroDouble);
-  beta->resize(num_states, kLogZeroDouble);
-
-  double tot_forward_prob = kLogZeroDouble;
-  (*alpha)[0] = 0.0;
-  // Propagate alphas forward.
-  for (StateId s = 0; s < num_states; s++) {
-    double this_alpha = (*alpha)[s];
-    for (fst::ArcIterator<LatticeType> aiter(lat, s); !aiter.Done();
-         aiter.Next()) {
-      const Arc &arc = aiter.Value();
-      double arc_like = -ConvertToCost(arc.weight);
-      (*alpha)[arc.nextstate] = LogAdd((*alpha)[arc.nextstate], 
-                                        this_alpha + arc_like);
-    }
-    Weight f = lat.Final(s);
-    if (f != Weight::Zero()) {
-      double final_like = this_alpha - ConvertToCost(f);
-      tot_forward_prob = LogAdd(tot_forward_prob, final_like);
-    }
-  }
-  for (StateId s = num_states-1; s >= 0; s--) { // it's guaranteed signed.
-    double this_beta = -ConvertToCost(lat.Final(s));
-    for (fst::ArcIterator<LatticeType> aiter(lat, s); !aiter.Done();
-         aiter.Next()) {
-      const Arc &arc = aiter.Value();
-      double arc_like = -ConvertToCost(arc.weight),
-          arc_beta = (*beta)[arc.nextstate] + arc_like;
-      this_beta = LogAdd(this_beta, arc_beta);
-    }
-    (*beta)[s] = this_beta;
-  }
-  double tot_backward_prob = (*beta)[lat.Start()];
-  if (!ApproxEqual(tot_forward_prob, tot_backward_prob, 1e-8)) {
-    KALDI_WARN << "Total forward probability over lattice = " << tot_forward_prob
-               << ", while total backward probability = " << tot_backward_prob;
-  }
-  // Split the difference when returning... they should be the same.
-  return 0.5 * (tot_backward_prob + tot_forward_prob);
-}
+                                           vector<double> *beta);
 
 
 // Lattice lat has to have loglikelihoods on weights
@@ -123,12 +67,11 @@ void MovePostToArcs(fst::VectorFst<fst::LogArc> * lat,
 
 
 // the input lattice has to have log-likelihood weights
-double LatticeToWordsPost(Lattice &lat, fst::VectorFst<fst::LogArc> *pst);
-
-// the input lattice has to have log-likelihood weights
 double CompactLatticeToWordsPost(CompactLattice &lat, fst::VectorFst<fst::LogArc> *pst);
 
 
 } // namespace kaldi
+
+#include "pykaldi-utils-inl.h"
 
 #endif // KALDI_PYKALDI_UTILS_H_

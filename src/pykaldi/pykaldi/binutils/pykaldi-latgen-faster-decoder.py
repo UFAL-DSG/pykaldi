@@ -17,6 +17,7 @@ from pykaldi.utils import load_wav, wst2dict, lattice_to_nbest
 from pykaldi.decoders import PyGmmLatgenWrapper
 import sys
 import fst
+import time
 
 DEBUG = True
 # DEBUG = False
@@ -33,6 +34,8 @@ def write_decoded(f, wav_name, word_ids, wst):
     if DEBUG:
         print >> sys.stderr, '%s best path %s' % (wav_name, decoded)
         for i, s in enumerate(word_ids):
+            if i > 0:
+                break
             print >> sys.stderr, 'best path %d: %s' % (i, str(s))
     f.write(line)
 
@@ -50,8 +53,12 @@ def decode(d, pcm):
         while dec_t > 0:
             decoded_frames += dec_t
             dec_t = d.decode(max_frames=10)
+    start = time.clock()
     d.prune_final()
     prob, lat = d.get_lattice()
+    end = time.clock()
+    if DEBUG:
+        print >> sys.stderr, "GetLatest lasted %s seconds" % str(end - start)
     return lat
 
 
@@ -74,6 +81,7 @@ def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
             lat.write('lattice_%s.fst' % wav_name)
 
         word_ids = lattice_to_nbest(lat, n=10)
+
         write_decoded(file_output, wav_name, word_ids, wst)
 
 

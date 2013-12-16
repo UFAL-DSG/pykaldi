@@ -62,11 +62,15 @@ struct OptionsItf;
 
 struct KaldiDecoderGmmLatgenWrapperOptions  {
   /// Input sampling frequency is fixed to 16KHz
-  explicit KaldiDecoderGmmLatgenWrapperOptions():kSampleFreq(16000), acoustic_scale(0.1),
+  explicit KaldiDecoderGmmLatgenWrapperOptions():kSampleFreq(16000), 
+  acoustic_scale(0.1),
+  lat_acoustic_scale(1.0), lat_lm_scale(15.0),
   left_context(4), right_context(4)
   {}
   int32 kSampleFreq;
   BaseFloat acoustic_scale;
+  BaseFloat lat_acoustic_scale;
+  BaseFloat lat_lm_scale;
   int32 left_context;
   int32 right_context;
   std::string model_rxfilename;
@@ -106,6 +110,7 @@ class GmmLatgenWrapper {
     fst::StdFst *decode_fst;
   private:
     bool initialized_;
+    BaseFloat lat_lm_scale_, lat_acoustic_scale_;
     void Deallocate();
 };
 

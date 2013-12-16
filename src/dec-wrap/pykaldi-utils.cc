@@ -99,7 +99,7 @@ double CompactLatticeToWordsPost(CompactLattice &clat, fst::VectorFst<fst::LogAr
     Lattice lat;
     fst::VectorFst<fst::StdArc> t_std;
     RemoveAlignmentsFromCompactLattice(&clat); // remove the alignments
-    ConvertLattice(clat, &lat); // convert to non-compact form... no new states
+    ConvertLattice(clat, &lat); // convert to non-compact form.. no new states
 #ifdef DEBUG
     LatticeWriter lattice_writer;
     std::string lattice_wspecifier("ark:|gzip -c > after_convertLattice_lat.gz");
@@ -107,8 +107,7 @@ double CompactLatticeToWordsPost(CompactLattice &clat, fst::VectorFst<fst::LogAr
     compact_lattice_writer.Write("unknown", clat);
     compact_lattice_writer.Close();
 #endif // DEBUG
-    // FIXME breaks best path property (maybe ConvertLattice from clat to lat too)
-    ConvertLattice(lat, &t_std); // this adds up the (lm,acoustic) costs to tropical fst
+    ConvertLattice(lat, &t_std); // this adds up the (lm,acoustic) costs
 #ifdef DEBUG
     {
       std::ofstream logfile;
@@ -116,28 +115,6 @@ double CompactLatticeToWordsPost(CompactLattice &clat, fst::VectorFst<fst::LogAr
       t_std.Write(logfile, fst::FstWriteOptions());
       logfile.close();
     }
-
-    using namespace fst;
-    VectorFst<StdArc> trop_best_path;
-    size_t n = 4; bool unique = false; bool first_path = false;
-    TropicalWeight weight_threshold = StdArc::Weight::Zero();
-    StdArc::StateId state_threshold = kNoStateId;
-    std::vector<TropicalWeight > distance;
-    AnyArcFilter<StdArc> arc_filter;
-    AutoQueue<StdArc::StateId> state_queue(t_std, &distance, arc_filter);
-    ShortestPathOptions<StdArc, AutoQueue<StdArc::StateId>, AnyArcFilter<StdArc> >
-                      opts(&state_queue, arc_filter, n, unique, false,
-                      kDelta, first_path, weight_threshold, state_threshold);
-    ShortestPath(t_std, &trop_best_path, &distance, opts);
-    for(size_t i = 0; i < distance.size(); ++i)
-      std::cerr << "TROPICAL best [" << i << "]: weight " << distance[i] << std::endl;
-    {
-      std::ofstream logfile;
-      logfile.open("after_convert_trop_best_path.fst");
-      trop_best_path.Write(logfile, fst::FstWriteOptions());
-      logfile.close();
-    }
-
 #endif // DEBUG
     fst::Cast(t_std, pst);  // reinterpret the inner implementations
   }
@@ -152,84 +129,18 @@ double CompactLatticeToWordsPost(CompactLattice &clat, fst::VectorFst<fst::LogAr
   fst::Project(pst, fst::PROJECT_OUTPUT);
 
 
-//   fst::Minimize(pst);
-// #ifdef DEBUG
-//   {
-//     std::ofstream logfile;
-//     logfile.open("after_minimize_c.fst");
-//     pst->Write(logfile, fst::FstWriteOptions());
-//     logfile.close();
-//   }
-// #endif // DEBUG
-
-  std::vector<double> alpha, beta;
-  double tot_prob=-1.0;
-//   fst::TopSort(pst);
-//   tot_prob = ComputeLatticeAlphasAndBetas(*pst, &alpha, &beta);
-//   MovePostToArcs(pst, alpha, beta);
-// #ifdef DEBUG
-//   for (size_t i = 0; i < alpha.size(); ++i) {
-//     std::cerr << "a[" << i << "] = " << alpha[i] << " beta[" << i << "] = "
-//       << beta[i] << std::endl;
-//   }
-//   {
-//     std::ofstream logfile;
-//     logfile.open("after_post_c.fst");
-//     pst->Write(logfile, fst::FstWriteOptions());
-//     logfile.close();
-//   }
-// #endif // DEBUG
-
-  return tot_prob;
-}
-
-
-
-double LatticeToWordsPost(Lattice &lat, fst::VectorFst<fst::LogArc> *pst) {
-  // the input lattice has to have log-likelihood weights
-  fst::VectorFst<fst::LogArc> t;  // tmp object
-  {
-    fst::VectorFst<fst::StdArc> t_std;
-    ConvertLattice(lat, &t_std); // Does it convert to tropical? If yes that is not nice
-    fst::Cast(t_std, &t);  // reinterpret the inner implementations
-  }
+  fst::Minimize(pst);
 #ifdef DEBUG
   {
     std::ofstream logfile;
-    logfile.open("after_Cast.fst");
-    t.Write(logfile, fst::FstWriteOptions());
-    logfile.close();
-  }
-#endif // DEBUG
-  fst::Project(&t, fst::PROJECT_OUTPUT);
-
-  // TODO http://kaldi.sourceforge.net/fst_algo.html
-  // fst::RemoveEpsLocal(&t); // kaldi alternative TODO extremaly slow
-  fst::RmEpsilon(&t); // original fst
-#ifdef DEBUG
-  {
-    std::ofstream logfile;
-    logfile.open("after_RmEpsilon.fst");
-    t.Write(logfile, fst::FstWriteOptions());
-    logfile.close();
-  }
-#endif // DEBUG
-
-  fst::ILabelCompare<fst::LogArc> ilabel_comp;
-  fst::ArcSort(&t, ilabel_comp);
-  fst::Determinize(t, pst);
-  fst::Connect(pst);
-#ifdef DEBUG
-  {
-    std::ofstream logfile;
-    logfile.open("after_Determinize.fst");
+    logfile.open("after_minimize_c.fst");
     pst->Write(logfile, fst::FstWriteOptions());
     logfile.close();
   }
 #endif // DEBUG
 
+  double tot_prob=-1.0;
   std::vector<double> alpha, beta;
-  double tot_prob;
   fst::TopSort(pst);
   tot_prob = ComputeLatticeAlphasAndBetas(*pst, &alpha, &beta);
   MovePostToArcs(pst, alpha, beta);
@@ -240,38 +151,13 @@ double LatticeToWordsPost(Lattice &lat, fst::VectorFst<fst::LogArc> *pst) {
   }
   {
     std::ofstream logfile;
-    logfile.open("after_post.fst");
-    pst->Write(logfile, fst::FstWriteOptions());
-    logfile.close();
-  }
-#endif // DEBUG
-
-fst::Minimize(pst);
-#ifdef DEBUG
-  {
-    std::ofstream logfile;
-    logfile.open("after_minimize.fst");
+    logfile.open("after_post_c.fst");
     pst->Write(logfile, fst::FstWriteOptions());
     logfile.close();
   }
 #endif // DEBUG
 
   return tot_prob;
-}
-
-double LatticeToNbest(const fst::VectorFst<fst::StdArc> &lat, 
-                     std::vector<std::vector<int> > &nbest, 
-                     std::vector<BaseFloat> &prob_out,
-                     int n) {
-  // TODO compute likelihoods and normalize them against each other
-  // There are n - eps arcs from 0 state which mark beginning of each list
-  // Following one path there are 2 eps arcs at beginning
-  // and one at the end before final state
-
-  // using namespace fst;
-  // VectorFst<StdArc> p;
-  // ShortestPath(lat, &p, n); 
-  return 1.0;
 }
 
 
