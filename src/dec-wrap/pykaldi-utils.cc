@@ -121,7 +121,7 @@ double CompactLatticeToWordsPost(CompactLattice &clat, fst::VectorFst<fst::LogAr
 #ifdef DEBUG
   {
     std::ofstream logfile;
-    logfile.open("after_cast_c.fst");
+    logfile.open("after_cast.fst");
     pst->Write(logfile, fst::FstWriteOptions());
     logfile.close();
   }
@@ -133,7 +133,17 @@ double CompactLatticeToWordsPost(CompactLattice &clat, fst::VectorFst<fst::LogAr
 #ifdef DEBUG
   {
     std::ofstream logfile;
-    logfile.open("after_minimize_c.fst");
+    logfile.open("after_minimize.fst");
+    pst->Write(logfile, fst::FstWriteOptions());
+    logfile.close();
+  }
+#endif // DEBUG
+
+  fst::ArcMap(pst, fst::SuperFinalMapper<fst::LogArc>());
+#ifdef DEBUG
+  {
+    std::ofstream logfile;
+    logfile.open("after_super_final.fst");
     pst->Write(logfile, fst::FstWriteOptions());
     logfile.close();
   }
@@ -151,7 +161,7 @@ double CompactLatticeToWordsPost(CompactLattice &clat, fst::VectorFst<fst::LogAr
   }
   {
     std::ofstream logfile;
-    logfile.open("after_post_c.fst");
+    logfile.open("after_post.fst");
     pst->Write(logfile, fst::FstWriteOptions());
     logfile.close();
   }
