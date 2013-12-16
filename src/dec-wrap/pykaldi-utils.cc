@@ -70,7 +70,7 @@ void MovePostToArcs(fst::VectorFst<fst::LogArc> * lat,
 
 double CompactLatticeToWordsPost(CompactLattice &clat, fst::VectorFst<fst::LogArc> *pst) {
 #ifdef DEBUG
-  std::string lattice_wspecifier("ark:|gzip - c > after_getLattice.gz");
+  std::string lattice_wspecifier("ark:|gzip -c > after_getLattice.gz");
   CompactLatticeWriter compact_lattice_writer;
   compact_lattice_writer.Open(lattice_wspecifier);
   compact_lattice_writer.Write("unknown", clat);
@@ -84,11 +84,12 @@ double CompactLatticeToWordsPost(CompactLattice &clat, fst::VectorFst<fst::LogAr
     ConvertLattice(clat, &lat); // convert to non-compact form... no new states
 #ifdef DEBUG
     LatticeWriter lattice_writer;
-    std::string lattice_wspecifier("ark:|gzip - c > after_convertLattice_lat.gz");
+    std::string lattice_wspecifier("ark:|gzip -c > after_convertLattice_lat.gz");
     compact_lattice_writer.Open(lattice_wspecifier);
     compact_lattice_writer.Write("unknown", clat);
     compact_lattice_writer.Close();
 #endif // DEBUG
+    // FIXME breaks best path property
     ConvertLattice(lat, &t_std); // this adds up the (lm,acoustic) costs to tropical fst
 #ifdef DEBUG
     std::ofstream logfile;
@@ -120,7 +121,7 @@ double CompactLatticeToWordsPost(CompactLattice &clat, fst::VectorFst<fst::LogAr
 // #endif // DEBUG
 
   std::vector<double> alpha, beta;
-  double tot_prob;
+  double tot_prob=-1.0;
 //   fst::TopSort(pst);
 //   tot_prob = ComputeLatticeAlphasAndBetas(*pst, &alpha, &beta);
 //   MovePostToArcs(pst, alpha, beta);
