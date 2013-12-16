@@ -23,6 +23,8 @@
 #include "fstext/fstext-utils.h"
 #include "fstext/lattice-utils-inl.h"
 
+// DEBUG
+#include "lat/lattice-functions.h"
 
 namespace kaldi {
 
@@ -75,6 +77,22 @@ double CompactLatticeToWordsPost(CompactLattice &clat, fst::VectorFst<fst::LogAr
   compact_lattice_writer.Open(lattice_wspecifier);
   compact_lattice_writer.Write("unknown", clat);
   compact_lattice_writer.Close();
+
+  CompactLattice clat_best_path;
+  CompactLatticeShortestPath(clat, &clat_best_path);  // A specialized
+  Lattice best_path;
+  ConvertLattice(clat_best_path, &best_path);
+  std::vector<int32> alignment;
+  std::vector<int32> words;
+  LatticeWeight weight;
+  GetLinearSymbolSequence(best_path, &alignment, &words, &weight);
+  std::cerr << "CompactLattice best path: cost:"
+            << weight.Value1() << " + " << weight.Value2() << " = "
+            << (weight.Value1() + weight.Value2()) << std::endl;
+  std::cerr << "CompactLattice best path: words:";
+  for (size_t i = 0; i < words.size(); ++i)
+    std::cerr << words[i] << " ";
+  std::cerr << std::endl;
 #endif // DEBUG
 
   {
@@ -89,13 +107,37 @@ double CompactLatticeToWordsPost(CompactLattice &clat, fst::VectorFst<fst::LogAr
     compact_lattice_writer.Write("unknown", clat);
     compact_lattice_writer.Close();
 #endif // DEBUG
-    // FIXME breaks best path property
+    // FIXME breaks best path property (maybe ConvertLattice from clat to lat too)
     ConvertLattice(lat, &t_std); // this adds up the (lm,acoustic) costs to tropical fst
 #ifdef DEBUG
-    std::ofstream logfile;
-    logfile.open("after_convert_trop.fst");
-    t_std.Write(logfile, fst::FstWriteOptions());
-    logfile.close();
+    {
+      std::ofstream logfile;
+      logfile.open("after_convert_trop.fst");
+      t_std.Write(logfile, fst::FstWriteOptions());
+      logfile.close();
+    }
+
+    using namespace fst;
+    VectorFst<StdArc> trop_best_path;
+    size_t n = 4; bool unique = false; bool first_path = false;
+    TropicalWeight weight_threshold = StdArc::Weight::Zero();
+    StdArc::StateId state_threshold = kNoStateId;
+    std::vector<TropicalWeight > distance;
+    AnyArcFilter<StdArc> arc_filter;
+    AutoQueue<StdArc::StateId> state_queue(t_std, &distance, arc_filter);
+    ShortestPathOptions<StdArc, AutoQueue<StdArc::StateId>, AnyArcFilter<StdArc> >
+                      opts(&state_queue, arc_filter, n, unique, false,
+                      kDelta, first_path, weight_threshold, state_threshold);
+    ShortestPath(t_std, &trop_best_path, &distance, opts);
+    for(size_t i = 0; i < distance.size(); ++i)
+      std::cerr << "TROPICAL best [" << i << "]: weight " << distance[i] << std::endl;
+    {
+      std::ofstream logfile;
+      logfile.open("after_convert_trop_best_path.fst");
+      trop_best_path.Write(logfile, fst::FstWriteOptions());
+      logfile.close();
+    }
+
 #endif // DEBUG
     fst::Cast(t_std, pst);  // reinterpret the inner implementations
   }

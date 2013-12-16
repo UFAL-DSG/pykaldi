@@ -32,6 +32,8 @@ def write_decoded(f, wav_name, word_ids, wst):
     line = ' '.join([wav_name] + decoded + ['\n'])
     if DEBUG:
         print >> sys.stderr, '%s best path %s' % (wav_name, decoded)
+        for i, s in enumerate(word_ids):
+            print >> sys.stderr, 'best path %d: %s' % (i, str(s))
     f.write(line)
 
 
