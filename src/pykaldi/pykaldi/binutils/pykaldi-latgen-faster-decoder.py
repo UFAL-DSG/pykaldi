@@ -47,7 +47,6 @@ def decode(d, pcm):
     while i * frame_len < len(pcm):
         i, begin, end = i + 1, i * frame_len, min(max_end, (i + 1) * frame_len)
         audio_chunk = pcm[begin:end]
-        print 'len(pcm) = %d ; end = %d ' % (len(pcm), end)  # FIXME remove debug
         d.frame_in(audio_chunk)
         dec_t = d.decode(max_frames=10)
         while dec_t > 0:
