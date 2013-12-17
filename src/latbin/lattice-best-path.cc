@@ -82,8 +82,6 @@ int main(int argc, char *argv[]) {
       std::string key = clat_reader.Key();
       CompactLattice clat = clat_reader.Value();
       clat_reader.FreeCurrent();
-      // DEBUG DELETE FIXME
-      std::cout << "lm_scale " << lm_scale << " acoustic_scale " << acoustic_scale << std::endl;
       fst::ScaleLattice(fst::LatticeScale(lm_scale, acoustic_scale), &clat);
       CompactLattice clat_best_path;
       CompactLatticeShortestPath(clat, &clat_best_path);  // A specialized
