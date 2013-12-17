@@ -12,7 +12,7 @@ EXTRA_CXXFLAGS += -DPYKALDI_MAJOR=0 -DPYKALDI_MINOR=0 -DPYKALDI_MINOR=0 -DPYKALD
 GIT_HASH=$(shell git log -1 HEAD --pretty=format:"%H")
 EXTRA_CXXFLAGS += -DPYKALDI_GIT_VERSION=\"$(GIT_HASH)\"
 EXTRA_CXXFLAGS += -Wno-sign-compare
-EXTRA_CXXFLAGS += -DDEBUG -ggdb -O0  # for gdb debugging
+EXTRA_CXXFLAGS += -ggdb -O0  # for gdb debugging, example -DDEBUG_POST for MovePostToArcs debug
 
 # Kaldi libraries required
 ADDLIBS = ../decoder/kaldi-decoder.a ../thread/kaldi-thread.a \

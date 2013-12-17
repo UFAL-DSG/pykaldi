@@ -16,6 +16,7 @@ gmm_latgen_faster_tra_txt=${gmm_latgen_faster_tra}.txt
 pykaldi_faster_tra=$decode_dir/pykaldi-faster.tra.txt
 pykaldi_latgen_tra=$decode_dir/pykaldi-latgen.tra  # FIXME not used
 pykaldi_latgen_tra_txt=${pykaldi_faster_tra}.txt
+lattice=$decode_dir/lat.gz
 # common configs
 mfcc_config=conf/mfcc.conf
 decode_config=conf/decode.conf

@@ -71,7 +71,7 @@ void MovePostToArcs(fst::VectorFst<fst::LogArc> * lat,
 }
 
 double CompactLatticeToWordsPost(CompactLattice &clat, fst::VectorFst<fst::LogArc> *pst) {
-#ifdef DEBUG
+#ifdef DEBUG_COMPACT_LAT
   std::string lattice_wspecifier("ark:|gzip -c > after_getLattice.gz");
   CompactLatticeWriter compact_lattice_writer;
   compact_lattice_writer.Open(lattice_wspecifier);
@@ -93,68 +93,68 @@ double CompactLatticeToWordsPost(CompactLattice &clat, fst::VectorFst<fst::LogAr
   for (size_t i = 0; i < words.size(); ++i)
     std::cerr << words[i] << " ";
   std::cerr << std::endl;
-#endif // DEBUG
+#endif // DEBUG_COMPACT_LAT
 
   {
     Lattice lat;
     fst::VectorFst<fst::StdArc> t_std;
     RemoveAlignmentsFromCompactLattice(&clat); // remove the alignments
     ConvertLattice(clat, &lat); // convert to non-compact form.. no new states
-#ifdef DEBUG
+#ifdef DEBUG_CONVERT_LAT
     LatticeWriter lattice_writer;
     std::string lattice_wspecifier("ark:|gzip -c > after_convertLattice_lat.gz");
     compact_lattice_writer.Open(lattice_wspecifier);
     compact_lattice_writer.Write("unknown", clat);
     compact_lattice_writer.Close();
-#endif // DEBUG
+#endif // DEBUG_CONVERT_LAT
     ConvertLattice(lat, &t_std); // this adds up the (lm,acoustic) costs
-#ifdef DEBUG
+#ifdef DEBUG_CONVERT_TROP
     {
       std::ofstream logfile;
       logfile.open("after_convert_trop.fst");
       t_std.Write(logfile, fst::FstWriteOptions());
       logfile.close();
     }
-#endif // DEBUG
+#endif // DEBUG_CONVERT_TROP
     fst::Cast(t_std, pst);  // reinterpret the inner implementations
   }
-#ifdef DEBUG
+#ifdef DEBUG_CAST
   {
     std::ofstream logfile;
     logfile.open("after_cast.fst");
     pst->Write(logfile, fst::FstWriteOptions());
     logfile.close();
   }
-#endif // DEBUG
+#endif // DEBUG_CAST
   fst::Project(pst, fst::PROJECT_OUTPUT);
 
 
   fst::Minimize(pst);
-#ifdef DEBUG
+#ifdef DEBUG_MIN
   {
     std::ofstream logfile;
     logfile.open("after_minimize.fst");
     pst->Write(logfile, fst::FstWriteOptions());
     logfile.close();
   }
-#endif // DEBUG
+#endif // DEBUG_MIN
 
   fst::ArcMap(pst, fst::SuperFinalMapper<fst::LogArc>());
-#ifdef DEBUG
+#ifdef DEBUG_FINAL
   {
     std::ofstream logfile;
     logfile.open("after_super_final.fst");
     pst->Write(logfile, fst::FstWriteOptions());
     logfile.close();
   }
-#endif // DEBUG
+#endif // DEBUG_FINAL
 
   double tot_prob=-1.0;
   std::vector<double> alpha, beta;
   fst::TopSort(pst);
   tot_prob = ComputeLatticeAlphasAndBetas(*pst, &alpha, &beta);
   MovePostToArcs(pst, alpha, beta);
-#ifdef DEBUG
+#ifdef DEBUG_POST
   for (size_t i = 0; i < alpha.size(); ++i) {
     std::cerr << "a[" << i << "] = " << alpha[i] << " beta[" << i << "] = "
       << beta[i] << std::endl;
@@ -165,7 +165,7 @@ double CompactLatticeToWordsPost(CompactLattice &clat, fst::VectorFst<fst::LogAr
     pst->Write(logfile, fst::FstWriteOptions());
     logfile.close();
   }
-#endif // DEBUG
+#endif // DEBUG_POST
 
   return tot_prob;
 }

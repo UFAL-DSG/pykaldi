@@ -76,9 +76,9 @@ def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
         lat = decode(d, pcm)
         lat.isyms = lat.osyms = fst.read_symbols_text(wst_path)
         if DEBUG:
-            with open('lattice_%s.svg' % wav_name, 'w') as f:
+            with open('pykaldi_%s.svg' % wav_name, 'w') as f:
                 f.write(lat._repr_svg_())
-            lat.write('lattice_%s.fst' % wav_name)
+            lat.write('%s_pykaldi.fst' % wav_name)
 
         word_ids = lattice_to_nbest(lat, n=10)
 

@@ -1,4 +1,4 @@
-#!/bin/bash
+# $!/bin/bash
 
 # source the settings
 . path.sh
@@ -22,12 +22,12 @@ compute-mfcc-feats  --verbose=0 --config=$mfcc_config scp:$wav_scp \
 # add-deltas "scp,s,cs:$feat_scp" "ark,t:$mfccdir/dd_mfcc.ark.txt"
 
 # gmm-latgen-faster-parallel --config=$decode_config \
-gmm-latgen-faster --config=$decode_config \
+gmm-latgen-faster --verbose=0 --config=$decode_config \
     --word-symbol-table=$wst $model $hclg \
     "ark,s,cs:copy-feats scp:$feat_scp ark:- | add-deltas  ark:- ark:- |" \
     "ark:|gzip - c > $lattice"
 
-lattice-best-path --lm-scale=15 --word-symbol-table=$wst \
+lattice-best-path --verbose=0 --lm-scale=15 --word-symbol-table=$wst \
     "ark:gunzip -c $lattice|" ark,t:$gmm_latgen_faster_tra || exit 1;
 
 cat $gmm_latgen_faster_tra | ./int2sym.pl -f 2- $wst \
