@@ -46,6 +46,8 @@ void PykaldiBuffSource::Reset() {
 
 void PykaldiBuffSource::Write(unsigned char * data, size_t num_samples) {
   // allocate the space at once -> should be faster
+  KALDI_VLOG(3) << "Data inserted: " <<  num_samples << std::endl
+                <<" Data already buffered " << src_.size() << std::endl;
   src_.reserve(src_.size() + num_samples);
   // copy and convert the data to the buffer
   for (size_t i = 0; i < num_samples; ++i) {

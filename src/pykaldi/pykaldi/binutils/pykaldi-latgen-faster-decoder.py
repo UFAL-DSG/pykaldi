@@ -43,10 +43,11 @@ def write_decoded(f, wav_name, word_ids, wst):
 # @profile
 def decode(d, pcm):
     frame_len = (2 * audio_batch_size)  # 16-bit audio so 1 sample = 2 chars
-    it = (len(pcm) / frame_len)
-    decoded_frames = 0
-    for i in xrange(it):
-        audio_chunk = pcm[i * frame_len:(i + 1) * frame_len]
+    i, decoded_frames, max_end = 0, 0, len(pcm)
+    while i * frame_len < len(pcm):
+        i, begin, end = i + 1, i * frame_len, min(max_end, (i + 1) * frame_len)
+        audio_chunk = pcm[begin:end]
+        print 'len(pcm) = %d ; end = %d ' % (len(pcm), end)  # FIXME remove debug
         d.frame_in(audio_chunk)
         dec_t = d.decode(max_frames=10)
         while dec_t > 0:
@@ -79,7 +80,7 @@ def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
                 f.write(lat._repr_svg_())
             lat.write('%s_pykaldi.fst' % wav_name)
             print >> sys.stderr, "Expected num of frames %d vs decoded %d" % (
-                (float(len(pcm)) / 2) / (16000 / 100), decoded_frames)
+                (len(pcm) / 2) / (16000 / 100), decoded_frames)
 
         print >> sys.stderr, "Log-like per frame for utterance %s is %f over %d frames" % (
             wav_name, (prob / decoded_frames), decoded_frames)
