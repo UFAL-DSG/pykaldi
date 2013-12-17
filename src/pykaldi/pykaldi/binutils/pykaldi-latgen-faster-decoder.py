@@ -44,7 +44,6 @@ def write_decoded(f, wav_name, word_ids, wst):
 def decode(d, pcm):
     frame_len = (2 * audio_batch_size)  # 16-bit audio so 1 sample = 2 chars
     it = (len(pcm) / frame_len)
-    print >> sys.stderr, 'NUMBER of audio input chunks: %d' % it
     decoded_frames = 0
     for i in xrange(it):
         audio_chunk = pcm[i * frame_len:(i + 1) * frame_len]
@@ -59,7 +58,7 @@ def decode(d, pcm):
     end = time.clock()
     if DEBUG:
         print >> sys.stderr, "GetLatest lasted %s seconds" % str(end - start)
-    return lat
+    return (lat, prob, decoded_frames)
 
 
 def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
@@ -73,15 +72,18 @@ def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
             print >> sys.stderr, '%s has %f sec' % (
                 wav_name, (float(len(pcm)) / 2) / 16000)
         d.reset(keep_buffer_data=False)
-        lat = decode(d, pcm)
+        lat, prob, decoded_frames = decode(d, pcm)
         lat.isyms = lat.osyms = fst.read_symbols_text(wst_path)
         if DEBUG:
             with open('pykaldi_%s.svg' % wav_name, 'w') as f:
                 f.write(lat._repr_svg_())
             lat.write('%s_pykaldi.fst' % wav_name)
+            print >> sys.stderr, "Expected num of frames %d vs decoded %d" % (
+                (float(len(pcm)) / 2) / (16000 / 100), decoded_frames)
 
+        print >> sys.stderr, "Log-like per frame for utterance %s is %f over %d frames" % (
+            wav_name, (prob / decoded_frames), decoded_frames)
         word_ids = lattice_to_nbest(lat, n=10)
-
         write_decoded(file_output, wav_name, word_ids, wst)
 
 

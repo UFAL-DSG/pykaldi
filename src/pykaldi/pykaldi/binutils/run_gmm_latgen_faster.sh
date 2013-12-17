@@ -5,7 +5,6 @@
 
 
 # temporary files
-lattice=$decode_dir/lat.gz
 mfccdir=$decode_dir/mfcc
 feat_scp=$mfccdir/raw_mfcc.scp
 
