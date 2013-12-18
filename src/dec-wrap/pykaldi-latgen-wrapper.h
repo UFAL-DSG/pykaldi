@@ -64,7 +64,7 @@ struct KaldiDecoderGmmLatgenWrapperOptions  {
   /// Input sampling frequency is fixed to 16KHz
   explicit KaldiDecoderGmmLatgenWrapperOptions():kSampleFreq(16000), 
   acoustic_scale(0.1),
-  lat_acoustic_scale(1.0), lat_lm_scale(15.0),
+  lat_acoustic_scale(1.0), lat_lm_scale(1.0),
   left_context(4), right_context(4)
   {}
   int32 kSampleFreq;
@@ -75,7 +75,6 @@ struct KaldiDecoderGmmLatgenWrapperOptions  {
   int32 right_context;
   std::string model_rxfilename;
   std::string fst_rxfilename;
-  std::string word_syms_filename; // FIXME remove it from po options
   std::string lda_mat_rspecifier;
   std::vector<int32> silence_phones;
   void Register(OptionsItf *po);

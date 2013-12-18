@@ -88,15 +88,10 @@ def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
 
 
 if __name__ == '__main__':
-    audio_scp, audio_batch_size, dec_hypo = sys.argv[1], int(sys.argv[2]), sys.argv[3]
-    argv = sys.argv[4:]
+    audio_scp, audio_batch_size = sys.argv[1], int(sys.argv[2])
+    dec_hypo, wst_path = sys.argv[3], sys.argv[4]
+    argv = sys.argv[5:]
     print >> sys.stderr, 'Python args: %s' % str(sys.argv)
-
-    # Try to locate and extract wst argument
-    wst_path = None
-    for a in argv:
-        if a.endswith('words.txt'):
-            wst_path = a
 
     # open audio_scp, decode and write to dec_hypo file
     with open(audio_scp, 'rb') as r:

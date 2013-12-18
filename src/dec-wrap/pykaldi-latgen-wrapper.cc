@@ -41,7 +41,7 @@ namespace kaldi {
 void KaldiDecoderGmmLatgenWrapperOptions::Register(OptionsItf *po) {
   po->Register("left-context", &left_context, "Number of frames of left context");
   po->Register("right-context", &right_context, "Number of frames of right context");
-  po->Register("acoustic-scale", &lat_acoustic_scale,
+  po->Register("acoustic-scale", &acoustic_scale,
               "Scaling factor for acoustic likelihoods for forward decoding");
   po->Register("lat-acoustic-scale", &lat_acoustic_scale,
               "Scaling factor for acoustic likelihoods after forward decoding");
@@ -167,7 +167,7 @@ bool GmmLatgenWrapper::Setup(int argc, char **argv) {
     ParseOptions po("Utterance segmentation is done on-the-fly.\n"
       "The delta/delta-delta(2-nd order) features are produced.\n\n"
       "Usage: decoder-binary-name [options] <model-in>"
-      "<fst-in> <word-symbol-table> <silence-phones> \n\n"
+      "<fst-in> <silence-phones> \n\n"
       "Example: decoder-binary-name --max-active=4000 --beam=12.0 "
       "--acoustic-scale=0.0769 model HCLG.fst words.txt '1:2:3:4:5'");
 
@@ -179,22 +179,20 @@ bool GmmLatgenWrapper::Setup(int argc, char **argv) {
     au_opts.Register(&po);
 
     po.Read(argc, argv);
-    if (po.NumArgs() != 4 && po.NumArgs() != 5) {
-      // throw std::invalid_argument("Specify 4 or 5 arguments. See the usage in stderr");
+    if (po.NumArgs() != 3 && po.NumArgs() != 4) {
       po.PrintUsage();
+      // throw std::invalid_argument("Specify 3 or 4 arguments. See the usage in stderr");
       return false;
     }
-    if (po.NumArgs() == 4)
+    if (po.NumArgs() == 3)
       if (wrapper_opts.left_context % delta_feat_opts.order != 0 ||
           wrapper_opts.left_context != wrapper_opts.right_context)
         KALDI_ERR << "Invalid left/right context parameters!";
 
     wrapper_opts.model_rxfilename = po.GetArg(1);
     wrapper_opts.fst_rxfilename = po.GetArg(2);
-    wrapper_opts.word_syms_filename = po.GetArg(3);
-
-    wrapper_opts.silence_phones = phones_to_vector(po.GetArg(4));
-    wrapper_opts.lda_mat_rspecifier = po.GetOptArg(5);
+    wrapper_opts.silence_phones = phones_to_vector(po.GetArg(3));
+    wrapper_opts.lda_mat_rspecifier = po.GetOptArg(4);
 
     lat_lm_scale_ = wrapper_opts.lat_lm_scale;
     lat_acoustic_scale_ = wrapper_opts.lat_acoustic_scale;

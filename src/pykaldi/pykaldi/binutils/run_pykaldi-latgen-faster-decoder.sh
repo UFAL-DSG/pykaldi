@@ -21,9 +21,9 @@ export LD_LIBRARY_PATH=`pwd`/../../../dec-wrap:$LD_LIBRARY_PATH
 # kernprof.py -l -v  \
 # valgrind --tool=callgrind -v --dump-instr=yes --trace-jump=yes --callgrind-out-file=callgrind.log python \
 python \
-pykaldi-latgen-faster-decoder.py $wav_scp $batch_size $pykaldi_latgen_tra \
-    --verbose=0 --acoustic-scale=0.1 --config=$tmp_config \
-    $model $hclg $wst 1:2:3:4:5
+pykaldi-latgen-faster-decoder.py $wav_scp $batch_size $pykaldi_latgen_tra $wst \
+    --verbose=2 --lat-lm-scale=15 --config=$tmp_config \
+    $model $hclg 1:2:3:4:5
 
 # If using callgrind display the results by running kcachegrind
 # kcachegrind callgrind.log
