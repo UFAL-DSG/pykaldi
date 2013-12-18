@@ -15,14 +15,14 @@ export LD_LIBRARY_PATH=`pwd`/../../../dec-wrap:$LD_LIBRARY_PATH
 
 # Below, there are various commands for debugging, profiling and always
 # running the python wrapper around decoder. 
-# Uncomment convenient prefix for you and put it after other alternatives.
+# Uncomment convenient prefix for you and put it just before the arguments. 
 #
 # cgdb -q -x .gdbinit_latgen --args python \
 # kernprof.py -l -v  \
 # valgrind --tool=callgrind -v --dump-instr=yes --trace-jump=yes --callgrind-out-file=callgrind.log python \
 python \
 pykaldi-latgen-faster-decoder.py $wav_scp $batch_size $pykaldi_latgen_tra $wst \
-    --verbose=2 --lat-lm-scale=15 --config=$tmp_config \
+    --verbose=0 --lat-lm-scale=15 --config=$tmp_config \
     $model $hclg 1:2:3:4:5
 
 # If using callgrind display the results by running kcachegrind

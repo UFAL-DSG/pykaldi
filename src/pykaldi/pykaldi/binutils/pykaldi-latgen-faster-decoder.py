@@ -19,8 +19,8 @@ import sys
 import fst
 import time
 
-DEBUG = True
-# DEBUG = False
+# DEBUG = True
+DEBUG = False
 
 
 def write_decoded(f, wav_name, word_ids, wst):
