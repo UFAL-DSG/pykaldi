@@ -55,9 +55,8 @@ def decode(d, pcm):
     start = time.clock()
     d.prune_final()
     prob, lat = d.get_lattice()
-    end = time.clock()
-    if DEBUG:
-        print >> sys.stderr, "GetLatest lasted %s seconds" % str(end - start)
+    print >> sys.stderr, "get_lattice: %s secs" % str(time.clock() - start)
+    d.reset(keep_buffer_data=False)
     return (lat, prob, decoded_frames)
 
 
