@@ -107,7 +107,12 @@ bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::LogArc> *fst_out,
   bool ok = decoder->GetLattice(&lat);
 
   KALDI_ASSERT(lat_acoustic_scale_ != 0.0 || lat_lm_scale_ != 0.0);
-  fst::ScaleLattice(fst::LatticeScale(lat_lm_scale_, lat_acoustic_scale_), &lat);
+  BaseFloat ac_scale = 1.0, acoustic_scale = decodable->GetAcousticScale();
+  if (acoustic_scale != 0.0) // We'll unapply the acoustic scaling for forward decoding
+    ac_scale = 1.0 / acoustic_scale;
+  // We apply new acoustic scaling (and we supposed the lattice is not scaled)
+  ac_scale = ac_scale * lat_acoustic_scale_;
+  fst::ScaleLattice(fst::LatticeScale(lat_lm_scale_, ac_scale), &lat);
 
   *tot_prob = CompactLatticeToWordsPost(lat, fst_out);  // TODO tot_prob is sensible?
 
