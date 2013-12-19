@@ -11,7 +11,7 @@ if [ $# != 3 ]; then
    exit 1;
 fi
 
-. path.sh
+[ -f ./path.sh ] && . ./path.sh; # source the path.
 
 uttid=$1
 lat=$2
@@ -34,7 +34,7 @@ elif [ $mode == "display" ] ; then
 fi
 
 [ $mode == "display" ] && $doc_open $tmpdir/$uttid.${format}
-[ $mode == "display" && $? -ne 0 ] && echo "Failed to open ${format} format." && mode=save
-[ $mode == "save" ] && echo "Saving to $uttid.${format}" && cp $tmpdir/$uttid.${format} .
+[[ $mode == "display" && $? -ne 0 ]] && echo "Failed to open ${format} format." && mode=save
+[ $mode == "save" ] && echo "Saving to $uttid.${format}" && cp $tmpdir/$uttid.${format} $tmpdir/$uttid.fst .
 
 exit 0
