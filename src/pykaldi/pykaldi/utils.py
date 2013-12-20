@@ -116,8 +116,9 @@ def fst_shortest_path_to_lists(fst_shortest):
     # There are n - eps arcs from 0 state which mark beginning of each list
     # Following one path there are 2 eps arcs at beginning
     # and one at the end before final state
-    first_arcs = [a for a in fst_shortest[0].arcs]
-    word_ids = []
+    first_arcs, word_ids = [], []
+    if len(fst_shortest) > 0:
+        first_arcs = [a for a in fst_shortest[0].arcs]
     for arc in first_arcs:
         # first arc is epsilon arc
         assert(arc.ilabel == 0 and arc.olabel == 0)
