@@ -30,9 +30,9 @@ $(LIBFILE): $(ADDLIBS)
 	# The static libraries were compiled with -fPIC.
 	$(CXX) -shared -DPIC -o $@ -Wl,-soname=$@,--whole-archive $^ -Wl,--no-whole-archive $(EXTRA_LDLIBS) $(LDFLAGS) $(LDLIBS)
 # else
+# # TODO
 # # static compilation
 # LIBFILE=$(LIBNAME).a
-# # TODO
 # endif
 
 pykaldi/decoders.so: $(LIBFILE)
@@ -43,8 +43,8 @@ pykaldi/decoders.so: $(LIBFILE)
 
 all: pykaldi/decoders.so
 
-test:
-	LD_LIBRARY_PATH=.:../../tools/openfst/lib:../../tools/openfst/lib/fst \
+test: $(LIBFILE)
+	LD_LIBRARY_PATH=.:$(FSTDIR)/lib:$(FSTDIR)/lib/fst \
 	LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include \
 	python setup.py nosetests
 
