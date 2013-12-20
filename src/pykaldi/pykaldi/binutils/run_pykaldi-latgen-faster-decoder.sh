@@ -11,7 +11,7 @@ cat $decode_config $mfcc_config > $tmp_config
 echo 1>&2; echo Using config $tmp_config 1>&2 ; echo 1>&2
 cat $tmp_config 1>&2 ; echo 1>&2
 
-export LD_LIBRARY_PATH=`pwd`/../../../dec-wrap:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=`pwd`/../../:$LD_LIBRARY_PATH
 
 # Below, there are various commands for debugging, profiling and always
 # running the python wrapper around decoder. 

@@ -11,6 +11,7 @@ from distutils.extension import Extension
 import yaml
 import pystache
 
+STATIC = False
 
 install_requires = []
 if python_version < (2, 7):
@@ -19,13 +20,23 @@ if python_version < (2, 7):
 
 
 ext_modules = []
-                             # library_dirs=['../dec-wrap'],
-                             # libraries=['pykaldi'],
+
+# pykaldi library compilation (static|dynamic)
+if STATIC:
+    # STATIC TODO extract linking parameters from Makefile
+    library_dirs, libraries = [], []
+    extra_objects = ['pykaldi.a', ]
+else:
+    # DYNAMIC
+    library_dirs = ['.']
+    libraries = ['pykaldi']
+    extra_objects = []
 ext_modules.append(Extension('pykaldi.decoders',
                              language='c++',
                              include_dirs=['..', 'fst'],
-                             extra_objects=['../dec-wrap/dec-wrap.a',
-                                            '../../tools/openfst/lib/libfst.a'],
+                             library_dirs=library_dirs,
+                             libraries=libraries,
+                             extra_objects=extra_objects,
                              sources=['pykaldi/decoders.pyx'],
                              ))
 
@@ -52,11 +63,11 @@ class pre_build_ext(build_ext):
                             tmpl = t.read()
                             r.write(pystache.render(tmpl, dic))
                             print 'Created template %s' % result
-            build_ext.run(self)
         except Exception as e:
             # how to handle bad cases!
             print e
             raise e
+        build_ext.run(self)
 
 ext_modules.append(Extension(name='fst._fst',
                              sources=['fst/_fst.pyx'],
