@@ -19,11 +19,13 @@ if python_version < (2, 7):
 
 
 ext_modules = []
+                             # library_dirs=['../dec-wrap'],
+                             # libraries=['pykaldi'],
 ext_modules.append(Extension('pykaldi.decoders',
                              language='c++',
                              include_dirs=['..', 'fst'],
-                             library_dirs=['../dec-wrap'],
-                             libraries=['pykaldi'],
+                             extra_objects=['../dec-wrap/dec-wrap.a',
+                                            '../../tools/openfst/lib/libfst.a'],
                              sources=['pykaldi/decoders.pyx'],
                              ))
 
@@ -36,6 +38,7 @@ templates = [
 
 
 class pre_build_ext(build_ext):
+
     def run(self):
         '''Before building the C++ extension apply the
         templates substitution'''

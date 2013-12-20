@@ -1,5 +1,6 @@
-LIBNAME=pykaldi
+LIBNAME=dec-wrap
 LIBFILE=lib$(LIBNAME).so
+LIBFILE=$(LIBNAME).a
 SOURCEDIR=../dec-wrap
 FSTDIR=$(PWD)/../../tools/openfst
 

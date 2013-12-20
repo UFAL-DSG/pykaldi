@@ -1,9 +1,9 @@
 all:
 
 include ../kaldi.mk
-ifneq ($(KALDI_FLAVOR), dynamic)
-$(error Kaldi must compiled with dynamic libraries support. Run configure with --shared flag. )
-endif
+# ifneq ($(KALDI_FLAVOR), dynamic)
+# $(error Kaldi must compiled with dynamic libraries support. Run configure with --shared flag. )
+# endif
 
 
 # Tag the compilation with version
@@ -30,30 +30,35 @@ OBJFILES = pykaldi-latgen-decoder.o pykaldi-latgen-wrapper.o \
 		   pykaldi-audio-source.o  pykaldi-utils.o \
 		   pykaldi-decodable.o pykaldi-feat-input.o
 
-LIBNAME = pykaldi
-LIBFILE = lib$(LIBNAME).so
-
-all: $(LIBFILE) $(PYTHON_LIB)
+LIBNAME = dec-wrap
 
 
-$(LIBFILE): $(OBJFILES) $(ADDLIBS)
-	# Building shared library from static librariess.
-	# The static libraries were compiled with -fPIC.
-	$(CXX) -shared -DPIC -o $@ -Wl,-soname=$@,--whole-archive $^ -Wl,--no-whole-archive $(EXTRA_LDLIBS) $(LDFLAGS) $(LDLIBS)
+include ../makefiles/default_rules.mk
 
-
-$(TESTFILES): $(LIBFILE)
-
-test_compile: $(TESTFILES)
-
-test: test_compile
-	@result=0; for x in $(TESTFILES); do printf "Running $$x ..."; ./$$x >/dev/null 2>&1; if [ $$? -ne 0 ]; then echo "... FAIL"; result=1; else echo "... SUCCESS";  fi;  done; exit $$result
-
-
-clean:
-	rm -rf $(TESTFILES) *.o *.so *.svg *.fst *.txt
-
-depend:
-	-$(CXX) -M $(CXXFLAGS) *.cc > .depend.mk
-
--include .depend.mk
+# FIXME shared library rules
+# LIBFILE = lib$(LIBNAME).so
+# 
+# all: $(LIBFILE) $(PYTHON_LIB)
+# 
+# 
+# $(LIBFILE): $(OBJFILES) $(ADDLIBS)
+# 	# Building shared library from static librariess.
+# 	# The static libraries were compiled with -fPIC.
+# 	$(CXX) -shared -DPIC -o $@ -Wl,-soname=$@,--whole-archive $^ -Wl,--no-whole-archive $(EXTRA_LDLIBS) $(LDFLAGS) $(LDLIBS)
+# 
+# 
+# $(TESTFILES): $(LIBFILE)
+# 
+# test_compile: $(TESTFILES)
+# 
+# test: test_compile
+# 	@result=0; for x in $(TESTFILES); do printf "Running $$x ..."; ./$$x >/dev/null 2>&1; if [ $$? -ne 0 ]; then echo "... FAIL"; result=1; else echo "... SUCCESS";  fi;  done; exit $$result
+# 
+# 
+# clean:
+# 	rm -rf $(TESTFILES) *.o *.so *.svg *.fst *.txt
+# 
+# depend:
+# 	-$(CXX) -M $(CXXFLAGS) *.cc > .depend.mk
+# 
+# -include .depend.mk
