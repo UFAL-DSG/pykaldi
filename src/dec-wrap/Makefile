@@ -20,15 +20,20 @@ ADDLIBS = ../decoder/kaldi-decoder.a ../thread/kaldi-thread.a \
 
 BINFILES =
 
-TESTFILES = pykaldi-faster-wrapper-test pykaldi-feat-input-test \
-			pykaldi-audio-source-test read-wav-test pykaldi-utils-test
+TESTFILES = dec-wrap-faster-wrapper-test dec-wrap-feat-input-test \
+			dec-wrap-audio-source-test read-wav-test dec-wrap-utils-test
 
-OBJFILES = pykaldi-latgen-decoder.o pykaldi-latgen-wrapper.o \
-		   pykaldi-faster-wrapper.o pykaldi-faster-decoder.o \
-		   pykaldi-audio-source.o  pykaldi-utils.o \
-		   pykaldi-decodable.o pykaldi-feat-input.o
+OBJFILES = dec-wrap-latgen-decoder.o dec-wrap-latgen-wrapper.o \
+		   dec-wrap-faster-wrapper.o dec-wrap-faster-decoder.o \
+		   dec-wrap-audio-source.o  dec-wrap-utils.o \
+		   dec-wrap-decodable.o dec-wrap-feat-input.o
 
 LIBNAME = dec-wrap
 
 
 include ../makefiles/default_rules.mk
+
+cleantest:
+	rm -f *.txt *.svg *.fst
+
+cleanall: clean cleantest

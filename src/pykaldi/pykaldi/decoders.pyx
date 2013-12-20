@@ -10,7 +10,7 @@ import fst
 from pykaldi.utils import lattice_to_nbest
 
 
-cdef extern from "dec-wrap/pykaldi-latgen-wrapper.h" namespace "kaldi":
+cdef extern from "dec-wrap/dec-wrap-latgen-wrapper.h" namespace "kaldi":
     cdef cppclass GmmLatgenWrapper:
         size_t Decode(size_t max_frames) except +
         void FrameIn(unsigned char *frame, size_t frame_len) except +

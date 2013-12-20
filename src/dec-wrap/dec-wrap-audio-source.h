@@ -1,4 +1,4 @@
-// pykaldi/pykaldi-audio-source.cc
+// dec-wrap/dec-wrap-audio-source.cc
 
 /* Copyright (c) 2013, Ondrej Platek, Ufal MFF UK <oplatek@ufal.mff.cuni.cz>
  *                     2012-2013  Vassil Panayotov
@@ -18,8 +18,8 @@
 
 
 
-#ifndef KALDI_PYKALDI_PYKALDI_AUDIO_SOURCE_H_
-#define KALDI_PYKALDI_PYKALDI_AUDIO_SOURCE_H_
+#ifndef KALDI_DEC_WRAP_DEC_WRAP_AUDIO_SOURCE_H_
+#define KALDI_DEC_WRAP_DEC_WRAP_AUDIO_SOURCE_H_
 
 #include "matrix/kaldi-vector.h"
 #include "itf/options-itf.h"
@@ -84,4 +84,4 @@ class PykaldiBuffSource: public PykaldiAudioSourceItf {
 } // namespace kaldi
 
 
-#endif // KALDI_PYKALDI_PYKALDI_AUDIO_SOURCE_H_
+#endif // KALDI_DEC_WRAP_DEC_WRAP_AUDIO_SOURCE_H_

@@ -14,8 +14,8 @@
  * MERCHANTABLITY OR NON-INFRINGEMENT.
  * See the Apache 2 License for the specific language governing permissions and
  * limitations under the License. */
-#ifndef KALDI_PYKALDI_LATGEN_WRAPPER_H_
-#define KALDI_PYKALDI_LATGEN_WRAPPER_H_
+#ifndef KALDI_DEC_WRAP_LATGEN_WRAPPER_H_
+#define KALDI_DEC_WRAP_LATGEN_WRAPPER_H_
 #include <string>
 #include <vector>
 #include "base/kaldi-types.h"
@@ -115,4 +115,4 @@ class GmmLatgenWrapper {
 
 } // namespace kaldi
 
-#endif  // #ifdef KALDI_PYKALDI_LATGEN_WRAPPER_H_
+#endif  // #ifdef KALDI_DEC_WRAP_LATGEN_WRAPPER_H_

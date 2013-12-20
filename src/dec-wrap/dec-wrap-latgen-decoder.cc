@@ -1,4 +1,4 @@
-#include "dec-wrap/pykaldi-latgen-decoder.h"
+#include "dec-wrap/dec-wrap-latgen-decoder.h"
 #include "decoder/lattice-faster-decoder.h"
 
 namespace kaldi {

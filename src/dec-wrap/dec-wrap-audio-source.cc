@@ -1,4 +1,4 @@
-// pykaldi/pykaldi-audio-source.cc
+// dec-wrap/dec-wrap-audio-source.cc
 
 /* Copyright (c) 2013, Ondrej Platek, Ufal MFF UK <oplatek@ufal.mff.cuni.cz>
  *                     2012-2013  Vassil Panayotov
@@ -20,7 +20,7 @@
 #include <cmath>
 #include <unistd.h>
 
-#include "dec-wrap/pykaldi-audio-source.h"
+#include "dec-wrap/dec-wrap-audio-source.h"
 
 namespace kaldi {
 

@@ -17,11 +17,11 @@
 // MERCHANTABLITY OR NON-INFRINGEMENT.
 // See the Apache 2 License for the specific language governing permissions and
 // limitations under the License.
-#ifndef KALDI_PYKALDI_PYKALDI_FEAT_INPUT_H_
-#define KALDI_PYKALDI_PYKALDI_FEAT_INPUT_H_
+#ifndef KALDI_DEC_WRAP_DEC_WRAP_FEAT_INPUT_H_
+#define KALDI_DEC_WRAP_DEC_WRAP_FEAT_INPUT_H_
 
 #include "feat/feature-functions.h"
-#include "dec-wrap/pykaldi-audio-source.h"
+#include "dec-wrap/dec-wrap-audio-source.h"
 
 
 namespace kaldi {
@@ -279,4 +279,4 @@ class PykaldiDeltaInput: public PykaldiFeatInputItf {
 
 } // namespace kaldi
 
-#endif // KALDI_PYKALDI_PYKALDI_FEAT_INPUT_H_
+#endif // KALDI_DEC_WRAP_DEC_WRAP_FEAT_INPUT_H_

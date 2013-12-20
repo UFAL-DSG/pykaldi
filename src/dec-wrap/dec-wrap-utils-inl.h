@@ -1,4 +1,4 @@
-// dec-wrap/pykaldi-utils-inl.h
+// dec-wrap/dec-wrap-utils-inl.h
 
 // See ../../COPYING for clarification regarding multiple authors
 //
@@ -15,8 +15,8 @@
 // See the Apache 2 License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef KALDI_PYKALDI_UTILS_INL_H_
-#define KALDI_PYKALDI_UTILS_INL_H_
+#ifndef KALDI_DEC_WRAP_UTILS_INL_H_
+#define KALDI_DEC_WRAP_UTILS_INL_H_
 
 #include "lat/kaldi-lattice.h"
 #include <vector>

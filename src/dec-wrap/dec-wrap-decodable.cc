@@ -1,4 +1,4 @@
-// pykaldi/pykaldi-decodable.cc
+// dec-wrap/dec-wrap-decodable.cc
 
 // Copyright 2012 Cisco Systems (author: Matthias Paulik)
 
@@ -18,7 +18,7 @@
 // See the Apache 2 License for the specific language governing permissions and
 // limitations under the License.
 
-#include "dec-wrap/pykaldi-decodable.h"
+#include "dec-wrap/dec-wrap-decodable.h"
 
 namespace kaldi {
 

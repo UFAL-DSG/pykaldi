@@ -13,7 +13,7 @@
  * MERCHANTABLITY OR NON-INFRINGEMENT.
  * See the Apache 2 License for the specific language governing permissions and
  * limitations under the License. */
-#include "pykaldi-audio-source.h"
+#include "dec-wrap-audio-source.h"
 #include "matrix/kaldi-vector.h"
 
 using namespace kaldi;

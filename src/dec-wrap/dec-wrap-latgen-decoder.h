@@ -13,8 +13,8 @@
  * MERCHANTABLITY OR NON-INFRINGEMENT.
  * See the Apache 2 License for the specific language governing permissions and
  * limitations under the License. */
-#ifndef KALDI_PYKALDI_LATGEN_DECODER_H_
-#define KALDI_PYKALDI_LATGEN_DECODER_H_
+#ifndef KALDI_DEC_WRAP_LATGEN_DECODER_H_
+#define KALDI_DEC_WRAP_LATGEN_DECODER_H_
 
 #include "decoder/lattice-faster-decoder.h"
 #include "fst/fstlib.h"
@@ -42,4 +42,4 @@ class PykaldiLatticeFasterDecoder: public LatticeFasterDecoder {
 }  // namespace kaldi
 
 
-#endif  // #ifndef KALDI_PYKALDI_LATGEN_DECODER_H_
+#endif  // #ifndef KALDI_DEC_WRAP_LATGEN_DECODER_H_

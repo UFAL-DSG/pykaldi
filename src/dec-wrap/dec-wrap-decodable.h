@@ -1,4 +1,4 @@
-// pykaldi/pykaldi-decodable.h
+// dec-wrap/dec-wrap-decodable.h
 
 // Copyright 2012 Cisco Systems (author: Matthias Paulik)
 
@@ -20,10 +20,10 @@
 // See the Apache 2 License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef KALDI_PYKALDI_PYKALDI_DECODABLE_H_
-#define KALDI_PYKALDI_PYKALDI_DECODABLE_H_
+#ifndef KALDI_DEC_WRAP_DEC_WRAP_DECODABLE_H_
+#define KALDI_DEC_WRAP_DEC_WRAP_DECODABLE_H_
 
-#include "dec-wrap/pykaldi-feat-input.h"
+#include "dec-wrap/dec-wrap-feat-input.h"
 #include "gmm/decodable-am-diag-gmm.h"
 
 namespace kaldi {
@@ -66,4 +66,4 @@ class PykaldiDecodableDiagGmmScaled : public DecodableInterface {
 
 } // namespace kaldi
 
-#endif // KALDI_PYKALDI_PYKALDI_DECODABLE_H_
+#endif // KALDI_DEC_WRAP_DEC_WRAP_DECODABLE_H_

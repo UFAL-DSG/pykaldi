@@ -15,8 +15,8 @@
  * See the Apache 2 License for the specific language governing permissions and
  * limitations under the License. */
 
-#ifndef KALDI_PYKALDI_GMM_DECODE_FASTER_H_
-#define KALDI_PYKALDI_GMM_DECODE_FASTER_H_
+#ifndef KALDI_DEC_WRAP_GMM_DECODE_FASTER_H_
+#define KALDI_DEC_WRAP_GMM_DECODE_FASTER_H_
 
 /*****************
  *  C interface  *
@@ -54,10 +54,10 @@ int Setup(CKaldiDecoderWrapper *d, int argc, char **argv);
 #include <string>
 #include <vector>
 #include "feat/feature-mfcc.h"
-#include "dec-wrap/pykaldi-faster-decoder.h"
-#include "dec-wrap/pykaldi-feat-input.h"
-#include "dec-wrap/pykaldi-decodable.h"
-#include "dec-wrap/pykaldi-audio-source.h"
+#include "dec-wrap/dec-wrap-faster-decoder.h"
+#include "dec-wrap/dec-wrap-feat-input.h"
+#include "dec-wrap/dec-wrap-decodable.h"
+#include "dec-wrap/dec-wrap-audio-source.h"
 
 
 namespace kaldi {
@@ -149,4 +149,4 @@ class KaldiDecoderWrapper {
 
 #endif  // __cplusplus
 
-#endif  // #ifndef KALDI_PYKALDI_GMM_DECODE_FASTER_H_
+#endif  // #ifndef KALDI_DEC_WRAP_GMM_DECODE_FASTER_H_

@@ -1,4 +1,4 @@
-// pykaldi/pykaldi-util.h
+// dec-wrap/dec-wrap-util.h
 
 // Copyright 2012 Cisco Systems (author: Matthias Paulik)
 
@@ -18,8 +18,8 @@
 // MERCHANTABLITY OR NON-INFRINGEMENT.
 // See the Apache 2 License for the specific language governing permissions and
 // limitations under the License.
-#ifndef KALDI_PYKALDI_UTILS_H_
-#define KALDI_PYKALDI_UTILS_H_
+#ifndef KALDI_DEC_WRAP_UTILS_H_
+#define KALDI_DEC_WRAP_UTILS_H_
 #include <string>
 #include "base/kaldi-common.h"
 #include "fstext/fstext-lib.h"
@@ -72,6 +72,6 @@ double CompactLatticeToWordsPost(CompactLattice &lat, fst::VectorFst<fst::LogArc
 
 } // namespace kaldi
 
-#include "pykaldi-utils-inl.h"
+#include "dec-wrap-utils-inl.h"
 
-#endif // KALDI_PYKALDI_UTILS_H_
+#endif // KALDI_DEC_WRAP_UTILS_H_

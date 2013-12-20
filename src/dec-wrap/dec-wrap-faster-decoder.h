@@ -1,4 +1,4 @@
-// pykaldi/pykaldi-faster-decoder.h
+// dec-wrap/dec-wrap-faster-decoder.h
 
 // Copyright 2012 Cisco Systems (author: Matthias Paulik)
 
@@ -23,8 +23,8 @@
 // 1. first reason is to get rid off dependancy on portaudio
 // 2. I need slightly change the decoder and most importantly the API
 
-#ifndef KALDI_PYKALDI_PYKALDI_FASTER_DECODER_H_
-#define KALDI_PYKALDI_PYKALDI_FASTER_DECODER_H_
+#ifndef KALDI_DEC_WRAP_DEC_WRAP_FASTER_DECODER_H_
+#define KALDI_DEC_WRAP_DEC_WRAP_FASTER_DECODER_H_
 
 // FIXME is this necessary?
 // #ifdef _MSC_VER
@@ -94,7 +94,7 @@ class PykaldiFasterDecoder : public FasterDecoder {
 
   int32 frame() { return frame_; }
 
- // Change to protected for implementation of pykaldi/pykaldi-faster-decoder.cc
+ // Change to protected for implementation of dec-wrap/dec-wrap-faster-decoder.cc
  protected:
   void ResetDecoder(bool full);
 
@@ -125,4 +125,4 @@ class PykaldiFasterDecoder : public FasterDecoder {
 };
 
 } // namespace kaldi
-#endif // KALDI_PYKALDI_PYKALDI_FASTER_DECODER_H_
+#endif // KALDI_DEC_WRAP_DEC_WRAP_FASTER_DECODER_H_

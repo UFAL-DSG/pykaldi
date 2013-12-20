@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 #include "test-cffi-python-dyn.h"
-#include "pykaldi-faster-wrapper.h"
+#include "dec-wrap-faster-wrapper.h"
 
 using namespace kaldi;
 
@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
 
 
   // open the library
-  // char nameLib[] = "libpykaldi.so";
+  // char nameLib[] = "libdec-wrap.so";
   // void *lib = dlopen(nameLib, RTLD_NOW);
   // if (!lib) {
   //     printf("Cannot open library: %s\n", dlerror());

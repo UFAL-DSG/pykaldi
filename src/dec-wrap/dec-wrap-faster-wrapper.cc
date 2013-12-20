@@ -16,11 +16,11 @@
  * limitations under the License. */
 
 #include "feat/feature-mfcc.h"
-#include "dec-wrap/pykaldi-utils.h"
-#include "dec-wrap/pykaldi-audio-source.h"
-#include "dec-wrap/pykaldi-faster-wrapper.h"
-#include "dec-wrap/pykaldi-feat-input.h"
-#include "dec-wrap/pykaldi-decodable.h"
+#include "dec-wrap/dec-wrap-utils.h"
+#include "dec-wrap/dec-wrap-audio-source.h"
+#include "dec-wrap/dec-wrap-faster-wrapper.h"
+#include "dec-wrap/dec-wrap-feat-input.h"
+#include "dec-wrap/dec-wrap-decodable.h"
 
 /*****************
  *  C interface  *
