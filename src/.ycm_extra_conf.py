@@ -39,10 +39,10 @@ import ycm_core
 kaldi_flags = [
     '-I.',
     '-I../tools/openfst/include',
-    '-I../tools/OpenBLAS/install/include',
+    '-I../tools/ATLAS/include',
     '-fPIC',
     '-rdynamic',
-    '-DHAVE_OPENBLAS',
+    '-DHAVE_ATLAS',
     '-DKALDI_DOUBLEPRECISION=0',
     '-msse2',
     '-DHAVE_POSIX_MEMALIGN',
