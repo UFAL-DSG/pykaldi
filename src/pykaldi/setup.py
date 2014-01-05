@@ -6,10 +6,7 @@
 from setuptools import setup
 from sys import version_info as python_version
 from os import path
-from Cython.Distutils import build_ext
 from distutils.extension import Extension
-import yaml
-import pystache
 
 STATIC = False
 
@@ -33,7 +30,7 @@ else:
     extra_objects = []
 ext_modules.append(Extension('pykaldi.decoders',
                              language='c++',
-                             include_dirs=['..', 'fst'],
+                             include_dirs=['..', 'pyfst/fst'],
                              library_dirs=library_dirs,
                              libraries=libraries,
                              extra_objects=extra_objects,
@@ -41,50 +38,13 @@ ext_modules.append(Extension('pykaldi.decoders',
                              ))
 
 
-templates = [
-    ('fst/_fst.pyx.tpl', 'fst/types.yml', 'fst/_fst.pyx'),
-    ('fst/_fst.pxd.tpl', 'fst/types.yml', 'fst/_fst.pxd'),
-    ('fst/libfst.pxd.tpl', 'fst/types.yml', 'fst/libfst.pxd'),
-]
-
-
-class pre_build_ext(build_ext):
-
-    def run(self):
-        '''Before building the C++ extension apply the
-        templates substitution'''
-        print 'running pre_build_ext'
-        try:
-            for templ_name, dic_name, result in templates:
-                with open(dic_name, 'r') as d:
-                    with open(templ_name, 'r') as t:
-                        with open(result, 'w') as r:
-                            dic = yaml.load(d)
-                            tmpl = t.read()
-                            r.write(pystache.render(tmpl, dic))
-                            print 'Created template %s' % result
-        except Exception as e:
-            # how to handle bad cases!
-            print e
-            raise e
-        build_ext.run(self)
-
-ext_modules.append(Extension(name='fst._fst',
-                             sources=['fst/_fst.pyx'],
-                             language='c++',
-                             include_dirs=[],
-                             libraries=['fst'],
-                             library_dirs=[],
-                             ))
-
 long_description = open(path.join(path.dirname(__file__), 'README.rst')).read()
 
 setup(
     name='pykaldi',
     version='0.0',
-    cmdclass={'build_ext': pre_build_ext},
     install_requires=install_requires,
-    setup_requires=['cython>=0.19.1', 'pyyaml', 'pystache'],
+    setup_requires=['cython>=0.19.1'],
     ext_modules=ext_modules,
     test_suite="nose.collector",
     tests_require=['nose>=1.0', 'pykaldi'],
@@ -95,7 +55,7 @@ setup(
     # },
     author='Ondrej Platek',
     author_email='ondrej.platek@seznam.cz',
-    url='https://github.com/oplatek/pykaldi',
+    url='https://github.com/DSG-UFAL/pykaldi',
     license='Apache, Version 2.0',
     keywords='Kaldi speech recognition Python bindings',
     description='C++/Python wrapper for Kaldi decoders',

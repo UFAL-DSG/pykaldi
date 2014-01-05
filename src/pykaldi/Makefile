@@ -53,8 +53,7 @@ clean:
 	-python setup.py clean --all
 	rm -rf dist
 	@# Do not want to use wildcards and rm -rf
-	rm -f *.egg-info/* *.egg-info/.[a-zA-Z]* build
-	-rmdir *.egg-info
+	rm -rf *.egg-info build
 
 cleanall: clean
 	# recursive make clean
