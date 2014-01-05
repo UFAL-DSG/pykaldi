@@ -51,9 +51,8 @@ test: $(LIBFILE)
 clean:
 	@# removing build directory
 	-python setup.py clean --all
-	rm -rf dist
-	@# Do not want to use wildcards and rm -rf
-	rm -rf *.egg-info build
+	rm -f pykaldi/decoders.so pykaldi/decoders.cpp
+	rm -rf dist build *.egg-info
 
 cleanall: clean
 	# recursive make clean
