@@ -7,6 +7,7 @@ from setuptools import setup
 from sys import version_info as python_version
 from os import path
 from distutils.extension import Extension
+from Cython.Distutils import build_ext
 
 STATIC = False
 
@@ -25,16 +26,16 @@ if STATIC:
     extra_objects = ['pykaldi.a', ]
 else:
     # DYNAMIC
-    library_dirs = ['.']
-    libraries = ['pykaldi']
+    library_dirs = ['.', ]
+    libraries = ['pykaldi', ]
     extra_objects = []
 ext_modules.append(Extension('pykaldi.decoders',
                              language='c++',
-                             include_dirs=['..', 'pyfst/fst'],
+                             include_dirs=['..', 'pyfst', ],
                              library_dirs=library_dirs,
                              libraries=libraries,
                              extra_objects=extra_objects,
-                             sources=['pykaldi/decoders.pyx'],
+                             sources=['pykaldi/decoders.pyx', ],
                              ))
 
 
@@ -42,6 +43,7 @@ long_description = open(path.join(path.dirname(__file__), 'README.rst')).read()
 
 setup(
     name='pykaldi',
+    cmdclass={'build_ext': build_ext},
     version='0.0',
     install_requires=install_requires,
     setup_requires=['cython>=0.19.1'],

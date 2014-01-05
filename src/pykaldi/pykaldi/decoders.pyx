@@ -5,7 +5,7 @@ from libc.stdlib cimport malloc, free
 from libcpp.vector cimport vector
 from libcpp cimport bool
 cimport fst._fst
-cimport libfst
+cimport fst.libfst
 import fst
 from pykaldi.utils import lattice_to_nbest
 
@@ -15,8 +15,8 @@ cdef extern from "dec-wrap/dec-wrap-latgen-wrapper.h" namespace "kaldi":
         size_t Decode(size_t max_frames) except +
         void FrameIn(unsigned char *frame, size_t frame_len) except +
         bool GetBestPath(vector[int] v_out, float *prob) except +
-        bool GetRawLattice(libfst.StdVectorFst *fst_out) except +
-        bool GetLattice(libfst.LogVectorFst *fst_out, double *tot_prob) except +
+        bool GetRawLattice(fst.libfst.StdVectorFst *fst_out) except +
+        bool GetLattice(fst.libfst.LogVectorFst *fst_out, double *tot_prob) except +
         void PruneFinal() except +
         void Reset(bool keep_buffer_data) except +
         int Setup(int argc, char **argv) except +

@@ -35,7 +35,15 @@ $(LIBFILE): $(ADDLIBS)
 # LIBFILE=$(LIBNAME).a
 # endif
 
-pykaldi/decoders.so: $(LIBFILE)
+pyfst:
+	git clone https://github.com/UFAL-DSG/pyfst.git pyfst
+
+pyfst/fst/_fst.so: pyfst
+	export FST=`pwd`/../../tools/openfst; cd pyfst ; LIBRARY_PATH=$$FST/lib:$$FST/lib/fst CPLUS_INCLUDE_PATH=$$FST/include python setup.py build_ext --inplace
+
+pyfst_compiled: pyfst/fst/_fst.so
+
+pykaldi/decoders.so: $(LIBFILE) pyfst_compiled
 	# LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include \
 	# 			  python setup.py build_ext --inplace
 	LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include \
