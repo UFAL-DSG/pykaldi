@@ -14,8 +14,8 @@ Description
 Install
 -------
 
-..  image:: https://travis-ci.org/oplatek/pykaldi.png
-    :target: https://travis-ci.org/oplatek/pykaldi
+..  image:: https://travis-ci.org/UFAL-DSG/pykaldi.png
+    :target: https://travis-ci.org/UFAL-DSG/pykaldi
 
 
 * Read `INSTALL.rst <./INSTALL.rst>`_ and `INSTALL <./INSTALL>`_ first!
