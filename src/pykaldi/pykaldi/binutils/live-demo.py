@@ -43,23 +43,32 @@ def teardown_pyaudio(p, stream):
 
 
 def user_control(pause):
+    '''Simply stupid sollution how to control state of recognizer.
+    Three boolean states which should be
+    set up by are returned by the function.'''
+
     utt_end, dialog_end = False, False
     old_settings = termios.tcgetattr(sys.stdin)
-    raise NotImplementedError('TODO not working reading characters from terminal')
+    # raise NotImplementedError('TODO not working reading characters from terminal')
     try:
         tty.setcbreak(sys.stdin.fileno())
         # if is data on input
-        while (select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], [])):
+        while (select.select([sys.stdin], [], [], 1) == ([sys.stdin], [], [])):
             c = sys.stdin.read(1)
-            print c
-            if c == '\n':  # enter
+            print 'character %s' % c
+            if c == 'u':
                 utt_end = True
-            elif c == ' ':  # space
+            elif c == 'p':
                 pause = not pause
-            elif c == '\x1b' or c == 'c':  # ESC
+            elif c == 'c':
                 dialog_end = True
     finally:
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+    print """
+Utterance end %d : press 'u'
+The recognition is paused %d: press 'p'
+For terminating the program press 'c'\n\n""" % (utt_end, pause)
+
     return (utt_end, dialog_end, pause)
 
 
@@ -67,7 +76,6 @@ def decode_loop(d, audio_batch_size, wst, stream):
     utt_frames, new_frames, pause = 0, 0, False
     while True:
         utt_end, dialog_end, pause = user_control(pause)
-        print utt_end, dialog_end, pause
         if pause:
             d.reset(keep_buffer_data=False)
             time.sleep(0.1)
@@ -88,7 +96,7 @@ def decode_loop(d, audio_batch_size, wst, stream):
             break
         if new_frames == 0:
             frame = stream.read(2 * audio_batch_size)  # 16bit audio 16/8=2
-            d.frame_in(frame, audio_batch_size)
+            d.frame_in(frame)
         else:
             utt_frames += new_frames
 
