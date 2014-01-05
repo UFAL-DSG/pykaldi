@@ -39,7 +39,7 @@ pyfst:
 	git clone https://github.com/UFAL-DSG/pyfst.git pyfst
 
 pyfst/fst/_fst.so: pyfst
-	export FST=`pwd`/../../tools/openfst; cd pyfst ; LIBRARY_PATH=$$FST/lib:$$FST/lib/fst CPLUS_INCLUDE_PATH=$$FST/include python setup.py build_ext --inplace
+	export FST=`pwd`/../../tools/openfst; cd pyfst ; LIBRARY_PATH=$$FST/lib:$$FST/lib/fst CPLUS_INCLUDE_PATH=$$FST/include python setup.py develop --user
 
 pyfst_compiled: pyfst/fst/_fst.so
 
