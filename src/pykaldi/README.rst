@@ -1,12 +1,7 @@
 Install & Dependencies
 ============
- * The [../dec-wrap](../dec-wrap) directory: The pykaldi currently interfaces
-    the online decoders already wrapped in C code from [../dec-wrap](../dec-wrap).
-    Run the `make` to build that directory.
- * The [pyfst](http://pyfst.github.io) which source code I copied in into pykaldi/fst *TODO remove it*.
-
- * See [setup.py](./setup.py) `install_requires` variable for full list of Python dependencies.
-
+ * ``cython 19.1+``, fork of `PyFST <https://github.com/UFAL-DSG/pyfst>`_ which transitively requires ``pyyaml``, ``pystache``
+ * It should be enough to run ``make`` from ``pykaldi`` directory 
 
 DEPRECATED- REWRITE - Running and building examples
 -----------------------------
