@@ -18,4 +18,4 @@ live: $(VYSTADIAL_SCP)
 clean:
 	rm -rf online-data online-data.tar.bz2 *.pyc work
 
-.PHONY: run_live pykaldi gmm_latgen test clean
+.PHONY: live pykaldi gmm-latgen-faster test clean

@@ -23,3 +23,5 @@ decode_config=conf/decode.conf
 model=$exp_dir/final.mdl
 hclg=$exp_dir/graph/HCLG.fst
 wst=$exp_dir/graph/words.txt
+lda_matrix=""   # empty -> no LDA
+lda_matrix=""   # empty -> no LDA

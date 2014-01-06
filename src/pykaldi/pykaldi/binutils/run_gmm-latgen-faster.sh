@@ -20,10 +20,11 @@ compute-mfcc-feats  --verbose=0 --config=$mfcc_config scp:$wav_scp \
 # # For debugging
 # add-deltas "scp,s,cs:$feat_scp" "ark,t:$mfccdir/dd_mfcc.ark.txt"
 
+feats="ark,s,cs:copy-feats scp:$feat_scp ark:- | add-deltas  ark:- ark:- |"
+
 # gmm-latgen-faster-parallel --config=$decode_config \
 gmm-latgen-faster --verbose=0 --config=$decode_config \
-    --word-symbol-table=$wst $model $hclg \
-    "ark,s,cs:copy-feats scp:$feat_scp ark:- | add-deltas  ark:- ark:- |" \
+    --word-symbol-table=$wst $model $hclg "$feats" \
     "ark:|gzip - c > $lattice"
 
 lattice-best-path --verbose=0 --lm-scale=15 --word-symbol-table=$wst \
