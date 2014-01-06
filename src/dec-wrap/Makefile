@@ -20,11 +20,10 @@ ADDLIBS = ../decoder/kaldi-decoder.a ../thread/kaldi-thread.a \
 
 BINFILES =
 
-TESTFILES = dec-wrap-faster-wrapper-test dec-wrap-feat-input-test \
+TESTFILES = dec-wrap-feat-input-test \
 			dec-wrap-audio-source-test read-wav-test dec-wrap-utils-test
 
 OBJFILES = dec-wrap-latgen-decoder.o dec-wrap-latgen-wrapper.o \
-		   dec-wrap-faster-wrapper.o dec-wrap-faster-decoder.o \
 		   dec-wrap-audio-source.o  dec-wrap-utils.o \
 		   dec-wrap-decodable.o dec-wrap-feat-input.o
 
