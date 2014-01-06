@@ -3,6 +3,11 @@
 # source the settings
 . path.sh
 
+beam=16.0
+latbeam=10.0
+max_active=14000
+
+. $decode_config
 
 # temporary files
 mfccdir=$decode_dir/mfcc
@@ -22,9 +27,10 @@ compute-mfcc-feats  --verbose=0 --config=$mfcc_config scp:$wav_scp \
 
 feats="ark,s,cs:copy-feats scp:$feat_scp ark:- | add-deltas  ark:- ark:- |"
 
-# gmm-latgen-faster-parallel --config=$decode_config \
-gmm-latgen-faster --verbose=0 --config=$decode_config \
-    --word-symbol-table=$wst $model $hclg "$feats" \
+gmm-latgen-faster --verbose=0 \
+    --beam=$beam --lattice-beam=$latbeam --max-active=$max_active \
+    --allow-partial=true --word-symbol-table=$wst \
+    $model $hclg "$feats" \
     "ark:|gzip - c > $lattice"
 
 lattice-best-path --verbose=0 --lm-scale=15 --word-symbol-table=$wst \

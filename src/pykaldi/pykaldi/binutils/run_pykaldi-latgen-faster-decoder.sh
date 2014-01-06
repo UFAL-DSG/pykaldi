@@ -3,13 +3,13 @@
 # source the settings
 . path.sh
 
-batch_size=4560
+beam=16.0
+latbeam=10.0
+max_active=14000
 
-date=`date +%Y-%m-%d`
-tmp_config=/tmp/$(basename $0)_${date}.$$
-cat $decode_config $mfcc_config > $tmp_config
-echo 1>&2; echo Using config $tmp_config 1>&2 ; echo 1>&2
-cat $tmp_config 1>&2 ; echo 1>&2
+. $decode_config
+
+batch_size=4560
 
 export LD_LIBRARY_PATH=`pwd`/../../:$LD_LIBRARY_PATH
 
@@ -22,7 +22,8 @@ export LD_LIBRARY_PATH=`pwd`/../../:$LD_LIBRARY_PATH
 # valgrind --tool=callgrind -v --dump-instr=yes --trace-jump=yes --callgrind-out-file=callgrind.log python \
 python \
 pykaldi-latgen-faster-decoder.py $wav_scp $batch_size $pykaldi_latgen_tra $wst \
-    --verbose=0 --lat-lm-scale=15 --config=$tmp_config \
+    --verbose=0 --lat-lm-scale=15 --config=$mfcc_config \
+    --beam=$beam --lattice-beam=$latbeam --max-active=$max_active \
     $model $hclg 1:2:3:4:5
 
 # If using callgrind display the results by running kcachegrind
