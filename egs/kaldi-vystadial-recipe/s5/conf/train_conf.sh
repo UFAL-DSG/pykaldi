@@ -29,7 +29,7 @@ export NOOOV="yes"  # nonempty string triggers removing;)
 
 # How big portion of available data to use
 # everyN=3    ->   we use one third of data
-everyN=1
+everyN=10
 
 # Train monophone models on a subset of the data of this size
 # monoTrainData=150

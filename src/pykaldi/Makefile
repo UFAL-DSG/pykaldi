@@ -38,10 +38,10 @@ $(LIBFILE): $(ADDLIBS)
 pyfst:
 	git clone https://github.com/UFAL-DSG/pyfst.git pyfst
 
+# If you want to develop or install pyfst
+# use setup.py develop --user or setup.py install respectively
 pyfst/fst/_fst.so: pyfst
-	cd pyfst ; \
-	LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include \
-	python setup.py develop --user
+	cd pyfst ; LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include python setup.py build_ext --inplace
 
 pyfst_compiled: pyfst/fst/_fst.so
 
@@ -54,16 +54,16 @@ all: pykaldi/decoders.so
 test: all
 	LD_LIBRARY_PATH=.:$(FSTDIR)/lib:$(FSTDIR)/lib/fst \
 	LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include \
+	PYTHONPATH=$(PWD)/pyfst:$$PYTHONPATH \
 	python setup.py nosetests
 
 clean:
 	@# removing build directory
 	-python setup.py clean --all
-	rm -f pykaldi/decoders.so pykaldi/decoders.cpp
+	rm -f pykaldi/decoders.so pykaldi/decoders.cpp $(LIBFILE)
 	rm -rf dist build *.egg-info
 
 cleanall: clean
 	# recursive make clean
 	$(MAKE) -C pykaldi clean
 	$(MAKE) -C pykaldi/binutils clean
-	$(MAKE) -C pykaldi/audio clean

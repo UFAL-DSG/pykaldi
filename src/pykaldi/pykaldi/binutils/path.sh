@@ -3,7 +3,7 @@
 # data location
 PWD=`pwd`
 exp_dir=$PWD
-data_dir=$PWD/vystadial-sample-en/test
+data_dir=$PWD/vystadial-sample-cs/test
 decode_dir=$exp_dir/decode
 
 # IO parameters
@@ -23,5 +23,9 @@ model=$exp_dir/final.mdl
 hclg=$exp_dir/HCLG.fst
 wst=$exp_dir/words.txt
 # if no LDA matrix specified -> use delta + delta-delta
-# lda_matrix="$exp_dir/final.mat"   # alternatives empty | path to LDA matrix  
-lda_matrix=""
+# Note that $model has to be trained with LDA enabled if using LDA
+lda_matrix="$exp_dir/final.mat"   # alternatives empty | path to LDA matrix
+
+
+export LD_LIBRARY_PATH=`pwd`/../../:$LD_LIBRARY_PATH
+export PYTHONPATH=`pwd`/../../pyfst:$PYTHONPATH

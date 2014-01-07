@@ -1,5 +1,7 @@
 BEST_LINE=16
-MODEL_PREFIX_URL=http://vystadial.ms.mff.cuni.cz/download/alex/resources/asr/voip_cs/kaldi/
+# LANG available alternatives cs|en
+LANG=cs
+MODEL_PREFIX_URL=http://vystadial.ms.mff.cuni.cz/download/alex/resources/asr/voip_$(LANG)/kaldi/
 HCLG=HCLG.fst
 AM=final.mdl
 LDA_MAT=final.mat
@@ -17,20 +19,20 @@ $(LDA_MAT):
 $(WST):
 	wget $(MODEL_PREFIX_URL)/$@
 
-vystadial-sample-en.tar.gz:
-	wget http://vystadial.ms.mff.cuni.cz/download/vystadial-sample/vystadial-sample-en.tar.gz
+vystadial-sample-$(LANG).tar.gz:
+	wget http://vystadial.ms.mff.cuni.cz/download/vystadial-sample/vystadial-sample-$(LANG).tar.gz
 
-vystadial-sample-en/README.rst: vystadial-sample-en.tar.gz
+vystadial-sample-$(LANG)/README.rst: vystadial-sample-$(LANG).tar.gz
 	tar xf $<
 	touch $@
 
-vystadial-sample-en/test/input.scp: vystadial-sample-en/README.rst
-	 python -c "from pykaldi.utils import build_input_scp as b; b('vystadial-sample-en/test')"
+vystadial-sample-$(LANG)/test/input.scp: vystadial-sample-$(LANG)/README.rst
+	 python -c "from pykaldi.utils import build_input_scp as b; b('vystadial-sample-$(LANG)/test')"
 
-vystadial-sample-en/test/input_best.scp: vystadial-sample-en/test/input.scp
+vystadial-sample-$(LANG)/test/input_best.scp: vystadial-sample-$(LANG)/test/input.scp
 	sed -n '$(BEST_LINE)p' < $< > $@
 
-build_scp: vystadial-sample-en/test/input_best.scp vystadial-sample-en/test/input.scp
+build_scp: vystadial-sample-$(LANG)/test/input_best.scp vystadial-sample-$(LANG)/test/input.scp
 
 download_models: $(HCLG) $(AM) $(LDA_MAT) $(WST)
 
@@ -44,6 +46,6 @@ live: download_models
 	bash run_live-demo.sh
 	
 clean:
-	rm -rf *.pyc $(HCLG) $(AM) $(LDA_MAT) $(WST) vystadial-sample-en vystadial-sample-en.tar.gz
+	rm -rf *.pyc $(HCLG) $(AM) $(LDA_MAT) $(WST) vystadial-sample-*
 
 .PHONY: live pykaldi-latgen-faster gmm-latgen-faster clean

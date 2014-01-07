@@ -11,8 +11,6 @@ max_active=14000
 
 batch_size=4560
 
-export LD_LIBRARY_PATH=`pwd`/../../:$LD_LIBRARY_PATH
-
 # Below, there are various commands for debugging, profiling and always
 # running the python wrapper around decoder.
 # Uncomment convenient prefix for you and put it just before the arguments.
