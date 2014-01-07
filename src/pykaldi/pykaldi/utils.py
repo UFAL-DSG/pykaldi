@@ -16,21 +16,9 @@
 
 import os
 from ordereddefaultdict import DefaultOrderedDict
-import argparse
 import errno
-import json
 import wave
-import audioop
-import glob
 import fst
-
-
-def build_input_scp(dir_audio_path, path=None):
-    wav_paths = glob.glob(os.path.join(dir_audio_path, '*.wav'))
-    wav_names = [os.path.basename(p)[:-4] for p in wav_paths]
-    with open(os.path.join(dir_audio_path, 'input.scp'), 'wb') as input_scp:
-        for n, p in zip(wav_names, wav_paths):
-            input_scp.write('%s %s\n' % (n, p))
 
 
 def fst_shortest_path_to_lists(fst_shortest):
@@ -95,6 +83,7 @@ def load_wav(file_name, def_sample_width=2, def_sample_rate=16000):
         wf.close()
     # resample audio if not compatible
     if sample_rate != def_sample_rate:
+        import audioop
         pcm, state = audioop.ratecv(pcm, 2, 1, sample_rate, def_sample_rate, None)
 
     return pcm
@@ -107,15 +96,18 @@ def config_is_yes(config, keystr):
         return False
 
 
-def parse_config_from_arguments():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("config", help='The main config file')
-    args = parser.parse_args()
-    with open(args.config, 'r') as r:
-        config = json.load(r)
-    # Replace {'prefix':'key_to_path', 'value':'suffix_of_path'} with correct path
-    config = expand_prefix(config, config)
-    return config
+# TODO remove
+# import json
+# import argparse
+# def parse_config_from_arguments():
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument("config", help='The main config file')
+#     args = parser.parse_args()
+#     with open(args.config, 'r') as r:
+#         config = json.load(r)
+#     # Replace {'prefix':'key_to_path', 'value':'suffix_of_path'} with correct path
+#     config = expand_prefix(config, config)
+#     return config
 
 
 def make_dir(path):

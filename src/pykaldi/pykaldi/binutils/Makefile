@@ -26,9 +26,11 @@ vystadial-sample-$(LANG)/README.rst: vystadial-sample-$(LANG).tar.gz
 	tar xf $<
 	touch $@
 
-vystadial-sample-$(LANG)/test/input.scp: vystadial-sample-$(LANG)/README.rst
-	 python -c "from pykaldi.utils import build_input_scp as b; b('vystadial-sample-$(LANG)/test')"
+export BUILD_INPUT_SCP_PY
 
+vystadial-sample-$(LANG)/test/input.scp: vystadial-sample-$(LANG)/README.rst
+	for f in `dirname $@`/*.wav ; do echo "`basename $$f`" "`pwd`/$$f" ; done > $@
+		
 vystadial-sample-$(LANG)/test/input_best.scp: vystadial-sample-$(LANG)/test/input.scp
 	sed -n '$(BEST_LINE)p' < $< > $@
 

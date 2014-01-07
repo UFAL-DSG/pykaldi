@@ -26,6 +26,6 @@ wst=$exp_dir/words.txt
 # Note that $model has to be trained with LDA enabled if using LDA
 lda_matrix="$exp_dir/final.mat"   # alternatives empty | path to LDA matrix
 
-
-export LD_LIBRARY_PATH=`pwd`/../../:$LD_LIBRARY_PATH
-export PYTHONPATH=`pwd`/../../pyfst:$PYTHONPATH
+pykaldi_dir=`pwd`/../..
+export LD_LIBRARY_PATH=$pykaldi_dir:$LD_LIBRARY_PATH
+export PYTHONPATH=$pykaldi_dir:$pykaldi_dir/pyfst:$PYTHONPATH

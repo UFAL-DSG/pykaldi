@@ -47,7 +47,7 @@ pyfst_compiled: pyfst/fst/_fst.so
 
 pykaldi/decoders.so: $(LIBFILE) pyfst_compiled
 	LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include \
-	python setup.py develop --user
+	python setup.py build_ext --inplace
 
 all: pykaldi/decoders.so
 
@@ -65,5 +65,5 @@ clean:
 
 cleanall: clean
 	# recursive make clean
-	$(MAKE) -C pykaldi clean
+	rm -rf pyfst
 	$(MAKE) -C pykaldi/binutils clean
