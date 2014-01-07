@@ -25,13 +25,20 @@ compute-mfcc-feats  --verbose=0 --config=$mfcc_config scp:$wav_scp \
 # # For debugging
 # add-deltas "scp,s,cs:$feat_scp" "ark,t:$mfccdir/dd_mfcc.ark.txt"
 
-feats="ark,s,cs:copy-feats scp:$feat_scp ark:- | add-deltas  ark:- ark:- |"
+# check the splice-feats use the default left=right=4 context
+if [ -z $lda_matrix ] ; then
+  # no LDA matrix -> use delta-delta
+  feats="ark,s,cs:copy-feats scp:$feat_scp ark:- | add-deltas ark:- ark:- |"
+else
+  # LDA matrix specified -> using it
+  feats="ark,s,cs:copy-feats scp:$feat_scp ark:- | splice-feats ark:- ark:- | transform-feats $lda_matrix ark:- ark:- |"
+fi
 
 gmm-latgen-faster --verbose=0 \
     --beam=$beam --lattice-beam=$latbeam --max-active=$max_active \
     --allow-partial=true --word-symbol-table=$wst \
     $model $hclg "$feats" \
-    "ark:|gzip - c > $lattice"
+    "ark:|gzip -c > $lattice"
 
 lattice-best-path --verbose=0 --lm-scale=15 --word-symbol-table=$wst \
     "ark:gunzip -c $lattice|" ark,t:$gmm_latgen_faster_tra || exit 1;
