@@ -21,95 +21,16 @@ import errno
 import json
 import wave
 import audioop
-import urllib2
-from urllib2 import URLError, HTTPError
-import tarfile
 import glob
-from sys import stderr
 import fst
 
 
-def get_voxforge_data(path=None, workdir='work'):
-    if path is None:
-        path = os.getcwd()
-    if not os.path.isabs(workdir):
-        workdir = os.path.join(path, workdir)
-    if not os.path.exists(workdir):
-        os.makedirs(workdir)
-    url = 'http://sourceforge.net/projects/kaldi/files/online-data.tar.bz2'
-    name = 'online-data'
-    tar_name = os.path.join(path, '%s.tar.bz2' % name)
-    if os.path.isfile(os.path.join(path, tar_name)):
-        print 'Skipping download. File exists.'
-    else:
-        try:
-            with open(tar_name, 'wb') as tar:
-                print 'Downloading %s from %s' % (tar_name, url)
-                u = urllib2.urlopen(url)
-                tar.write(u.read())
-        except HTTPError as e:
-            stderr.write(str(e))
-            return False
-        except URLError:
-            stderr.write(str(e))
-            return False
-
-    print 'Extracting Tarball'
-    with tarfile.open(tar_name) as tar:
-        tar.extractall(path=path)
-
-    audio_path = os.path.sep.join([path, 'online-data', 'audio'])
-    wav_paths = glob.glob(os.path.join(audio_path, '*.wav'))
+def build_input_scp(dir_audio_path, path=None):
+    wav_paths = glob.glob(os.path.join(dir_audio_path, '*.wav'))
     wav_names = [os.path.basename(p)[:-4] for p in wav_paths]
-
-    print 'Create input scp.'
-    with open(os.path.join(workdir, 'input.scp'), 'wb') as input_scp:
+    with open(os.path.join(dir_audio_path, 'input.scp'), 'wb') as input_scp:
         for n, p in zip(wav_names, wav_paths):
             input_scp.write('%s %s\n' % (n, p))
-
-    print 'Create  spk2utt'
-    with open(os.path.join(workdir, 'spk2utt'), 'wb') as spk2utt:
-        for n in wav_names:
-            spk2utt.write('%s %s\n' % (n, n))
-
-    print 'Create trns'
-    with open(os.path.join(audio_path, 'trans.txt'), 'rb') as trans:
-        lines = trans.readlines()
-        trans_dict = dict([l.strip().split(' ', 1) for l in lines])
-        for n in wav_names:
-            with open(os.path.join(workdir, '%s.wav.trn' % n), 'wb') as trn:
-                trn.write(trans_dict[n])
-    return True
-
-
-def get_vystadial_data(src_tar_path, path=None):
-    if path is None:
-        path = os.getcwd()
-
-    print 'Get the tar file'
-    from subprocess import call
-    call(['cp', src_tar_path, path])
-
-    print 'Extracting Tarball'
-    name = 'vystadial-sample-test'
-    tar_name = os.path.join(path, '%s.tar.bz2' % name)
-    with tarfile.open(tar_name) as tar:
-        tar.extractall(path=path)
-
-    print 'Create input scp.'
-
-    audio_path = os.path.sep.join([path, name, 'data', 'test'])
-    wav_paths = glob.glob(os.path.join(audio_path, '*.wav'))
-    wav_names = [os.path.basename(p)[:-4] for p in wav_paths]
-    with open(os.path.join(audio_path, 'input.scp'), 'wb') as input_scp:
-        for n, p in zip(wav_names, wav_paths):
-            input_scp.write('%s %s\n' % (n, p))
-    with open(os.path.join(audio_path, 'input_max_10.scp'), 'wb') as input_scp:
-        for n, p, i in zip(wav_names, wav_paths, range(10)):
-            input_scp.write('%s %s\n' % (n, p))
-    with open(os.path.join(audio_path, 'input_best.scp'), 'wb') as input_scp:
-        best_index = 10
-        input_scp.write('%s %s\n' % (wav_names[best_index], wav_paths[best_index]))
 
 
 def fst_shortest_path_to_lists(fst_shortest):
