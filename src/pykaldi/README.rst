@@ -1,32 +1,32 @@
-Install & Dependencies
-============
- * ``cython 19.1+``, fork of `PyFST <https://github.com/UFAL-DSG/pyfst>`_ which transitively requires ``pyyaml``, ``pystache``
- * It should be enough to run ``make`` from ``pykaldi`` directory 
+Pykaldi - Python Kaldi decoders wrapper
+=======================================
 
-DEPRECATED- REWRITE - Running and building examples
------------------------------
-The Python [setuptools](http://pythonhosted.org/an_example_pypi_project/setuptools.html#installing-setuptools-and-easy-install) is used instead of Makefile
-for "Installing" and running tests.
-
-Surprisingly the most used `python setup.py install` command does not work.
-It is so, because the `Pykaldi` depends on Kaldi libraries and they are not used as system libraries. You have probably noticed no 'make install' or anything similar.
-If the it changes it will work. In fact, it does not matter.
-
-Commands you SHOULD USE:
- * `python setup.py develop --user` an its undo `python setup.py develop --uninstall`
-
-    The command links pykaldi directory to PYTHONPATH (at Ubuntu to `$HOME/.local/lib/python2.7/site-packages/`),
-    so you can use pykaldi system wide.
-
-    ```python
-    import pykaldi
-    print pykaldi.__version__
-    ```
- * `python setup.py nosetests` runs all test for `pykaldi`
+Dependencies
+------------
+* OpenFST - You should use the installation build via ``cd kaldi/src/tools; make openfst_tgt``
+* Cython 19.1+  ``pip install cython>=19.1``
+* Our fork of `PyFST <https://github.com/UFAL-DSG/pyfst>`_ which transitively requires ``pyyaml``, ``pystache``
+  - Not necessary to install. Local ``Makefile`` will install it for you.
 
 
-Commands you SHOULD NOT USE:
- * `python setup.py install [--user]` and its undo `pip uninstall pykaldi`
+Installation
+------------
+Having the required dependencies installed, run ``make`` in this directory.
 
-    This command fails due to missing headers of Kaldi. There are no headers for Kaldi in system paths.
+The ``Makefile`` cares for installing ``pyfst`` and ``pykaldi`` locally.
+
+Note that the ``pyfst`` and ``pykaldi`` are local installations.
+It enables multiple installation environments on one system.
+The downside is that you need to setup ``PYTHONPATH`` and ``LD_LIBRARY_PATH`` variables.
+All the scripts in `./pykaldi/pykaldi/binutils` set up these variables.
+Please use the scripts as a reference or 
+install the packages system wide via ``python setup.py install``.
+
+Testing on sample data
+----------------------
+In the ``pykaldi/binutils`` directory there are scripts,
+which wraps Kaldi Python decoders.
+The scripts decode few sample utterances with 
+pretrained toy acoustic and language models.
+The scripts are described in `.pykaldi/binutils/README.rst`
 

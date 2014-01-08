@@ -1,52 +1,39 @@
-* For drawing you need `dot` binary from graph [http://www.graphviz.org/Download..php](graphviz) library.
-DEPRECATED - TODO REWRITE
-=========================
+Running the example Pykaldi scripts
+===================================
 
+Summary
+-------
+The `./pykaldi-latgen-faster-decoder.py` 
+demonstrates how to use the class ``PyGmmLatgenWrapper``,
+which takes audio on the input and outputs the decoded lattice.
 
-Known bugs
-==========
- * Currently not working and this walkthrough is DEPRECATED
+Dependencies
+------------
+* For inspecting the saved lattices you need `dot` binary 
+  from `Graphviz <http://www.graphviz.org/Download..php>`_ library.
+* For running the live demo you need ``pyaudio`` package.
 
-Report the bugs at [https://github.com/oplatek/pykaldi/issues/](https://github.com/oplatek/pykaldi/issues/)
-or send the reports to me via email.
+Running the example scripts
+---------------------------
+* Run the decoding with ``PyGmmLatgenWrapper`` on small test set
+  with pretrained Language (LM) and Acoustic (AM) models.
+  The data as well as the models are downloaded from our server.
+  The logic is written in `./pykaldi-latgen-faster-decoder.py`.
+  
+::
+    make pykaldi-latgen-faster
 
-Thanks!
+* Run the decoding with Kaldi binary utils wrapped in `./run_gmm-latgen-faster.sh`.
+  The same data, AM a LM are used as for ``make pykaldi-latgen-faster``.
+  We use this script as reference.
 
+:: 
+    make gmm-latgen-faster
 
-How to run the demo
-===================
-```bash
-# 1. obtain source code:
-git clone git@github.com:oplatek/pykaldi.git oplatek2
+* The stupid simple live demo should decode speech from your microphone.
+  It uses the pretrained AM and LM and wraps `./live-demo.py`. 
+  The `pyaudio` package is used for capturing the sound from your microphone.
+  We were able to use it under `Ubuntu 12.10`, but we guarantee nothing on your system.
 
-2.
-#    Read the Requirements section!
-# b) Go to oplatek2/tools and install cffi locally by using install_cffi.sh. 
-# After a successful installation the script prompts you to add the installation directory to PYTHONPATH. 
-# Do it, it will be needed in step 7.
-
-# 3. Update PYTHONPATH
-# if using 2b) The installation script will give you statement like the one below! So use it! 
-export PYTHONPATH="$PYTHONPATH:/ha/work/people/oplatek/kaldi/tools/python/lib/python2.7/site-packages"
-# add src/pykaldi directory itself to PYTHONPATH. Use absolute paths like this!
-export PYTHONPATH="$PYTHONPATH":/home/oplatek/kaldi-svn/oplatek2/src
-
-# 4. 
-cd oplatek2/src
-
-# 5. Configure it with --shared flag
- ./configure --fst-root=`pwd`/../tools/openfst --shared
-
-# 6. Build Kaldi. Clean it and tested to be sure that, it is not corrupted.
-make clean; make depend && make ext_depend && make && make ext && make test && make ext_test
-
-# 7. Change to the directory with the example.
-cd pykaldi/binutils/
-
-# 8 a) Run a demo which downloads sample acoustic and language models
-with testing audio data and run the decoding.
-make pykaldi_latgen
-
-# 8. b) If you have a microphone you can try to talk to live_demo.
-It should compile and download everything needed
-make run_live 
+::
+    make live
