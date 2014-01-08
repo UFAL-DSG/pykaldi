@@ -3,8 +3,8 @@ Pykaldi - fork of Kaldi
 
 Summary
 -------
-* Goal: Create a Python wrapper around Kaldi decoders suitable for real-time decoding in a dialog systems.
-* Based on: the `Svn trunk of Kaldi project <svn://svn.code.sf.net/p/kaldi/code/trunk>`_ which is mirrored to branch ``svn-mirror``.
+* Goal: Create a Python wrapper around Kaldi decoders suitable for real-time decoding in dialog systems.
+* Based on the `Svn trunk of Kaldi project <svn://svn.code.sf.net/p/kaldi/code/trunk>`_ which is mirrored to branch ``svn-mirror``.
 * There is also a new Kaldi recipe for training acoustic models. 
   See `egs/kaldi-vystadial-recipe <egs/kaldi-vystadial-recipe>`_ 
   and `README.rst <egs/kaldi-vystadial-recipe/README.rst>`_!
@@ -28,8 +28,8 @@ Other info
 ----------
 * Pykaldi is developed under `Vystadial project <https://sites.google.com/site/filipjurcicek/projects/vystadial>`_.
 * The svn trunk is mirrored via ``git svn``. 
-  Checkout tutorials: `Intro to git svn <http://viget.com/extend/effectively-using-git-with-subversion>`_, 
-  `Git svn branch in git repo <http://ivanz.com/2009/01/15/selective-import-of-svn-branches-into-a-gitgit-svn-repository>`_
+  Checkout tutorials: `Git svn <http://viget.com/extend/effectively-using-git-with-subversion>`_, 
+  `Svn branch in git <http://ivanz.com/2009/01/15/selective-import-of-svn-branches-into-a-gitgit-svn-repository>`_
 
 LICENSE
 --------
