@@ -18,7 +18,7 @@ The ``Makefile`` cares for installing ``pyfst`` and ``pykaldi`` locally.
 Note that the ``pyfst`` and ``pykaldi`` are local installations.
 It enables multiple installation environments on one system.
 The downside is that you need to setup ``PYTHONPATH`` and ``LD_LIBRARY_PATH`` variables.
-All the scripts in `<pykaldi/pykaldi/binutils>`_ set up these variables.
+All the scripts in `<pykaldi/binutils>`_ set up these variables.
 Please use the scripts as a reference or 
 install the packages system wide via ``python setup.py install``.
 
