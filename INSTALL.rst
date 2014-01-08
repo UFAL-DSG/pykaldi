@@ -7,20 +7,19 @@ Installing external dependencies
 ================================
 
 How have I installed OpenBlas?
-----------------------
-Simple enough:
+------------------------------
 .. code-block:: bash
     cd tools
     make openblas
 
 How have I installed Openfst?
-----------------------
+-----------------------------
 .. code-block:: bash
     cd tools
     make openfst_tgt
 
 How do I build Kaldi?
-------------------
+---------------------
 .. code-block:: bash
     cd src
     ./configure  --openblas-root=`pwd`/../tools/OpenBLAS/install --fst-root=`pwd`/../tools/openfst --shared
@@ -35,13 +34,13 @@ Since by *default it is turned of! I always forget about that!*
     make test && make ext_test
 
 How have I installed cython?
---------------------------
+----------------------------
 .. code-block:: bash
     pip install --user cython
 
 
 How have I installed PortAudio?
---------------------------
+-------------------------------
 NOTE: Necessary only for Kaldi online decoder
 
 .. code-block:: bash
@@ -50,7 +49,7 @@ NOTE: Necessary only for Kaldi online decoder
 
 
 How did I update Kaldi source code?
-----------------------------
+-----------------------------------
 I checked out the kaldi-trunk version.
 
 `Kaldi install instructions <http://kaldi.sourceforge.net/install.html>`_
@@ -59,7 +58,7 @@ Note: If you checkout Kaldi before March 2013 you need to relocate svn. See the 
 
 
 What setup did I use?
---------------------
+---------------------
 In order to use Kaldi binaries everywhere I add them to ``PATH``. 
 In addition, I needed to add ``openfst`` directory to ``LD_LIBRARY_PATH``,
 I compiled Kaldi dynamically linked against ``openfst``.
@@ -75,7 +74,7 @@ To conclude, I added following lines to my ``.bashrc``.
     export LD_LIBRARY_PATH="$LD_LIBRARY_PATH":$openfst/lib 
 
 How have I installed Atlas?
---------------------
+---------------------------
  * NOTE1: I normally use OpenBLAS instead of ATLAS. 
  * NOTE2: There is prepared installation script ``tools/install_atlas.sh`` which you should try first. 
           If it fails, you may find the help in this section.
