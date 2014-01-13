@@ -234,8 +234,10 @@ bool GmmLatgenWrapper::Setup(int argc, char **argv) {
       feat_transform = new PykaldiLdaInput(feat_input,
                                 lda_transform,
                                 wrapper_opts.left_context, wrapper_opts.right_context);
+      KALDI_VLOG(1) << "LDA will be used for decoding" << std::endl;
     } else {
       feat_transform = new PykaldiDeltaInput(delta_feat_opts, feat_input);
+      KALDI_VLOG(1) << "Delta + delta-delta will be used for decoding" << std::endl;
     }
 
     feat_matrix = new PykaldiFeatureMatrix(feature_reading_opts,

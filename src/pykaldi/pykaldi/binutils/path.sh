@@ -17,12 +17,12 @@ pykaldi_latgen_tra=$decode_dir/pykaldi-latgen.tra
 pykaldi_latgen_tra_txt=${pykaldi_faster_tra}.txt
 lattice=$decode_dir/lat.gz
 # common configs
-mfcc_config=conf/mfcc.conf
+mfcc_config=mfcc.conf
 decode_config=conf/decode.conf
 
 wst=$exp_dir/words.txt
 
-lda=no
+lda=yes
 if [ $lda='yes' ] ; then
     # Note that $model has to be trained with LDA enabled if using LDA
     model=$exp_dir/final_lda.mdl

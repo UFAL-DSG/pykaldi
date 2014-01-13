@@ -8,6 +8,10 @@ AM=final.mdl
 AM_LDA=final_lda.mdl
 MAT_LDA=final_lda.mat
 WST=words.txt
+MFCC=mfcc.conf
+
+$(MFCC):
+	wget $(MODEL_PREFIX_URL)/$@
 
 $(HCLG):
 	wget $(MODEL_PREFIX_URL)/$@
@@ -44,7 +48,7 @@ vystadial-sample-$(LANG)/test/input_best.scp: vystadial-sample-$(LANG)/test/inpu
 
 build_scp: vystadial-sample-$(LANG)/test/input_best.scp vystadial-sample-$(LANG)/test/input.scp
 
-download_models: $(HCLG) $(AM) $(WST) $(MAT_LDA) $(AM_LDA) $(HCLG_LDA)
+download_models: $(HCLG) $(AM) $(WST) $(MAT_LDA) $(AM_LDA) $(HCLG_LDA) $(MFCC)
 
 pykaldi-latgen-faster: build_scp download_models
 	bash run_pykaldi-latgen-faster-decoder.sh
