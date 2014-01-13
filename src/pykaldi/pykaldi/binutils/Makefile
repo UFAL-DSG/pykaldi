@@ -3,17 +3,25 @@ BEST_LINE=16
 LANG=cs
 MODEL_PREFIX_URL=http://vystadial.ms.mff.cuni.cz/download/alex/resources/asr/voip_$(LANG)/kaldi/
 HCLG=HCLG.fst
+HCLG_LDA=HCLG_lda.fst
 AM=final.mdl
-LDA_MAT=final.mat
+AM_LDA=final_lda.mdl
+MAT_LDA=final_lda.mat
 WST=words.txt
 
 $(HCLG):
 	wget $(MODEL_PREFIX_URL)/$@
 
+$(HCLG_LDA):
+	wget $(MODEL_PREFIX_URL)/$@
+
 $(AM):
 	wget $(MODEL_PREFIX_URL)/$@
 
-$(LDA_MAT):
+$(AM_LDA):
+	wget $(MODEL_PREFIX_URL)/$@
+
+$(MAT_LDA):
 	wget $(MODEL_PREFIX_URL)/$@
 
 $(WST):
@@ -36,7 +44,7 @@ vystadial-sample-$(LANG)/test/input_best.scp: vystadial-sample-$(LANG)/test/inpu
 
 build_scp: vystadial-sample-$(LANG)/test/input_best.scp vystadial-sample-$(LANG)/test/input.scp
 
-download_models: $(HCLG) $(AM) $(LDA_MAT) $(WST)
+download_models: $(HCLG) $(AM) $(WST) $(MAT_LDA) $(AM_LDA) $(HCLG_LDA)
 
 pykaldi-latgen-faster: build_scp download_models
 	bash run_pykaldi-latgen-faster-decoder.sh
@@ -48,6 +56,6 @@ live: download_models
 	bash run_live-demo.sh
 	
 clean:
-	rm -rf *.pyc $(HCLG) $(AM) $(LDA_MAT) $(WST) vystadial-sample-*
+	rm -rf *.pyc $(HCLG) $(AM) $(MAT_LDA) $(WST) vystadial-sample-*
 
 .PHONY: live pykaldi-latgen-faster gmm-latgen-faster clean
