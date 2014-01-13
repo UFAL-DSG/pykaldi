@@ -50,7 +50,7 @@ if [ ! "$(ls -A ${MFCC_DIR} 2>/dev/null)" ]; then
   for x in train $test_sets ; do 
     steps/make_mfcc.sh --mfcc-config conf/mfcc.conf --cmd \
       "$train_cmd" --nj $njobs data/$x exp/make_mfcc/$x ${MFCC_DIR} || exit 1;
-    # CMVN is turn off by default but the scripts require it 
+    # CMVN stats are always computed but not always used in decoding
     steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x ${MFCC_DIR} || exit 1;
     if [[ ! -z "$TEST_ZERO_GRAMS" ]] ; then
         cp data/$x/feats.scp data/${x}0/feats.scp
