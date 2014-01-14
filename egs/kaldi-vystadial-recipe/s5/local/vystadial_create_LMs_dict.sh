@@ -40,7 +40,6 @@ if [[ ! -z "$ARPA_MODEL" ]] ; then
 else
     echo "=== Building LM of order ${LM_ORDER}..."
     cut -d' ' -f2- data/train/text | sed -e 's:^:<s> :' -e 's:$: </s>:' | \
-        grep -v '_INHALE_\|_LAUGH_\|_EHM_HMM_\|_NOISE_' \
         > $locdata/lm_train.txt
 
     ngram-count -text $locdata/lm_train.txt -order ${LM_ORDER} \
@@ -58,7 +57,6 @@ fi
 if [[ ! -z "$TEST_ZERO_GRAMS" ]]; then
     echo "=== Building ZERO GRAM for testing data..."
     cut -d' ' -f2- data/test/text | tr ' ' '\n' | \
-      grep -v '_INHALE_\|_LAUGH_\|_EHM_HMM_\|_NOISE_' | \
       sort -u > $locdata/vocab-test.txt
 
     cp $locdata/vocab-test.txt ${local_lm}_test0.arpa
@@ -87,7 +85,6 @@ if [ ! -z "${DICTIONARY}" ]; then
   tail -n +3 $DICTIONARY | cut -f 1 |\
     sort -u >> $locdata/vocab-full.txt 
 else 
-  # grep -v _ throws away _NOISE_ _SIL_ etc
   cut -d' ' -f2- data/train/text | tr ' ' '\n' | \
       grep -v '_' | sort -u > $locdata/vocab-full.txt
 fi
@@ -100,29 +97,25 @@ else
     echo "Unknown language $data_lang" ; exit 1
 fi
 
-# HANDLING OOV WORDS: OOV   SPN    UNKnow has pronancuation SPoken Noise
-# Kaldi has special symbols SPN (Spoken Noise), NSN (Non Spoken Noise)
-# and LAU (LAUGHTER)
-echo "OOV SPN" > $locdict/lexicon-oov.txt
-echo "_SIL_ NPN" >> $locdict/lexicon-oov.txt
-echo "_INHALE_ NPN" >> $locdict/lexicon-oov.txt
-echo "_LAUGH_ LAU" >> $locdict/lexicon-oov.txt
-echo "_EHM_HMM_ NPN" >> $locdict/lexicon-oov.txt
-echo "_NOISE_ NPN" >> $locdict/lexicon-oov.txt
 
-cat $locdict/lexicon-oov.txt $locdict/lexicon-iv.txt |\
-  sort > $locdict/lexicon.txt
+echo "_INHALE_ NPN" >> $locdict/lexicon.txt
+echo "_LAUGH_ LAU" >> $locdict/lexicon.txt
+echo "_EHM_HMM_ NPN" >> $locdict/lexicon.txt
+echo "_NOISE_ NPN" >> $locdict/lexicon.txt
+
+# sort lexicon in place
+sort $locdict/lexicon.txt -o $locdict/lexicon.txt
 
 echo "--- Prepare phone lists ..."
 echo SIL > $locdict/silence_phones.txt
 echo SIL > $locdict/optional_silence.txt
 
-grep -v -w sil $locdict/lexicon.txt | \
+grep -v -w SIL $locdict/lexicon.txt | \
   awk '{for(n=2;n<=NF;n++) { p[$n]=1; }} END{for(x in p) {print x}}' |\
   sort > $locdict/nonsilence_phones.txt
 
 echo "--- Adding SIL to the lexicon ..."
-echo -e "!SIL\tSIL" >> $locdict/lexicon.txt
+echo "_SIL_ SIL" >> $locdict/lexicon.txt
 
 # Some downstream scripts expect this file exists, even if empty
 touch $locdict/extra_questions.txt

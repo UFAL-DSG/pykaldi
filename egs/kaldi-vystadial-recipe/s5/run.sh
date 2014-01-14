@@ -31,12 +31,11 @@ if [ ! "$(ls -A data 2>/dev/null)" ]; then
   local/vystadial_data_split.sh --every_n $everyN ${DATA_ROOT} || exit 1
   
   # Prepare the lexicon, language model and various phone lists
-  # DISABLED because of swig: Sequitor model: 
-  # Pronunciations for OOV words are obtained using a pre-trained Sequitur model
   local/vystadial_create_LMs_dict.sh || exit 1 
   
   # Prepare data/lang and data/local/lang directories read it IO param describtion
-  utils/prepare_lang.sh data/local/dict 'OOV' data/local/lang data/lang || exit 1
+  # OOV words are mapped to _SIL_
+  utils/prepare_lang.sh data/local/dict '_SIL_' data/local/lang data/lang || exit 1
   
   # Prepare G.fst
   local/vystadial_create_G.sh "$test_sets_ext" || exit 1 
