@@ -22,8 +22,8 @@ decode_config=conf/decode.conf
 
 wst=$exp_dir/words.txt
 
-lda=yes
-if [ $lda='yes' ] ; then
+lda=no
+if [ $lda = 'yes' ] ; then
     # Note that $model has to be trained with LDA enabled if using LDA
     model=$exp_dir/final_lda.mdl
     hclg=$exp_dir/HCLG_lda.fst
