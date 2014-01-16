@@ -28,17 +28,17 @@ local/save_check_conf.sh || exit 1;
 # With save_check_conf.sh it ask about rewriting the data directory
 if [ ! "$(ls -A data 2>/dev/null)" ]; then
 
-  local/vystadial_data_split.sh --every_n $everyN ${DATA_ROOT} || exit 1
+  local/data_split.sh --every_n $everyN ${DATA_ROOT} || exit 1
   
   # Prepare the lexicon, language model and various phone lists
-  local/vystadial_create_LMs_dict.sh || exit 1 
+  local/create_dict_LM.sh || exit 1 
   
   # Prepare data/lang and data/local/lang directories read it IO param describtion
   # OOV words are mapped to _SIL_
   utils/prepare_lang.sh data/local/dict '_SIL_' data/local/lang data/lang || exit 1
   
   # Prepare G.fst
-  local/vystadial_create_G.sh "$test_sets_ext" || exit 1 
+  local/create_G.sh "$test_sets_ext" || exit 1 
 fi 
 # end of generating data directory
   
