@@ -17,8 +17,8 @@
 
 # The vystadial data are specific by having following marks in transcriptions
 # _INHALE_
-# _LAUGH_ 
-# _EHM_HMM_ 
+# _LAUGH_
+# _EHM_HMM_
 # _NOISE_
 # _EHM_HMM_
 # _SIL_
@@ -63,26 +63,27 @@ if [[ ! -z "$TEST_ZERO_GRAMS" ]]; then
     echo "</s>" >> ${local_lm}_test0.arpa
     python -c """
 import math
-with open('${local_lm}_test0.arpa', 'r+') as f: 
-    lines = f.readlines() 
-    p = math.log10(1/float(len(lines))); 
+with open('${local_lm}_test0.arpa', 'r+') as f:
+    lines = f.readlines()
+    p = math.log10(1/float(len(lines)));
     lines = ['%f\\t%s'%(p,l) for l in lines]
-    f.seek(0); f.write('\\n\\\\data\\\\\\nngram  1=       %d\\n\\n\\\\1-grams:\\n' % len(lines)) 
+    f.seek(0); f.write('\\n\\\\data\\\\\\nngram  1=       %d\\n\\n\\\\1-grams:\\n' % len(lines))
     f.write(''.join(lines) + '\\\\end\\\\')
 """
 fi
 
 
-echo "=== Preparing the dictionary ..."
+echo "=== Preparing the dictionary and phone lists..."
 
-mkdir -p $locdict 
+mkdir -p $locdict
 
 if [ ! -z "${DICTIONARY}" ]; then
-  echo "Using predefined dictionary: ${DICTIONARY}"
+  echo; echo "Using predefined dictionary: ${DICTIONARY}"
+  echo "Throwing away first 2 rows."; echo
   echo '</s>' > $locdata/vocab-full.txt
-  tail -n +3 $DICTIONARY | cut -f 1 |\
-    sort -u >> $locdata/vocab-full.txt 
-else 
+  tail -n +3 $DICTIONARY | cut -f 1 | \
+    sort -u >> $locdata/vocab-full.txt
+else
   cut -d' ' -f2- data/train/text | tr ' ' '\n' | \
       grep -v '_' | sort -u > $locdata/vocab-full.txt
 fi
@@ -91,32 +92,37 @@ if [ "$data_lang" == "en" ] ; then
     local/prepare_cmu_dict.sh $locdata $locdict
 elif [ "$data_lang" == "cs" ] ; then
     local/run_cs_transcriptions.sh $locdata $locdict
-else 
+else
     echo "Unknown language $data_lang" ; exit 1
 fi
 
+echo "--- Prepare nonsilence phone lists ..."
+# We suppose only nonsilence_phones in lexicon right now
+awk '{for(n=2;n<=NF;n++) { p[$n]=1; }} END{for(x in p) {print x}}' \
+    $locdict/lexicon.txt | sort > $locdict/nonsilence_phones.txt
 
-echo "_INHALE_ NPN" >> $locdict/lexicon.txt
-echo "_LAUGH_ LAU" >> $locdict/lexicon.txt
-echo "_EHM_HMM_ NPN" >> $locdict/lexicon.txt
-echo "_NOISE_ NPN" >> $locdict/lexicon.txt
-
-# sort lexicon in place
-sort $locdict/lexicon.txt -o $locdict/lexicon.txt
-
-echo "--- Prepare phone lists ..."
-echo SIL > $locdict/silence_phones.txt
-echo SIL > $locdict/optional_silence.txt
-
-grep -v -w SIL $locdict/lexicon.txt | \
-  awk '{for(n=2;n<=NF;n++) { p[$n]=1; }} END{for(x in p) {print x}}' |\
-  sort > $locdict/nonsilence_phones.txt
-
-echo "--- Adding SIL to the lexicon ..."
+echo "--- Adding silence phones to lexicon ..."
 echo "_SIL_ SIL" >> $locdict/lexicon.txt
+echo "_EHM_HMM_ EHM" >> $locdict/lexicon.txt
+echo "_INHALE_ INH" >> $locdict/lexicon.txt
+echo "_LAUGH_ LAU" >> $locdict/lexicon.txt
+echo "_NOISE_ NOI" >> $locdict/lexicon.txt
+
+sort $locdict/lexicon.txt -o $locdict/lexicon.txt  # sort in place
+
+echo "--- Prepare silence phone lists ..."
+# TODO In previous versions the silence phones
+# were in nonsilence phones
+# and it was not so bad TODO
+echo SIL > $locdict/silence_phones.txt
+echo EHM >> $locdict/silence_phones.txt
+echo INH >> $locdict/silence_phones.txt
+echo LAU >> $locdict/silence_phones.txt
+echo NOI >> $locdict/silence_phones.txt
+
+echo SIL > $locdict/optional_silence.txt
 
 # Some downstream scripts expect this file exists, even if empty
 touch $locdict/extra_questions.txt
 
 echo "*** Dictionary preparation finished!"
-
