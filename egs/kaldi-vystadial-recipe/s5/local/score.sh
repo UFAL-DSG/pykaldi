@@ -43,7 +43,7 @@ $cmd LMWT=$min_lmwt:$max_lmwt $dir/scoring/log/best_path.LMWT.log \
 # Note: the double level of quoting for the sed command
 $cmd LMWT=$min_lmwt:$max_lmwt $dir/scoring/log/score.LMWT.log \
    cat $dir/scoring/LMWT.tra \| \
-    utils/int2sym.pl -f 2- $symtab \| sed 's:OOV::g' \| \
+    utils/int2sym.pl -f 2- $symtab \| \
     compute-wer --text --mode=present \
      ark:$dir/scoring/test_filt.txt  ark,p:- ">&" $dir/wer_LMWT || exit 1;
 

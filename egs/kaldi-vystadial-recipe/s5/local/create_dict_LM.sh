@@ -46,12 +46,10 @@ else
         -wbdiscount -interpolate -lm ${local_lm}_train_${LM_ORDER}.arpa
 fi
 
-if [ ! -z "${NOOOV}" ]; then
-  echo; echo "REMOVING OOV WORD FROM LANGUAGE MODEL"; echo
-  sed -i '/\<OOV\>/d' ${local_lm}_train_${LM_ORDER}.arpa
-else
-  echo; echo "KEEPING OOV WORD IN LANGUAGE MODEL"; echo
-fi
+# We assume that there no OOV in training data from pronounciation dictoinary
+# For Czech it is true and for English we ignore the problem for now.
+echo; echo "REMOVING OOV WORD FROM LANGUAGE MODEL"; echo
+sed -i '/\<OOV\>/d' ${local_lm}_train_${LM_ORDER}.arpa
 
 
 if [[ ! -z "$TEST_ZERO_GRAMS" ]]; then

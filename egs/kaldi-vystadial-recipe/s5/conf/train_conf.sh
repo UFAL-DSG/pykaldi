@@ -22,14 +22,9 @@ unset DICTIONARY
 # Storage dir for MFCC. Need a lot of space.
 export MFCC_DIR="./mfcc"
 
-# Want to remove OOV from LM?
-export NOOOV="yes"  # nonempty string triggers removing;)
-# unset NOOOV
-
-
 # How big portion of available data to use
 # everyN=3    ->   we use one third of data
-everyN=10
+everyN=1
 
 # Train monophone models on a subset of the data of this size
 # monoTrainData=150
