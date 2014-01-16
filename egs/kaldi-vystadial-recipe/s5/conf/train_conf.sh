@@ -1,6 +1,7 @@
 #!/bin/bash
 
 data_lang=cs  # alternatives cs|en
+
 export DATA_ROOT=/ha/projects/vystadial/nobackup/VYSTADIAL-2013/data_voip_${data_lang}
 
 export test_sets="dev test"
@@ -18,6 +19,10 @@ export TEST_ZERO_GRAMS="yes"
 # Unset or empty DICTIONARY variable means that the script will build the DICTIONARY itself
 # export DICTIONARY="/ha/projects/vystadial/git/alex/resources/lm/caminfo/dict"
 unset DICTIONARY
+
+# Settings for LM model weight tuned on development set and applied on test set.
+[ $data_lang == "cs" ]  && min_lmw=4 && max_lmw=15
+[ $data_lang == "en" ]  && min_lmw=9 && max_lmw=20
 
 # Storage dir for MFCC. Need a lot of space.
 export MFCC_DIR="./mfcc"

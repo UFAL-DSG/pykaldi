@@ -2,7 +2,6 @@
 # Copyright Ondrej Platek Apache 2.0
 # based heavily on copyrighted 2012 Vassil Panayotov recipe 
 # at egs/voxforge/s5/run.sh(Apache 2.0)
-
 renice 20 $$
 
 . ./path.sh
@@ -70,9 +69,11 @@ fi
 # Monophone decoding
 for set_name in $test_sets_ext ; do
  utils/mkgraph.sh --mono data/lang_$set_name exp/mono exp/mono/graph_${set_name} || exit 1
- # note: steps/decode.sh calls the command line once for each test, 
+ # note: steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
+   calls the command line once for each test, 
  # and afterwards averages the WERs into (in this case exp/mono/decode/)
- steps/decode.sh --run-cmn $cmn --config conf/decode.config --nj $njobs --cmd "$decode_cmd" \
+ steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
+   --run-cmn $cmn --config conf/decode.config --nj $njobs --cmd "$decode_cmd" \
    exp/mono/graph_${set_name} data/$set_name exp/mono/decode_$set_name
 done
  
@@ -87,7 +88,8 @@ steps/train_deltas.sh --run-cmn $cmn --cmd "$train_cmd" \
 # decode tri1
 for set_name in $test_sets_ext ; do
  utils/mkgraph.sh data/lang_$set_name exp/tri1 exp/tri1/graph_${set_name} || exit 1;
- steps/decode.sh --run-cmn $cmn --config conf/decode.config --nj $njobs --cmd "$decode_cmd" \
+ steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
+   --run-cmn $cmn --config conf/decode.config --nj $njobs --cmd "$decode_cmd" \
    exp/tri1/graph_${set_name} data/$set_name exp/tri1/decode_$set_name
 done
  
@@ -104,7 +106,8 @@ steps/train_deltas.sh --run-cmn $cmn --cmd "$train_cmd" $pdf $gauss \
 # decode tri2a
 for set_name in $test_sets_ext ; do
  utils/mkgraph.sh data/lang_$set_name exp/tri2a exp/tri2a/graph_${set_name}
- steps/decode.sh --run-cmn $cmn --config conf/decode.config --nj $njobs --cmd "$decode_cmd" \
+ steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
+   --run-cmn $cmn --config conf/decode.config --nj $njobs --cmd "$decode_cmd" \
   exp/tri2a/graph_${set_name} data/$set_name exp/tri2a/decode_$set_name
 done
  
@@ -113,7 +116,8 @@ steps/train_lda_mllt.sh --run-cmn $cmn --cmd "$train_cmd" $pdf $gauss \
   data/train data/lang exp/tri1_ali exp/tri2b || exit 1;
 for set_name in $test_sets_ext ; do
  utils/mkgraph.sh data/lang_$set_name exp/tri2b exp/tri2b/graph_${set_name}
- steps/decode.sh --run-cmn $cmn --config conf/decode.config --nj $njobs --cmd "$decode_cmd" \
+ steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
+   --run-cmn $cmn --config conf/decode.config --nj $njobs --cmd "$decode_cmd" \
   exp/tri2b/graph_${set_name} data/$set_name exp/tri2b/decode_$set_name
 done
  
@@ -126,9 +130,11 @@ steps/make_denlats.sh --run-cmn $cmn --nj $njobs --cmd "$train_cmd" \
    data/train data/lang exp/tri2b exp/tri2b_denlats || exit 1;
 steps/train_mmi.sh --run-cmn $cmn data/train data/lang exp/tri2b_ali exp/tri2b_denlats exp/tri2b_mmi || exit 1;
 for set_name in $test_sets_ext ; do
- steps/decode.sh --run-cmn $cmn --config conf/decode.config --iter 4 --nj $njobs --cmd "$decode_cmd" \
+ steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
+   --run-cmn $cmn --config conf/decode.config --iter 4 --nj $njobs --cmd "$decode_cmd" \
   exp/tri2b/graph_${set_name} data/$set_name exp/tri2b_mmi/decode_it4_$set_name
- steps/decode.sh --run-cmn $cmn --config conf/decode.config --iter 3 --nj $njobs --cmd "$decode_cmd" \
+ steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
+   --run-cmn $cmn --config conf/decode.config --iter 3 --nj $njobs --cmd "$decode_cmd" \
   exp/tri2b/graph_${set_name} data/$set_name exp/tri2b_mmi/decode_it3_$set_name
 done
  
@@ -136,18 +142,22 @@ done
 steps/train_mmi.sh --run-cmn $cmn --boost ${train_mmi_boost} data/train data/lang \
    exp/tri2b_ali exp/tri2b_denlats exp/tri2b_mmi_b${train_mmi_boost} || exit 1;
 for set_name in $test_sets_ext ; do
- steps/decode.sh --run-cmn $cmn --config conf/decode.config --iter 4 --nj $njobs --cmd "$decode_cmd" \
+ steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
+   --run-cmn $cmn --config conf/decode.config --iter 4 --nj $njobs --cmd "$decode_cmd" \
   exp/tri2b/graph_${set_name} data/$set_name exp/tri2b_mmi_b${train_mmi_boost}/decode_it4_$set_name || exit 1;
- steps/decode.sh --run-cmn $cmn --config conf/decode.config --iter 3 --nj $njobs --cmd "$decode_cmd" \
+ steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
+   --run-cmn $cmn --config conf/decode.config --iter 3 --nj $njobs --cmd "$decode_cmd" \
   exp/tri2b/graph_${set_name} data/$set_name exp/tri2b_mmi_b${train_mmi_boost}/decode_it3_$set_name || exit 1;
 done
 
 # Do MPE.
 steps/train_mpe.sh --run-cmn $cmn data/train data/lang exp/tri2b_ali exp/tri2b_denlats exp/tri2b_mpe || exit 1;
 for set_name in $test_sets_ext ; do
- steps/decode.sh --run-cmn $cmn --config conf/decode.config --iter 4 --nj $njobs --cmd "$decode_cmd" \
+ steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
+   --run-cmn $cmn --config conf/decode.config --iter 4 --nj $njobs --cmd "$decode_cmd" \
   exp/tri2b/graph_${set_name} data/$set_name exp/tri2b_mpe/decode_it4_$set_name || exit 1;
- steps/decode.sh --run-cmn $cmn --config conf/decode.config --iter 3 --nj $njobs --cmd "$decode_cmd" \
+ steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
+   --run-cmn $cmn --config conf/decode.config --iter 3 --nj $njobs --cmd "$decode_cmd" \
   exp/tri2b/graph_${set_name} data/$set_name exp/tri2b_mpe/decode_it3_$set_name || exit 1;
 done
 
