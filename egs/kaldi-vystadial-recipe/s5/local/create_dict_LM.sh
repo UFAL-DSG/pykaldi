@@ -88,13 +88,7 @@ else
       grep -v '_' | sort -u > $locdata/vocab-full.txt
 fi
 
-if [ "$data_lang" == "en" ] ; then
-    local/prepare_cmu_dict.sh $locdata $locdict
-elif [ "$data_lang" == "cs" ] ; then
-    local/run_cs_transcriptions.sh $locdata $locdict
-else
-    echo "Unknown language $data_lang" ; exit 1
-fi
+local/prepare_${data_lang}_transcription.sh $locdata $locdict
 
 echo "--- Prepare nonsilence phone lists ..."
 # We suppose only nonsilence_phones in lexicon right now
