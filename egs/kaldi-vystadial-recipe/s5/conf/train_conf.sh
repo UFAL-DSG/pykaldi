@@ -1,8 +1,9 @@
 #!/bin/bash
 
-data_lang=cs  # alternatives cs|en
 
-export DATA_ROOT=/ha/projects/vystadial/nobackup/VYSTADIAL-2013/data_voip_${data_lang}
+
+data_lang=cs  # alternatives cs|en
+export DATA_ROOT=/ha/projects/vystadial/data/asr/${data_lang}/voip
 
 export test_sets="dev test"
 
@@ -16,7 +17,7 @@ export TEST_ZERO_GRAMS="yes"
 # unset TEST_ZERO_GRAMS
 
 
-# Unset or empty DICTIONARY variable means that the script will build the DICTIONARY itself
+# Unset or empty DICTIONARY -> DICTIONARY is built from data
 # export DICTIONARY="/ha/projects/vystadial/git/alex/resources/lm/caminfo/dict"
 unset DICTIONARY
 
@@ -27,11 +28,11 @@ unset DICTIONARY
 # Storage dir for MFCC. Need a lot of space.
 export MFCC_DIR="./mfcc"
 
-# How big portion of available data to use
+# EveryN utterance is used for training 
 # everyN=3    ->   we use one third of data
 everyN=1
 
-# Train monophone models on a subset of the data of this size
+# Number of utterances used for training monophone models:
 # monoTrainData=150
 unset monoTrainData  # use full data
 
@@ -41,7 +42,7 @@ pdf=1200
 # Maximum number of Gaussians used for training
 gauss=19200
 
-# if run Cepstral Mean Normalisation: true/false
+# Cepstral Mean Normalisation: true/false
 cmn=false
 
 train_mmi_boost=0.05

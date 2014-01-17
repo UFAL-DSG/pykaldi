@@ -33,7 +33,7 @@ local_lm=data/local/lm  # appending arpa in the script
 
 mkdir -p $locdata
 
-echo "=== Preparing the LMs ..."
+echo "=== Preparing the LM ..."
 if [[ ! -z "$ARPA_MODEL" ]] ; then
     cp -f $ARPA_MODEL ${local_lm}_train_${LM_ORDER}.arpa
     echo "Using predefined LM in arpa format: ${ARPA_MODEL}"

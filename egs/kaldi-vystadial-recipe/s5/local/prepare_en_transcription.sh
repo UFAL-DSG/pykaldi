@@ -2,8 +2,8 @@
 
 source conf/train_conf.sh
 
-locdata=$1; shift
-locdict=$1; shift
+locdata=$1
+locdict=$2
 
 
 if [ ! -f $locdict/cmudict/cmudict.0.7a ]; then
