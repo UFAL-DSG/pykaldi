@@ -70,7 +70,7 @@ fi
 for set_name in $test_sets_ext ; do
  utils/mkgraph.sh --mono data/lang_$set_name exp/mono exp/mono/graph_${set_name} || exit 1
  # note: steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
-   calls the command line once for each test, 
+ # calls the command line once for each test, 
  # and afterwards averages the WERs into (in this case exp/mono/decode/)
  steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
    --run-cmn $cmn --config conf/decode.config --nj $njobs --cmd "$decode_cmd" \
