@@ -20,7 +20,7 @@ config= # name of config file.
 stage=-4
 power=0.25 # exponent to determine number of gaussians from occurrence counts
 feat_dim=-1 # This option is now ignored but retained for compatibility.
-run_cmn=true
+run_cmn=false  # TODO remove kaldi incompatible
 norm_vars=false # false : cmn, true : cmvn
 # End configuration section.
 

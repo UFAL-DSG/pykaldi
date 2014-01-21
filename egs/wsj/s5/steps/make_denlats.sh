@@ -18,7 +18,7 @@ max_mem=20000000 # This will stop the processes getting too large.
 # by something like 5 or 10 to get real bytes (not sure why so large)
 num_threads=1
 parallel_opts=
-run_cmn=true
+run_cmn=false
 # End configuration section.
 
 echo "$0 $@"  # Print the command line for logging

@@ -21,7 +21,7 @@ scoring_opts=
 # note: there are no more min-lmwt and max-lmwt options, instead use
 # e.g. --scoring-opts "--min-lmwt 1 --max-lmwt 20"
 skip_scoring=false
-run_cmn=true
+run_cmn=false   # TODO get rid off run_cmn Kaldi incompatible
 # End configuration section.
 
 echo "$0 $@"  # Print the command line for logging
@@ -70,9 +70,14 @@ if [ -z "$model" ]; then # if --model <mdl> was not specified on the command lin
   else model=$srcdir/$iter.mdl; fi
 fi
 
-for f in $sdata/1/feats.scp $sdata/1/cmvn.scp $model $graphdir/HCLG.fst; do
+for f in $sdata/1/feats.scp $model $graphdir/HCLG.fst; do
   [ ! -f $f ] && echo "decode.sh: no such file $f" && exit 1;
 done
+
+if [ $run_cmn == 'true' ] ; then
+  f=sdata/1/cmvn.scp
+  [ ! -f $f ] && echo "decode.sh no such file $f" 
+fi
 
 if [ -f $srcdir/final.mat ]; then feat_type=lda; else feat_type=delta; fi
 echo "decode.sh: feature type is $feat_type";

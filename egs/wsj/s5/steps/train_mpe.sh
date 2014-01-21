@@ -18,7 +18,7 @@ weight_tau=10
 acwt=0.1
 stage=0
 smooth_to_mode=true
-run_cmn=true
+run_cmn=false
 # End configuration section
 
 echo "$0 $@"  # Print the command line for logging
