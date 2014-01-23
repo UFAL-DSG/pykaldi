@@ -19,6 +19,7 @@ from ordereddefaultdict import DefaultOrderedDict
 import errno
 import wave
 import fst
+import codecs
 
 
 def fst_shortest_path_to_lists(fst_shortest):
@@ -142,23 +143,20 @@ def expand_prefix(d, bigd):
         raise ValueError('We support only dictionaries, lists and strings.')
 
 
-def wst2dict(wst_path, intdict=False):
+def wst2dict(wst_path, encoding='utf-8'):
     ''' Stores word symbol table (WST) like dictionary.
     The numbers are stored like string values
     Example line of WST looks like:
     sample_word  1234
     '''
-    with open(wst_path, 'r') as r:
+    with codecs.open(wst_path, encoding=encoding) as r:
         # split removes empty and white space only splits
         line_arr = [line.split() for line in r.readlines()]
         d = dict([])
         for arr in line_arr:
             assert len(arr) == 2, 'Word Symbol Table should have 2 records on each row'
             # WST format:  WORD  NUMBER  ...we store d[NUMBER] = WORD
-            if intdict:
-                d[int(arr[1])] = arr[0]
-            else:
-                d[arr[1]] = arr[0]
+            d[int(arr[1])] = arr[0]
         return d
 
 

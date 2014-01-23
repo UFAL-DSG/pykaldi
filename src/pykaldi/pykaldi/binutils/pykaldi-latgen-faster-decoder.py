@@ -27,17 +27,17 @@ def write_decoded(f, wav_name, word_ids, wst):
     assert(len(word_ids) > 0)
     best_weight, best_path = word_ids[0]
     if wst is not None:
-        decoded = [wst[str(w)] for w in best_path]
+        decoded = [wst[w] for w in best_path]
     else:
-        decoded = [str(w) for w in best_path]
-    line = ' '.join([wav_name] + decoded + ['\n'])
+        decoded = [unicode(w) for w in best_path]
+    line = u' '.join([wav_name] + decoded + ['\n'])
     if DEBUG:
-        print >> sys.stderr, '%s best path %s' % (wav_name, decoded)
+        print >> sys.stderr, '%s best path %s' % (wav_name, decoded.encode('UTF-8'))
         for i, s in enumerate(word_ids):
             if i > 0:
                 break
             print >> sys.stderr, 'best path %d: %s' % (i, str(s))
-    f.write(line)
+    f.write(line.encode('UTF-8'))
 
 
 # @profile
