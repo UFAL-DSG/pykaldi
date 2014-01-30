@@ -1,31 +1,35 @@
 BEST_LINE=16
-# LANG available alternatives cs|en
+MODEL_PREFIX_URL=http://vystadial.ms.mff.cuni.cz/download/pykaldi/src/pykaldi/pykaldi/binutils
+# Czech language models 
 LANG=cs
-MODEL_PREFIX_URL=http://vystadial.ms.mff.cuni.cz/download/alex/resources/asr/voip_$(LANG)/kaldi/
-HCLG=HCLG.fst
-HCLG_LDA=HCLG_lda.fst
-AM=final.mdl
-AM_LDA=final_lda.mdl
-MAT_LDA=final_lda.mat
+HCLGa=HCLG_tri2a.fst
+AMa=tri2a.mdl
+HCLGb=HCLG_tri2b.fst
+AMb=tri2b.mdl
+MATb=tri2b.mat
 WST=words.txt
 MFCC=mfcc.conf
+SILENCE=silence.csl
 
 $(MFCC):
 	wget $(MODEL_PREFIX_URL)/$@
 
-$(HCLG):
+$(SILENCE):
 	wget $(MODEL_PREFIX_URL)/$@
 
-$(HCLG_LDA):
+$(HCLGa):
 	wget $(MODEL_PREFIX_URL)/$@
 
-$(AM):
+$(HCLGb):
 	wget $(MODEL_PREFIX_URL)/$@
 
-$(AM_LDA):
+$(AMa):
 	wget $(MODEL_PREFIX_URL)/$@
 
-$(MAT_LDA):
+$(AMb):
+	wget $(MODEL_PREFIX_URL)/$@
+
+$(MATb):
 	wget $(MODEL_PREFIX_URL)/$@
 
 $(WST):
@@ -48,7 +52,7 @@ vystadial-sample-$(LANG)/test/input_best.scp: vystadial-sample-$(LANG)/test/inpu
 
 build_scp: vystadial-sample-$(LANG)/test/input_best.scp vystadial-sample-$(LANG)/test/input.scp
 
-download_models: $(HCLG) $(AM) $(WST) $(MAT_LDA) $(AM_LDA) $(HCLG_LDA) $(MFCC)
+download_models: $(SILENCE) $(WST) $(HCLGa) $(AMa) $(MATb) $(AMb) $(HCLGb) $(MFCC)
 
 pykaldi-latgen-faster: build_scp download_models
 	bash run_pykaldi-latgen-faster-decoder.sh
