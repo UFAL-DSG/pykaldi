@@ -13,6 +13,8 @@
 # MERCHANTABLITY OR NON-INFRINGEMENT.
 # See the Apache 2 License for the specific language governing permissions and
 # limitations under the License. #
+from __future__ import unicode_literals
+
 from pykaldi.utils import load_wav, wst2dict, lattice_to_nbest
 from pykaldi.decoders import PyGmmLatgenWrapper
 import sys

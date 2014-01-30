@@ -22,7 +22,9 @@ python \
 pykaldi-latgen-faster-decoder.py $wav_scp $batch_size $pykaldi_latgen_tra $wst \
     --verbose=0 --lat-lm-scale=15 --config=$mfcc_config \
     --beam=$beam --lattice-beam=$latbeam --max-active=$max_active \
-    $model $hclg 1:2:3:4:5 $lda_matrix
+    $model $hclg `cat silence.csl` $lda_matrix
+
+# TODO use --word-penalty=0.0
 
 # If using callgrind display the results by running kcachegrind
 # kcachegrind callgrind.log

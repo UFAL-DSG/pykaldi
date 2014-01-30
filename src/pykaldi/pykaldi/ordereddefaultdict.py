@@ -10,7 +10,7 @@ Combine functionality from ordered and default dict.
 #
 # However,
 # I did not change the code, so It should not effect the license of the project!
-
+from __future__ import unicode_literals
 
 from collections import Callable
 try:
@@ -20,6 +20,7 @@ except:
 
 
 class DefaultOrderedDict(OrderedDict):
+
     def __init__(self, default_factory=None, *a, **kw):
         if (default_factory is not None and not isinstance(default_factory, Callable)):
             raise TypeError('first argument must be callable')

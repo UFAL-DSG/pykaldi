@@ -50,7 +50,7 @@ if [ "$(ls -A ${MFCC_DIR} 2>/dev/null)" ]; then
                 echo 'REUSING MFCC from previous experiment!' \
                     'Check that the settings are THE SAME!' >> exp/conf/mfcc.conf
             ;;
-        * ) echo 'Keeping the data directory and cancelling..'; 
+        * ) echo 'Keeping the data directory and cancelling..';
             exit 1;;
     esac
 fi

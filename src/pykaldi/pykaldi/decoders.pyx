@@ -1,5 +1,7 @@
 # encoding: utf-8
 # distutils: language = c++
+from __future__ import unicode_literals
+
 from cython cimport address
 from libc.stdlib cimport malloc, free
 from libcpp.vector cimport vector
