@@ -48,7 +48,7 @@ def fst_shortest_path_to_lists(fst_shortest):
             pass
 
         word_ids.append((float(weight), path))
-    sorted(word_ids)  # TODO is it necessary? // probably not
+    word_ids.sort()
     return word_ids
 
 
@@ -56,7 +56,7 @@ def lattice_to_nbest(lat, n=1):
     # Log semiring -> no best path
     # Converting the lattice to tropical semiring
     std_v = fst.StdVectorFst(lat)
-    p = std_v.shortest_path(n=10)
+    p = std_v.shortest_path(n)
     return fst_shortest_path_to_lists(p)
 
 
