@@ -20,7 +20,7 @@ batch_size=4560
 # valgrind --tool=callgrind -v --dump-instr=yes --trace-jump=yes --callgrind-out-file=callgrind.log python \
 python \
 pykaldi-latgen-faster-decoder.py $wav_scp $batch_size $pykaldi_latgen_tra $wst \
-    --verbose=0 --lat-lm-scale=15 --config=$mfcc_config \
+    --verbose=0  --max-mem=500000000 --lat-lm-scale=15 --config=$mfcc_config \
     --beam=$beam --lattice-beam=$latbeam --max-active=$max_active \
     $model $hclg `cat silence.csl` $lda_matrix
 

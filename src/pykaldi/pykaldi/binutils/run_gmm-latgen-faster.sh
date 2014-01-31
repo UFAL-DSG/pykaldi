@@ -34,7 +34,7 @@ else
   feats="ark,s,cs:copy-feats scp:$feat_scp ark:- | splice-feats ark:- ark:- | transform-feats $lda_matrix ark:- ark:- |"
 fi
 
-gmm-latgen-faster --verbose=0 \
+gmm-latgen-faster --verbose=0 --max-mem=500000000 \
     --beam=$beam --lattice-beam=$latbeam --max-active=$max_active \
     --allow-partial=true --word-symbol-table=$wst \
     $model $hclg "$feats" \
