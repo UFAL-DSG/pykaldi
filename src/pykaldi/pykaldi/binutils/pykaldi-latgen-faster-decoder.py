@@ -54,10 +54,10 @@ def decode(d, pcm):
         while dec_t > 0:
             decoded_frames += dec_t
             dec_t = d.decode(max_frames=10)
-    start = time.clock()
+    start = time.time()
     d.prune_final()
     prob, lat = d.get_lattice()
-    print >> sys.stderr, "get_lattice: %s secs" % str(time.clock() - start)
+    print >> sys.stderr, "get_lattice: %s secs" % str(time.time() - start)
     d.reset(keep_buffer_data=False)
     return (lat, prob, decoded_frames)
 
