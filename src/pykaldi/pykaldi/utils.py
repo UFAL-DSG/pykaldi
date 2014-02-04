@@ -42,8 +42,9 @@ def fst_shortest_path_to_lists(fst_shortest):
         try:
             while arc.olabel != 0:
                 path.append(arc.olabel)
-                weight += float(arc.weight)  # TODO use the Weights class explicitly
+                weight += float(arc.weight)  # TODO use the Weights plus operation explicitly
                 arc = fst_shortest[arc.nextstate].arcs.next()
+            weight += float(arc.weight)
         except StopIteration:
             pass
 
