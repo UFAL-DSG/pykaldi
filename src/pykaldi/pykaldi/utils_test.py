@@ -60,13 +60,15 @@ class TestExpandPref(unittest.TestCase):
 class TestLatticeToNbest(unittest.TestCase):
 
     def setUp(self):
+        shortest_txt = os.path.join(os.path.dirname(__file__), 'test_shortest.txt')
+        shortest_fst = os.path.join(os.path.dirname(__file__), 'test_shortest.fst')
         try:
-            if not os.path.exists('test_shortest.fst'):
-                call(['fstcompile', 'test_shortest.txt', 'test_shortest.fst'])
+            if not os.path.exists(shortest_fst):
+                call(['fstcompile', shortest_txt, shortest_txt])
         except Exception as e:
             print 'Failed to generate testing fst'
             raise e
-        self.s = fst.read_std('test_shortest.fst')
+        self.s = fst.read_std(shortest_fst)
         self.s_result = [(110.40000001341105, [1, 3, 4]),
                          (110.6000000089407, [2, 3, 4]), (1000.2000000029802, [2])]
 
