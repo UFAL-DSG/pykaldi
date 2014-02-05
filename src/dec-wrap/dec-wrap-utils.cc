@@ -149,7 +149,7 @@ double CompactLatticeToWordsPost(CompactLattice &clat, fst::VectorFst<fst::LogAr
   }
 #endif // DEBUG_FINAL
 
-  double tot_prob=-1.0;
+  double tot_prob;
   std::vector<double> alpha, beta;
   fst::TopSort(pst);
   tot_prob = ComputeLatticeAlphasAndBetas(*pst, &alpha, &beta);

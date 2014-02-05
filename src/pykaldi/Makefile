@@ -65,7 +65,7 @@ clean:
 
 install: all
 	cp -f $(LIBFILE) /usr/lib
-	python setup.py intall
+	python setup.py install
 
 
 cleanall: clean
