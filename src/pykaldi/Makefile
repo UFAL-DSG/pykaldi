@@ -63,6 +63,11 @@ clean:
 	rm -f pykaldi/decoders.so pykaldi/decoders.cpp $(LIBFILE)
 	rm -rf dist build *.egg-info
 
+install: all
+	cp -f $(LIBFILE) /usr/lib	
+	python setup.py intall
+
+
 cleanall: clean
 	# recursive make clean
 	rm -rf pyfst

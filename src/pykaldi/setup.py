@@ -27,7 +27,7 @@ if STATIC:
     extra_objects = ['pykaldi.a', ]
 else:
     # DYNAMIC
-    library_dirs = ['.', ]
+    library_dirs = ['pykaldi', ]
     libraries = ['pykaldi', ]
     extra_objects = []
 ext_modules.append(Extension('pykaldi.decoders',
