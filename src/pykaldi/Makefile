@@ -24,7 +24,7 @@ ADDLIBS = ../dec-wrap/dec-wrap.a ../decoder/kaldi-decoder.a \
 
 # ifeq ($(KALDI_FLAVOR), dynamic)
 # dynamic compilation
-LIBFILE=lib$(LIBNAME).so
+LIBFILE=pykaldi/lib$(LIBNAME).so
 $(LIBFILE): $(ADDLIBS)
 	# Building shared library from static librariess.
 	# The static libraries were compiled with -fPIC.

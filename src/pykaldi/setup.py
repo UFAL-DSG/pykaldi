@@ -53,6 +53,8 @@ except:
 setup(
     name='pykaldi',
     packages=['pykaldi', 'pykaldi.binutils'],
+    package_data={'pykaldi': ['libpykaldi.so']},
+    include_package_data=True,
     cmdclass={'build_ext': build_ext},
     version='0.1-' + git_version,
     install_requires=install_requires,
