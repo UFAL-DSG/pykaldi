@@ -9,8 +9,8 @@ Dependencies
   - Not necessary to install. Local ``Makefile`` will install it for you.
 
 
-Installation
-------------
+Local Installation
+------------------
 Having the required dependencies installed, run ``make`` in this directory.
 
 The ``Makefile`` cares for installing ``pyfst`` and ``pykaldi`` locally.
@@ -21,6 +21,8 @@ The downside is that you need to setup ``PYTHONPATH`` and ``LD_LIBRARY_PATH`` va
 All the scripts in `<pykaldi/binutils>`_ set up these variables.
 Please use the scripts as a reference or 
 install the packages system wide via ``python setup.py install``.
+The system wide installation is descriped in ``INSTALL.rst`` 
+in the root directory of this git repository.
 
 Testing on sample data
 ----------------------
