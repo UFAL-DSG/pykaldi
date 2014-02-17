@@ -28,7 +28,7 @@ namespace kaldi {
 
 
 // Copied and renamed from online -> in order to get rid of portaudio dependency
-class PykaldiAudioSourceItf {
+class OnlAudioSourceItf {
  public:
   // Reads from the audio source, and writes the samples converted to BaseFloat
   // into the vector pointed by "data".
@@ -37,12 +37,12 @@ class PykaldiAudioSourceItf {
   // Ideal scenerio the return value is equal to data->Dim()
   virtual MatrixIndexT Read(Vector<BaseFloat> *data) = 0;
 
-  virtual ~PykaldiAudioSourceItf() { }
+  virtual ~OnlAudioSourceItf() { }
 };
 
-struct PykaldiBuffSourceOptions {
+struct OnlBuffSourceOptions {
   int32 bits_per_sample;
-  PykaldiBuffSourceOptions(): bits_per_sample(16) { }
+  OnlBuffSourceOptions(): bits_per_sample(16) { }
   void Register(OptionsItf *po) {
     po->Register("bits-per-sample", &bits_per_sample,
                  "Number of bits for storing one audio sample. Typically 8, 16, 32");
@@ -51,14 +51,14 @@ struct PykaldiBuffSourceOptions {
 
 /** @brief Proxy Audio Input. Acts like a buffer.
  *
- *  PykaldiAudioSource implementation.
+ *  OnlAudioSource implementation.
  *  It expects to be fed with the audio frame by frame.
  *  Supports only one channel. */
-class PykaldiBuffSource: public PykaldiAudioSourceItf {
+class OnlBuffSource: public OnlAudioSourceItf {
  public:
 
-  /// Creates the PykaldiBuffSource empty "buffer"
-  PykaldiBuffSource(const PykaldiBuffSourceOptions &opts): opts_(opts) { }
+  /// Creates the OnlBuffSource empty "buffer"
+  OnlBuffSource(const OnlBuffSourceOptions &opts): opts_(opts) { }
 
   size_t BufferSize() { return src_.size(); }
   size_t frame_size;
@@ -75,10 +75,10 @@ class PykaldiBuffSource: public PykaldiAudioSourceItf {
   void Reset();
 
  private:
-  const PykaldiBuffSourceOptions opts_;
+  const OnlBuffSourceOptions opts_;
   std::vector<BaseFloat> src_;
 
-  KALDI_DISALLOW_COPY_AND_ASSIGN(PykaldiBuffSource);
+  KALDI_DISALLOW_COPY_AND_ASSIGN(OnlBuffSource);
 };
 
 } // namespace kaldi

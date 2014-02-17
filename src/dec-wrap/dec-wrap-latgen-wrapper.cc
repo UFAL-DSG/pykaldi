@@ -162,11 +162,11 @@ bool GmmLatgenWrapper::Setup(int argc, char **argv) {
   initialized_ = false;
   try {
     KaldiDecoderGmmLatgenWrapperOptions wrapper_opts;
-    PykaldiFeatureMatrixOptions feature_reading_opts;
+    OnlFeatureMatrixOptions feature_reading_opts;
     MfccOptions mfcc_opts;
     LatticeFasterDecoderConfig decoder_opts;
     DeltaFeaturesOptions delta_feat_opts;
-    PykaldiBuffSourceOptions au_opts;
+    OnlBuffSourceOptions au_opts;
 
     // Parsing options
     ParseOptions po("Utterance segmentation is done on-the-fly.\n"
@@ -213,15 +213,15 @@ bool GmmLatgenWrapper::Setup(int argc, char **argv) {
     }
 
     decode_fst = ReadDecodeGraph(wrapper_opts.fst_rxfilename);
-    decoder = new PykaldiLatticeFasterDecoder(
+    decoder = new OnlLatticeFasterDecoder(
                                     *decode_fst, decoder_opts);
 
-    audio = new PykaldiBuffSource(au_opts);
+    audio = new OnlBuffSource(au_opts);
 
     mfcc = new Mfcc(mfcc_opts);
     int32 frame_length = mfcc_opts.frame_opts.frame_length_ms;
     int32 frame_shift = mfcc_opts.frame_opts.frame_shift_ms;
-    feat_input = new PykaldiFeInput<Mfcc>(audio, mfcc,
+    feat_input = new OnlFeInput<Mfcc>(audio, mfcc,
                                frame_length * (wrapper_opts.kSampleFreq / 1000),
                                frame_shift * (wrapper_opts.kSampleFreq / 1000));
 
@@ -230,19 +230,19 @@ bool GmmLatgenWrapper::Setup(int argc, char **argv) {
       Matrix<BaseFloat> lda_transform;
       Input ki(wrapper_opts.lda_mat_rspecifier, &binary_in);
       lda_transform.Read(ki.Stream(), binary_in);
-      // lda_transform is copied to PykaldiLdaInput
-      feat_transform = new PykaldiLdaInput(feat_input,
+      // lda_transform is copied to OnlLdaInput
+      feat_transform = new OnlLdaInput(feat_input,
                                 lda_transform,
                                 wrapper_opts.left_context, wrapper_opts.right_context);
       KALDI_VLOG(1) << "LDA will be used for decoding" << std::endl;
     } else {
-      feat_transform = new PykaldiDeltaInput(delta_feat_opts, feat_input);
+      feat_transform = new OnlDeltaInput(delta_feat_opts, feat_input);
       KALDI_VLOG(1) << "Delta + delta-delta will be used for decoding" << std::endl;
     }
 
-    feat_matrix = new PykaldiFeatureMatrix(feature_reading_opts,
+    feat_matrix = new OnlFeatureMatrix(feature_reading_opts,
                                        feat_transform);
-    decodable = new PykaldiDecodableDiagGmmScaled(*amm,
+    decodable = new OnlDecodableDiagGmmScaled(*amm,
                                             *trans_model,
                                             wrapper_opts.acoustic_scale, feat_matrix);
 

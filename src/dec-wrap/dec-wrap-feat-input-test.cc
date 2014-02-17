@@ -18,7 +18,7 @@
 
 using namespace kaldi;
 
-class DummyFeatInput: public PykaldiFeatInputItf {
+class DummyFeatInput: public OnlFeatInputItf {
   public:
     DummyFeatInput(MatrixIndexT rows, MatrixIndexT cols) {
       Vector<BaseFloat> v(cols);
@@ -46,7 +46,7 @@ class DummyFeatInput: public PykaldiFeatInputItf {
 };
 
 
-class DummyFeatNoInput: public PykaldiFeatInputItf {
+class DummyFeatNoInput: public OnlFeatInputItf {
   public:
     DummyFeatNoInput(MatrixIndexT cols) { dim_ = cols; }
     virtual MatrixIndexT Compute(Matrix<BaseFloat> *output) { output->Resize(0, 0); return 0; }
@@ -56,11 +56,11 @@ class DummyFeatNoInput: public PykaldiFeatInputItf {
     int32 dim_;
 };
 
-void test_fm_IsValidFrame(PykaldiFeatureMatrixOptions opts, int32 dim) {
+void test_fm_IsValidFrame(OnlFeatureMatrixOptions opts, int32 dim) {
   DummyFeatInput yes_features(opts.batch_size, dim);
   DummyFeatNoInput no_features(dim);
-  PykaldiFeatureMatrix yes_m(opts, &yes_features);
-  PykaldiFeatureMatrix no_m(opts, &no_features);
+  OnlFeatureMatrix yes_m(opts, &yes_features);
+  OnlFeatureMatrix no_m(opts, &no_features);
 
   int32 i, bigger_batch = 3 * opts.batch_size;
   for (i = 0; i < bigger_batch; ++i) {
@@ -69,15 +69,15 @@ void test_fm_IsValidFrame(PykaldiFeatureMatrixOptions opts, int32 dim) {
   }
 }
 
-void test_fm_Dim(PykaldiFeatureMatrixOptions opts, int32 dim) {
+void test_fm_Dim(OnlFeatureMatrixOptions opts, int32 dim) {
   DummyFeatNoInput feat(dim);
-  PykaldiFeatureMatrix m(opts, &feat);
+  OnlFeatureMatrix m(opts, &feat);
   KALDI_ASSERT(dim == m.Dim());
 }
 
-void test_fm_GetFrame(PykaldiFeatureMatrixOptions opts, int32 dim) {
+void test_fm_GetFrame(OnlFeatureMatrixOptions opts, int32 dim) {
   DummyFeatInput feat(opts.batch_size, dim);
-  PykaldiFeatureMatrix m(opts, &feat);
+  OnlFeatureMatrix m(opts, &feat);
 
   for (int32 b = 0; b < 3; ++b) {
     // features from b batch
@@ -101,7 +101,7 @@ void test_fm_GetFrame(PykaldiFeatureMatrixOptions opts, int32 dim) {
 }
 
 int main() {
-  PykaldiFeatureMatrixOptions opts;
+  OnlFeatureMatrixOptions opts;
   opts.batch_size = 1;
   int32 dim = 39;
 

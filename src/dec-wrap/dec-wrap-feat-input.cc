@@ -25,9 +25,9 @@
 namespace kaldi {
 
 /*********************************************************************
- *                       PykaldiFeatureMatrix                        *
+ *                       OnlFeatureMatrix                        *
  *********************************************************************/
-MatrixIndexT PykaldiFeatureMatrix::GetNextFeatures() {
+MatrixIndexT OnlFeatureMatrix::GetNextFeatures() {
 
   Matrix<BaseFloat> next_features(opts_.batch_size, feat_dim_);
 
@@ -45,7 +45,7 @@ MatrixIndexT PykaldiFeatureMatrix::GetNextFeatures() {
 }
 
 
-bool PykaldiFeatureMatrix::IsValidFrame (int32 frame) {
+bool OnlFeatureMatrix::IsValidFrame (int32 frame) {
   KALDI_ASSERT(frame >= 0);
   KALDI_VLOG(4) << "DEBUG isValid" << frame;
   if (frame < feat_loaded_)
@@ -63,7 +63,7 @@ bool PykaldiFeatureMatrix::IsValidFrame (int32 frame) {
 }
 
 
-SubVector<BaseFloat> PykaldiFeatureMatrix::GetFrame(int32 frame) {
+SubVector<BaseFloat> OnlFeatureMatrix::GetFrame(int32 frame) {
   KALDI_ASSERT(frame >= 0);
   KALDI_VLOG(4) << "DEBUG getFrame" << frame;
   if (frame < feat_loaded_-(feat_matrix_.NumRows()+feat_matrix_old_.NumRows()) )
@@ -82,7 +82,7 @@ SubVector<BaseFloat> PykaldiFeatureMatrix::GetFrame(int32 frame) {
 }
 
 
-void PykaldiFeatureMatrix::Reset() {
+void OnlFeatureMatrix::Reset() {
   // discarding data
   feat_matrix_.Resize(0, 0);
   feat_matrix_old_.Resize(0, 0);
@@ -93,7 +93,7 @@ void PykaldiFeatureMatrix::Reset() {
 /*********************************************************************
  *                          PykaliLdaInput                           *
  *********************************************************************/
-PykaldiLdaInput::PykaldiLdaInput(PykaldiFeatInputItf *input,
+OnlLdaInput::OnlLdaInput(OnlFeatInputItf *input,
                                const Matrix<BaseFloat> &transform,
                                int32 left_context,
                                int32 right_context):
@@ -111,18 +111,18 @@ PykaldiLdaInput::PykaldiLdaInput(PykaldiFeatInputItf *input,
     offset_.Resize(transform.NumRows());
     offset_.CopyColFromMat(transform, transform.NumCols() - 1);
   } else {
-    KALDI_ERR << "Invalid parameters supplied to PykaldiLdaInput";
+    KALDI_ERR << "Invalid parameters supplied to OnlLdaInput";
   }
 }
 
 
-void PykaldiLdaInput::Reset() {
+void OnlLdaInput::Reset() {
   remainder_.Resize(0, 0);
 }
 
 
 // static
-void PykaldiLdaInput::SpliceFrames(const MatrixBase<BaseFloat> &input1,
+void OnlLdaInput::SpliceFrames(const MatrixBase<BaseFloat> &input1,
                                   const MatrixBase<BaseFloat> &input2,
                                   const MatrixBase<BaseFloat> &input3,
                                   int32 context_window,
@@ -155,7 +155,7 @@ void PykaldiLdaInput::SpliceFrames(const MatrixBase<BaseFloat> &input1,
 }
 
 
-void PykaldiLdaInput::TransformToOutput(const MatrixBase<BaseFloat> &spliced_feats,
+void OnlLdaInput::TransformToOutput(const MatrixBase<BaseFloat> &spliced_feats,
                                        Matrix<BaseFloat> *output) {
   if (spliced_feats.NumRows() == 0) {
     output->Resize(0, 0);
@@ -169,7 +169,7 @@ void PykaldiLdaInput::TransformToOutput(const MatrixBase<BaseFloat> &spliced_fea
 }
 
 
-MatrixIndexT PykaldiLdaInput::Compute(Matrix<BaseFloat> *output) {
+MatrixIndexT OnlLdaInput::Compute(Matrix<BaseFloat> *output) {
   KALDI_ASSERT(output->NumRows() > 0 &&
                output->NumCols() == linear_transform_.NumRows());
   // If output->NumRows() == 0, it corresponds to a request for zero frames,
@@ -213,7 +213,7 @@ MatrixIndexT PykaldiLdaInput::Compute(Matrix<BaseFloat> *output) {
 }
 
 
-void PykaldiLdaInput::ComputeNextRemainder(const MatrixBase<BaseFloat> &input) {
+void OnlLdaInput::ComputeNextRemainder(const MatrixBase<BaseFloat> &input) {
   // The size of the remainder that we propagate to the next frame is
   // context_window - 1, if available.
   int32 context_window = left_context_ + 1 + right_context_;
@@ -238,15 +238,15 @@ void PykaldiLdaInput::ComputeNextRemainder(const MatrixBase<BaseFloat> &input) {
 
 
 /*********************************************************************
- *                         PykaldiDeltaInput                         *
+ *                         OnlDeltaInput                         *
  *********************************************************************/
-PykaldiDeltaInput::PykaldiDeltaInput(const DeltaFeaturesOptions &delta_opts,
-                                   PykaldiFeatInputItf *input):
+OnlDeltaInput::OnlDeltaInput(const DeltaFeaturesOptions &delta_opts,
+                                   OnlFeatInputItf *input):
     input_(input), opts_(delta_opts), input_dim_(input_->Dim()) { }
 
 
 // static
-void PykaldiDeltaInput::AppendFrames(const MatrixBase<BaseFloat> &input1,
+void OnlDeltaInput::AppendFrames(const MatrixBase<BaseFloat> &input1,
                                     const MatrixBase<BaseFloat> &input2,
                                     const MatrixBase<BaseFloat> &input3,
                                     Matrix<BaseFloat> *output) {
@@ -270,7 +270,7 @@ void PykaldiDeltaInput::AppendFrames(const MatrixBase<BaseFloat> &input1,
 }
 
 
-void PykaldiDeltaInput::DeltaComputation(const MatrixBase<BaseFloat> &input,
+void OnlDeltaInput::DeltaComputation(const MatrixBase<BaseFloat> &input,
                                         Matrix<BaseFloat> *output,
                                         Matrix<BaseFloat> *remainder) const {
   int32 input_rows = input.NumRows(),
@@ -299,7 +299,7 @@ void PykaldiDeltaInput::DeltaComputation(const MatrixBase<BaseFloat> &input,
 }
 
 
-MatrixIndexT PykaldiDeltaInput::Compute(Matrix<BaseFloat> *output) {
+MatrixIndexT OnlDeltaInput::Compute(Matrix<BaseFloat> *output) {
   // If output->NumRows() == 0, it corresponds to a request for zero frames
   KALDI_ASSERT(output->NumRows() > 0 &&
                output->NumCols() == Dim());
@@ -340,7 +340,7 @@ MatrixIndexT PykaldiDeltaInput::Compute(Matrix<BaseFloat> *output) {
 }
 
 
-void PykaldiDeltaInput::Reset() {
+void OnlDeltaInput::Reset() {
   remainder_.Resize(0, 0);
 }
 

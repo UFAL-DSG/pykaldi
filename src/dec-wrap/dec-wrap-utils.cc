@@ -28,20 +28,6 @@
 
 namespace kaldi {
 
-void pykaldi_version(int *out_major, int * out_minor, int *patch) {
-  *out_major = PYKALDI_MAJOR;
-  *out_minor = PYKALDI_MINOR;
-  *patch = PYKALDI_PATCH;
-}
-
-
-void build_git_revision(std::string & pykaldi_git_revision) {
-  pykaldi_git_revision.clear();
-  pykaldi_git_revision.append(PYKALDI_GIT_VERSION);
-  KALDI_ASSERT((pykaldi_git_revision.size() == 40) && "Git SHA has length 40 size");
-}
-
-
 void MovePostToArcs(fst::VectorFst<fst::LogArc> * lat, 
                           const std::vector<double> &alpha,
                           const std::vector<double> &beta) {

@@ -47,16 +47,16 @@ namespace kaldi{
 namespace kaldi {
 
 // forward declarations
-class PykaldiBuffSource;
+class OnlBuffSource;
 class Mfcc;
-template<typename Mfcc> class PykaldiFeInput;
-class PykaldiFeInput_Mfcc;
-class PykaldiFeatInputItf;
-class PykaldiFeatureMatrix;
-class PykaldiDecodableDiagGmmScaled;
+template<typename Mfcc> class OnlFeInput;
+class OnlFeInput_Mfcc;
+class OnlFeatInputItf;
+class OnlFeatureMatrix;
+class OnlDecodableDiagGmmScaled;
 class TransitionModel;
 class AmDiagGmm;
-class PykaldiLatticeFasterDecoder;
+class OnlLatticeFasterDecoder;
 class GmmLatgenWrapper;
 struct OptionsItf;
 
@@ -97,15 +97,15 @@ class GmmLatgenWrapper {
     void Reset(bool keep_buffer_data);
     bool Setup(int argc, char **argv);
   protected:
-    PykaldiBuffSource *audio;
+    OnlBuffSource *audio;
     Mfcc *mfcc;
-    PykaldiFeInput<Mfcc> *feat_input;
-    PykaldiFeatInputItf *feat_transform;
-    PykaldiFeatureMatrix *feat_matrix;
-    PykaldiDecodableDiagGmmScaled *decodable;
+    OnlFeInput<Mfcc> *feat_input;
+    OnlFeatInputItf *feat_transform;
+    OnlFeatureMatrix *feat_matrix;
+    OnlDecodableDiagGmmScaled *decodable;
     TransitionModel *trans_model;
     AmDiagGmm *amm;
-    PykaldiLatticeFasterDecoder *decoder;
+    OnlLatticeFasterDecoder *decoder;
     fst::StdFst *decode_fst;
   private:
     bool initialized_;

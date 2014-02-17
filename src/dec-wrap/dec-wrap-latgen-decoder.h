@@ -21,9 +21,9 @@
 
 namespace kaldi {
 
-class PykaldiLatticeFasterDecoder: public LatticeFasterDecoder {
+class OnlLatticeFasterDecoder: public LatticeFasterDecoder {
  public:
-  PykaldiLatticeFasterDecoder(const fst::Fst<fst::StdArc> &fst,
+  OnlLatticeFasterDecoder(const fst::Fst<fst::StdArc> &fst,
                        const LatticeFasterDecoderConfig &config)
     : LatticeFasterDecoder(fst, config), frame_(1) { 
       this->Reset();  // do not forget

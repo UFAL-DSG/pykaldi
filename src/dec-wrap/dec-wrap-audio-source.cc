@@ -24,7 +24,7 @@
 
 namespace kaldi {
 
-MatrixIndexT PykaldiBuffSource::Read(Vector<BaseFloat> *output) {
+MatrixIndexT OnlBuffSource::Read(Vector<BaseFloat> *output) {
   KALDI_ASSERT(output->Dim() > 0 && "Request at least something");
 
   // copy as much as possible to output
@@ -39,12 +39,12 @@ MatrixIndexT PykaldiBuffSource::Read(Vector<BaseFloat> *output) {
 }
 
 
-void PykaldiBuffSource::Reset() {
+void OnlBuffSource::Reset() {
   src_.clear();
 }
 
 
-void PykaldiBuffSource::Write(unsigned char * data, size_t num_samples) {
+void OnlBuffSource::Write(unsigned char * data, size_t num_samples) {
   // allocate the space at once -> should be faster
   KALDI_VLOG(3) << "Data inserted: " <<  num_samples << std::endl
                 <<" Data already buffered " << src_.size() << std::endl;
