@@ -502,14 +502,27 @@ static void _div_rows_vec(Real* mat, const Real* vec_div, MatrixDim d) {
 
 template<typename Real>
 __global__
-static void _add_mat(Real alpha, const Real* A, Real beta, Real* dst, MatrixDim d) {
+static void _add_mat(Real alpha, const Real* src, Real beta, Real* dst, MatrixDim d, int src_stride) {
+  int32_cuda i = blockIdx.x * blockDim.x + threadIdx.x;
+  int32_cuda j = blockIdx.y * blockDim.y + threadIdx.y;
+  int32_cuda index = i + j*d.stride;
+  int32_cuda index_src = i + j*src_stride;
+  if (i < d.cols && j < d.rows)
+    dst[index] = alpha*src[index_src] + beta*dst[index];
+}
+
+template<typename Real>
+__global__
+static void _add_mat_mat_div_mat(const Real* A, const Real* B, const Real* C, Real* dst, MatrixDim d) {
   int32_cuda i = blockIdx.x * blockDim.x + threadIdx.x;
   int32_cuda j = blockIdx.y * blockDim.y + threadIdx.y;
   int32_cuda index = i + j*d.stride;
   if (i < d.cols && j < d.rows)
-    dst[index] = alpha*A[index] + beta*dst[index];
+    if (C[index] == 0)
+      dst[index] = A[index];
+    else
+      dst[index] = A[index] * B[index] / C[index];
 }
-
 
 // Given a matrix input S (not packed!) and a lower-triangular matrix L,
 // this function does S = beta S + alpha * L^T L.  This is used in PSD matrix inversion.
@@ -987,6 +1000,31 @@ static void _cuda_comp_obj_deriv(MatrixElement<Real> *x, int s, const Real* z, M
 
 template<typename Real>
 __global__
+static void _cuda_matrix_add_elements(Real *data, MatrixDim dim, Real alpha, MatrixElement<Real>* x, int s) { 
+  int i = threadIdx.x;
+  if (i >= s)
+    return;
+  int size = s / CU1DBLOCK; //the least size in a loop (later part)
+  int threshold = s - size * CU1DBLOCK; //any loop below this number would + 1
+
+  int loop_start;
+  int loop_end;
+  if(i < threshold) {
+    loop_start = i * (size + 1);
+    loop_end = (i+1) * (size + 1);
+  }
+  else {
+    loop_start = threshold + i*size;
+    loop_end = threshold + (i+1)*size;
+  }
+  for(int j = loop_start; j < loop_end; j++) {
+    *(data + x[j].row * dim.stride + x[j].column) += alpha * x[j].weight;
+  }
+}
+
+
+template<typename Real>
+__global__
 static void _matrix_lookup(const Real *data, MatrixDim dim,
                            const Int32Pair *indices,
                            int indices_size, Real *output) {
@@ -999,6 +1037,18 @@ static void _matrix_lookup(const Real *data, MatrixDim dim,
       output[i] = data[row * dim.stride + col];
     }
   }
+}
+
+template<typename Real>
+__global__
+static void _equal_element_mask(const Real *mat1, const Real *mat2, Real *mask, MatrixDim mat1_dim, int mat2_stride, int mask_stride) {
+  int32_cuda i = blockIdx.x * blockDim.x + threadIdx.x; //col
+  int32_cuda j = blockIdx.y * blockDim.y + threadIdx.y; //row
+  int32_cuda index_mat1 = i + j*mat1_dim.stride;
+  int32_cuda index_mat2 = i + j*mat2_stride;
+  int32_cuda index_mask = i + j*mask_stride;
+  if (i < mat1_dim.cols && j < mat1_dim.rows)
+    mask[index_mask] = (mat1[index_mat1] == mat2[index_mat2] ? 1.0 : 0.0);
 }
 
 template<typename Real>
@@ -1973,8 +2023,12 @@ void cudaF_div_rows_vec(dim3 Gr, dim3 Bl, float* mat, const float* vec_div, Matr
   _div_rows_vec<<<Gr,Bl>>>(mat, vec_div, d);
 }
 
-void cudaF_add_mat(dim3 Gr, dim3 Bl, float alpha, const float* A, float beta, float* dst, MatrixDim d) {
-  _add_mat<<<Gr,Bl>>>(alpha,A,beta,dst,d); 
+void cudaF_add_mat(dim3 Gr, dim3 Bl, float alpha, const float* src, float beta, float* dst, MatrixDim d, int src_stride) {
+  _add_mat<<<Gr,Bl>>>(alpha,src,beta,dst,d,src_stride); 
+}
+
+void cudaF_add_mat_mat_div_mat(dim3 Gr, dim3 Bl, const float *A, const float *B, const float *C, float *dst, MatrixDim d) {
+  _add_mat_mat_div_mat<<<Gr,Bl>>>(A,B,C,dst,d);
 }
 
 void cudaF_sy_add_tr2(dim3 Gr, dim3 Bl, float alpha, float beta, const float* T, MatrixDim tdim,
@@ -2062,6 +2116,10 @@ void cudaF_vec_sum(int Gr, int Bl, float* v, float* value, int dim, int inc) {
 
 void cudaF_pvec_sum(int Gr, int Bl, float* v, float* pvec_sum, int dim, int size) {
   _pvec_sum<<<Gr,Bl>>>(v, pvec_sum, dim, size);
+}
+
+void cudaF_matrix_add_elements(dim3 Gr, dim3 Bl, float *data, MatrixDim dim, float alpha, MatrixElement<float>* x, int s) { 
+  _cuda_matrix_add_elements<<<Gr, Bl>>>(data, dim, alpha, x, s); 
 }
 
 void cudaF_comp_obj_deriv(dim3 Gr, dim3 Bl, MatrixElement<float>* x, int s, const float* z, MatrixDim d, float* z2, MatrixDim d2, float* t) {
@@ -2239,7 +2297,11 @@ void cudaF_matrix_lookup(dim3 Gr, dim3 Bl, const float *data, MatrixDim dim,
   _matrix_lookup<<<Gr,Bl>>>(data, dim, indices, indices_size, output);
 }
 
-
+void cudaF_equal_element_mask(dim3 Gr, dim3 Bl, const float *mat1,
+                              const float *mat2, float *mask, MatrixDim mat1_dim,
+                              int mat2_stride, int mask_stride) {
+  _equal_element_mask<<<Gr,Bl>>>(mat1, mat2, mask, mat1_dim, mat2_stride, mask_stride);
+}
 
 /*
  * "double" 
@@ -2375,8 +2437,12 @@ void cudaD_div_rows_vec(dim3 Gr, dim3 Bl, double* mat, const double* vec_div, Ma
   _div_rows_vec<<<Gr,Bl>>>(mat, vec_div, d);
 }
 
-void cudaD_add_mat(dim3 Gr, dim3 Bl, double alpha, const double* A, double beta, double* dst, MatrixDim d) {
-  _add_mat<<<Gr,Bl>>>(alpha,A,beta,dst,d); 
+void cudaD_add_mat(dim3 Gr, dim3 Bl, double alpha, const double* src, double beta, double* dst, MatrixDim d, int src_stride) {
+  _add_mat<<<Gr,Bl>>>(alpha,src,beta,dst,d,src_stride); 
+}
+
+void cudaD_add_mat_mat_div_mat(dim3 Gr, dim3 Bl, const double *A, const double *B, const double *C, double *dst, MatrixDim d) {
+  _add_mat_mat_div_mat<<<Gr,Bl>>>(A,B,C,dst,d);
 }
 
 void cudaD_sy_add_tr2(dim3 Gr, dim3 Bl, double alpha, double beta, const double* T, MatrixDim tdim,
@@ -2475,6 +2541,10 @@ void cudaD_vec_sum(int Gr, int Bl, double* v, double* value, int dim, int inc) {
 
 void cudaD_pvec_sum(int Gr, int Bl, double* v, double* pvec_sum, int dim, int size) {
   _pvec_sum<<<Gr,Bl>>>(v,pvec_sum,dim,size);
+}
+
+void cudaD_matrix_add_elements(dim3 Gr, dim3 Bl, double *data, MatrixDim dim, double alpha, MatrixElement<double>* x, int s) { 
+  _cuda_matrix_add_elements<<<Gr, Bl>>>(data, dim, alpha, x, s); 
 }
 
 void cudaD_vec_copy_diag_from_packed(int Gr, int Bl, double *dst, const double *src, int dim) {
@@ -2629,6 +2699,13 @@ void cudaD_matrix_lookup(dim3 Gr, dim3 Bl, const double *data, MatrixDim dim,
                          double *output) {
   _matrix_lookup<<<Gr,Bl>>>(data, dim, indices, indices_size, output);
 }
+
+void cudaD_equal_element_mask(dim3 Gr, dim3 Bl, const double *mat1,
+                              const double *mat2, double *mask, MatrixDim mat1_dim,
+                              int mat2_stride, int mask_stride) {
+  _equal_element_mask<<<Gr,Bl>>>(mat1, mat2, mask, mat1_dim, mat2_stride, mask_stride);
+}
+
 
 
 /* Some conversion kernels for which it's more convenient to not name them F or D. */

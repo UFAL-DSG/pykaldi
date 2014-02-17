@@ -320,6 +320,43 @@ class NonlinearComponent: public Component {
   double count_;
 };
 
+class MaxoutComponent: public Component {
+ public:
+  void Init(int32 input_dim, int32 output_dim);
+  explicit MaxoutComponent(int32 input_dim, int32 output_dim) {
+    Init(input_dim, output_dim);
+  }
+  MaxoutComponent(): input_dim_(0), output_dim_(0) { }
+  virtual std::string Type() const { return "MaxoutComponent"; }
+  virtual void InitFromString(std::string args); 
+  virtual int32 InputDim() const { return input_dim_; }
+  virtual int32 OutputDim() const { return output_dim_; }
+  virtual void Propagate(const CuMatrixBase<BaseFloat> &in,
+                         int32 num_chunks,
+                         CuMatrix<BaseFloat> *out) const;
+  virtual void Backprop(const CuMatrixBase<BaseFloat> &in_value,
+                        const CuMatrixBase<BaseFloat> &, // out_value
+                        const CuMatrixBase<BaseFloat> &out_deriv,
+                        int32 num_chunks,
+                        Component *to_update, // may be identical to "this".
+                        CuMatrix<BaseFloat> *in_deriv) const;
+  virtual bool BackpropNeedsInput() const { return true; }
+  virtual bool BackpropNeedsOutput() const { return true; }
+  virtual Component* Copy() const { return new MaxoutComponent(input_dim_,
+                                                              output_dim_); }
+  
+  virtual void Read(std::istream &is, bool binary); // This Read function
+  // requires that the Component has the correct type.
+  
+  /// Write component to stream
+  virtual void Write(std::ostream &os, bool binary) const;
+
+  virtual std::string Info() const;
+ protected:
+  int32 input_dim_;
+  int32 output_dim_;
+};
+
 class PnormComponent: public Component {
  public:
   void Init(int32 input_dim, int32 output_dim, BaseFloat p);
@@ -365,8 +402,8 @@ class NormalizeComponent: public NonlinearComponent {
   NormalizeComponent() { }
   virtual std::string Type() const { return "NormalizeComponent"; }
   virtual Component* Copy() const { return new NormalizeComponent(*this); }
-  virtual bool BackpropNeedsInput() { return true; }
-  virtual bool BackpropNeedsOutput() { return true; }
+  virtual bool BackpropNeedsInput() const { return true; }
+  virtual bool BackpropNeedsOutput() const { return true; }
   virtual void Propagate(const CuMatrixBase<BaseFloat> &in,
                          int32 num_chunks,
                          CuMatrix<BaseFloat> *out) const; 
@@ -378,7 +415,12 @@ class NormalizeComponent: public NonlinearComponent {
                         CuMatrix<BaseFloat> *in_deriv) const;
  private:
   NormalizeComponent &operator = (const NormalizeComponent &other); // Disallow.
+  static const BaseFloat kNormFloor;
+  // about 0.7e-20.  We need a value that's exactly representable in
+  // float and whose inverse square root is also exactly representable
+  // in float (hence, an even power of two).
 };
+
 
 class SigmoidComponent: public NonlinearComponent {
  public:
@@ -386,8 +428,8 @@ class SigmoidComponent: public NonlinearComponent {
   explicit SigmoidComponent(const SigmoidComponent &other): NonlinearComponent(other) { }    
   SigmoidComponent() { }
   virtual std::string Type() const { return "SigmoidComponent"; }
-  virtual bool BackpropNeedsInput() { return false; }
-  virtual bool BackpropNeedsOutput() { return true; }
+  virtual bool BackpropNeedsInput() const { return false; }
+  virtual bool BackpropNeedsOutput() const { return true; }
   virtual Component* Copy() const { return new SigmoidComponent(*this); }
   virtual void Propagate(const CuMatrixBase<BaseFloat> &in,
                          int32 num_chunks,
@@ -409,8 +451,8 @@ class TanhComponent: public NonlinearComponent {
   TanhComponent() { }
   virtual std::string Type() const { return "TanhComponent"; }
   virtual Component* Copy() const { return new TanhComponent(*this); }
-  virtual bool BackpropNeedsInput() { return false; }
-  virtual bool BackpropNeedsOutput() { return true; }
+  virtual bool BackpropNeedsInput() const { return false; }
+  virtual bool BackpropNeedsOutput() const { return true; }
   virtual void Propagate(const CuMatrixBase<BaseFloat> &in,
                          int32 num_chunks,
                          CuMatrix<BaseFloat> *out) const; 
@@ -431,8 +473,8 @@ class RectifiedLinearComponent: public NonlinearComponent {
   RectifiedLinearComponent() { }
   virtual std::string Type() const { return "RectifiedLinearComponent"; }
   virtual Component* Copy() const { return new RectifiedLinearComponent(*this); }
-  virtual bool BackpropNeedsInput() { return false; }
-  virtual bool BackpropNeedsOutput() { return true; }
+  virtual bool BackpropNeedsInput() const { return false; }
+  virtual bool BackpropNeedsOutput() const { return true; }
   virtual void Propagate(const CuMatrixBase<BaseFloat> &in,
                          int32 num_chunks,
                          CuMatrix<BaseFloat> *out) const; 
@@ -453,8 +495,8 @@ class SoftHingeComponent: public NonlinearComponent {
   SoftHingeComponent() { }
   virtual std::string Type() const { return "SoftHingeComponent"; }
   virtual Component* Copy() const { return new SoftHingeComponent(*this); }
-  virtual bool BackpropNeedsInput() { return true; }
-  virtual bool BackpropNeedsOutput() { return true; }
+  virtual bool BackpropNeedsInput() const { return true; }
+  virtual bool BackpropNeedsOutput() const { return true; }
   virtual void Propagate(const CuMatrixBase<BaseFloat> &in,
                          int32 num_chunks,
                          CuMatrix<BaseFloat> *out) const; 
@@ -480,8 +522,8 @@ class ScaleComponent: public Component {
   ScaleComponent(): dim_(0), scale_(0.0) { }
   virtual std::string Type() const { return "ScaleComponent"; }
   virtual Component* Copy() const { return new ScaleComponent(*this); }
-  virtual bool BackpropNeedsInput() { return false; }
-  virtual bool BackpropNeedsOutput() { return false; }
+  virtual bool BackpropNeedsInput() const { return false; }
+  virtual bool BackpropNeedsOutput() const { return false; }
   virtual void Propagate(const CuMatrixBase<BaseFloat> &in,
                          int32 num_chunks,
                          CuMatrix<BaseFloat> *out) const; 

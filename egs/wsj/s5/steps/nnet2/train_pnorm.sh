@@ -65,6 +65,7 @@ parallel_opts="-pe smp 16 -l ram_free=1G,mem_free=1G" # by default we use 16 thr
 cleanup=true
 egs_dir=
 lda_opts=
+lda_dim=
 egs_opts=
 # End configuration section.
 
@@ -91,7 +92,6 @@ if [ $# != 4 ]; then
   echo "  --final-learning-rate  <final-learning-rate|0.004>   # Learning rate at end of training, e.g. 0.004 for small"
   echo "                                                   # data, 0.001 for large data"
   echo "  --num-hidden-layers <#hidden-layers|2>           # Number of hidden layers, e.g. 2 for 3 hours of data, 4 for 100hrs"
-  echo "  --initial-num-hidden-layers <#hidden-layers|1>   # Number of hidden layers to start with."
   echo "  --add-layers-period <#iters|2>                   # Number of iterations between adding hidden layers"
   echo "  --mix-up <#pseudo-gaussians|0>                   # Can be used to have multiple targets in final output layer,"
   echo "                                                   # per context-dependent state.  Try a number several times #states."
@@ -243,7 +243,7 @@ echo "$0: (while reducing learning rate) + (with constant learning rate)."
 
 # This is when we decide to mix up from: halfway between when we've finished
 # adding the hidden layers and the end of training.
-finish_add_layers_iter=$[($num_hidden_layers-$initial_num_hidden_layers+1)*$add_layers_period]
+finish_add_layers_iter=$[$num_hidden_layers * $add_layers_period]
 mix_up_iter=$[($num_iters + $finish_add_layers_iter)/2]
 
 if [ $num_threads -eq 1 ]; then
@@ -343,10 +343,23 @@ if [ $stage -le $num_iters ]; then
   num_egs=`nnet-copy-egs ark:$egs_dir/combine.egs ark:/dev/null 2>&1 | tail -n 1 | awk '{print $NF}'`
   mb=$[($num_egs+$this_num_threads-1)/$this_num_threads]
   [ $mb -gt 512 ] && mb=512
+  # Setting --initial-model to a large value makes it initialize the combination
+  # with the average of all the models.  It's important not to start with a
+  # single model, or, due to the invariance to scaling that these nonlinearities
+  # give us, we get zero diagonal entries in the fisher matrix that
+  # nnet-combine-fast uses for scaling, which after flooring and inversion, has
+  # the effect that the initial model chosen gets much higher learning rates
+  # than the others.  This prevents the optimization from working well.
   $cmd $parallel_opts $dir/log/combine.log \
-    nnet-combine-fast --use-gpu=no --num-threads=$this_num_threads --regularizer=$combine_regularizer \
+    nnet-combine-fast --initial-model=100000 --num-lbfgs-iters=40 --use-gpu=no \
+      --num-threads=$this_num_threads --regularizer=$combine_regularizer \
       --verbose=3 --minibatch-size=$mb "${nnets_list[@]}" ark:$egs_dir/combine.egs \
       $dir/final.mdl || exit 1;
+
+  # Normalize stddev for affine or block affine layers that are followed by a
+  # pnorm layer and then a normalize layer.
+  $cmd $parallel_opts $dir/log/normalize.log \
+    nnet-normalize-stddev $dir/final.mdl $dir/final.mdl || exit 1;
 fi
 
 # Compute the probability of the final, combined model with

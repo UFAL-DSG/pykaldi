@@ -49,6 +49,7 @@ add_layers_period=2 # by default, add new layers every 2 iterations.
 num_hidden_layers=3
 modify_learning_rates=false
 last_layer_factor=0.1 # relates to modify_learning_rates.
+first_layer_factor=1.0 # relates to modify_learning_rates.
 stage=-5
 
 io_opts="-tc 5" # for jobs with a lot of I/O, limits the number running at one time.   These don't
@@ -243,7 +244,7 @@ echo "$0: (while reducing learning rate) + (with constant learning rate)."
 
 # This is when we decide to mix up from: halfway between when we've finished
 # adding the hidden layers and the end of training.
-finish_add_layers_iter=$[($num_hidden_layers-$initial_num_hidden_layers+1)*$add_layers_period]
+finish_add_layers_iter=$[$num_hidden_layers * $add_layers_period]
 first_modify_iter=$[$finish_add_layers_iter + $add_layers_period]
 mix_up_iter=$[($num_iters + $finish_add_layers_iter)/2]
 
@@ -314,7 +315,7 @@ while [ $x -lt $num_iters ]; do
     if $modify_learning_rates && [ $x -ge $first_modify_iter ]; then
       $cmd $dir/log/modify_learning_rates.$x.log \
         nnet-modify-learning-rates --last-layer-factor=$last_layer_factor \
-          --average-learning-rate=$learning_rate \
+          --first-layer-factor=$first_layer_factor --average-learning-rate=$learning_rate \
         $dir/$x.mdl $dir/$[$x+1].mdl $dir/$[$x+1].mdl || exit 1;
     fi
 

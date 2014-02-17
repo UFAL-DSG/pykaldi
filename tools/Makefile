@@ -69,7 +69,7 @@ openfst-1.3.2_tgt: openfst-1.3.2.tar.gz
 
 openfst-1.3.2.tar.gz: 
 		wget http://openfst.cs.nyu.edu/twiki/pub/FST/FstDownload/openfst-1.3.2.tar.gz || \
-		wget -T 10 -t 3 --no-check-certificate http://www.openfst.org/twiki/pub/FST/FstDownload/openfst-1.3.2.tar.gz
+		wget -T 10 -t 3 --no-check-certificate http://www.danielpovey.com/files/data/openfst-1.3.2.tar.gz 
 
 sclite_tgt: sclite_compiled
 
@@ -119,7 +119,8 @@ ATLAS/include/cblas.h: | atlas3.8.3.tar.gz
 		tar xozf atlas3.8.3.tar.gz ATLAS/include
 
 atlas3.8.3.tar.gz:
-		wget -T 10  http://sourceforge.net/projects/math-atlas/files/Stable/3.8.3/atlas3.8.3.tar.gz
+		wget -T 10  http://sourceforge.net/projects/math-atlas/files/Stable/3.8.3/atlas3.8.3.tar.gz || \
+		wget --no-check-certificate -T 10 -t 3 http://www.danielpovey.com/files/kaldi/atlas3.8.3.tar.gz
 
 sph2pipe: sph2pipe_compiled
 

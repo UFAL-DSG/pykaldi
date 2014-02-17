@@ -10,8 +10,6 @@ cmd=run.pl
 feat_type=
 num_utts_subset=300    # number of utterances in validation and training
                        # subsets used for shrinkage and diagnostics
-hidden_layer_dim=300
-within_class_factor=0.0001
 num_valid_frames_combine=0 # #valid frames for combination weights at the very end.
 num_train_frames_combine=10000 # # train frames for the above.
 num_frames_diagnostic=4000 # number of frames for "compute_prob" jobs
@@ -154,6 +152,16 @@ samples_per_iter_real=$[$num_frames/($num_jobs_nnet*$iters_per_epoch)]
 echo "$0: Every epoch, splitting the data up into $iters_per_epoch iterations,"
 echo "$0: giving samples-per-iteration of $samples_per_iter_real (you requested $samples_per_iter)."
 
+# Making soft links to storage directories.
+for x in `seq 1 $num_jobs_nnet`; do
+  for y in `seq 0 $[$iters_per_epoch-1]`; do
+    utils/create_data_link.pl $dir/egs/egs.$x.$y.ark
+    utils/create_data_link.pl $dir/egs/egs_tmp.$x.$y.ark
+  done
+  for y in `seq 1 $nj`; do
+    utils/create_data_link.pl $dir/egs/egs_orig.$x.$y.ark
+  done
+done
 
 nnet_context_opts="--left-context=$splice_width --right-context=$splice_width"
 mkdir -p $dir/egs
