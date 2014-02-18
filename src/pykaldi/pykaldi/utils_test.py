@@ -64,7 +64,7 @@ class TestLatticeToNbest(unittest.TestCase):
         shortest_fst = os.path.join(os.path.dirname(__file__), 'test_shortest.fst')
         try:
             if not os.path.exists(shortest_fst):
-                call(['fstcompile', shortest_txt, shortest_txt])
+                call(['fstcompile', shortest_txt, shortest_fst])
         except Exception as e:
             print 'Failed to generate testing fst'
             raise e
