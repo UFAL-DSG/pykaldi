@@ -20,7 +20,7 @@ scoring_opts=
 # note: there are no more min-lmwt and max-lmwt options, instead use
 # e.g. --scoring-opts "--min-lmwt 1 --max-lmwt 20"
 skip_scoring=false
-run_cmn=false   # TODO get rid off run_cmn Kaldi incompatible
+run_cmn=true
 # End configuration section.
 
 echo "$0 $@"  # Print the command line for logging

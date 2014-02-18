@@ -24,7 +24,7 @@ cluster_thresh=-1  # for build-tree control final bottom-up clustering of leaves
 norm_vars=false # false : cmn, true : cmvn
 train_tree=true  # if false, don't actually train the tree.
 use_lda_mat=  # If supplied, use this LDA[+MLLT] matrix.
-run_cmn=false
+run_cmn=true
 # End configuration.
 
 echo "$0 $@"  # Print the command line for logging
