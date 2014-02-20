@@ -78,4 +78,5 @@ decoding with Kaldi binaries.
 
 Credits and license
 ------------------------
-The scripts are based on Voxforge KALDI recipe http://vpanayotov.blogspot.cz/2012/07/voxforge-scripts-for-kaldi.html . The original scripts as well as theses scripts are licensed under APACHE 2.0 license.
+The scripts are based on Voxforge KALDI recipe http://vpanayotov.blogspot.cz/2012/07/voxforge-scripts-for-kaldi.html. 
+The original scripts as well as theses scripts are licensed under APACHE 2.0 license.
