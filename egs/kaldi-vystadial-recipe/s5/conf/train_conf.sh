@@ -42,7 +42,7 @@ pdf=1200
 # Maximum number of Gaussians used for training
 gauss=19200
 
-# Cepstral Mean Normalisation: true/false
-cmn=false
+# Note fake=--fake -> NO CM(V)N, fake='' -> YES CMN(V)N
+fake=--fake
 
 train_mmi_boost=0.05
