@@ -106,6 +106,23 @@ See ``run.sh`` for details.
 
 Credits and license
 ------------------------
-The scripts were based on Voxforge KALDI recipe 
-http://vpanayotov.blogspot.cz/2012/07/voxforge-scripts-for-kaldi.html . 
+The scripts are partialy based on Voxforge KALDI recipe.
 The original scripts as well as theses scripts are licensed under APACHE 2.0 license.
+The data are distributed under Attribution-{ShareAlike} 3.0 Unported ({CC} {BY}-{SA} 3.0) license.
+
+The data collecting process was funded by project Vystadial.
+For citing, please use following ``BibTex`` citation:
+
+
+.. code-block:: tex
+
+    @todo{todo_lrec_2014,
+      author = {Korvas, Matěj; Pl\'{a}tek, Ondřej; Du\v{s}ek, Ondřej; \v{Z}ilka, Luk\'{a}\v{s}; Jur\v{c}\'{i}\v{c}ek, Filip},
+      title = {Free English and Czech telephone speech corpus shared under the CC-BY-SA 3.0 license},
+      year = {2014},
+      language = {eng},
+      institution = {Faculty of Mathematics and Physics, Charles University in Prague, {UFAL}}
+    }
+
+
+

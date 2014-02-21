@@ -20,6 +20,8 @@ renice 20 $$
 echo " Copy the configuration files to $EXP directory."
 local/save_check.sh $EXP $WORK/*  || exit 1;
 
+local/download_data_cs.sh $DATA_ROOT || exit 1;
+
 local/data_split.sh --every_n $EVERY_N $DATA_ROOT $WORK/local "$LMs" "$TEST_SETS" || exit 1
 
 local/create_LMs.sh $WORK/local $WORK/local/train/trans.txt \
