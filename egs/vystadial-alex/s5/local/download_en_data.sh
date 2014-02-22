@@ -7,6 +7,8 @@ url=https://lindat.mff.cuni.cz/repository/xmlui/bitstream/handle/11858/00-097C-0
 name=data_voip_en
 extract_file=205859
 
+mkdir -p $DATA_ROOT
+
 if [ ! -f $DATA_ROOT/${name}.tgz ] ; then
     wget $url -O $DATA_ROOT/${name}.tgz || exit 1
     echo "Data successfully downloaded"
@@ -35,3 +37,10 @@ if [ -d $DATA_ROOT/$name ] ; then
     fi
     echo "It seams that data are extracted correctly"
 fi
+
+pushd $DATA_ROOT
+    for t in test train dev ; do
+        ln -s $name/$t
+    done
+    ln -s $name/arpa_bigram arpa-bigram
+popd
