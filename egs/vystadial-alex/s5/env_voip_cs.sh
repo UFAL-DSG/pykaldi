@@ -6,11 +6,11 @@ export EVERY_N=1
 export TEST_SETS="dev test"
 
 # Directories set up
-export KALDI_ROOT=/ha/projects/vystadial/lib/pykaldi-kronos-build
-export DATA_ROOT=`pwd`/data_voip_en  # expects subdirectories train + $TEST_SETS
-export WORK=`pwd`/model_voip_en
-export EXP=`pwd`/model_voip_en/exp
-export TGT_MODELS=../../resources/asr/voip_en/kaldi/last
+export KALDI_ROOT=../../..
+export DATA_ROOT=`pwd`/data_voip_cs  # expects subdirectories train + $TEST_SETS
+export WORK=`pwd`/model_voip_cs
+export EXP=`pwd`/model_voip_cs/exp
+export TGT_MODELS=../../resources/asr/voip_cs/kaldi/last
 
 # Specify paths to arpa models. Paths may not contain spaces.
 # Specify build0 or build1 or build2, .. for building (zero|uni|bi)-gram LM.
@@ -25,8 +25,8 @@ export DICTIONARY="build"
 
 # Borders for estimating LM model weight.
 # LMW is tuned on development set and applied on test set.
-export min_lmw=9
-export max_lmw=20
+export min_lmw=4
+export max_lmw=15
 
 # Number of states for phonem training
 export pdf=1200

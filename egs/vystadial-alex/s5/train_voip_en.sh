@@ -3,9 +3,9 @@
 renice 20 $$
 
 # Load training parameters
-. ./env_voip_cs.sh
+. ./env_voip_en.sh
 # Source optional config if exists
-[ -f env_voip_cs_CUSTOM.sh ] && . ./env_voip_cs_CUSTOM.sh
+[ -f env_voip_en_CUSTOM.sh ] && . ./env_voip_en_CUSTOM.sh
 
 . ./path.sh "$KALDI_ROOT"
 
@@ -20,14 +20,14 @@ renice 20 $$
 echo " Copy the configuration files to $EXP directory."
 local/save_check.sh $EXP $WORK/*  || exit 1;
 
-local/download_data_cs.sh $DATA_ROOT || exit 1;
+local/download_en_data.sh $DATA_ROOT || exit 1;
 
 local/data_split.sh --every_n $EVERY_N $DATA_ROOT $WORK/local "$LMs" "$TEST_SETS" || exit 1
 
 local/create_LMs.sh $WORK/local $WORK/local/train/trans.txt \
     $WORK/local/test/trans.txt  $WORK/local/lm "$LMs" || exit 1
 
-local/prepare_cs_transcription.sh $WORK/local $WORK/local/dict || exit 1
+local/prepare_en_transcription.sh $WORK/local $WORK/local/dict || exit 1
 
 local/create_phone_lists.sh $WORK/local/dict || exit 1
 
