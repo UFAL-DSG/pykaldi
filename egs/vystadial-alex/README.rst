@@ -104,6 +104,34 @@ its decoding graph and support files
 with the Kaldi scripts.
 Using the two tables above their purpose should be obvious.
 
+Expected results
+----------------
+
+.. code-block:: bash
+
+Full Czech data: 
+build2 - bigram LM from train data, estimated by the scripts using SRILM
+build0 - zerogram LM from test data, estimated by scripts using Python code
+LMW - Language model weight, we picked the best from (min_lmw, max_lmw)
+      based on decoding results on DEV set
+
+exp             set     LM      LMW     WER     SER  
+mono            test    build0  6       86.1    89.66
+tri1            test    build0  8       70.84   82.9 
+tri2a           test    build0  8       70.86   83.01
+tri2b           test    build0  9       68.13   80.89
+tri2b_mmi       test    build0  9       67.61   79.53
+tri2b_mmi_b0.05 test    build0  8       66.18   78.72
+tri2b_mpe       test    build0  9       64.93   77.66
+mono            test    build2  8       72.3    79.02
+tri1            test    build2  11      55.57   72.11
+tri2a           test    build2  11      55.12   70.9 
+tri2b           test    build2  12      52.95   70.7 
+tri2b_mmi       test    build2  10      50.42   68.38
+tri2b_mmi_b0.05 test    build2  10      49.96   68.58
+tri2b_mpe       test    build2  12      49.87   66.97
+
+
 
 Credits and license
 ------------------------

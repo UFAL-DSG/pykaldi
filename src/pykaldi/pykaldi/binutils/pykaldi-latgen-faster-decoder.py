@@ -56,10 +56,10 @@ def decode(d, pcm):
             dec_t = d.decode(max_frames=10)
     start = time.time()
     d.prune_final()
-    prob, lat = d.get_lattice()
+    lik, lat = d.get_lattice()
     print >> sys.stderr, "get_lattice: %s secs" % str(time.time() - start)
     d.reset(keep_buffer_data=False)
-    return (lat, prob, decoded_frames)
+    return (lat, lik, decoded_frames)
 
 
 def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
@@ -72,7 +72,7 @@ def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
         if DEBUG:
             print >> sys.stderr, '%s has %f sec' % (
                 wav_name, (float(len(pcm)) / 2) / 16000)
-        lat, prob, decoded_frames = decode(d, pcm)
+        lat, lik, decoded_frames = decode(d, pcm)
         lat.isyms = lat.osyms = fst.read_symbols_text(wst_path)
         if DEBUG:
             with open('pykaldi_%s.svg' % wav_name, 'w') as f:
@@ -81,8 +81,8 @@ def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
             print >> sys.stderr, "Expected num of frames %d vs decoded %d" % (
                 (len(pcm) / 2) / (16000 / 100), decoded_frames)
 
-        print >> sys.stderr, "Log-probability per frame for utterance %s is %f over %d frames" % (
-            wav_name, (prob / decoded_frames), decoded_frames)
+        print >> sys.stderr, "Log-likelihood per frame for utterance %s is %f over %d frames" % (
+            wav_name, (lik / decoded_frames), decoded_frames)
         word_ids = lattice_to_nbest(lat, n=10)
         write_decoded(file_output, wav_name, word_ids, wst)
 
