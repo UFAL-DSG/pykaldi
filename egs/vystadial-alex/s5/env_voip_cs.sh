@@ -10,7 +10,7 @@ export KALDI_ROOT=../../..
 export DATA_ROOT=`pwd`/data_voip_cs  # expects subdirectories train + $TEST_SETS
 export WORK=`pwd`/model_voip_cs
 export EXP=`pwd`/model_voip_cs/exp
-export TGT_MODELS=../../resources/asr/voip_cs/kaldi/last
+export TGT_MODELS=cs_models
 
 # Specify paths to arpa models. Paths may not contain spaces.
 # Specify build0 or build1 or build2, .. for building (zero|uni|bi)-gram LM.
