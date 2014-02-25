@@ -132,8 +132,24 @@ Expected results
     tri2b_mpe       test    build2  12      49.87   66.97
 
     Full English data:
-    TODO
+    exp             set     LM      LMW     WER     SER
+    mono            test    build0  9       67.52   91.6
+    tri1            test    build0  10      36.75   74.7
+    tri2a           test    build0  10      35.8    71.65
+    tri2b           test    build0  10      32.24   68.35
+    tri2b_mmi       test    build0  9       24.36   54.5
+    tri2b_mmi_b0.05 test    build0  9       23.72   53.1
+    tri2b_mpe       test    build0  10      25.81   59.45
+    mono            test    build2  14      31.51   64.2
+    tri1            test    build2  20      15.2    43.55
+    tri2a           test    build2  16      15.61   43.4
+    tri2b           test    build2  19      15.27   42.8
+    tri2b_mmi       test    build2  14      10.2    30.45
+    tri2b_mmi_b0.05 test    build2  17      10.09   29.85
+    tri2b_mpe       test    build2  20      15.54   42.2
 
+    Note that the zero-gram LMs for discriminative training
+    give significant advantage, because they are estimated on test set!
 
 
 Credits and license
