@@ -92,7 +92,7 @@ class GmmLatgenWrapper {
     void FrameIn(unsigned char *frame, size_t frame_len);
     bool GetBestPath(std::vector<int> &v_out, BaseFloat *prob);
     bool GetRawLattice(fst::VectorFst<fst::StdArc> *fst_out);
-    bool GetLattice(fst::VectorFst<fst::LogArc> * out_fst, double *tot_prob);
+    bool GetLattice(fst::VectorFst<fst::LogArc> * out_fst, double *tot_lik);
     void PruneFinal();
     void Reset(bool keep_buffer_data);
     bool Setup(int argc, char **argv);

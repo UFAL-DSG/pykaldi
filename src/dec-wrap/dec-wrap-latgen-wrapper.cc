@@ -99,7 +99,7 @@ bool GmmLatgenWrapper::GetBestPath(std::vector<int> &out_ids, BaseFloat *prob) {
 
 
 bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::LogArc> *fst_out, 
-                                  double *tot_prob) {
+                                  double *tot_lik) {
   if (! initialized_)
     return false;
 
@@ -114,7 +114,7 @@ bool GmmLatgenWrapper::GetLattice(fst::VectorFst<fst::LogArc> *fst_out,
   ac_scale = ac_scale * lat_acoustic_scale_;
   fst::ScaleLattice(fst::LatticeScale(lat_lm_scale_, ac_scale), &lat);
 
-  *tot_prob = CompactLatticeToWordsPost(lat, fst_out);  // TODO tot_prob is sensible?
+  *tot_lik = CompactLatticeToWordsPost(lat, fst_out);
 
   return ok;
 }

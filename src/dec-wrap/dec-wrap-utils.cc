@@ -135,10 +135,10 @@ double CompactLatticeToWordsPost(CompactLattice &clat, fst::VectorFst<fst::LogAr
   }
 #endif // DEBUG_FINAL
 
-  double tot_prob;
+  double tot_lik;
   std::vector<double> alpha, beta;
   fst::TopSort(pst);
-  tot_prob = ComputeLatticeAlphasAndBetas(*pst, &alpha, &beta);
+  tot_lik = ComputeLatticeAlphasAndBetas(*pst, &alpha, &beta);
   MovePostToArcs(pst, alpha, beta);
 #ifdef DEBUG_POST
   for (size_t i = 0; i < alpha.size(); ++i) {
@@ -153,7 +153,7 @@ double CompactLatticeToWordsPost(CompactLattice &clat, fst::VectorFst<fst::LogAr
   }
 #endif // DEBUG_POST
 
-  return tot_prob;
+  return tot_lik;
 }
 
 
