@@ -38,7 +38,7 @@ distclean:
 		rm -rf openfst-1.3.2.tar.gz
 		rm -f openfst
 
-openfst_tgt: openfst_compiled | openfst/lib
+openfst_tgt: openfst_compiled openfst/lib
 
 .PHONY: openfst_compiled
 openfst_compiled: openfst-1.3.2/Makefile
