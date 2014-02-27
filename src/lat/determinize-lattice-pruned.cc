@@ -119,7 +119,7 @@ template<class Weight, class IntType> class LatticeDeterminizerPruned {
     if (destroy)
       FreeMostMemory();
     // Add basic states-- but we will add extra ones to account for strings on output.
-    for (OutputStateId s = 0;s < nStates;s++) {
+    for (OutputStateId s = 0; s< nStates;s++) {
       OutputStateId news = ofst->AddState();
       KALDI_ASSERT(news == s);
     }
@@ -639,7 +639,7 @@ template<class Weight, class IntType> class LatticeDeterminizerPruned {
 
     {
       MapIter iter = cur_subset.end();
-      for (size_t i = 0;i < subset->size();i++) {
+      for (size_t i = 0; i < subset->size(); i++) {
         std::pair<const InputStateId, Element> pr((*subset)[i].state, (*subset)[i]);
 #if __GNUC__ == 4 && __GNUC_MINOR__ == 0
         iter = cur_subset.insert(iter, pr).first;
@@ -981,7 +981,7 @@ template<class Weight, class IntType> class LatticeDeterminizerPruned {
 
         { // this is a check.
           double best_cost = backward_costs_[ifst_->Start()],
-              tolerance = 0.01;
+              tolerance = 0.01 + 1.0e-04 * abs(best_cost);
           if (task->priority_cost < best_cost - tolerance) {
             KALDI_WARN << "Cost below best cost was encountered:"
                        << task->priority_cost << " < " << best_cost;
@@ -1462,6 +1462,30 @@ bool DeterminizeLatticePhonePruned(
   VectorFst<ArcTpl<Weight> > temp_fst(ifst);
   return DeterminizeLatticePhonePruned(trans_model, &temp_fst,
                                        beam, ofst, opts);
+}
+
+bool DeterminizeLatticePhonePrunedWrapper(
+    const kaldi::TransitionModel &trans_model,
+    MutableFst<kaldi::LatticeArc> *ifst,
+    double beam,
+    MutableFst<kaldi::CompactLatticeArc> *ofst,
+    DeterminizeLatticePhonePrunedOptions opts) {
+  bool ans = true;
+  Invert(ifst);
+  if (ifst->Properties(fst::kTopSorted, true) == 0) {
+    if (!TopSort(ifst)) {
+      // Cannot topologically sort the lattice -- determinization will fail.
+      KALDI_ERR << "Topological sorting of state-level lattice failed (probably"
+                << " your lexicon has empty words or your LM has epsilon cycles"
+                << ").";
+    }
+  }
+  ILabelCompare<kaldi::LatticeArc> ilabel_comp;
+  ArcSort(ifst, ilabel_comp);
+  ans = DeterminizeLatticePhonePruned<kaldi::LatticeWeight, kaldi::int32>(
+      trans_model, ifst, beam, ofst, opts);
+  Connect(ofst);
+  return ans;
 }
 
 // Instantiate the templates for the types we might need.
