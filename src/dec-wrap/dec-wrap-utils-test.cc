@@ -94,8 +94,8 @@ void test_ComputeLatticeAlphasAndBetas(const std::vector<std::string> &tests) {
     VectorFst<LogArc> *t = VectorFst<LogArc>::Read(tests[k]);
     std::vector<double> alpha;
     std::vector<double> beta;
-    double tot_post = ComputeLatticeAlphasAndBetas(*t, &alpha, &beta);
-    std::cerr << tests[k] << "posterior probability: " << tot_post << std::endl;
+    double tot_lik = ComputeLatticeAlphasAndBetas(*t, &alpha, &beta);
+    std::cerr << tests[k] << "utterance likelihood: " << tot_lik << std::endl;
     for (size_t i = 0; i < alpha.size(); ++i) {
       std::cerr << tests[k] << ": alpha[" << i << "] = " << alpha[i] 
         << " beta[" << i << "] = " << beta[i] << std::endl;
@@ -128,7 +128,7 @@ int main() {
   test_post_sum.push_back("symetric_end.fst");
   // test_post_sum.push_back("symetric_middle.fst"); // failing as expected :(
   // test_post_sum.push_back("negative.fst"); // failing as expected
-  test_post_sum.push_back("negative_end.fst"); // TODO passing but correct?
+  test_post_sum.push_back("negative_end.fst");
   test_posterior_sum_to_one(test_post_sum);
   // test_fst_equal();
   return 0;
