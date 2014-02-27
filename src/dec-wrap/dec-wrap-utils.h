@@ -44,8 +44,7 @@ std::vector<int32> phones_to_vector(const std::string & s);
 
 
 // FIXME Copied from lat/lattice-functions.cc no declaration in header
-// FIXME does it work with multiple final states? Yes-only at the end of paths
-// Computes (normal or Viterbi) alphas and betas; returns (total-prob, or
+// Computes (normal or Viterbi) alphas and betas; returns (total-lik, or
 // best-path negated cost) 
 // Note: in either case, the alphas and betas are negated costs.
 // Requires that lat be topologically sorted.  This code

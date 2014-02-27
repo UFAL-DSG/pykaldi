@@ -17,12 +17,11 @@ before_install:
     - sudo apt-get install python-dev
     # ATLAS matrix library
     - sudo apt-get install libatlas3gf-base libblas-dev libatlas-dev libblas-dev libblas3gf
-    # - pushd /usr/include && sudo ln -s atlas/*.h . ; popd  # hack how to make available clapack.h FIXME failing cblas.h exists
 
 install: 
     - pip install -q cython pystache pyyaml --use-mirrors
     # Openfst: building
-    - pushd tools && make -j 4 openfst_tgt && popd
+    - pushd tools && make openfst_tgt && popd
     # hack how to make available clapack.h
     - pushd tools && make -j 4 atlas && popd
     # Configure with ATLAS (default)
@@ -31,6 +30,5 @@ install:
     - pushd src/dec-wrap && make -j 4 && popd
 
 script:
-    # Setting the PATH variable is necessary for fstcompilation TODO get rid of it
-    - pushd src/dec-wrap && PATH=../../tools/openfst/bin:$PATH make -j 4 test ; RET=$?; popd ; (exit $RET)
+    - pushd src/dec-wrap && make -j 4 test ; RET=$?; popd ; (exit $RET)
     - pushd src/pykaldi && make test ; RET=$? ; popd ; (exit $RET)
