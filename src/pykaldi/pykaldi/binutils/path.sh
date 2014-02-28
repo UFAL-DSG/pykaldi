@@ -16,24 +16,15 @@ gmm_latgen_faster_tra_txt=${gmm_latgen_faster_tra}.txt
 pykaldi_latgen_tra=$decode_dir/pykaldi-latgen.tra
 pykaldi_latgen_tra_txt=${pykaldi_faster_tra}.txt
 lattice=$decode_dir/lat.gz
-# common configs
-mfcc_config=mfcc.conf
-decode_config=conf/decode.conf
 
-wst=$exp_dir/words.txt
-silent_phones=silence.csl
-
-if [ -f tri2b.mat ] ; then
-    # Note that $model has to be trained with LDA enabled if using LDA
-    lda_matrix="$exp_dir/tri2b.mat"
-    model=$exp_dir/tri2b.mdl
-    hclg=$exp_dir/HCLG.fst
-else
-    # if no LDA matrix specified -> use delta + delta-delta
-    model=$exp_dir/tri2a.mdl
-    hclg=$exp_dir/HCLG.fst  # different HCLG.fst
-    lda_matrix=""
-fi
+# Czech language models 
+LANG=cs
+HCLG=models/HCLG_tri2b_bmmi.fst
+AM=models/tri2b_bmmi.mdl
+MAT=models/tri2b_bmmi.mat  # matrix trained in tri2b models 
+WST=models/words.txt
+MFCC=models/mfcc.conf
+SILENCE=models/silence.csl
 
 pykaldi_dir=`pwd`/../..
 export LD_LIBRARY_PATH=$pykaldi_dir:$LD_LIBRARY_PATH

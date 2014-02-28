@@ -196,7 +196,7 @@ bool GmmLatgenWrapper::Setup(int argc, char **argv) {
 
     wrapper_opts.model_rxfilename = po.GetArg(1);
     wrapper_opts.fst_rxfilename = po.GetArg(2);
-    wrapper_opts.silence_phones = phones_to_vector(po.GetArg(3));
+    wrapper_opts.silence_phones = phones_to_vector(po.GetArg(3));  // Currently not used. TODO
     wrapper_opts.lda_mat_rspecifier = po.GetOptArg(4);
 
     lat_lm_scale_ = wrapper_opts.lat_lm_scale;

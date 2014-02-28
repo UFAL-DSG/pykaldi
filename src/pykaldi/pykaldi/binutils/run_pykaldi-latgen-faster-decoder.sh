@@ -19,12 +19,10 @@ batch_size=4560
 # kernprof.py -l -v  \
 # valgrind --tool=callgrind -v --dump-instr=yes --trace-jump=yes --callgrind-out-file=callgrind.log python \
 python \
-pykaldi-latgen-faster-decoder.py $wav_scp $batch_size $pykaldi_latgen_tra $wst \
-    --verbose=0  --max-mem=500000000 --lat-lm-scale=15 --config=$mfcc_config \
+pykaldi-latgen-faster-decoder.py $wav_scp $batch_size $pykaldi_latgen_tra $WST \
+    --verbose=0  --max-mem=500000000 --lat-lm-scale=15 --config=$MFCC \
     --beam=$beam --lattice-beam=$latbeam --max-active=$max_active \
-    $model $hclg `cat silence.csl` $lda_matrix
-
-# TODO use --word-penalty=0.0
+    $AM $HCLG `cat $SILENCE` $MAT
 
 # If using callgrind display the results by running kcachegrind
 # kcachegrind callgrind.log
