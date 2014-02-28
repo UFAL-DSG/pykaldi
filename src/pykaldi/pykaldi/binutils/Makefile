@@ -33,7 +33,7 @@ data/vystadial-sample-$(LANG).tar.gz:
 	wget $(DATA_PREFIX_URL)/$@ -O $@
 
 data/vystadial-sample-$(LANG)/README.rst: data/vystadial-sample-$(LANG).tar.gz
-	tar xf $<
+	tar xf  $< -C data
 	touch $@
 
 data/vystadial-sample-$(LANG)/test/input.scp: data/vystadial-sample-$(LANG)/README.rst
