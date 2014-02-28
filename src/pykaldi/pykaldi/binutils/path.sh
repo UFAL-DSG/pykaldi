@@ -3,7 +3,7 @@
 # data location
 PWD=`pwd`
 exp_dir=$PWD
-data_dir=$PWD/vystadial-sample-cs/test
+data_dir=$PWD/data/vystadial-sample-cs/test
 decode_dir=$exp_dir/decode
 
 # IO parameters

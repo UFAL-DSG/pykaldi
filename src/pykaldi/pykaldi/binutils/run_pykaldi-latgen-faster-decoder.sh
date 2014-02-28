@@ -7,8 +7,6 @@ beam=16.0
 latbeam=10.0
 max_active=14000
 
-. $decode_config
-
 batch_size=4560
 
 # Below, there are various commands for debugging, profiling and always

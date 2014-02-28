@@ -7,8 +7,6 @@ beam=16.0
 latbeam=10.0
 max_active=14000
 
-. $decode_config
-
 # temporary files
 mfccdir=$decode_dir/mfcc
 feat_scp=$mfccdir/raw_mfcc.scp

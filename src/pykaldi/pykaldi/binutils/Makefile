@@ -1,4 +1,4 @@
-BEST_LINE=16
+BEST_LINE=18
 MODEL_PREFIX_URL=http://vystadial.ms.mff.cuni.cz/download/kaldi/src/pykaldi/pykaldi/binutils/
 DATA_PREFIX_URL=http://vystadial.ms.mff.cuni.cz/download/kaldi/src/pykaldi/pykaldi/binutils/
 
@@ -56,6 +56,6 @@ live: download_models
 	bash run_live-demo.sh
 	
 clean:
-	rm -rf *.pyc data/* models/*
+	rm -rf *.pyc data/* models/* decode
 
 .PHONY: live pykaldi-latgen-faster gmm-latgen-faster clean
