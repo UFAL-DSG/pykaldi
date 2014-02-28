@@ -6,6 +6,7 @@ Summary
 The `<pykaldi-latgen-faster-decoder.py>`_
 demonstrates how to use the class ``PyGmmLatgenWrapper``,
 which takes audio on the input and outputs the decoded lattice.
+Currently, the test data are for Czech language only.
 
 Dependencies
 ------------
