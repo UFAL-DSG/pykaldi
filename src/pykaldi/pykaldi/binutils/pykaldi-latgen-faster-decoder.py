@@ -67,19 +67,15 @@ def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
     d = PyGmmLatgenWrapper()
     d.setup(argv)
     for wav_name, wav_path in wav_paths:
-        # 16-bit audio so 1 sample_width = 2 chars
-        pcm = load_wav(wav_path, def_sample_width=2, def_sample_rate=16000)
-        if DEBUG:
-            print >> sys.stderr, '%s has %f sec' % (
-                wav_name, (float(len(pcm)) / 2) / 16000)
+        sw, sr = 2, 16000  # 16-bit audio so 1 sample_width = 2 chars
+        pcm = load_wav(wav_path, def_sample_width=sw, def_sample_rate=sr)
+        print >> sys.stderr, '%s has %f sec' % (wav_name, (float(len(pcm)) / sw) / sr)
         lat, lik, decoded_frames = decode(d, pcm)
         lat.isyms = lat.osyms = fst.read_symbols_text(wst_path)
         if DEBUG:
             with open('pykaldi_%s.svg' % wav_name, 'w') as f:
                 f.write(lat._repr_svg_())
             lat.write('%s_pykaldi.fst' % wav_name)
-            print >> sys.stderr, "Expected num of frames %d vs decoded %d" % (
-                (len(pcm) / 2) / (16000 / 100), decoded_frames)
 
         print >> sys.stderr, "Log-likelihood per frame for utterance %s is %f over %d frames" % (
             wav_name, (lik / decoded_frames), decoded_frames)

@@ -3,9 +3,7 @@
 # source the settings
 . path.sh
 
-beam=16.0
-latbeam=10.0
-max_active=14000
+. utils/parse_options.sh || exit 1
 
 # temporary files
 mfccdir=$decode_dir/mfcc
@@ -41,7 +39,7 @@ gmm-latgen-faster --verbose=0 --max-mem=500000000 \
 lattice-best-path --verbose=0 --lm-scale=15 --word-symbol-table=$WST \
     "ark:gunzip -c $lattice|" ark,t:$gmm_latgen_faster_tra || exit 1;
 
-cat $gmm_latgen_faster_tra | ./int2sym.pl -f 2- $WST \
+cat $gmm_latgen_faster_tra | utils/int2sym.pl -f 2- $WST \
     > $gmm_latgen_faster_tra_txt || exit 1
 
 # reference is named based on wav_scp

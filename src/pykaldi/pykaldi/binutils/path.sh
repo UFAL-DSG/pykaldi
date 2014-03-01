@@ -29,3 +29,11 @@ SILENCE=models/silence.csl
 pykaldi_dir=`pwd`/../..
 export LD_LIBRARY_PATH=$pykaldi_dir:$LD_LIBRARY_PATH
 export PYTHONPATH=$pykaldi_dir:$pykaldi_dir/pyfst:$PYTHONPATH
+
+
+beam=16.0
+latbeam=10.0
+max_active=14000
+
+# Size of chunks are queued in "online" interface
+batch_size=4560
