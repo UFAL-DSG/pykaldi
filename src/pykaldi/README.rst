@@ -1,6 +1,14 @@
 Pykaldi - Python Kaldi decoders wrapper
 =======================================
 
+Intro
+-----
+Pykaldi wraps the online decoder
+from src/dec-wrap directory.
+The development is done in https://github.com/UFAL-DSG/pykaldi.
+Currently, we do not support CMN,
+so train your AM without CMN.
+
 Dependencies
 ------------
 * OpenFST - You should use the installation build via ``cd kaldi/src/tools; make openfst_tgt``

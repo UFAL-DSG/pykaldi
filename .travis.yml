@@ -21,14 +21,15 @@ before_install:
 install: 
     - pip install -q cython pystache pyyaml --use-mirrors
     # Openfst: building
-    - pushd tools && make openfst_tgt && popd
+    - pushd tools && make -j 4 openfst_tgt && popd
     # hack how to make available clapack.h
     - pushd tools && make -j 4 atlas && popd
     # Configure with ATLAS (default)
     - pushd src && ./configure --shared && popd
-    - pushd src && make -j 4 && popd
+    # - pushd src && make -j 4 && popd
+    # Should be enough
     - pushd src/dec-wrap && make -j 4 && popd
 
 script:
     - pushd src/dec-wrap && make -j 4 test ; RET=$?; popd ; (exit $RET)
-    - pushd src/pykaldi && make test ; RET=$? ; popd ; (exit $RET)
+    - pushd src/pykaldi && make -j 4 test ; RET=$? ; popd ; (exit $RET)
