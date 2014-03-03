@@ -107,7 +107,7 @@ FST
 fsts="non_symetric symetric symetric_end symetric_middle negative negative_end fair_bet"
 
 for name in $fsts; do
-    fstcompile --arc_type=log ${name}.txt ${name}.fst
+    fstcompile --arc_type=log ${name}.txt ${name}.fst || exit 1
     fstdraw --portrait=true ${name}.fst | \
         dot -Tsvg  > ${name}.svg
 done
