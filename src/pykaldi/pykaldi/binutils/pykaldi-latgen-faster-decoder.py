@@ -46,6 +46,7 @@ def write_decoded(f, wav_name, word_ids, wst):
 def decode(d, pcm):
     frame_len = (2 * audio_batch_size)  # 16-bit audio so 1 sample = 2 chars
     i, decoded_frames, max_end = 0, 0, len(pcm)
+    start = time.time()
     while i * frame_len < len(pcm):
         i, begin, end = i + 1, i * frame_len, min(max_end, (i + 1) * frame_len)
         audio_chunk = pcm[begin:end]
@@ -54,10 +55,11 @@ def decode(d, pcm):
         while dec_t > 0:
             decoded_frames += dec_t
             dec_t = d.decode(max_frames=10)
+    print "forward decode: %s secs" % str(time.time() - start)
     start = time.time()
     d.prune_final()
     lik, lat = d.get_lattice()
-    print "get_lattice: %s secs" % str(time.time() - start)
+    print "backward decode: %s secs" % str(time.time() - start)
     d.reset(keep_buffer_data=False)
     return (lat, lik, decoded_frames)
 
