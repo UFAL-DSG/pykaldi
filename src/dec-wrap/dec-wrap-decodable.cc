@@ -22,9 +22,9 @@
 
 namespace kaldi {
 
-PykaldiDecodableDiagGmmScaled::PykaldiDecodableDiagGmmScaled(
+OnlDecodableDiagGmmScaled::OnlDecodableDiagGmmScaled(
     const AmDiagGmm &am, const TransitionModel &trans_model,
-    const BaseFloat scale, PykaldiFeatureMatrix *input_feats):
+    const BaseFloat scale, OnlFeatureMatrix *input_feats):
       features_(input_feats), ac_model_(am),
       ac_scale_(scale), trans_model_(trans_model),
       feat_dim_(input_feats->Dim()), cur_frame_(-1) {
@@ -38,7 +38,7 @@ PykaldiDecodableDiagGmmScaled::PykaldiDecodableDiagGmmScaled(
   Reset();
 }
 
-void PykaldiDecodableDiagGmmScaled::GetFrame(int32 frame) {
+void OnlDecodableDiagGmmScaled::GetFrame(int32 frame) {
   KALDI_VLOG(4) << "Begin Decodable->GetFrame frame" << frame;
   KALDI_ASSERT(frame >= 0);
   cur_feats_.Resize(feat_dim_);
@@ -48,7 +48,7 @@ void PykaldiDecodableDiagGmmScaled::GetFrame(int32 frame) {
   cur_frame_ = frame;
 }
 
-BaseFloat PykaldiDecodableDiagGmmScaled::LogLikelihood(int32 frame, int32 index) {
+BaseFloat OnlDecodableDiagGmmScaled::LogLikelihood(int32 frame, int32 index) {
   KALDI_VLOG(4) << "Begin Decodable->LogLikelihood frame, index" << frame << index;
   if (frame != cur_frame_) {
     GetFrame(frame);
@@ -63,11 +63,11 @@ BaseFloat PykaldiDecodableDiagGmmScaled::LogLikelihood(int32 frame, int32 index)
 }
 
 
-bool PykaldiDecodableDiagGmmScaled::IsLastFrame(int32 frame) {
+bool OnlDecodableDiagGmmScaled::IsLastFrame(int32 frame) {
   return !features_->IsValidFrame(frame+1);
 }
 
-void PykaldiDecodableDiagGmmScaled::Reset() {
+void OnlDecodableDiagGmmScaled::Reset() {
   cache_.resize(trans_model_.NumPdfs(), std::make_pair<int32,BaseFloat>(-1, 0.0));
   cur_frame_ = -1;
   cur_feats_.Resize(0);

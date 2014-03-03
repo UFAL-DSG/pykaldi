@@ -4,7 +4,7 @@
 namespace kaldi {
 
 
-size_t PykaldiLatticeFasterDecoder::Decode(DecodableInterface *decodable, size_t max_frames) {
+size_t OnlLatticeFasterDecoder::Decode(DecodableInterface *decodable, size_t max_frames) {
   // We use 1-based indexing for frames in this decoder (if you view it in
   // terms of features), but note that the decodable object uses zero-based
   // numbering, which we have to correct for when we call it.
@@ -26,9 +26,9 @@ size_t PykaldiLatticeFasterDecoder::Decode(DecodableInterface *decodable, size_t
 }
 
 
-void PykaldiLatticeFasterDecoder::Reset() {
+void OnlLatticeFasterDecoder::Reset() {
   // clean up from last time:
-  ClearToks(toks_.Clear());
+  DeleteElems(toks_.Clear());
   cost_offsets_.clear();
   ClearActiveTokens();
   warned_ = false;

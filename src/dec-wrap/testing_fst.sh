@@ -4,7 +4,6 @@
 
 # Fst fair_bet
 # Inspiration from http://vimeo.com/7303679
-# Excel version in pykaldi/unfair_bet_casino.ods
 # Casino has two coins. 
 # The first one is fair the second one is loaded.
 # It means that from the fair one we get with equal 

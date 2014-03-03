@@ -8,6 +8,7 @@ from sys import version_info as python_version
 from os import path
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
+from subprocess import check_output
 
 STATIC = False
 
@@ -26,7 +27,7 @@ if STATIC:
     extra_objects = ['pykaldi.a', ]
 else:
     # DYNAMIC
-    library_dirs = ['.', ]
+    library_dirs = ['pykaldi', ]
     libraries = ['pykaldi', ]
     extra_objects = []
 ext_modules.append(Extension('pykaldi.decoders',
@@ -41,10 +42,21 @@ ext_modules.append(Extension('pykaldi.decoders',
 
 long_description = open(path.join(path.dirname(__file__), 'README.rst')).read()
 
+try:
+    # In order to find out the pykaldi version from installed package at runtime use:
+    # import pgk_resources as pkg; pkg.get_distribution('pykaldi')
+    git_version = check_output(['git', 'rev-parse', 'HEAD'])
+except:
+    git_version = 'Unknown Git version'
+    print git_version
+
 setup(
     name='pykaldi',
+    packages=['pykaldi', 'pykaldi.binutils'],
+    package_data={'pykaldi': ['libpykaldi.so', 'test_shortest.txt']},
+    include_package_data=True,
     cmdclass={'build_ext': build_ext},
-    version='0.0',
+    version='0.1-' + git_version,
     install_requires=install_requires,
     setup_requires=['cython>=0.19.1'],
     ext_modules=ext_modules,

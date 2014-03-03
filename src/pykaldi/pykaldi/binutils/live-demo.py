@@ -14,6 +14,8 @@
 # MERCHANTABLITY OR NON-INFRINGEMENT.
 # See the Apache 2 License for the specific language governing permissions and
 # limitations under the License. #
+from __future__ import unicode_literals
+
 import pyaudio
 from pykaldi.decoders import PyGmmLatgenWrapper
 from pykaldi.utils import wst2dict, lattice_to_nbest
@@ -82,14 +84,14 @@ def decode_loop(d, audio_batch_size, wst, stream):
             continue
         new_frames = d.decode(max_frames=10)
         if utt_end or dialog_end:
-            start = time.clock()
+            start = time.time()
             d.prune_final()
             prob, lat = d.get_lattice()
             nbest = lattice_to_nbest(lat, n=1)
             best_prob, best_path = nbest[0]
-            decoded = [wst[str(w)] for w in best_path]
+            decoded = [wst[w] for w in best_path]
             print "%s secs, frames: %d, prob: %f, %s " % (
-                str(time.clock() - start), utt_frames, prob, decoded)
+                str(time.time() - start), utt_frames, prob, decoded.encode('UTF-8'))
             utt_frames = 0
         if dialog_end:
             d.reset(keep_buffer_data=False)

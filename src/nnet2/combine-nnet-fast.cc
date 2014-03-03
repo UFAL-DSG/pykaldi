@@ -243,8 +243,9 @@ void FastNnetCombiner::ComputePreconditioner() {
   // Make zero diagonal elements of F non-zero.  Relates to updatable
   // components that have no effect, e.g. MixtureProbComponents that have
   // no real free parameters.
+  KALDI_ASSERT(config_.fisher_floor > 0.0);
   for (int32 i = 0; i < F.NumRows(); i++)
-    if (F(i, i) < 1.0e-20) F(i, i) = 1.0e-20;
+    F(i, i) = std::max<BaseFloat>(F(i, i), config_.fisher_floor);
   // We next smooth the diagonal elements of F by a small amount.
   // This is mainly necessary in case the number of minibatches is
   // smaller than the dimension of F; we want to ensure F is full rank.
@@ -266,7 +267,9 @@ void FastNnetCombiner::ComputePreconditioner() {
 void FastNnetCombiner::GetInitialParams() {
   int32 initial_model = config_.initial_model,
       num_nnets = static_cast<int32>(nnets_.size());
-  if (initial_model < 0 || initial_model > num_nnets)
+  if (initial_model > num_nnets)
+    initial_model = num_nnets;
+  if (initial_model < 0)
     initial_model = GetInitialModel(egs_, nnets_);
 
   KALDI_ASSERT(initial_model >= 0 && initial_model <= num_nnets);
@@ -365,7 +368,10 @@ void FastNnetCombiner::ComputeCurrentNnet(
     raw_params = params_; // C not set up yet: interpret params_ as raw parameters.
   
   if (debug) {
-    KALDI_LOG << "Scale parameters are " << raw_params;
+    Matrix<double> params_mat(num_nnets,
+                              nnets_[0].NumUpdatableComponents());
+    params_mat.CopyRowsFromVec(raw_params);
+    KALDI_LOG << "Scale parameters are " << params_mat;
   }
   CombineNnets(raw_params, nnets_, dest);
 }
@@ -399,7 +405,9 @@ int32 FastNnetCombiner::GetInitialModel(
 
   int32 num_uc = nnets[0].NumUpdatableComponents();
 
-  { // Now try a version where all the neural nets have the same weight.
+  if (num_nnets > 1) { // Now try a version where all the neural nets have the
+                       // same weight.  Don't do this if num_nnets == 1 as
+                       // it would be a waste of time (identical to n == 0).
     Vector<double> scale_params(num_uc * num_nnets);
     scale_params.Set(1.0 / num_nnets);
     Nnet average_nnet;
@@ -415,6 +423,8 @@ int32 FastNnetCombiner::GetInitialModel(
     } else {
       return best_n;
     }
+  } else {
+    return best_n;
   }
 }
 

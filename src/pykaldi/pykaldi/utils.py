@@ -12,13 +12,14 @@
 # MERCHANTABLITY OR NON-INFRINGEMENT.
 # See the Apache 2 License for the specific language governing permissions and
 # limitations under the License. #
-
+from __future__ import unicode_literals
 
 import os
 from ordereddefaultdict import DefaultOrderedDict
 import errno
 import wave
 import fst
+import codecs
 
 
 def fst_shortest_path_to_lists(fst_shortest):
@@ -41,13 +42,14 @@ def fst_shortest_path_to_lists(fst_shortest):
         try:
             while arc.olabel != 0:
                 path.append(arc.olabel)
-                weight += float(arc.weight)  # TODO use the Weights class explicitly
+                weight += float(arc.weight)  # TODO use the Weights plus operation explicitly
                 arc = fst_shortest[arc.nextstate].arcs.next()
+            weight += float(arc.weight)
         except StopIteration:
             pass
 
         word_ids.append((float(weight), path))
-    sorted(word_ids)  # TODO is it necessary? // probably not
+    word_ids.sort()
     return word_ids
 
 
@@ -55,7 +57,7 @@ def lattice_to_nbest(lat, n=1):
     # Log semiring -> no best path
     # Converting the lattice to tropical semiring
     std_v = fst.StdVectorFst(lat)
-    p = std_v.shortest_path(n=10)
+    p = std_v.shortest_path(n)
     return fst_shortest_path_to_lists(p)
 
 
@@ -142,23 +144,20 @@ def expand_prefix(d, bigd):
         raise ValueError('We support only dictionaries, lists and strings.')
 
 
-def wst2dict(wst_path, intdict=False):
+def wst2dict(wst_path, encoding='utf-8'):
     ''' Stores word symbol table (WST) like dictionary.
     The numbers are stored like string values
     Example line of WST looks like:
     sample_word  1234
     '''
-    with open(wst_path, 'r') as r:
+    with codecs.open(wst_path, encoding=encoding) as r:
         # split removes empty and white space only splits
         line_arr = [line.split() for line in r.readlines()]
         d = dict([])
         for arr in line_arr:
             assert len(arr) == 2, 'Word Symbol Table should have 2 records on each row'
             # WST format:  WORD  NUMBER  ...we store d[NUMBER] = WORD
-            if intdict:
-                d[int(arr[1])] = arr[0]
-            else:
-                d[arr[1]] = arr[0]
+            d[int(arr[1])] = arr[0]
         return d
 
 

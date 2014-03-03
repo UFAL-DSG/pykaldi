@@ -29,7 +29,7 @@ int32 NumFrames(int32 nsamp,
                 const FrameExtractionOptions &opts) {
   int32 frame_shift = opts.WindowShift();
   int32 frame_length = opts.WindowSize();
-  assert(frame_shift != 0 && frame_length != 0);
+  KALDI_ASSERT(frame_shift != 0 && frame_length != 0);
   if (static_cast<int32>(nsamp) < frame_length)
     return 0;
   else
@@ -49,7 +49,7 @@ void Dither(VectorBase<BaseFloat> *waveform, BaseFloat dither_value) {
 
 void Preemphasize(VectorBase<BaseFloat> *waveform, BaseFloat preemph_coeff) {
   if (preemph_coeff == 0.0) return;
-  assert(preemph_coeff >= 0.0 && preemph_coeff <= 1.0);
+  KALDI_ASSERT(preemph_coeff >= 0.0 && preemph_coeff <= 1.0);
   for (int32 i = waveform->Dim()-1; i > 0; i--)
     (*waveform)(i) -= preemph_coeff * (*waveform)(i-1);
   (*waveform)(0) -= preemph_coeff * (*waveform)(0);
@@ -59,7 +59,7 @@ void Preemphasize(VectorBase<BaseFloat> *waveform, BaseFloat preemph_coeff) {
 
 FeatureWindowFunction::FeatureWindowFunction(const FrameExtractionOptions &opts) {
   int32 frame_length = opts.WindowSize();
-  assert(frame_length > 0);
+  KALDI_ASSERT(frame_length > 0);
   window.Resize(frame_length);
   for (int32 i = 0; i < frame_length; i++) {
     BaseFloat i_fl = static_cast<BaseFloat>(i);
@@ -89,11 +89,11 @@ void ExtractWindow(const VectorBase<BaseFloat> &wave,
                    BaseFloat *log_energy_pre_window) {
   int32 frame_shift = opts.WindowShift();
   int32 frame_length = opts.WindowSize();
-  assert(window_function.window.Dim() == frame_length);
-  assert(frame_shift != 0 && frame_length != 0);
+  KALDI_ASSERT(window_function.window.Dim() == frame_length);
+  KALDI_ASSERT(frame_shift != 0 && frame_length != 0);
   int32 start = frame_shift*f, end = start + frame_length;
-  assert(start >= 0 && end <= wave.Dim());
-  assert(window != NULL);
+  KALDI_ASSERT(start >= 0 && end <= wave.Dim());
+  KALDI_ASSERT(window != NULL);
   int32 frame_length_padded = opts.PaddedWindowSize();
 
   if (window->Dim() != frame_length_padded)
@@ -130,10 +130,10 @@ void ExtractWaveformRemainder(const VectorBase<BaseFloat> &wave,
   int32 num_frames = NumFrames(wave.Dim(), opts);
   // offset is the amount at the start that has been extracted.
   int32 offset = num_frames * frame_shift;
-  assert(wave_remainder != NULL);
+  KALDI_ASSERT(wave_remainder != NULL);
   int32 remaining_len = wave.Dim() - offset;
   wave_remainder->Resize(remaining_len);
-  assert(remaining_len >= 0);
+  KALDI_ASSERT(remaining_len >= 0);
   if (remaining_len > 0)
     wave_remainder->CopyFromVec(SubVector<BaseFloat>(wave, offset, remaining_len));
 }
@@ -143,7 +143,7 @@ void ComputePowerSpectrum(VectorBase<BaseFloat> *waveform) {
   int32 dim = waveform->Dim();
 
   // no, letting it be non-power-of-two for now.
-  // assert(dim > 0 && (dim & (dim-1) == 0));  // make sure a power of two.. actually my FFT code
+  // KALDI_ASSERT(dim > 0 && (dim & (dim-1) == 0));  // make sure a power of two.. actually my FFT code
   // does not require this (dan) but this is better in case we use different code [dan].
 
   // RealFft(waveform, true);  // true == forward (not inverse) FFT; makes no difference here,
@@ -165,9 +165,9 @@ void ComputePowerSpectrum(VectorBase<BaseFloat> *waveform) {
 
 
 DeltaFeatures::DeltaFeatures(const DeltaFeaturesOptions &opts): opts_(opts) {
-  assert(opts.order >= 0 && opts.order < 1000);  // just make sure we don't get binary junk.
+  KALDI_ASSERT(opts.order >= 0 && opts.order < 1000);  // just make sure we don't get binary junk.
   // opts will normally be 2 or 3.
-  assert(opts.window > 0 && opts.window < 1000);  // again, basic sanity check.
+  KALDI_ASSERT(opts.window > 0 && opts.window < 1000);  // again, basic sanity check.
   // normally the window size will be two.
 
   scales_.resize(opts.order+1);
@@ -181,7 +181,7 @@ DeltaFeatures::DeltaFeatures(const DeltaFeaturesOptions &opts): opts_(opts) {
     // work if instead we later make it an array and do opts.window[i-1],
     // or something like that. "window" is a parameter specifying delta-window
     // width which is actually 2*window + 1.
-    assert(window != 0);
+    KALDI_ASSERT(window != 0);
     int32 prev_offset = (static_cast<int32>(prev_scales.Dim()-1))/2,
         cur_offset = prev_offset + window;
     cur_scales.Resize(prev_scales.Dim() + 2*window);  // also zeros it.
@@ -201,22 +201,69 @@ DeltaFeatures::DeltaFeatures(const DeltaFeaturesOptions &opts): opts_(opts) {
 void DeltaFeatures::Process(const MatrixBase<BaseFloat> &input_feats,
                             int32 frame,
                             SubVector<BaseFloat> *output_frame) const {
-  assert(frame < input_feats.NumRows());
+  KALDI_ASSERT(frame < input_feats.NumRows());
   int32 num_frames = input_feats.NumRows(),
       feat_dim = input_feats.NumCols();
-  assert(static_cast<int32>(output_frame->Dim()) == feat_dim * (opts_.order+1));
+  KALDI_ASSERT(static_cast<int32>(output_frame->Dim()) == feat_dim * (opts_.order+1));
   output_frame->SetZero();
   for (int32 i = 0; i <= opts_.order; i++) {
     const Vector<BaseFloat> &scales = scales_[i];
-    int32 offset = (scales.Dim()-1)/2;
+    int32 max_offset = (scales.Dim() - 1) / 2;
     SubVector<BaseFloat> output(*output_frame, i*feat_dim, feat_dim);
-    for (int32 j = -offset; j <= offset; j++) {
+    for (int32 j = -max_offset; j <= max_offset; j++) {
       // if asked to read
       int32 offset_frame = frame + j;
       if (offset_frame < 0) offset_frame = 0;
       else if (offset_frame >= num_frames)
-        offset_frame = num_frames-1;
-      BaseFloat scale = scales(j+offset);
+        offset_frame = num_frames - 1;
+      BaseFloat scale = scales(j + max_offset);
+      if (scale != 0.0)
+        output.AddVec(scale, input_feats.Row(offset_frame));
+    }
+  }
+}
+
+ShiftedDeltaFeatures::ShiftedDeltaFeatures(
+  const ShiftedDeltaFeaturesOptions &opts): opts_(opts) {
+  KALDI_ASSERT(opts.window > 0 && opts.window < 1000);
+
+  // Default window is 1.
+  int32 window = opts.window;
+  KALDI_ASSERT(window != 0);
+  scales_.Resize(1 + 2*window);  // also zeros it.
+  BaseFloat normalizer = 0.0;
+  for (int32 j = -window; j <= window; j++) {
+    normalizer += j*j;
+    scales_(j + window) += static_cast<BaseFloat>(j);
+  }
+  scales_.Scale(1.0 / normalizer);
+}
+
+void ShiftedDeltaFeatures::Process(const MatrixBase<BaseFloat> &input_feats,
+                            int32 frame,
+                            SubVector<BaseFloat> *output_frame) const {
+  KALDI_ASSERT(frame < input_feats.NumRows());
+  int32 num_frames = input_feats.NumRows(),
+      feat_dim = input_feats.NumCols();
+  KALDI_ASSERT(static_cast<int32>(output_frame->Dim()) 
+               == feat_dim * (opts_.num_blocks + 1));
+  output_frame->SetZero();
+
+  // The original features  
+  SubVector<BaseFloat> output(*output_frame, 0, feat_dim);
+  output.AddVec(1.0, input_feats.Row(frame));
+
+  // Concatenate the delta-blocks. Each block is block_shift 
+  // (usually 3) frames apart. 
+  for (int32 i = 0; i < opts_.num_blocks; i++) {
+    int32 max_offset = (scales_.Dim() - 1) / 2;
+    SubVector<BaseFloat> output(*output_frame, (i + 1) * feat_dim, feat_dim);
+    for (int32 j = -max_offset; j <= max_offset; j++) {
+      int32 offset_frame = frame + j + i * opts_.block_shift;
+      if (offset_frame < 0) offset_frame = 0;
+      else if (offset_frame >= num_frames)
+        offset_frame = num_frames - 1;
+      BaseFloat scale = scales_(j + max_offset);
       if (scale != 0.0)
         output.AddVec(scale, input_feats.Row(offset_frame));
     }
@@ -236,7 +283,19 @@ void ComputeDeltas(const DeltaFeaturesOptions &delta_opts,
   }
 }
 
-
+void ComputeShiftedDeltas(const ShiftedDeltaFeaturesOptions &delta_opts,
+                   const MatrixBase<BaseFloat> &input_features,
+                   Matrix<BaseFloat> *output_features) {
+  output_features->Resize(input_features.NumRows(),
+                          input_features.NumCols()
+                          * (delta_opts.num_blocks + 1));
+  ShiftedDeltaFeatures delta(delta_opts);
+  
+  for (int32 r = 0; r < static_cast<int32>(input_features.NumRows()); r++) {
+    SubVector<BaseFloat> row(*output_features, r);
+    delta.Process(input_features, r, &row);
+  }
+}
 
 
 
@@ -276,7 +335,7 @@ void InitIdftBases(int32 n_bases, int32 dimension, Matrix<BaseFloat> *mat_out) {
 BaseFloat ComputeLpc(const VectorBase<BaseFloat> &autocorr_in,
                      Vector<BaseFloat> *lpc_out) {
   int32 n = autocorr_in.Dim() - 1;
-  assert(lpc_out->Dim() == n);
+  KALDI_ASSERT(lpc_out->Dim() == n);
   Vector<BaseFloat> tmp(n);
   BaseFloat ans =  Durbin(n, autocorr_in.Data(),
                           lpc_out->Data(),
@@ -368,19 +427,22 @@ void SlidingWindowCmn(const SlidingWindowCmnOptions &opts,
                                       window_start, window_end - window_start,
                                       0, dim);
       cur_sum.AddRowSumMat(1.0, input_part , 0.0);
-      cur_sumsq.AddDiagMat2(1.0, input_part, kTrans, 0.0);
+      if (opts.normalize_variance)
+        cur_sumsq.AddDiagMat2(1.0, input_part, kTrans, 0.0);
     } else {
       if (window_start > last_window_start) {
         KALDI_ASSERT(window_start == last_window_start + 1);
         SubVector<double> frame_to_remove(input, last_window_start);
         cur_sum.AddVec(-1.0, frame_to_remove);
-        cur_sumsq.AddVec2(-1.0, frame_to_remove);
+        if (opts.normalize_variance)
+          cur_sumsq.AddVec2(-1.0, frame_to_remove);
       }
       if (window_end > last_window_end) {
         KALDI_ASSERT(window_end == last_window_end + 1);
         SubVector<double> frame_to_add(input, last_window_end);
         cur_sum.AddVec(1.0, frame_to_add);
-        cur_sumsq.AddVec2(1.0, frame_to_add);
+        if (opts.normalize_variance)
+          cur_sumsq.AddVec2(1.0, frame_to_add);
       }
     }
     int32 window_frames = window_end - window_start;

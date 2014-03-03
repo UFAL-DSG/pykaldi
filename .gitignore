@@ -102,6 +102,8 @@ src/feat/feature-fbank-test
 src/feat/.depend.mk
 
 # /src/featbin/
+src/featbin/add-deltas-sdc
+src/featbin/copy-feats-to-sphinx
 src/featbin/compare-feats
 src/featbin/compute-kaldi-pitch-feats
 src/featbin/process-kaldi-pitch-feats
@@ -295,6 +297,8 @@ src/lat/.depend.mk
 src/lat/kaldi-lattice-test
 
 # /src/latbin/
+src/latbin/lattice-determinize-phone-pruned
+src/latbin/lattice-determinize-phone-pruned-parallel
 src/latbin/lattice-depth-per-frame
 src/latbin/lattice-limit-depth
 src/latbin/lattice-minimize
@@ -352,6 +356,7 @@ src/nnet-cpu/.depend.mk
 src/nnet-cpu/nnet-component-test
 
 # /src/nnetbin/
+src/nnetbin/nnet-initialize
 src/nnetbin/nnet-info
 src/nnetbin/.depend.mk
 src/nnetbin/nnet-train-xent-hardlab-perutt
@@ -673,6 +678,10 @@ tools/python/
 
 
 # src/nnet2bin
+src/nnet2bin/nnet-normalize-stddev
+src/nnet2bin/nnet-perturb-egs
+src/nnet2bin/nnet-perturb-egs-fmllr
+src/nnet2bin/nnet-train-ensemble
 src/nnet2bin/nnet-align-compiled
 src/nnet2bin/nnet-am-average
 src/nnet2bin/nnet-am-combine
@@ -734,3 +743,24 @@ src/nnet2bin/raw-nnet-info
 src/nnetbin/nnet-kl-hmm-acc
 src/nnetbin/nnet-kl-hmm-mat-to-component
 src/nnetbin/nnet-train-frmshuff
+
+
+
+# src/ivectorbin
+src/ivectorbin/compute-eer
+src/ivectorbin/compute-vad
+src/ivectorbin/ivector-compute-dot-products
+src/ivectorbin/ivector-compute-lda
+src/ivectorbin/ivector-compute-plda
+src/ivectorbin/ivector-copy-plda
+src/ivectorbin/ivector-extract
+src/ivectorbin/ivector-extractor-acc-stats
+src/ivectorbin/ivector-extractor-est
+src/ivectorbin/ivector-extractor-init
+src/ivectorbin/ivector-extractor-sum-accs
+src/ivectorbin/ivector-mean
+src/ivectorbin/ivector-normalize-length
+src/ivectorbin/ivector-plda-scoring
+src/ivectorbin/ivector-subtract-global-mean
+src/ivectorbin/ivector-transform
+src/ivectorbin/select-voiced-frames

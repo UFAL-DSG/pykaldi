@@ -57,7 +57,7 @@ if [ $stage -le 0 ]; then
     lattice-prune --beam=$beam ark:- ark:- \| \
     lattice-align-words $lang/phones/word_boundary.int $model ark:- ark:- \| \
     lattice-to-ctm-conf --decode-mbr=$decode_mbr ark:- - \| \
-    utils/int2sym.pl -f 5 $lang/words.txt  \| \
+    utils/int2sym.pl -f 5 $lang/words.txt  \| tee $dir/score_LMWT/$name.utt.ctm \| \
     utils/convert_ctm.pl $data/segments $data/reco2file_and_channel \
     '>' $dir/score_LMWT/$name.ctm || exit 1;
 fi
@@ -71,6 +71,7 @@ if [ $stage -le 1 ]; then
       grep -v -E '<eps>' | \
       grep -v -E '<noise>' | \
       grep -v -E '<silence>' | \
+      grep -v -E '<hes>' | \
       grep -v -E '<unk>' | \
       grep -v -E '<v-noise>' | \
       perl -e '@list = (); %list = ();

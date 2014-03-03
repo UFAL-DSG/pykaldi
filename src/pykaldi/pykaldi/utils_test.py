@@ -13,13 +13,19 @@
 # MERCHANTABLITY OR NON-INFRINGEMENT.
 # See the Apache 2 License for the specific language governing permissions and
 # limitations under the License. #
+from __future__ import unicode_literals
 
 import unittest
 import copy
 from utils import expand_prefix
+from utils import fst_shortest_path_to_lists
+import fst
+import os
+from subprocess import call
 
 
 class TestExpandPref(unittest.TestCase):
+
     def setUp(self):
         self.test = {'x': '1',
                      'prefixdir': 'myownpath',
@@ -48,6 +54,28 @@ class TestExpandPref(unittest.TestCase):
         t, g = gold['innerdic']['a'], test['innerdic']['a']
         self.assertTrue(t == g, 'empty value for expansion fails: %r vs %r' % (t, g))
         self.assertTrue(gold['innerlist'][0] == test['innerlist'][0], 'list expansion fails')
+
+
+@unittest.skipIf(call(['which', 'fstcompile']) != 0, 'We need to compile testing fst using fstcompile')
+class TestLatticeToNbest(unittest.TestCase):
+
+    def setUp(self):
+        shortest_txt = os.path.join(os.path.dirname(__file__), 'test_shortest.txt')
+        shortest_fst = os.path.join(os.path.dirname(__file__), 'test_shortest.fst')
+        try:
+            if not os.path.exists(shortest_fst):
+                call(['fstcompile', shortest_txt, shortest_fst])
+        except Exception as e:
+            print 'Failed to generate testing fst'
+            raise e
+        self.s = fst.read_std(shortest_fst)
+        self.s_result = [(110.40000001341105, [1, 3, 4]),
+                         (110.6000000089407, [2, 3, 4]), (1000.2000000029802, [2])]
+
+    def test_shortestPathToLists(self):
+        shortest_fst = self.s.shortest_path(10)
+        nbest_list = fst_shortest_path_to_lists(shortest_fst)
+        self.assertSequenceEqual(nbest_list, self.s_result)
 
 
 if __name__ == '__main__':

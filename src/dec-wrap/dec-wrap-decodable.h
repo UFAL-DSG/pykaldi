@@ -28,13 +28,13 @@
 
 namespace kaldi {
 
-// A decodable, taking input from an PykaldiFeatureInput object on-demand
-class PykaldiDecodableDiagGmmScaled : public DecodableInterface {
+// A decodable, taking input from an OnlFeatureInput object on-demand
+class OnlDecodableDiagGmmScaled : public DecodableInterface {
  public:
-  PykaldiDecodableDiagGmmScaled(const AmDiagGmm &am,
+  OnlDecodableDiagGmmScaled(const AmDiagGmm &am,
                                const TransitionModel &trans_model,
                                const BaseFloat scale,
-                               PykaldiFeatureMatrix *input_feats);
+                               OnlFeatureMatrix *input_feats);
 
 
   /// Returns the log likelihood, which will be negated in the decoder.
@@ -52,7 +52,7 @@ class PykaldiDecodableDiagGmmScaled : public DecodableInterface {
  private:
   void GetFrame(int32 frame);
 
-  PykaldiFeatureMatrix *features_;
+  OnlFeatureMatrix *features_;
   const AmDiagGmm &ac_model_;
   BaseFloat ac_scale_;
   const TransitionModel &trans_model_;
@@ -61,7 +61,7 @@ class PykaldiDecodableDiagGmmScaled : public DecodableInterface {
   int32 cur_frame_;
   std::vector<std::pair<int32, BaseFloat> > cache_;
 
-  KALDI_DISALLOW_COPY_AND_ASSIGN(PykaldiDecodableDiagGmmScaled);
+  KALDI_DISALLOW_COPY_AND_ASSIGN(OnlDecodableDiagGmmScaled);
 };
 
 } // namespace kaldi

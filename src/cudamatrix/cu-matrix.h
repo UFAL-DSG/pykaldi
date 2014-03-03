@@ -271,6 +271,8 @@ class CuMatrixBase {
   void MulRowsGroupMat(const CuMatrixBase<Real> &src);
   /// divide i'th row by scale[i]
   void DivRowsVec(const CuVectorBase<Real> &div);
+  /// invert the matrix by elements.
+  void InvertElements();
   /// B = aplha * A + beta * B
   void AddMat(Real alpha, const CuMatrixBase<Real> &A, Real beta=1.0);
   /// B = aplha * row + beta * B
@@ -280,7 +282,8 @@ class CuMatrixBase {
   /// C = alpha * A(^T)*B(^T) + beta * C
   void AddMatMat(Real alpha, const CuMatrixBase<Real> &A, MatrixTransposeType transA,
                  const CuMatrixBase<Real> &B, MatrixTransposeType transB, Real beta);
-
+  /// *this = a * b / c (by element; when c = 0, *this = a)
+  void AddMatMatDivMat(const CuMatrixBase<Real> &A, const CuMatrixBase<Real> &B, const CuMatrixBase<Real> &C);
   /// *this = beta * *this + alpha * M M^T, for symmetric matrices.  It only
   /// updates the lower triangle of *this.  It will leave the matrix asymmetric;
   /// if you need it symmetric as a regular matrix, do CopyLowerToUpper().
@@ -395,11 +398,20 @@ class CuMatrixBase {
 
   void Write(std::ostream &os, bool binary) const;
 
+  // This function, adds a list of MatrixElements (scaled by alpha) to corresponding locations to
+  // (*this).
+  void AddElements(Real alpha, const std::vector<MatrixElement<Real> >& input);
+
   // This function resizes the output to indices.size(), and for each element of
   // "indices" it interprets it as a (row, column) index into *this, and puts
   // (*this)(row, column) into the corresponding element of "output".
   void Lookup(const std::vector<Int32Pair> &indices,
               std::vector<Real> *output) const;
+
+  // Creates binary mask with per-element equality predicates of *this, mat.
+  // Output stored to 'mask', values : 1.0 = equal, 0.0 = not-equal.
+  void EqualElementMask(const CuMatrixBase<Real> &mat, CuMatrix<Real> *mask) const;
+
  protected:
   // The following two functions should only be called if we did not compile with CUDA
   // or could not get a CUDA card; in that case the contents are interpreted the

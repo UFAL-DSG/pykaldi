@@ -2,13 +2,6 @@ all:
 
 include ../kaldi.mk
 
-# FIXME TODO TEST with shared settings
-
-# Tag the compilation with version
-EXTRA_CXXFLAGS += -DPYKALDI_MAJOR=0 -DPYKALDI_MINOR=0 -DPYKALDI_MINOR=0 -DPYKALDI_PATCH=1
-# Git version is also stored to library
-GIT_HASH=$(shell git log -1 HEAD --pretty=format:"%H")
-EXTRA_CXXFLAGS += -DPYKALDI_GIT_VERSION=\"$(GIT_HASH)\"
 EXTRA_CXXFLAGS += -Wno-sign-compare
 EXTRA_CXXFLAGS += -ggdb -O0  # for gdb debugging, example -DDEBUG_POST for MovePostToArcs debug
 

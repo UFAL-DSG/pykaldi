@@ -13,6 +13,8 @@
 # MERCHANTABLITY OR NON-INFRINGEMENT.
 # See the Apache 2 License for the specific language governing permissions and
 # limitations under the License. #
+from __future__ import unicode_literals
+
 import unittest
 from pykaldi.decoders import PyGmmLatgenWrapper, DummyDecoder
 
@@ -29,6 +31,7 @@ from pykaldi.decoders import PyGmmLatgenWrapper, DummyDecoder
 
 
 class TestPyGmmLatgenWrappeNotInit(unittest.TestCase):
+
     def setUp(self):
         self.d = PyGmmLatgenWrapper()
 
@@ -39,11 +42,11 @@ class TestPyGmmLatgenWrappeNotInit(unittest.TestCase):
         self.assertEqual(self.d.decode(max_frames), 0)
 
     def test_frame_in(self):
-        wav = "ahoj"  # 16 bit audio -> 2 samples
+        wav = b"ahoj"  # 16 bit audio -> 2 samples
         self.d.frame_in(wav)
 
     def test_frame_in_assert(self):
-        wav = "cau"  # 16 bit audio ->1.5 samples == bad
+        wav = b"cau"  # 16 bit audio ->1.5 samples == bad
         with self.assertRaises(AssertionError):
             self.d.frame_in(wav)
 
@@ -73,6 +76,7 @@ class TestPyGmmLatgenWrappeRealInit(unittest.TestCase):
 
 
 class TestDummyDecoder(unittest.TestCase):
+
     def setUp(self):
         self.d = DummyDecoder()
 

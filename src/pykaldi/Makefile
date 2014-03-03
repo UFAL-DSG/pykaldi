@@ -24,7 +24,7 @@ ADDLIBS = ../dec-wrap/dec-wrap.a ../decoder/kaldi-decoder.a \
 
 # ifeq ($(KALDI_FLAVOR), dynamic)
 # dynamic compilation
-LIBFILE=lib$(LIBNAME).so
+LIBFILE=pykaldi/lib$(LIBNAME).so
 $(LIBFILE): $(ADDLIBS)
 	# Building shared library from static librariess.
 	# The static libraries were compiled with -fPIC.
@@ -62,6 +62,11 @@ clean:
 	-python setup.py clean --all
 	rm -f pykaldi/decoders.so pykaldi/decoders.cpp $(LIBFILE)
 	rm -rf dist build *.egg-info
+
+install: all
+	cp -f $(LIBFILE) /usr/lib
+	python setup.py install
+
 
 cleanall: clean
 	# recursive make clean

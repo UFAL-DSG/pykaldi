@@ -1,54 +1,50 @@
-BEST_LINE=16
-# LANG available alternatives cs|en
+BEST_LINE=18
+MODEL_PREFIX_URL=http://vystadial.ms.mff.cuni.cz/download/kaldi/src/pykaldi/pykaldi/binutils/
+DATA_PREFIX_URL=http://vystadial.ms.mff.cuni.cz/download/kaldi/src/pykaldi/pykaldi/binutils/
+
+# Czech language models 
 LANG=cs
-MODEL_PREFIX_URL=http://vystadial.ms.mff.cuni.cz/download/alex/resources/asr/voip_$(LANG)/kaldi/
-HCLG=HCLG.fst
-HCLG_LDA=HCLG_lda.fst
-AM=final.mdl
-AM_LDA=final_lda.mdl
-MAT_LDA=final_lda.mat
-WST=words.txt
-MFCC=mfcc.conf
+HCLG=models/HCLG_tri2b_bmmi.fst
+AM=models/tri2b_bmmi.mdl
+MAT=models/tri2b_bmmi.mat  # matrix trained in tri2b models 
+WST=models/words.txt
+MFCC=models/mfcc.conf
+SILENCE=models/silence.csl
 
 $(MFCC):
-	wget $(MODEL_PREFIX_URL)/$@
+	wget $(MODEL_PREFIX_URL)/$@ -O $@
+
+$(SILENCE):
+	wget $(MODEL_PREFIX_URL)/$@ -O $@
 
 $(HCLG):
-	wget $(MODEL_PREFIX_URL)/$@
-
-$(HCLG_LDA):
-	wget $(MODEL_PREFIX_URL)/$@
+	wget $(MODEL_PREFIX_URL)/$@ -O $@
 
 $(AM):
-	wget $(MODEL_PREFIX_URL)/$@
+	wget $(MODEL_PREFIX_URL)/$@ -O $@
 
-$(AM_LDA):
-	wget $(MODEL_PREFIX_URL)/$@
-
-$(MAT_LDA):
-	wget $(MODEL_PREFIX_URL)/$@
+$(MAT):
+	wget $(MODEL_PREFIX_URL)/$@ -O $@
 
 $(WST):
-	wget $(MODEL_PREFIX_URL)/$@
+	wget $(MODEL_PREFIX_URL)/$@ -O $@
 
-vystadial-sample-$(LANG).tar.gz:
-	wget http://vystadial.ms.mff.cuni.cz/download/vystadial-sample/vystadial-sample-$(LANG).tar.gz
+data/vystadial-sample-$(LANG).tar.gz:
+	wget $(DATA_PREFIX_URL)/$@ -O $@
 
-vystadial-sample-$(LANG)/README.rst: vystadial-sample-$(LANG).tar.gz
-	tar xf $<
+data/vystadial-sample-$(LANG)/README.rst: data/vystadial-sample-$(LANG).tar.gz
+	tar xf  $< -C data
 	touch $@
 
-export BUILD_INPUT_SCP_PY
-
-vystadial-sample-$(LANG)/test/input.scp: vystadial-sample-$(LANG)/README.rst
+data/vystadial-sample-$(LANG)/test/input.scp: data/vystadial-sample-$(LANG)/README.rst
 	for f in `dirname $@`/*.wav ; do echo "`basename $$f`" "`pwd`/$$f" ; done > $@
 		
-vystadial-sample-$(LANG)/test/input_best.scp: vystadial-sample-$(LANG)/test/input.scp
+data/vystadial-sample-$(LANG)/test/input_best.scp: data/vystadial-sample-$(LANG)/test/input.scp
 	sed -n '$(BEST_LINE)p' < $< > $@
 
-build_scp: vystadial-sample-$(LANG)/test/input_best.scp vystadial-sample-$(LANG)/test/input.scp
+build_scp: data/vystadial-sample-$(LANG)/test/input_best.scp data/vystadial-sample-$(LANG)/test/input.scp
 
-download_models: $(HCLG) $(AM) $(WST) $(MAT_LDA) $(AM_LDA) $(HCLG_LDA) $(MFCC)
+download_models: $(SILENCE) $(WST) $(HCLG) $(AM) $(MAT) $(MFCC)
 
 pykaldi-latgen-faster: build_scp download_models
 	bash run_pykaldi-latgen-faster-decoder.sh
@@ -60,6 +56,6 @@ live: download_models
 	bash run_live-demo.sh
 	
 clean:
-	rm -rf *.pyc $(HCLG) $(AM) $(MAT_LDA) $(WST) vystadial-sample-*
+	rm -rf *.pyc data/* models/* decode
 
 .PHONY: live pykaldi-latgen-faster gmm-latgen-faster clean
