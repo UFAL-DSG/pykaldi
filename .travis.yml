@@ -4,6 +4,7 @@
 branches:
     only:
         - master
+        - python3.3_support
 
 language: python
 python:
