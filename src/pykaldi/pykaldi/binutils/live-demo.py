@@ -14,7 +14,7 @@
 # MERCHANTABLITY OR NON-INFRINGEMENT.
 # See the Apache 2 License for the specific language governing permissions and
 # limitations under the License. #
-from __future__ import unicode_literals
+
 
 import pyaudio
 from pykaldi.decoders import PyGmmLatgenWrapper
@@ -57,7 +57,7 @@ def user_control(pause):
         # if is data on input
         while (select.select([sys.stdin], [], [], 1) == ([sys.stdin], [], [])):
             c = sys.stdin.read(1)
-            print 'character %s' % c
+            print('character %s' % c)
             if c == 'u':
                 utt_end = True
             elif c == 'p':
@@ -66,10 +66,10 @@ def user_control(pause):
                 dialog_end = True
     finally:
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
-    print """
+    print("""
 Utterance end %d : press 'u'
 The recognition is paused %d: press 'p'
-For terminating the program press 'c'\n\n""" % (utt_end, pause)
+For terminating the program press 'c'\n\n""" % (utt_end, pause))
 
     return (utt_end, dialog_end, pause)
 
@@ -90,8 +90,8 @@ def decode_loop(d, audio_batch_size, wst, stream):
             nbest = lattice_to_nbest(lat, n=1)
             best_prob, best_path = nbest[0]
             decoded = [wst[w] for w in best_path]
-            print "%s secs, frames: %d, prob: %f, %s " % (
-                str(time.time() - start), utt_frames, prob, decoded.encode('UTF-8'))
+            print("%s secs, frames: %d, prob: %f, %s " % (
+                str(time.time() - start), utt_frames, prob, decoded.encode('UTF-8')))
             utt_frames = 0
         if dialog_end:
             d.reset(keep_buffer_data=False)
@@ -105,11 +105,11 @@ def decode_loop(d, audio_batch_size, wst, stream):
 if __name__ == '__main__':
     audio_batch_size, wst_path = int(sys.argv[1]), sys.argv[2]
     argv = sys.argv[3:]
-    print >> sys.stderr, 'Python args: %s' % str(sys.argv)
+    print('Python args: %s' % str(sys.argv), file=sys.stderr)
 
-    print """ Press space for pause
+    print(""" Press space for pause
     Pres 'Enter' to see output at the end of utterance
-    Prec 'Esc' for terminating the program"""
+    Prec 'Esc' for terminating the program""")
     wst = wst2dict(wst_path)
     d = PyGmmLatgenWrapper()
     d.setup(argv)
