@@ -56,7 +56,7 @@ setup(
     package_data={'pykaldi': ['libpykaldi.so', 'test_shortest.txt']},
     include_package_data=True,
     cmdclass={'build_ext': build_ext},
-    version='0.1-' + git_version,
+    version='0.1-' + str(git_version),
     install_requires=install_requires,
     setup_requires=['cython>=0.19.1'],
     ext_modules=ext_modules,
