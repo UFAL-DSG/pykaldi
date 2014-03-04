@@ -26,8 +26,7 @@ install:
     - pushd tools && make -j 4 atlas && popd
     # Configure with ATLAS (default)
     - pushd src && ./configure --shared && popd
-    # - pushd src && make -j 4 && popd
-    # Should be enough
+    - pushd src && make -j 4 && popd
     - pushd src/dec-wrap && make -j 4 && popd
 
 script:
