@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 from pykaldi import __version__, __git_revision__
 
 

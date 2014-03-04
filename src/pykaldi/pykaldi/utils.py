@@ -12,10 +12,10 @@
 # MERCHANTABLITY OR NON-INFRINGEMENT.
 # See the Apache 2 License for the specific language governing permissions and
 # limitations under the License. #
-from __future__ import unicode_literals
+
 
 import os
-from ordereddefaultdict import DefaultOrderedDict
+from .ordereddefaultdict import DefaultOrderedDict
 import errno
 import wave
 import fst
@@ -32,18 +32,18 @@ def fst_shortest_path_to_lists(fst_shortest):
     for arc in first_arcs:
         # first arc is epsilon arc
         assert(arc.ilabel == 0 and arc.olabel == 0)
-        arc = fst_shortest[arc.nextstate].arcs.next()
+        arc = next(fst_shortest[arc.nextstate].arcs)
         # second arc is also epsilon arc
         assert(arc.ilabel == 0 and arc.olabel == 0)
         # assuming logarithmic semiring
         path, weight = [], 0
         # start with third arc
-        arc = fst_shortest[arc.nextstate].arcs.next()
+        arc = next(fst_shortest[arc.nextstate].arcs)
         try:
             while arc.olabel != 0:
                 path.append(arc.olabel)
                 weight += float(arc.weight)  # TODO use the Weights plus operation explicitly
-                arc = fst_shortest[arc.nextstate].arcs.next()
+                arc = next(fst_shortest[arc.nextstate].arcs)
             weight += float(arc.weight)
         except StopIteration:
             pass
@@ -132,12 +132,12 @@ def expand_prefix(d, bigd):
             s = os.path.sep.join([pref, d['value']]).rstrip(os.path.sep)
             return s.encode('utf-8')
         else:
-            for k, v in d.iteritems():
+            for k, v in d.items():
                 d[k] = expand_prefix(v, bigd)
             return d
     elif isinstance(d, list):
         return [expand_prefix(x, bigd) for x in d]
-    elif isinstance(d, unicode) or isinstance(d, str):
+    elif isinstance(d, str) or isinstance(d, str):
         # we need strings not unicode
         return d.encode('utf-8')
     else:
@@ -178,7 +178,7 @@ def int_to_txt(inp_path, out_path, wst_dict, unknown_symbol=None):
                     try:
                         word = wst_dict[iw]
                     except KeyError:
-                        print 'Warning: unknown word %s' % iw
+                        print('Warning: unknown word %s' % iw)
                         word = unknown_symbol
                     w.write('%s ' % word)
                 w.write('\n')
@@ -192,5 +192,5 @@ def compact_hyp(hyp_path, comp_hyp_path):
             name, dec = tmp[0], tmp[1:]
             d[name].extend(dec)
     with open(comp_hyp_path, 'wb') as w:
-        for wav, dec_list in d.iteritems():
+        for wav, dec_list in d.items():
             w.write('%s %s\n' % (wav, ' '.join(dec_list)))

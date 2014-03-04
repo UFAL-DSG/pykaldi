@@ -48,7 +48,7 @@ try:
     git_version = check_output(['git', 'rev-parse', 'HEAD'])
 except:
     git_version = 'Unknown Git version'
-    print git_version
+    print(git_version)
 
 setup(
     name='pykaldi',

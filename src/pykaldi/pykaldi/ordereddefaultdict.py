@@ -10,7 +10,7 @@ Combine functionality from ordered and default dict.
 #
 # However,
 # I did not change the code, so It should not effect the license of the project!
-from __future__ import unicode_literals
+
 
 from collections import Callable
 try:
@@ -44,7 +44,7 @@ class DefaultOrderedDict(OrderedDict):
             args = tuple()
         else:
             args = self.default_factory,
-        return type(self), args, None, None, self.items()
+        return type(self), args, None, None, list(self.items())
 
     def copy(self):
         return self.__copy__()
@@ -54,7 +54,7 @@ class DefaultOrderedDict(OrderedDict):
 
     def __deepcopy__(self, memo):
         import copy
-        return type(self)(self.default_factory, copy.deepcopy(self.items()))
+        return type(self)(self.default_factory, copy.deepcopy(list(self.items())))
 
     def __repr__(self):
         return 'OrderedDefaultDict(%s, %s)' % (self.default_factory, OrderedDict.__repr__(self))

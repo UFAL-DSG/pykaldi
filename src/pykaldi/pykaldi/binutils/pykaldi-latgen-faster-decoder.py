@@ -42,7 +42,7 @@ def write_decoded(f, wav_name, word_ids, wst):
     f.write(line.encode('UTF-8'))
 
 
-# @profile
+@profile
 def decode(d, pcm):
     frame_len = (2 * audio_batch_size)  # 16-bit audio so 1 sample = 2 chars
     i, decoded_frames, max_end = 0, 0, len(pcm)
