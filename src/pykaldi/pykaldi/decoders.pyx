@@ -97,21 +97,3 @@ cdef class PyGmmLatgenWrapper:
             self.thisptr.Setup(len(args), string_buf)
         finally:
             free(string_buf)
-
-
-class DummyDecoder(object):
-    """For debugging purposes."""
-
-    def __init__(self):
-        print 'DummyDecoder initialized'
-
-    def frame_in(self, frame):
-        """rec_in(self, frame)"""
-        print 'Dummy enqueing frame of length %d' % len(frame)
-
-    def decode(self):
-        """decode(self)"""
-        pass
-
-    def get_Nbest(self):
-        return [(1.0, 'answer')]

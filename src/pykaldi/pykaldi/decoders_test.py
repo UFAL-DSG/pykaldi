@@ -17,7 +17,7 @@
 
 from __future__ import unicode_literals
 import unittest
-from pykaldi.decoders import PyGmmLatgenWrapper, DummyDecoder
+from pykaldi.decoders import PyGmmLatgenWrapper
 
 
 # class TestHelperFunction(unittest.TestCase):
@@ -48,6 +48,7 @@ class TestPyGmmLatgenWrappeNotInit(unittest.TestCase):
 
     def test_frame_in_assert(self):
         wav = b"cau"  # 16 bit audio ->1.5 samples == bad
+        print(type(wav))
         with self.assertRaises(AssertionError):
             self.d.frame_in(wav)
 
@@ -75,20 +76,6 @@ class TestPyGmmLatgenWrappeRealInit(unittest.TestCase):
     # TODO create working dummy data
     pass
 
-
-class TestDummyDecoder(unittest.TestCase):
-
-    def setUp(self):
-        self.d = DummyDecoder()
-
-    def test_frame_in(self):
-        self.d.frame_in("Ahoj")
-
-    def test_decode(self):
-        self.d.decode()
-
-    def test_getNbest(self):
-        self.assertEqual([(1.0, 'answer')], self.d.get_Nbest())
 
 if __name__ == '__main__':
     unittest.main()
