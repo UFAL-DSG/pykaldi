@@ -87,6 +87,7 @@ cdef class PyGmmLatgenWrapper:
     def setup(self, args):
         """setup(self, args)"""
         args = ['PyGmmLatgenWrapper'] + args
+        args = [ a.encode('UTF-8') for a in args]
         cdef char **string_buf = <char**>malloc(len(args) * sizeof(char*))
         if string_buf is NULL:
             raise MemoryError()

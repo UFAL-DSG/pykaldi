@@ -122,7 +122,7 @@ def make_dir(path):
 
 
 def expand_prefix(d, bigd):
-    '''Supports only strings, list and dictionaries and its combinations.
+    '''Supports only strings/unicode, list and dictionaries and its combinations.
     Replace {'prefix':'key_to_path', 'value':'suffix_of_path'} with correct path'''
     if isinstance(d, dict):
         if len(d) == 2 and 'prefix' in d and 'value' in d:
@@ -131,16 +131,15 @@ def expand_prefix(d, bigd):
                 # we allow prefix to be another dictionary convertable to string
                 pref = expand_prefix(pref, bigd)
             s = os.path.sep.join([pref, d['value']]).rstrip(os.path.sep)
-            return s.encode('utf-8')
+            return str(s)
         else:
-            for k, v in d.items():
+            for k, v in list(d.items()):
                 d[k] = expand_prefix(v, bigd)
             return d
     elif isinstance(d, list):
         return [expand_prefix(x, bigd) for x in d]
-    elif isinstance(d, str) or isinstance(d, unicode):
-        # we need strings not unicode
-        return d.encode('utf-8')
+    elif isinstance(d, bytes) or isinstance(d, str):
+        return str(d)
     else:
         raise ValueError('We support only dictionaries, lists, unicode and strings.')
 
@@ -179,7 +178,7 @@ def int_to_txt(inp_path, out_path, wst_dict, unknown_symbol=None):
                     try:
                         word = wst_dict[iw]
                     except KeyError:
-                        print('Warning: unknown word %s' % iw)
+                        print(('Warning: unknown word %s' % iw))
                         word = unknown_symbol
                     w.write('%s ' % word)
                 w.write('\n')
@@ -193,5 +192,5 @@ def compact_hyp(hyp_path, comp_hyp_path):
             name, dec = tmp[0], tmp[1:]
             d[name].extend(dec)
     with open(comp_hyp_path, 'wb') as w:
-        for wav, dec_list in d.items():
+        for wav, dec_list in list(d.items()):
             w.write('%s %s\n' % (wav, ' '.join(dec_list)))
