@@ -16,9 +16,9 @@ cdef extern from "dec-wrap/dec-wrap-latgen-wrapper.h" namespace "kaldi":
     cdef cppclass GmmLatgenWrapper:
         size_t Decode(size_t max_frames) except +
         void FrameIn(unsigned char *frame, size_t frame_len) except +
-        bool GetBestPath(vector[int] v_out, float *prob) except +
+        bool GetBestPath(vector[int] v_out, float *lik) except +
         bool GetRawLattice(fst.libfst.StdVectorFst *fst_out) except +
-        bool GetLattice(fst.libfst.LogVectorFst *fst_out, double *tot_prob) except +
+        bool GetLattice(fst.libfst.LogVectorFst *fst_out, double *tot_lik) except +
         void PruneFinal() except +
         void Reset(bool keep_buffer_data) except +
         int Setup(int argc, char **argv) except +
@@ -55,21 +55,21 @@ cdef class PyGmmLatgenWrapper:
     def get_best_path(self):
         """get_best_path(self)"""
         cdef vector[int] t
-        cdef float prob
-        self.thisptr.GetBestPath(t, address(prob))
+        cdef float lik 
+        self.thisptr.GetBestPath(t, address(lik))
         ids = [t[i] for i in xrange(t.size())]
-        return (prob, ids)
+        return (lik, ids)
 
     def get_nbest(self, n=1):
         """get_nbest(self, n=1)"""
-        prob, lat = self.get_lattice()
+        lik, lat = self.get_lattice()
         return lattice_to_nbest(lat, n)
 
     def get_lattice(self):
-        cdef double prob
+        cdef double lik
         r = fst.LogVectorFst()
-        self.thisptr.GetLattice((<fst._fst.LogVectorFst?>r).fst, address(prob))
-        return (prob, r)
+        self.thisptr.GetLattice((<fst._fst.LogVectorFst?>r).fst, address(lik))
+        return (lik, r)
 
     def get_raw_lattice(self):
         r = fst.StdVectorFst()
