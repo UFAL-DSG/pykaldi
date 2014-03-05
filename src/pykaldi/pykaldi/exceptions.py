@@ -1,10 +1,8 @@
-
-from pykaldi import __version__, __git_revision__
+from __future__ import unicode_literals
 
 
 class PyKaldiError(Exception):
-    def __str__(self):
-        return 'Pykaldi %s, Git revision %s' % (__version__, __git_revision__)
+    pass
 
 
 class PyKaldiCError(PyKaldiError):

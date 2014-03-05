@@ -1,6 +1,7 @@
 """
 Combine functionality from ordered and default dict.
 """
+from __future__ import unicode_literals
 
 # ATTRIBUTION
 # The implementation is taken from:

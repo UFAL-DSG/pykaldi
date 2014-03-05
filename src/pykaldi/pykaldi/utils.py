@@ -14,6 +14,7 @@
 # limitations under the License. #
 
 
+from __future__ import unicode_literals
 import os
 from .ordereddefaultdict import DefaultOrderedDict
 import errno
@@ -137,11 +138,11 @@ def expand_prefix(d, bigd):
             return d
     elif isinstance(d, list):
         return [expand_prefix(x, bigd) for x in d]
-    elif isinstance(d, str) or isinstance(d, str):
+    elif isinstance(d, str) or isinstance(d, unicode):
         # we need strings not unicode
         return d.encode('utf-8')
     else:
-        raise ValueError('We support only dictionaries, lists and strings.')
+        raise ValueError('We support only dictionaries, lists, unicode and strings.')
 
 
 def wst2dict(wst_path, encoding='utf-8'):
