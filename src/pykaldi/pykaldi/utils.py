@@ -138,7 +138,8 @@ def expand_prefix(d, bigd):
             return d
     elif isinstance(d, list):
         return [expand_prefix(x, bigd) for x in d]
-    elif isinstance(d, bytes) or isinstance(d, str):
+    # hack: note that unicode is not valid function in Python 3.*
+    elif isinstance(d, bytes) or isinstance(d, str) or isinstance(d, unicode):
         return str(d)
     else:
         raise ValueError('We support only dictionaries, lists, unicode and strings.')
