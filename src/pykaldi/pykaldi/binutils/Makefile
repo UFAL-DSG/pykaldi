@@ -56,6 +56,6 @@ live: download_models
 	bash run_live-demo.sh
 	
 clean:
-	rm -rf *.pyc data/* models/* decode
+	rm -rf *.pyc data/* models/* decode/*
 
 .PHONY: live pykaldi-latgen-faster gmm-latgen-faster clean

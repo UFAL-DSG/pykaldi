@@ -28,7 +28,7 @@ LIBFILE=pykaldi/lib$(LIBNAME).so
 $(LIBFILE): $(ADDLIBS)
 	# Building shared library from static librariess.
 	# The static libraries were compiled with -fPIC.
-	$(CXX) -shared -DPIC -o $@ -Wl,-soname=$@,--whole-archive $^ -Wl,--no-whole-archive $(EXTRA_LDLIBS) $(LDFLAGS) $(LDLIBS)
+	$(CXX) -shared -DPIC -o $@ -Wl,-soname=lib$(LIBNAME).so,--whole-archive $^ -Wl,--no-whole-archive $(EXTRA_LDLIBS) $(LDFLAGS) $(LDLIBS)
 # else
 # # TODO
 # # static compilation
@@ -64,8 +64,12 @@ clean:
 	rm -rf dist build *.egg-info
 
 install: all
+	# TODO I should distribute the shared library in more sensible way (ANY SUGGESTIONS?)
 	cp -f $(LIBFILE) /usr/lib
 	python setup.py install
+	cd pyfst
+	python setup.py install
+	cd ..
 
 
 cleanall: clean
