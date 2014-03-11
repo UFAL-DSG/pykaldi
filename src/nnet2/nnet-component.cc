@@ -1,8 +1,8 @@
 // nnet2/nnet-component.cc
 
 // Copyright 2011-2012  Karel Vesely
-//                      Johns Hopkins University (author: Daniel Povey)
-//	          2013  Xiaohui Zhang	
+//           2013-2014  Johns Hopkins University (author: Daniel Povey)
+//	              2013  Xiaohui Zhang	
 
 // See ../../COPYING for clarification regarding multiple authors
 //
@@ -60,6 +60,8 @@ Component* Component::NewComponentOfType(const std::string &component_type) {
     ans = new SoftHingeComponent();
   } else if (component_type == "PnormComponent") {
     ans = new PnormComponent();
+  } else if (component_type == "MaxoutComponent") {
+    ans = new MaxoutComponent();
   } else if (component_type == "ScaleComponent") {
     ans = new ScaleComponent();
   } else if (component_type == "PowerExpandComponent") {
@@ -102,8 +104,6 @@ Component* Component::NewComponentOfType(const std::string &component_type) {
     ans = new DropoutComponent();
   } else if (component_type == "AdditiveNoiseComponent") {
     ans = new AdditiveNoiseComponent();
-  } else if (component_type == "InformationBottleneckComponent") {
-    ans = new InformationBottleneckComponent();
   }
   return ans;
 }
@@ -498,6 +498,91 @@ void NonlinearComponent::InitFromString(std::string args) {
   Init(dim);
 }
 
+void MaxoutComponent::Init(int32 input_dim, int32 output_dim)  {
+  input_dim_ = input_dim;
+  output_dim_ = output_dim;
+  if (input_dim_ == 0)
+    input_dim_ = 10 * output_dim_; // default group size : 10
+  KALDI_ASSERT(input_dim_ > 0 && output_dim_ >= 0);
+  KALDI_ASSERT(input_dim_ % output_dim_ == 0) 
+}
+
+void MaxoutComponent::InitFromString(std::string args) {
+  std::string orig_args(args);
+  int32 input_dim = 0;
+  int32 output_dim = 0;
+  bool ok = ParseFromString("output-dim", &args, &output_dim) &&
+      ParseFromString("input-dim", &args, &input_dim);
+  KALDI_LOG << output_dim << " " << input_dim << " " << ok;
+  if (!ok || !args.empty() || output_dim <= 0)
+    KALDI_ERR << "Invalid initializer for layer of type "
+              << Type() << ": \"" << orig_args << "\"";
+  Init(input_dim, output_dim);
+}
+
+
+void MaxoutComponent::Propagate(const CuMatrixBase<BaseFloat> &in,
+                                int32 num_chunks,
+                                CuMatrix<BaseFloat> *out) const {
+  out->Resize(in.NumRows(), output_dim_, kUndefined);
+  int32 group_size = input_dim_ / output_dim_;
+  for (MatrixIndexT j = 0; j < output_dim_; j++) {
+    CuSubMatrix<BaseFloat> pool(out->ColRange(j, 1));
+    pool.Set(-1e20);
+    for (MatrixIndexT i = 0; i < group_size; i++)
+      pool.Max(in.ColRange(j * group_size + i, 1));
+  }
+}
+
+void MaxoutComponent::Backprop(const CuMatrixBase<BaseFloat> &in_value,
+                               const CuMatrixBase<BaseFloat> &out_value,
+                               const CuMatrixBase<BaseFloat> &out_deriv,
+                               int32, // num_chunks
+                               Component *to_update, // to_update
+                               CuMatrix<BaseFloat> *in_deriv) const {
+  int32 group_size = input_dim_ / output_dim_;
+  in_deriv->Resize(in_value.NumRows(), in_value.NumCols(), kSetZero);
+  for (MatrixIndexT j = 0; j < output_dim_; j++) {
+    CuSubMatrix<BaseFloat> out_j(out_value.ColRange(j, 1));
+    for (MatrixIndexT i = 0; i < group_size; i++) {
+        CuSubMatrix<BaseFloat> in_i(in_value.ColRange(j * group_size + i, 1));
+        CuSubMatrix<BaseFloat> in_deriv_i(in_deriv->ColRange(j * group_size + i, 1));
+        CuMatrix<BaseFloat> out_deriv_j(out_deriv.ColRange(j, 1));
+
+        // Only the pool-inputs with 'max-values' are used to back-propagate into,
+        // the rest of derivatives is zeroed-out by a mask.
+        CuMatrix<BaseFloat> mask;
+        in_i.EqualElementMask(out_j, &mask);
+        out_deriv_j.MulElements(mask);
+        in_deriv_i.AddMat(1.0, out_deriv_j, 1.0); 
+    }
+  }
+}
+
+void MaxoutComponent::Read(std::istream &is, bool binary) {
+  ExpectOneOrTwoTokens(is, binary, "<MaxoutComponent>", "<InputDim>");
+  ReadBasicType(is, binary, &input_dim_);
+  ExpectToken(is, binary, "<OutputDim>");
+  ReadBasicType(is, binary, &output_dim_);
+  ExpectToken(is, binary, "</MaxoutComponent>");
+}
+
+void MaxoutComponent::Write(std::ostream &os, bool binary) const {
+  WriteToken(os, binary, "<MaxoutComponent>");
+  WriteToken(os, binary, "<InputDim>");
+  WriteBasicType(os, binary, input_dim_);
+  WriteToken(os, binary, "<OutputDim>");
+  WriteBasicType(os, binary, output_dim_);
+  WriteToken(os, binary, "</MaxoutComponent>");
+}
+
+std::string MaxoutComponent::Info() const {
+  std::stringstream stream;
+  stream << Type() << ", input-dim = " << input_dim_
+         << ", output-dim = " << output_dim_;
+  return stream.str();
+}
+
 void PnormComponent::Init(int32 input_dim, int32 output_dim, BaseFloat p)  {
   input_dim_ = input_dim;
   output_dim_ = output_dim;
@@ -516,7 +601,6 @@ void PnormComponent::InitFromString(std::string args) {
   bool ok = ParseFromString("output-dim", &args, &output_dim) &&
       ParseFromString("input-dim", &args, &input_dim);
   ParseFromString("p", &args, &p);
-  KALDI_LOG << output_dim << " " << input_dim << " " << p << " " << ok;
   if (!ok || !args.empty() || output_dim <= 0)
     KALDI_ERR << "Invalid initializer for layer of type "
               << Type() << ": \"" << orig_args << "\"";
@@ -572,8 +656,10 @@ std::string PnormComponent::Info() const {
 }
 
 
+const BaseFloat NormalizeComponent::kNormFloor = pow(2.0, -66);
 // This component modifies the vector of activations by scaling it so that the
-// root-mean-square does not exceed one.
+// root-mean-square equals 1.0.
+
 void NormalizeComponent::Propagate(const CuMatrixBase<BaseFloat> &in,
                               int32, // num_chunks
                               CuMatrix<BaseFloat> *out) const {
@@ -581,7 +667,7 @@ void NormalizeComponent::Propagate(const CuMatrixBase<BaseFloat> &in,
   CuVector<BaseFloat> in_norm(in.NumRows());
   in_norm.AddDiagMat2(1.0 / in.NumCols(),
                       in, kNoTrans, 0.0);
-  in_norm.ApplyFloor(1.0);
+  in_norm.ApplyFloor(kNormFloor);
   in_norm.ApplyPow(-0.5);
   out->MulRowsVec(in_norm);
 }
@@ -590,7 +676,7 @@ void NormalizeComponent::Propagate(const CuMatrixBase<BaseFloat> &in,
   A note on the derivative of NormalizeComponent...
   let both row_in and row_out be vectors of dimension D.
   Let p = row_in^T row_in / D, and let
-      f = 1 / sqrt(max(1, p)), and we compute row_out as:
+      f = 1 / sqrt(max(kNormFloor, p)), and we compute row_out as:
 row_out = f row_in.
   Suppose we have a quantity deriv_out which is the derivative
   of the objective function w.r.t. row_out.  We want to compute
@@ -599,10 +685,10 @@ row_out = f row_in.
      deriv_in = f deriv_out + ....
   next we have to take into account the derivative that gets back-propagated
   through f.  Obviously, dF/df = deriv_out^T row_in.
-  And df/dp = (p <= 1.0 ? 0.0 : -0.5 p^{-1.5}) = (f == 1.0 ? 0.0 : -0.5 f^3),
+  And df/dp = (p <= kNormFloor ? 0.0 : -0.5 p^{-1.5}) = (f == 1 / sqrt(kNormFloor) ? 0.0 : -0.5 f^3),
   and dp/d(row_in) = 2/D row_in. [it's vector_valued].
   So this term in dF/d(row_in) equals:
-    dF/df df/dp dp/d(row_in)   =    2/D (f == 1.0 ? 0.0 : -0.5 f^3) (deriv_out^T row_in) row_in
+    dF/df df/dp dp/d(row_in)   =    2/D (f == 1 / sqrt(kNormFloor)  ? 0.0 : -0.5 f^3) (deriv_out^T row_in) row_in
   So
      deriv_in = f deriv_out + (f == 1.0 ? 0.0 : -f^3 / D) (deriv_out^T row_in) row_in
 
@@ -614,40 +700,20 @@ void NormalizeComponent::Backprop(const CuMatrixBase<BaseFloat> &in_value,
                                   int32, // num_chunks
                                   Component *to_update,
                                   CuMatrix<BaseFloat> *in_deriv) const {
-  
-
-  /* Of course, you'll need to write testing code for this.  Please don't forget to
-  write testing code for the CPU-based version: your CPU-based p-norm code was
-  not tested and it had bugs.  Generally, to test things like this I just compute
-  the function manually using a simple loop and compare it with the
-  member-function version.
-
-   Then, compute in_norm as in Propagate(), and do
-      in_deriv.AddDiagVecMat(1.0, in_norm, out_deriv, kNoTrans, 0.0),
-  which gives you the first term in your derivative (see equation for "deriv_in" above)... then do
-   in_norm.ReplaceValue(1.0, 0.0);
-   in_norm.ApplyPow(3.0);
-  then create a vector dot_products to hold each element of the expression (deriv_out^T row_in)
-  that I mentioned above: something like
-   dot_products.AdyydDiagMatMat(1.0, deriv_out, kNoTrans, in_value, kTrans, 0.0);
-   dot_products.MulElements(in_norm);
-   // then add the second term to the derivatives:  
-   in_deriv.AddDiagVecMat(-1.0 / D, dot_products, in_value, 1.0);
-*/
-  in_deriv->Resize(out_deriv.NumRows(), out_deriv.NumCols(),
-                   kUndefined);
+  in_deriv->Resize(out_deriv.NumRows(), out_deriv.NumCols());
   
   CuVector<BaseFloat> in_norm(in_value.NumRows());
   in_norm.AddDiagMat2(1.0 / in_value.NumCols(),
                       in_value, kNoTrans, 0.0);
-  in_norm.ApplyFloor(1.0);
+  in_norm.ApplyFloor(kNormFloor);
   in_norm.ApplyPow(-0.5);
-  in_deriv->AddDiagVecMat(1.0, in_norm, out_deriv, kNoTrans, 0.0),
-  in_norm.ReplaceValue(1.0, 0.0);
+  in_deriv->AddDiagVecMat(1.0, in_norm, out_deriv, kNoTrans, 0.0);
+  in_norm.ReplaceValue(1.0 / sqrt(kNormFloor), 0.0);
   in_norm.ApplyPow(3.0);
   CuVector<BaseFloat> dot_products(in_deriv->NumRows());
   dot_products.AddDiagMatMat(1.0, out_deriv, kNoTrans, in_value, kTrans, 0.0);
   dot_products.MulElements(in_norm);
+  
   in_deriv->AddDiagVecMat(-1.0 / in_value.NumCols(), dot_products, in_value, kNoTrans, 1.0);
 }
 
@@ -4006,10 +4072,9 @@ void DropoutComponent::Init(int32 dim,
   dropout_scale_ = dropout_scale;
 }
   
-void DropoutComponent::Propagate(
-    const CuMatrixBase<BaseFloat> &in,
-    int32 num_chunks,
-    CuMatrix<BaseFloat> *out) const {
+void DropoutComponent::Propagate(const CuMatrixBase<BaseFloat> &in,
+    				 int32 num_chunks,
+    				 CuMatrix<BaseFloat> *out) const {
   KALDI_ASSERT(in.NumCols() == this->InputDim());
   out->Resize(in.NumRows(), in.NumCols());
 
@@ -4036,26 +4101,9 @@ void DropoutComponent::Propagate(
   if ((high_scale - low_scale) != 1.0)
     out->Scale(high_scale - low_scale); // now, "dp" are 0 and (1-dp) are "high_scale-low_scale".
   if (low_scale != 0.0)
-    out->Add(low_scale); // now "dp" equale "low_scale" and (1.0-dp) equal "high_scale".
+    out->Add(low_scale); // now "dp" equal "low_scale" and (1.0-dp) equal "high_scale".
 
   out->MulElements(in);
-  
-  /*
-    old code, before it was CUDA-ified:
-  Vector<BaseFloat> scales(dim);
-  BaseFloat *begin = scales.Data(), *mid = begin + num_low,
-      *end = begin + dim;
-  std::fill(begin, mid, low_scale);
-  std::fill(mid, end, high_scale);
-  
-  out->CopyFromMat(in);
-  for (int32 r = 0; r < out->NumRows(); r++) {
-    CuSubVector<BaseFloat> out_row(*out, r);
-    std::random_shuffle(begin, end); // get new random ordering of kept components.
-    // depends on rand().
-    out_row.MulElements(scales);
-    }*/
-
 }
 
 void DropoutComponent::Backprop(const CuMatrixBase<BaseFloat> &in_value,
@@ -4066,20 +4114,7 @@ void DropoutComponent::Backprop(const CuMatrixBase<BaseFloat> &in_value,
                                 CuMatrix<BaseFloat> *in_deriv) const {
   KALDI_ASSERT(SameDim(in_value, out_value) && SameDim(in_value, out_deriv));
   in_deriv->Resize(out_deriv.NumRows(), out_deriv.NumCols());
-  for (int32 r = 0; r < in_value.NumRows(); r++) { // each frame...
-    for (int32 c = 0; c < in_value.NumCols(); c++) {
-      BaseFloat i = in_value(r, c), o = out_value(r, c), od = out_deriv(r, c),
-          id;
-      if (i != 0.0) {
-        id = od * (o / i); /// o / i is either zero or "scale".
-      } else {
-        id = od; /// Just imagine the scale was 1.0.  This is somehow true in
-        /// expectation; anyway, this case should basically never happen so it doesn't
-        /// really matter.
-      }
-      (*in_deriv)(r, c) = id;
-    }
-  }
+  in_deriv->AddMatMatDivMat(out_deriv, out_value, in_value);
 }
 
 Component* DropoutComponent::Copy() const {
@@ -4133,146 +4168,6 @@ void AdditiveNoiseComponent::Propagate(
   const_cast<CuRand<BaseFloat>&>(random_generator_).RandUniform(&rand);
   out->AddMat(stddev_, rand);
 }
-
-
-std::string InformationBottleneckComponent::Info() const {
-  std::stringstream stream;
-  stream << Type() << ", input-dim=" << InputDim()
-         << ", output-dim=" << OutputDim() << ", noise-proportion="
-         << noise_proportion_;
-  return stream.str();
-}
-
-
-void InformationBottleneckComponent::InitFromString(std::string args) {
-  std::string orig_args(args);
-  int32 dim;
-  BaseFloat noise_proportion = 0.1;
-  bool ok = ParseFromString("dim", &args, &dim);
-  ParseFromString("noise-proportion", &args, &noise_proportion);  
-  
-  if (!ok || !args.empty() || dim <= 0)
-    KALDI_ERR << "Invalid initializer for layer of type InformationBottleneckComponent: \""
-              << orig_args << "\"";
-  Init(dim, noise_proportion);
-}
-
-void InformationBottleneckComponent::Read(std::istream &is, bool binary) {
-  ExpectOneOrTwoTokens(is, binary, "<InformationBottleneckComponent>", "<Dim>");
-  ReadBasicType(is, binary, &dim_);
-  ExpectToken(is, binary, "<NoiseProportion>");
-  ReadBasicType(is, binary, &noise_proportion_);
-  ExpectToken(is, binary, "<Sumsq>");
-  sumsq_.Read(is, binary);
-  ExpectToken(is, binary, "<Count>");
-  ReadBasicType(is, binary, &count_);
-  ExpectToken(is, binary, "</InformationBottleneckComponent>");
-}
-
-void InformationBottleneckComponent::Write(std::ostream &os, bool binary) const {
-  WriteToken(os, binary, "<InformationBottleneckComponent>");
-  WriteToken(os, binary, "<Dim>");
-  WriteBasicType(os, binary, dim_);
-  WriteToken(os, binary, "<NoiseProportion>");
-  WriteBasicType(os, binary, noise_proportion_);
-  WriteToken(os, binary, "<Sumsq>");
-  sumsq_.Write(os, binary);
-  WriteToken(os, binary, "<Count>");
-  WriteBasicType(os, binary, count_);
-  WriteToken(os, binary, "</InformationBottleneckComponent>");  
-}
-
-void InformationBottleneckComponent::Init(int32 dim,
-                                          BaseFloat noise_proportion) {
-  dim_ = dim;
-  noise_proportion_ = noise_proportion;
-  sumsq_.Resize(dim);
-  count_ = 0.0;
-}
-  
-void InformationBottleneckComponent::Propagate(
-    const CuMatrixBase<BaseFloat> &in,
-    int32 num_chunks,
-    CuMatrix<BaseFloat> *out) const {
-  KALDI_ASSERT(in.NumCols() == this->InputDim());
-
-  *out = in;
-  CuMatrix<BaseFloat> rand(in.NumRows(), in.NumCols());
-  const_cast<CuRand<BaseFloat>&>(random_generator_).RandUniform(&rand);
-  int32 dim = InputDim();
-  
-  for (int32 t = 0; t < in.NumRows(); t++) {
-    CuSubVector<BaseFloat> out_vec(*out, t), rand_vec(rand, t);
-    // we already copied in to *out.
-    BaseFloat in_variance = VecVec(out_vec, out_vec) / dim,
-        random_weight = sqrt(noise_proportion_ * in_variance);
-    out_vec.AddVec(random_weight, rand_vec);
-  }
-}
-
-void InformationBottleneckComponent::Backprop(
-    const CuMatrixBase<BaseFloat> &in_value,
-    const CuMatrixBase<BaseFloat> &out_value,
-    const CuMatrixBase<BaseFloat> &out_deriv,
-    int32 num_chunks,
-    Component *to_update, // may be identical to "this".
-    CuMatrix<BaseFloat> *in_deriv) const {
-  KALDI_ASSERT(SameDim(in_value, out_value));
-  KALDI_ASSERT(SameDim(in_value, out_deriv));
-  in_deriv->Resize(in_value.NumRows(), in_value.NumCols());
-
-  int32 dim = InputDim();
-  CuVector<BaseFloat> rand_row(dim);
-  for (int32 t = 0; t < in_value.NumRows(); t++) {
-    CuSubVector<BaseFloat> in_vec(in_value, t),
-        out_vec(out_value, t), out_deriv_vec(out_deriv, t),
-        in_deriv_vec(*in_deriv, t);
-    rand_row.CopyFromVec(out_vec);
-    rand_row.AddVec(-1.0, in_vec);
-    // At this point, rand_row equals random_weight * rand_vec
-    // in the Propagate code.
-    BaseFloat in_variance = VecVec(in_vec, in_vec) / dim,
-        random_weight = sqrt(noise_proportion_ * in_variance);
-    // Above, in_variance and random_weight have the same value as
-    // in the Propagatte code.
-    KALDI_ASSERT(random_weight != 0.0);
-    rand_row.Scale(1.0 / random_weight); // Now it's equivalent to
-    // the t'th row of "rand" in the Propagate function.
-    BaseFloat df_drandom_weight = VecVec(rand_row, out_deriv_vec);
-    // df_drandom_weight is the partial derivative of the objective function
-    // w.r.t. "random_weight".
-    BaseFloat df_din_variance = 0.5 * df_drandom_weight * noise_proportion_ / random_weight;
-    // df_din_variance is the partial derivative of the objective function
-    // w.r.t. "in_variance".  It comes from differentiating the expression
-    // for "random_weight".
-    
-    // First handle the straightforward part of the derivative w.r.t. in_deriv_vec.
-    in_deriv_vec.CopyFromVec(out_deriv_vec);
-    // The next term handles the part that comes from the effect of the length of
-    // "in_vec" on the noise variance.  It comes from propagating back through the
-    // expression for "in_variance".  Note: df_din_variance will on average be
-    // negative.
-    in_deriv_vec.AddVec((2.0 / dim) * df_din_variance, in_vec);
-  }
-
-  // Now accumulate the sumsq_ stats.  We code this in such a way that if
-  // multiple threads are working on the same object, the errors caused won't
-  // be too catastrophic
-  if (to_update != NULL) {
-    InformationBottleneckComponent *to_update_ib =
-        dynamic_cast<InformationBottleneckComponent*>(to_update);
-    to_update_ib->count_ += in_value.NumRows();
-    to_update_ib->sumsq_.AddDiagMat2(1.0, in_value, kTrans, 1.0);
-    const BaseFloat max_count = 1000.0;
-    if (to_update_ib->count_ > max_count) {
-      BaseFloat scale = max_count / to_update_ib->count_;
-      to_update_ib->count_ *= scale;
-      to_update_ib->sumsq_.Scale(scale);
-    }
-  }
-}
-
-
 
 void AffineComponentA::Read(std::istream &is, bool binary) {
   ExpectOneOrTwoTokens(is, binary, "<AffineComponentA>", "<LearningRate>");

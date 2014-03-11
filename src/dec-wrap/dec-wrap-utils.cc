@@ -28,20 +28,6 @@
 
 namespace kaldi {
 
-void pykaldi_version(int *out_major, int * out_minor, int *patch) {
-  *out_major = PYKALDI_MAJOR;
-  *out_minor = PYKALDI_MINOR;
-  *patch = PYKALDI_PATCH;
-}
-
-
-void build_git_revision(std::string & pykaldi_git_revision) {
-  pykaldi_git_revision.clear();
-  pykaldi_git_revision.append(PYKALDI_GIT_VERSION);
-  KALDI_ASSERT((pykaldi_git_revision.size() == 40) && "Git SHA has length 40 size");
-}
-
-
 void MovePostToArcs(fst::VectorFst<fst::LogArc> * lat, 
                           const std::vector<double> &alpha,
                           const std::vector<double> &beta) {
@@ -149,10 +135,10 @@ double CompactLatticeToWordsPost(CompactLattice &clat, fst::VectorFst<fst::LogAr
   }
 #endif // DEBUG_FINAL
 
-  double tot_prob;
+  double tot_lik;
   std::vector<double> alpha, beta;
   fst::TopSort(pst);
-  tot_prob = ComputeLatticeAlphasAndBetas(*pst, &alpha, &beta);
+  tot_lik = ComputeLatticeAlphasAndBetas(*pst, &alpha, &beta);
   MovePostToArcs(pst, alpha, beta);
 #ifdef DEBUG_POST
   for (size_t i = 0; i < alpha.size(); ++i) {
@@ -167,7 +153,7 @@ double CompactLatticeToWordsPost(CompactLattice &clat, fst::VectorFst<fst::LogAr
   }
 #endif // DEBUG_POST
 
-  return tot_prob;
+  return tot_lik;
 }
 
 

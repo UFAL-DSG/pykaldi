@@ -1,6 +1,14 @@
 Pykaldi - Python Kaldi decoders wrapper
 =======================================
 
+Intro
+-----
+Pykaldi wraps the online decoder
+from src/dec-wrap directory.
+The development is done in https://github.com/UFAL-DSG/pykaldi.
+Currently, we do not support CMN,
+so train your AM without CMN.
+
 Dependencies
 ------------
 * OpenFST - You should use the installation build via ``cd kaldi/src/tools; make openfst_tgt``
@@ -9,8 +17,8 @@ Dependencies
   - Not necessary to install. Local ``Makefile`` will install it for you.
 
 
-Installation
-------------
+Local Installation
+------------------
 Having the required dependencies installed, run ``make`` in this directory.
 
 The ``Makefile`` cares for installing ``pyfst`` and ``pykaldi`` locally.
@@ -21,6 +29,8 @@ The downside is that you need to setup ``PYTHONPATH`` and ``LD_LIBRARY_PATH`` va
 All the scripts in `<pykaldi/binutils>`_ set up these variables.
 Please use the scripts as a reference or 
 install the packages system wide via ``python setup.py install``.
+The system wide installation is descriped in ``INSTALL.rst`` 
+in the root directory of this git repository.
 
 Testing on sample data
 ----------------------

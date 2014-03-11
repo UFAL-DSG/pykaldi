@@ -18,7 +18,6 @@ max_mem=20000000 # This will stop the processes getting too large.
 # by something like 5 or 10 to get real bytes (not sure why so large)
 num_threads=1
 parallel_opts=
-run_cmn=false
 # End configuration section.
 
 echo "$0 $@"  # Print the command line for logging
@@ -85,18 +84,12 @@ else
   utils/mkgraph.sh $new_lang $srcdir $dir/dengraph || exit 1;
 fi
 
-case $run_cmn in
-    true) cmn="ark,s,cs:apply-cmvn --norm-vars=$norm_vars --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- ";;
-    false) cmn="ark,s,cs:copy-feats scp:$sdata/JOB/feats.scp ark:- ";;
-    *) echo "Invalid boolean value $run_cmn" && exit 1;;
-esac
-
 if [ -f $srcdir/final.mat ]; then feat_type=lda; else feat_type=delta; fi
 echo "align_si.sh: feature type is $feat_type"
 
 case $feat_type in
-  delta) feats="$cmn | add-deltas ark:- ark:- |";;
-  lda) feats="$cmn | splice-feats $splice_opts ark:- ark:- | transform-feats $srcdir/final.mat ark:- ark:- |"
+  delta) feats="ark,s,cs:apply-cmvn --norm-vars=$norm_vars --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- | add-deltas ark:- ark:- |";;
+  lda) feats="ark,s,cs:apply-cmvn --norm-vars=$norm_vars --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- | splice-feats $splice_opts ark:- ark:- | transform-feats $srcdir/final.mat ark:- ark:- |"
     cp $srcdir/final.mat $dir    
    ;;
   *) echo "Invalid feature type $feat_type" && exit 1;

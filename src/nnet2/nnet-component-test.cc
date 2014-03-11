@@ -97,7 +97,7 @@ void UnitTestGenericComponentInternal(const Component &component) {
         }
       }        
       perturbed_input.SetRandn();
-      perturbed_input.Scale(2.0e-04); // scale by a small amount so it's like a delta.
+      perturbed_input.Scale(1.0e-04); // scale by a small amount so it's like a delta.
       BaseFloat predicted_difference = TraceMatMat(perturbed_input,
                                                    input_deriv, kTrans);
       perturbed_input.AddMat(1.0, input); // now it's the input + a delta.
@@ -245,6 +245,28 @@ void UnitTestGenericComponent(std::string extra_str = "") {
   }
 }
 
+void UnitTestMaxoutComponent() {
+  // works if it has an initializer from int,
+  // e.g. tanh, sigmoid.
+  
+  // We're testing that the gradients are computed correctly:
+  // the input gradients and the model gradients.
+
+  for (int32 i = 0; i < 5; i++) {
+    int32 output_dim = 10 + rand() % 20,
+        group_size = 1 + rand() % 10,
+        input_dim = output_dim * group_size;
+    
+    MaxoutComponent component(input_dim, output_dim);
+    UnitTestGenericComponentInternal(component);
+  }
+
+  {
+    MaxoutComponent component;
+    component.InitFromString("input-dim=15 output-dim=5");
+    UnitTestGenericComponentInternal(component);
+  }
+}
 
 void UnitTestPnormComponent() {
   // works if it has an initializer from int,
@@ -257,7 +279,7 @@ void UnitTestPnormComponent() {
     int32 output_dim = 10 + rand() % 20,
         group_size = 1 + rand() % 10,
         input_dim = output_dim * group_size;
-    BaseFloat p = 0.6 + 0.1 * (rand() % 20);
+    BaseFloat p = 0.8 + 0.1 * (rand() % 20);
     
     PnormComponent component(input_dim, output_dim, p);
     UnitTestGenericComponentInternal(component);
@@ -331,22 +353,6 @@ void UnitTestAdditiveNoiseComponent() {
   }
 }
 
-
-void UnitTestInformationBottleneckComponent() {
-  // We're testing that the gradients are computed correctly:
-  // the input gradients and the model gradients.
-  
-  int32 input_dim = 10 + rand() % 50;
-  {
-    InformationBottleneckComponent ib_component(input_dim, 0.1);
-    UnitTestGenericComponentInternal(ib_component);
-  }
-  {
-    InformationBottleneckComponent ib_component;
-    ib_component.InitFromString("dim=15 noise-proportion=0.2");
-    UnitTestGenericComponentInternal(ib_component);
-  }
-}
 
 void UnitTestPiecewiseLinearComponent() {
   BaseFloat learning_rate = 0.01, max_change = 0.1 * (rand() % 2);
@@ -800,6 +806,7 @@ int main() {
       UnitTestGenericComponent<RectifiedLinearComponent>();
       UnitTestGenericComponent<SoftHingeComponent>();
       UnitTestGenericComponent<PowerExpandComponent>("higher-power-scale=0.1");
+      UnitTestMaxoutComponent(); 
       UnitTestPnormComponent(); 
       UnitTestGenericComponent<NormalizeComponent>();
       UnitTestSigmoidComponent();
@@ -819,7 +826,6 @@ int main() {
       UnitTestAffineComponentModified();
       UnitTestDropoutComponent();
       UnitTestAdditiveNoiseComponent();
-      UnitTestInformationBottleneckComponent();
       UnitTestParsing();
       if (loop == 0)
         KALDI_LOG << "Tests without GPU use succeeded.\n";

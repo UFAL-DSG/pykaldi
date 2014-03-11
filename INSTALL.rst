@@ -1,10 +1,57 @@
 Intro
 -----
-Kaldi has very good  `installation guide <http://kaldi.sourceforge.net/install.html>`_.
-It is easy and straightforward.
+The official Kaldi toolkit installation is well documented at `installation guide <http://kaldi.sourceforge.net/install.html>`_.
+
+
+KALDI on Ubuntu 12.04
+~~~~~~~~~~~~~~~~~~~~~
+In order to use Kaldi decoder, build ``pykaldi`` fork of Kaldi from https://github.com/UFAL-DSG/pykaldi,
+install patched ``OpenFST`` from ``pykaldi``, then ``pyfst`` from https://github.com/UFAL-DSG/pyfst, and finally 
+install ``pykaldi`` Python extension.
+
+First,  build Kaldi fork ``pykaldi`` as follows:
+
+.. code-block:: bash
+
+  git clone https://github.com/UFAL-DSG/pykaldi
+  cd pykaldi/tools
+  make atlas   # Just downloads headers
+  make openfst_tgt  # Install patched OpenFST LOCALLY!
+  cd ../src
+  ./configure  # Should find ATLAS libraries which you have installed via apptitude (easier way).
+  make && make test
+  cd dec-wrap && make && make test  # Directory needed for pykaldi Python wrapper
+
+Install patched ``OpenFST`` system wide. The following commands install the already built ``OpenFST`` 
+library from previous step:
+
+.. code-block:: bash
+
+    cd pykaldi/tools/openfst
+    ./configure  --prefix=/usr  # Sets the path to system wide installation directory
+    sudo make install  # Copies the already built and pathced libraries from 'make openfst_tgt' step.
+
+
+Install ``pyfst`` by
+
+.. code-block:: bash
+
+    sudo pip install --upgrade pystache pyyaml cython
+    
+    git clone https://github.com/UFAL-DSG/pyfst.git pyfst
+    cd pyfst
+    sudo python setup.py install
+
+
+Finally, install the ``pykaldi`` Python extension (a wrapper around Kaldi decoders):
+
+.. code-block:: bash
+
+    cd pykaldi/src/pykaldi
+    sudo make install
 
 Installing external dependencies
-================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 How have I installed OpenBlas?
 ------------------------------
@@ -81,10 +128,10 @@ To conclude, I added following lines to my ``.bashrc``.
 
 How have I installed Atlas?
 ---------------------------
- * NOTE1: I normally use OpenBLAS instead of ATLAS. 
+ * NOTE1: On Ubuntu 12.04 for Travis CI I used Debian packages. See [travis.yml](./.travis.yml)
+            and I just download ATLAS headers by ``cd tools; make atlas``.
  * NOTE2: There is prepared installation script ``tools/install_atlas.sh`` which you should try first. 
           If it fails, you may find the help in this section.
- * NOTE3: On Ubuntu 12.04 for Travis CI I used Debian packages. See [travis.yml](./.travis.yml).
 
 How I install Atlas:
  * I installed version atlas3.10.1.tar.bz2 (available at sourceforge)

@@ -1,4 +1,4 @@
-// online/online-feat-input.h
+// dec-wrap/dec-wrap-feat-input.h
 
 // Copyright 2012 Cisco Systems (author: Matthias Paulik)
 //           2012-2013  Vassil Panayotov
@@ -27,15 +27,15 @@
 namespace kaldi {
 
 
-// Interface specification COPY -> because PykaldiFeatInputItf
+// Interface specification COPY -> because OnlFeatInputItf
 // requires portaudio to be installed through various includes
 // It should be easy to remove the portaudio dependancy by splitting
 // the code into multiple files.
-class PykaldiFeatInputItf {
+class OnlFeatInputItf {
  public:
   // Produces feature vectors in some way.
   // The features may be e.g. extracted from an audio samples, received and/or
-  // transformed from another PykaldiFeatInput class etc.
+  // transformed from another OnlFeatInput class etc.
   //
   // "output" - a matrix to store the extracted feature vectors in its rows.
   //            The number of rows (NumRows()) of "output" when the function is
@@ -48,29 +48,29 @@ class PykaldiFeatInputItf {
 
   virtual void Reset() =0;
 
-  virtual ~PykaldiFeatInputItf() {}
+  virtual ~OnlFeatInputItf() {}
 
 };
 
 /*********************************************************************
- *                    PykaldiFeatureMatrix                           *
+ *                    OnlFeatureMatrix                           *
  *********************************************************************/
-struct PykaldiFeatureMatrixOptions {
+struct OnlFeatureMatrixOptions {
   int32 batch_size; // number of frames to request each time.
-  PykaldiFeatureMatrixOptions(): batch_size(27) { }
+  OnlFeatureMatrixOptions(): batch_size(27) { }
   void Register(OptionsItf *po) {
     po->Register("batch-size", &batch_size,
                  "Number of feature vectors processed without interruption");
   }
 };
 
-// The class PykaldiFeatureMatrix wraps something of type
-// PykaldiFeatInputItf in a manner that is convenient for
+// The class OnlFeatureMatrix wraps something of type
+// OnlFeatInputItf in a manner that is convenient for
 // a Decodable type to consume.
-class PykaldiFeatureMatrix {
+class OnlFeatureMatrix {
  public:
-  PykaldiFeatureMatrix(const PykaldiFeatureMatrixOptions &opts,
-                      PykaldiFeatInputItf *input):
+  OnlFeatureMatrix(const OnlFeatureMatrixOptions &opts,
+                      OnlFeatInputItf *input):
       opts_(opts), input_(input), feat_dim_(input->Dim()),
       feat_loaded_(0) { }
 
@@ -89,8 +89,8 @@ class PykaldiFeatureMatrix {
   /// Called when we need more features.
   MatrixIndexT GetNextFeatures();
 
-  const PykaldiFeatureMatrixOptions opts_;
-  PykaldiFeatInputItf *input_;
+  const OnlFeatureMatrixOptions opts_;
+  OnlFeatInputItf *input_;
   int32 feat_dim_;
   Matrix<BaseFloat> feat_matrix_;
   Matrix<BaseFloat> feat_matrix_old_;
@@ -98,18 +98,18 @@ class PykaldiFeatureMatrix {
 };
 
 /*********************************************************************
- *                          PykaldiFeInput                           *
+ *                          OnlFeInput                           *
  *********************************************************************/
 // Implementation, that is meant to be used to read samples from an
-// PykaldiAudioSource and to extract MFCC/PLP features in the usual way
+// OnlAudioSource and to extract MFCC/PLP features in the usual way
 template <class E>
-class PykaldiFeInput : public PykaldiFeatInputItf {
+class OnlFeInput : public OnlFeatInputItf {
  public:
-  // "au_src" - PykaldiAudioSourceItf object
+  // "au_src" - OnlAudioSourceItf object
   // "fe" - object implementing MFCC/PLP feature extraction
   // "frame_size" - frame extraction window size in audio samples
   // "frame_shift" - feature frame width in audio samples
-  PykaldiFeInput(PykaldiAudioSourceItf *au_src, E *fe,
+  OnlFeInput(OnlAudioSourceItf *au_src, E *fe,
                 const int32 frame_size, const int32 frame_shift);
 
   virtual int32 Dim() const { return extractor_->Dim(); }
@@ -119,24 +119,24 @@ class PykaldiFeInput : public PykaldiFeatInputItf {
   virtual void Reset();
 
  private:
-  PykaldiAudioSourceItf *source_; // audio source
+  OnlAudioSourceItf *source_; // audio source
   E *extractor_; // the actual feature extractor used
   const int32 frame_size_;
   const int32 frame_shift_;
   Vector<BaseFloat> wave_remainder_; // the samples remained from the previous
                                      // feature batch
 
-  KALDI_DISALLOW_COPY_AND_ASSIGN(PykaldiFeInput);
+  KALDI_DISALLOW_COPY_AND_ASSIGN(OnlFeInput);
 };
 
 template<class E>
-PykaldiFeInput<E>::PykaldiFeInput(PykaldiAudioSourceItf *au_src, E *fe,
+OnlFeInput<E>::OnlFeInput(OnlAudioSourceItf *au_src, E *fe,
                                    int32 frame_size, int32 frame_shift)
     : source_(au_src), extractor_(fe),
       frame_size_(frame_size), frame_shift_(frame_shift) {}
 
 template<class E> MatrixIndexT
-PykaldiFeInput<E>::Compute(Matrix<BaseFloat> *output) {
+OnlFeInput<E>::Compute(Matrix<BaseFloat> *output) {
   MatrixIndexT nvec = output->NumRows(); // the number of output vectors
   if (nvec <= 0) {
     KALDI_WARN << "No feature vectors requested?!";
@@ -176,20 +176,20 @@ PykaldiFeInput<E>::Compute(Matrix<BaseFloat> *output) {
 }
 
 template<class E>
-void PykaldiFeInput<E>::Reset() {
+void OnlFeInput<E>::Reset() {
   wave_remainder_.Resize(0);
 }
 
 
 /*********************************************************************
- *                          PykaldiLdaInput                          *
+ *                          OnlLdaInput                          *
  *********************************************************************/
 // Splices the input features and applies a transformation matrix.
 // Note: the transformation matrix will usually be a linear transformation
 // [output-dim x input-dim] but we accept an affine transformation too.
-class PykaldiLdaInput: public PykaldiFeatInputItf {
+class OnlLdaInput: public OnlFeatInputItf {
  public:
-  PykaldiLdaInput(PykaldiFeatInputItf *input,
+  OnlLdaInput(OnlFeatInputItf *input,
                  const Matrix<BaseFloat> &transform,
                  int32 left_context,
                  int32 right_context);
@@ -218,7 +218,7 @@ class PykaldiLdaInput: public PykaldiFeatInputItf {
                          Matrix<BaseFloat> *output);
   void ComputeNextRemainder(const MatrixBase<BaseFloat> &input);
 
-  PykaldiFeatInputItf *input_; // underlying/inferior input object
+  OnlFeatInputItf *input_; // underlying/inferior input object
   const int32 input_dim_; // dimension of the feature vectors before xform
   const int32 left_context_;
   const int32 right_context_;
@@ -227,20 +227,20 @@ class PykaldiLdaInput: public PykaldiFeatInputItf {
   Matrix<BaseFloat> remainder_; // The last few frames of the input, that may
   // be needed for context purposes.
 
-  KALDI_DISALLOW_COPY_AND_ASSIGN(PykaldiLdaInput);
+  KALDI_DISALLOW_COPY_AND_ASSIGN(OnlLdaInput);
 };
 
 /*********************************************************************
- *                         PykaldiDeltaInput                         *
+ *                         OnlDeltaInput                         *
  *********************************************************************/
 // Does the time-derivative computation (e.g., adding deltas and delta-deltas).
 // This is standard in more "old-fashioned" feature extraction.  Like an online
 // version of the function ComputeDeltas in feat/feature-functions.h, where the
 // struct DeltaFeaturesOptions is also defined.
-class PykaldiDeltaInput: public PykaldiFeatInputItf {
+class OnlDeltaInput: public OnlFeatInputItf {
  public:
-  PykaldiDeltaInput(const DeltaFeaturesOptions &delta_opts,
-                   PykaldiFeatInputItf *input);
+  OnlDeltaInput(const DeltaFeaturesOptions &delta_opts,
+                   OnlFeatInputItf *input);
 
   virtual MatrixIndexT Compute(Matrix<BaseFloat> *output);
 
@@ -267,13 +267,13 @@ class PykaldiDeltaInput: public PykaldiFeatInputItf {
                         Matrix<BaseFloat> *output,
                         Matrix<BaseFloat> *remainder) const;
 
-  PykaldiFeatInputItf *input_; // underlying/inferior input object
+  OnlFeatInputItf *input_; // underlying/inferior input object
   DeltaFeaturesOptions opts_;
   const int32 input_dim_;
   Matrix<BaseFloat> remainder_; // The last few frames of the input, that may
   // be needed for context purposes.
 
-  KALDI_DISALLOW_COPY_AND_ASSIGN(PykaldiDeltaInput);
+  KALDI_DISALLOW_COPY_AND_ASSIGN(OnlDeltaInput);
 };
 
 

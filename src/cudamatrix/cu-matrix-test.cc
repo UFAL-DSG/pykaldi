@@ -720,6 +720,12 @@ static void UnitTestCuMatrixAddMat() {
   Da.CopyToMat(&Ha2);
 
   AssertEqual(Ha,Ha2);
+
+  //check use with submatrix
+  CuMatrix<Real> mat1(10,10,kSetZero);
+  mat1.AddMat(1.0,Da.Range(5,10,12,10)); //different stride for mat1,mat2
+  CuMatrix<Real> mat2(Da.Range(5,10,12,10));
+  AssertEqual(mat1,mat2);
 }
 
 template<typename Real> 
@@ -1185,6 +1191,24 @@ static void UnitTestCuVectorInvertElements() {
   
   AssertEqual(Hv,Hv2);
 }
+
+template<typename Real> 
+static void UnitTestCuMatrixInvertElements() {
+  Matrix<Real> Hm(77, 77);
+  InitRand(&Hm);
+
+  CuMatrix<Real> Dm(77, 77);
+  Dm.CopyFromMat(Hm);
+
+  Dm.InvertElements();
+  Hm.InvertElements();
+
+  Matrix<Real> Hm2(77, 77);
+  Dm.CopyToMat(&Hm2);
+  
+  AssertEqual(Hm,Hm2);
+}
+
 
 template<class Real>
 static void UnitTestCuMatrixIO() {
@@ -1748,6 +1772,29 @@ static void UnitTestCuMatrixObjfDeriv() {
 }
 
 template<typename Real> 
+static void UnitTestCuMatrixAddElements() {
+  for (int32 i = 0; i < 5; i++) {
+    int32 dimM = 1000 + rand() % 200, dimN = 1000 + rand() % 200;
+   // int32 dimM = 256, dimN = 256;
+    CuMatrix<Real> H(dimM, dimN);
+    H.SetRandn();
+    CuMatrix<Real> M(H);
+    std::vector<MatrixElement<Real> > input;
+    BaseFloat scale = -1 + (0.33 * (rand() % 5));
+    for (int32 j = 0; j < 100 + rand() % 10; j++) {
+      MatrixIndexT r = rand() % dimM;
+      MatrixIndexT c = rand() % dimN;
+      BaseFloat offset = -1 + (0.33 * (rand() % 5));
+      M(r, c) += scale * offset;
+      MatrixElement<Real> t = {r, c, offset};
+      input.push_back(t);
+    }
+    H.AddElements(scale, input);
+
+    AssertEqual(H, M);
+  }
+}
+template<typename Real> 
 static void UnitTestCuMatrixLookup() {
   for (int32 i = 0; i < 5; i++) {
     int32 dimM = 100 + rand() % 200, dimN = 100 + rand() % 200;
@@ -1774,6 +1821,28 @@ static void UnitTestCuMatrixLookup() {
 
     AssertEqual(reference, output);
   }
+}
+
+template<typename Real> 
+static void UnitTestCuMatrixEqualElementMask() {
+  CuMatrix<Real> m1(10,9), m2(10,9);
+  CuMatrix<Real> mask_same, mask_different;
+  m1.SetRandUniform(); // U[0,1]
+  m2.SetRandUniform(); m2.Add(10.0); // U[10,11]
+
+  m1.EqualElementMask(m1,&mask_same); // all elements ones
+  m1.EqualElementMask(m2,&mask_different); // all elements zeros
+
+  //KALDI_LOG << m1 << m2 << mask_same << mask_different;
+  KALDI_ASSERT(mask_same.Sum() == 10*9);
+  KALDI_ASSERT(mask_different.Sum() == 0.0);
+
+  //check matrices with different strides:
+  CuMatrix<Real> m3(m1.Range(1,6,2,6));
+  CuMatrix<Real> m4(5,5,kSetZero);
+  m1.Range(1,5,2,5).EqualElementMask(m3.Range(0,5,0,5),&m4); // strides 9, 6, 5
+  KALDI_ASSERT(m4.Sum() == 25);
+
 }
 
 template<typename Real> void CudaMatrixUnitTest() {
@@ -1816,7 +1885,9 @@ template<typename Real> void CudaMatrixUnitTest() {
   UnitTestCuMatrixTranspose<Real>();
   UnitTestCuMatrixCopyUpperToLower<Real>();
   UnitTestCuMatrixCopyLowerToUpper<Real>();
+  UnitTestCuMatrixAddElements<Real>();
   UnitTestCuMatrixLookup<Real>();
+  UnitTestCuMatrixEqualElementMask<Real>();
   // test CuVector<Real> methods
   UnitTestCuVectorAddVec<Real>();
   UnitTestCuVectorAddRowSumMat<Real>();
@@ -1824,6 +1895,7 @@ template<typename Real> void CudaMatrixUnitTest() {
   UnitTestCuVectorAddColSumMat<Real>();
   UnitTestCuVectorAddColSumMatLarge<Real>();
   UnitTestCuSubMatrix<Real>();
+  UnitTestCuMatrixInvertElements<Real>();
   UnitTestCuVectorInvertElements<Real>();
   UnitTestCuMatrixIO<Real>();
   UnitTestCuSigmoid<Real>();

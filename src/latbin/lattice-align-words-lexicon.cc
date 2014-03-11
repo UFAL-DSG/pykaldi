@@ -22,6 +22,7 @@
 #include "util/common-utils.h"
 #include "lat/kaldi-lattice.h"
 #include "lat/word-align-lattice-lexicon.h"
+#include "lat/lattice-functions.h"
 
 int main(int argc, char *argv[]) {
   try {
@@ -91,7 +92,7 @@ int main(int argc, char *argv[]) {
     for (; !clat_reader.Done(); clat_reader.Next()) {
       std::string key = clat_reader.Key();
       const CompactLattice &clat = clat_reader.Value();
-
+      
       CompactLattice aligned_clat;
       
       bool ok = WordAlignLatticeLexicon(clat, tmodel, lexicon_info, opts,
@@ -103,6 +104,7 @@ int main(int argc, char *argv[]) {
             clat.NumStates() != 0) {
           KALDI_WARN << "Algorithm produced no output (due to --max-expand?), "
                      << "so passing input through as output, for key " << key;
+          TopSortCompactLatticeIfNeeded(&aligned_clat);
           clat_writer.Write(key, clat);
           continue;
         }
@@ -124,6 +126,7 @@ int main(int argc, char *argv[]) {
         } else {
           num_done++;
           KALDI_VLOG(2) << "Aligned lattice for " << key;
+          TopSortCompactLatticeIfNeeded(&aligned_clat);
           clat_writer.Write(key, aligned_clat);
         }
       }

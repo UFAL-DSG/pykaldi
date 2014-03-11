@@ -5,16 +5,18 @@
 SHELL := /bin/bash
 
 
-SUBDIRS = base matrix util feat tree thread gmm tied transform sgmm \
+SUBDIRS = base matrix util feat tree thread gmm transform sgmm \
           fstext hmm lm decoder lat cudamatrix nnet \
-          bin fstbin gmmbin fgmmbin tiedbin sgmmbin featbin \
-          nnetbin latbin sgmm2 sgmm2bin nnet2 nnet2bin kwsbin
+          bin fstbin gmmbin fgmmbin sgmmbin featbin \
+          nnetbin latbin sgmm2 sgmm2bin nnet2 nnet2bin kwsbin \
+          ivectorbin
 
-MEMTESTDIRS = base matrix util feat tree thread gmm tied transform sgmm \
+MEMTESTDIRS = base matrix util feat tree thread gmm transform sgmm \
           fstext hmm lm decoder lat nnet \
-          bin fstbin gmmbin fgmmbin tiedbin sgmmbin featbin \
-          nnetbin latbin sgmm2 nnet2 nnet2bin sgmm2bin kwsbin
- 
+          bin fstbin gmmbin fgmmbin sgmmbin featbin \
+          nnetbin latbin sgmm2 nnet2 nnet2bin sgmm2bin kwsbin \
+          ivectorbin
+
 CUDAMEMTESTDIR = cudamatrix
 
 SUBDIRS_LIB = $(filter-out %bin, $(SUBDIRS))
@@ -36,8 +38,12 @@ mklibdir:
 
 #I don't want to call rm -rf
 rmlibdir:
-	-rm $(KALDILIBDIR)/*{.so,.a,.o}
+ifneq ($(KALDILIBDIR), )
+	-rm $(KALDILIBDIR)/*{.so,.a,.o} 
 	-rmdir $(KALDILIBDIR)
+else
+	@true
+endif
 
 .PHONY: checkversion
 checkversion:
@@ -134,7 +140,10 @@ $(EXT_SUBDIRS) : mklibdir
 ### Dependency list ###
 # this is necessary for correct parallel compilation
 #1)The tools depend on all the libraries
-bin fstbin gmmbin fgmmbin tiedbin sgmmbin sgmm2bin featbin nnetbin nnet2bin latbin: base matrix util feat tree optimization thread gmm tied transform sgmm sgmm2 fstext hmm lm decoder lat cudamatrix nnet nnet2
+
+bin fstbin gmmbin fgmmbin sgmmbin sgmm2bin featbin nnetbin nnet2bin latbin ivectorbin: \
+ base matrix util feat tree optimization thread gmm transform sgmm sgmm2 fstext hmm \
+ lm decoder lat cudamatrix nnet nnet2 ivector
 
 #2)The libraries have inter-dependencies
 base:
@@ -144,21 +153,21 @@ thread: util
 feat: base matrix util gmm transform
 tree: base util matrix
 optimization: base matrix
-gmm: base util matrix tree
-tied: base util matrix gmm tree transform
+gmm: base util matrix tree thread
 transform: base util matrix gmm tree
 sgmm: base util matrix gmm tree transform thread hmm
 sgmm2: base util matrix gmm tree transform thread hmm
 fstext: base util matrix tree
 hmm: base tree matrix 
 lm: base util
-decoder: base util matrix gmm sgmm hmm tree transform
+decoder: base util matrix gmm sgmm hmm tree transform lat
 lat: base util hmm
 cudamatrix: base util matrix	
 nnet: base util matrix cudamatrix
-nnet2: base util matrix thread
+nnet2: base util matrix thread lat
+ivector: base util matrix thread transform tree gmm 
 #3)Dependencies for optional parts of Kaldi
-onlinebin: base matrix util feat tree optimization gmm tied transform sgmm sgmm2 fstext hmm lm decoder lat cudamatrix nnet nnet2 online
+onlinebin: base matrix util feat tree optimization gmm transform sgmm sgmm2 fstext hmm lm decoder lat cudamatrix nnet nnet2 online
 dec-wrap: base matrix util feat tree optimization thread gmm tied transform sgmm sgmm2 fstext hmm decoder lat
 online: decoder
 kwsbin: fstext lat base util

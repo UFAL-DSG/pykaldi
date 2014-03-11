@@ -11,13 +11,13 @@ if [ $# != 3 ]; then
    exit 1;
 fi
 
-[ -f ./path.sh ] && . ./path.sh; # source the path.
+. path.sh
 
 uttid=$1
 lat=$2
 words=$3
 
-tmpdir=$(mktemp -d); trap "rm -r $tmpdir" EXIT # cleanup
+tmpdir=$(mktemp -d); # trap "rm -r $tmpdir" EXIT # cleanup
 
 gunzip -c $lat | lattice-to-fst ark:- ark,scp:$tmpdir/fst.ark,$tmpdir/fst.scp || exit 1
 ! grep "^$uttid " $tmpdir/fst.scp && echo "ERROR : Missing utterance '$uttid' from gzipped lattice ark '$lat'" && exit 1
@@ -35,6 +35,6 @@ fi
 
 [ $mode == "display" ] && $doc_open $tmpdir/$uttid.${format}
 [[ $mode == "display" && $? -ne 0 ]] && echo "Failed to open ${format} format." && mode=save
-[ $mode == "save" ] && echo "Saving to $uttid.${format}" && cp $tmpdir/$uttid.${format} $tmpdir/$uttid.fst .
+[ $mode == "save" ] && echo "Saving to $uttid.${format}" && cp $tmpdir/$uttid.${format} .
 
 exit 0

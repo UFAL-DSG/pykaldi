@@ -14,6 +14,8 @@ splice_width=4 # meaning +- 4 frames on each side for second LDA
 rand_prune=4.0 # Relates to a speedup we do for LDA.
 within_class_factor=0.0001 # This affects the scaling of the transform rows...
                            # sorry for no explanation, you'll have to see the code.
+transform_dir=     # If supplied, overrides alidir
+lda_dim=  # This defaults to no dimension reduction.
 
 echo "$0 $@"  # Print the command line for logging
 
@@ -62,6 +64,8 @@ utils/split_data.sh $data $nj
 mkdir -p $dir/log
 echo $nj > $dir/num_jobs
 cp $alidir/tree $dir
+
+[ -z "$transform_dir" ] && transform_dir=$alidir
 norm_vars=`cat $alidir/norm_vars 2>/dev/null` || norm_vars=false # cmn/cmvn option, default false.
 cp $alidir/norm_vars $dir 2>/dev/null
 
@@ -84,19 +88,20 @@ case $feat_type in
     ;;
   *) echo "$0: invalid feature type $feat_type" && exit 1;
 esac
-if [ -f $alidir/trans.1 ] && [ $feat_type != "raw" ]; then
-  echo "$0: using transforms from $alidir"
-  feats="$feats transform-feats --utt2spk=ark:$sdata/JOB/utt2spk ark:$alidir/trans.JOB ark:- ark:- |"
+if [ -f $transform_dir/trans.1 ] && [ $feat_type != "raw" ]; then
+  echo "$0: using transforms from $transform_dir"
+  feats="$feats transform-feats --utt2spk=ark:$sdata/JOB/utt2spk ark:$transform_dir/trans.JOB ark:- ark:- |"
 fi
-if [ -f $alidir/raw_trans.1 ] && [ $feat_type == "raw" ]; then
-  echo "$0: using raw-fMLLR transforms from $alidir"
-  feats="$feats transform-feats --utt2spk=ark:$sdata/JOB/utt2spk ark:$alidir/raw_trans.JOB ark:- ark:- |"
+if [ -f $transform_dir/raw_trans.1 ] && [ $feat_type == "raw" ]; then
+  echo "$0: using raw-fMLLR transforms from $transform_dir"
+  feats="$feats transform-feats --utt2spk=ark:$sdata/JOB/utt2spk ark:$transform_dir/raw_trans.JOB ark:- ark:- |"
 fi
 
 
 feats_one="$(echo "$feats" | sed s:JOB:1:g)"
 feat_dim=$(feat-to-dim "$feats_one" -) || exit 1;
-lda_dim=$[$feat_dim*(1+2*($splice_width))]; # No dim reduction.
+# by default: oo dim reduction.
+[ -z "$lda_dim" ] && lda_dim=$[$feat_dim*(1+2*($splice_width))]; 
 
 if [ $stage -le 0 ]; then
   echo "$0: Accumulating LDA statistics."
@@ -111,7 +116,9 @@ echo $feat_dim > $dir/feat_dim
 echo $lda_dim > $dir/lda_dim
 
 if [ $stage -le 1 ]; then
-  nnet-get-feature-transform --within-class-factor=$within_class_factor --dim=$lda_dim $dir/lda.mat $dir/lda.*.acc \
+  nnet-get-feature-transform --write-cholesky=$dir/cholesky.tpmat \
+     --within-class-factor=$within_class_factor --dim=$lda_dim \
+      $dir/lda.mat $dir/lda.*.acc \
       2>$dir/log/lda_est.log || exit 1;
   rm $dir/lda.*.acc
 fi

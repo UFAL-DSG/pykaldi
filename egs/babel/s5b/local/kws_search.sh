@@ -41,7 +41,7 @@ set -o pipefail
 
 
 if [[ "$#" -ne "3" ]] ; then
-    echo -e "FATAL: wrong number of script parameters!\n\n"
+    echo -e "$0: FATAL: wrong number of script parameters!\n\n"
     printf "$help_message\n\n"
     exit 1;
 fi
@@ -73,20 +73,14 @@ if [ -z $indices_dir ]; then
   indices_dir=$kwsoutdir
 fi
 
-if [ ! -d "$datadir"  ] || [ ! -d "$kwsdatadir" ] ; then
-    echo "FATAL: the data directory does not exist"
+for d in "$datadir" "$kwsdatadir" "$langdir" "$decodedir"; do
+  if [ ! -d "$d" ]; then
+    echo "$0: FATAL: expected directory $d to exist"
     exit 1;
-fi
-if [[ ! -d "$langdir"  ]] ; then
-    echo "FATAL: the lang directory does not exist"
-    exit 1;
-fi
-if [[ ! -d "$decodedir"  ]] ; then
-    echo "FATAL: the directory with decoded files does not exist"
-    exit 1;
-fi
+  fi
+done
 if [[ ! -f "$kwsdatadir/ecf.xml"  ]] ; then
-    echo "FATAL: the $kwsdatadir does not contain the ecf.xml file"
+    echo "$0: FATAL: the $kwsdatadir does not contain the ecf.xml file"
     exit 1;
 fi
 
@@ -111,6 +105,7 @@ fi
 
 if [ $stage -le 0 ] ; then
   if [ ! -f $indices_dir/.done.index ] ; then
+    [ ! -d $indices_dir ] && mkdir  $indices_dir
     for lmwt in `seq $min_lmwt $max_lmwt` ; do
         indices=${indices_dir}_$lmwt
         mkdir -p $indices
@@ -125,7 +120,7 @@ if [ $stage -le 0 ] ; then
     touch $indices_dir/.done.index
   else
     echo "Assuming indexing has been aready done. If you really need to re-run "
-    echo "the indexing again, delete the file $kwsoutdir/.done.index"
+    echo "the indexing again, delete the file $indices_dir/.done.index"
   fi
 fi
 
