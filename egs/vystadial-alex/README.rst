@@ -1,118 +1,68 @@
 Summary
 -------
-* Requires Kaldi installation and Linux environment. (Tested on Ubuntu 10.04, 12.04 and 12.10.)
-* Trained models described in the paper are available in the 
-  `model_voip_cs` and `model_voip_en` directories for default configuration.
+The data comprise over 41 hours of speech in English and over 15 hours in
+Czech.
 
+The English recordings were collected from humans interacting via telephone 
+calls with statistical dialogue systems, designed to provide the user 
+with information on a suitable dining venue in the town.
 
-Details
--------
-* The config files `s5/env_voip_{cs,en}.sh` sets the data directory,
-  mfcc directory and experiments directory.
-  The default configuration `$WORK/model_voip_{cs,en}, 
-  $WORK/model_voip_{cs,en}/exp, $WORK/mfcc`.
-* Our scripts prepare the data to the expected format in `s5/$WORK/data`.
-* Experiment files are stored to `$exp` directory e.g. `data_voip_cs/exp`.
-* The `local` directory contains scripts for data preparation to prepare 
-  lang directory.
-* `path.sh`, `cmd.sh` and  `common/*` contain configurations for the 
-  recipe.
-* Language model (LM) is either built from the training data using 
-  [SRILM](http://www.speech.sri.com/projects/srilm/)  or we supply one in 
-  the ARPA format.
+The Czech recordings were collected in three ways:
 
+1. using a free Call Friend phone service
+2. using the Repeat After Me speech data collecting process
+3. from telephone interactions with the PublicTransportInfo Spoken Dialog System (SDS)
+   Alex: http://ufal.ms.mff.cuni.cz/alex-dialogue-systems-framework/.
 
-Running experiments
--------------------
-Before running the experiments, check that:
+The data collection process is described in detail
+in article "Free English and Czech telephone speech corpus shared under the CC-BY-SA 3.0 license"
+published for LREC 2014 (To Appear).
 
-* you have the Kaldi toolkit compiled: 
-  http://sourceforge.net/projects/kaldi/.
-* you have SRILM compiled. (This is needed for building a language model 
-  unless you supply your own LM in the ARPA format.) 
-  See http://www.speech.sri.com/projects/srilm/.
-* The number of jobs `njobs` are set correctly in `path.sh`.
-* In `cmd.sh`, you switched to run the training on a SGE[*] grid if 
-  required (disabled by default).
+The main purpose of providing the data and scripts
+is training acoustic models for real-time speech recognition unit
+for dialog system ALEX, which uses modified real-time Kaldi LatticeFasterDecoder.
+The modified Kaldi decoders are NOT required for running the scripts!
+WE USE COMMON KALDI DECODERS IN THE SCRIPTS (gmm-latgen-faster through steps/decode.sh)
 
-Start the recipe from the `s5` directory by running 
-`bash train_voip_cs.sh` or `bash train_voip_en.sh`.
-It will create `$WORK/mfcc`, `$WORK/data` and `$WORK/exp` directories.
-If any of them exists, it will ask you if you want them to be overwritten.
+The modified LatticeFasterDecoder is actively developed at 
+https://github.com/UFAL-DSG/pykaldi/tree/master/src/dec-wrap
+and has Python wrapper:
+https://github.com/UFAL-DSG/pykaldi/tree/master/src/pykaldi
+Note that I am currently moving the online decoder to:
+http://sourceforge.net/p/kaldi/code/HEAD/tree/sandbox/oplatek2/
 
-.. [*] Sun Grid Engine
+Credits and license
+------------------------
+The scripts are partially based on Voxforge KALDI recipe.
+The original scripts as well as theses scripts are licensed under APACHE 2.0 license.
+The data are distributed under Attribution-{ShareAlike} 3.0 Unported ({CC} {BY}-{SA} 3.0) license.
+Czech data: https://lindat.mff.cuni.cz/repository/xmlui/handle/11858/00-097C-0000-0023-4670-6
+English data: https://lindat.mff.cuni.cz/repository/xmlui/handle/11858/00-097C-0000-0023-4671-4
 
-Extracting the results and trained models
------------------------------------------
-The main scripts, `s5/train_voip_{cs,en}.sh`, 
-perform not only training of the acoustic 
-models, but also decoding.
-The acoustic models are evaluated after running the training and  
-reports are printed to the standard output.
+The data collecting process and development of these training scripts 
+was partly funded by the Ministry of Education, Youth and Sports 
+of the Czech Republic under the grant agreement LK11221 
+and core research funding of Charles University in Prague.
+For citing, please use following BibTex citation:
 
-The `s5/local/results.py exp` command extracts the results from the `$exp` directory.
-It is invoked at the end of the `s5/train_voip_{cs,en}.sh` script and 
-the results are thereby stored to `$WORK/exp/results.log`.
+@inproceedings{korvas_2014,
+  title={{Free English and Czech telephone speech corpus shared under the CC-BY-SA 3.0 license}},
+  author={Korvas, Mat\v{e}j and Pl\'{a}tek, Ond\v{r}ej and Du\v{s}ek, Ond\v{r}ej and \v{Z}ilka, Luk\'{a}\v{s} and Jur\v{c}\'{i}\v{c}ek, Filip},
+  booktitle={Proceedings of the Eigth International Conference on Language Resources and Evaluation (LREC 2014)},
+  pages={To Appear},
+  year={2014},
+}
 
-If you want to use the trained acoustic model with your language model
-outside the prepared script, you need to build the `HCLG` decoding graph yourself.  
-See http://kaldi.sourceforge.net/graph.html for general introduction to the FST 
-framework in Kaldi.
-
-The simplest way to start decoding is to use the same LM which
-was used by the `s5/train_voip_{cs,en}.sh` script.
-Let's say you want to decode with 
-the acoustic model stored in `exp/tri2b_bmmi`,
-then you need files listed below:
-
-----
-
-====================================  ====================================================================================
-`mfcc.conf`                         # Speech parametrisation (MFCC) settings. Training and decoding setup must match.
-`exp/tri2b_bmmi/graph/HCLG.fst`     # Decoding Graph. Graph part of AM plus lexicon, phone->3phone & LM representation.
-`exp/tri2b_bmmi/graph/words.txt`    # Word symbol table, a mapping between words and integers which are decoded.
-`exp/tri2b_bmmi/graph/silence.csl`  # List of phone integer ids, which represent silent phones. 
-`exp/tri2b_bmmi/final.mdl`          # Trained acoustic model (AM).
-`exp/tri2b_bmmi/final.mat`          # Trained matrix of feature/space transformations (E.g. LDA and bMMI).
-====================================  ====================================================================================
-
-
-----
-
-We recommend to study `steps/decode.sh` Kaldi standard script
-for standalone decoding with `gmm-latgen-faster` Kaldi decoder.
-
-In order to build your own decoding graph `HCLG` 
-you need LM in ARPA format and files in table below. 
-
-* Note 1: Building `HCLG` decoding graph is out of scope this README.
-* Note 2: Each acoustic model needs corresponding `HCLG` graph.
-* Note 3: The phonetic dictionary applied on the vocabulary 
-  should always generate only a subset of phones seen in training data!
-
-====================================  ====================================================================
-`LM.arpa`                           # Language model in ARPA format [You should supply it]
-`vocabulary.txt`                    # List of words you want to decode [You should supply it]
-`OOV_SYMBOL`                        # String representing out of vocabulary word. [You should supply it]
-`dictionary.txt`                    # Phonetic dictionary. [You should supply it]
-`exp/tri2b_bmmi/final.mdl`          # Trained acoustic model (AM).
-`exp/tri2b_bmmi/final.tree`         # Phonetic decision tree.
-====================================  ====================================================================
-
-Note: We supply the LDA+bMMI acoustic model, 
-its decoding graph and support files
-with the Kaldi scripts.
-Using the two tables above their purpose should be obvious.
 
 Expected results
 ----------------
+The expected results were obtained simply by running
+bash train_voip_cs.sh OR bash train_voip_en.sh.
+Note that you need SRILM installed in path or at kaldi/tools/ directory!
 
-.. code-block:: bash
-
-    build2 - bigram LM from train data, estimated by the scripts using SRILM
-    build0 - zerogram LM from test data, estimated by scripts using Python code
-    LMW - Language model weight, we picked the best from (min_lmw, max_lmw)
-          based on decoding results on DEV set
+build2 - bigram LM from train data, estimated by the scripts using SRILM
+build0 - zerogram LM from test data, estimated by scripts using Python code
+LMW - Language model weight, we picked the best from (min_lmw, max_lmw) based on decoding results on DEV set
 
     Full Czech data: 
     exp             set     LM      LMW     WER     SER  
@@ -152,22 +102,93 @@ Expected results
     give significant advantage, because they are estimated on test set!
 
 
-Credits and license
-------------------------
-The scripts are partialy based on Voxforge KALDI recipe.
-The original scripts as well as theses scripts are licensed under APACHE 2.0 license.
-The data are distributed under Attribution-{ShareAlike} 3.0 Unported ({CC} {BY}-{SA} 3.0) license.
+Details
+-------
+* Requires Kaldi installation and Linux environment. (Tested on Ubuntu 10.04, 12.04 and 12.10.)
+* The config files s5/env_voip_{cs,en}.sh sets the data directory,
+  mfcc directory and experiments directory.
+  The default configuration $WORK/model_voip_{cs,en}, 
+  $WORK/model_voip_{cs,en}/exp, $WORK/mfcc.
+* Our scripts prepare the data to the expected format in s5/$WORK/data.
+* Experiment files are stored to $exp directory e.g. data_voip_cs/exp.
+* The local directory contains scripts for data preparation to prepare 
+  lang directory.
+* path.sh, cmd.sh and  common/* contain configurations for the 
+  recipe.
+* Language model (LM) is either built from the training data using 
+  [SRILM](http://www.speech.sri.com/projects/srilm/)  or we supply one in 
+  the ARPA format.
 
-The data collecting process was funded by project Vystadial.
-For citing, please use following ``BibTex`` citation:
+
+Running experiments
+-------------------
+Before running the experiments, check that:
+
+* you have the Kaldi toolkit compiled: 
+  http://sourceforge.net/projects/kaldi/.
+* you have SRILM compiled. (This is needed for building a language model 
+  unless you supply your own LM in the ARPA format.) 
+  See http://www.speech.sri.com/projects/srilm/.
+* The number of jobs njobs are set correctly in path.sh.
+* In cmd.sh, you switched to run the training on a SGE[*] grid if 
+  required (disabled by default).
+
+Start the recipe from the s5 directory by running 
+bash train_voip_cs.sh or bash train_voip_en.sh.
+It will create $WORK/mfcc, $WORK/data and $WORK/exp directories.
+If any of them exists, it will ask you if you want them to be overwritten.
+
+.. [*] Sun Grid Engine
+
+Extracting the results and trained models
+-----------------------------------------
+The main scripts, s5/train_voip_{cs,en}.sh, 
+perform not only training of the acoustic 
+models, but also decoding.
+The acoustic models are evaluated after running the training and  
+reports are printed to the standard output.
+
+The s5/local/results.py exp command extracts the results from the $exp directory.
+It is invoked at the end of the s5/train_voip_{cs,en}.sh script and 
+the results are thereby stored to $WORK/exp/results.log.
+
+If you want to use the trained acoustic model with your language model
+outside the prepared script, you need to build the HCLG decoding graph yourself.  
+See http://kaldi.sourceforge.net/graph.html for general introduction to the FST 
+framework in Kaldi.
+
+The simplest way to start decoding is to use the same LM which
+was used by the s5/train_voip_{cs,en}.sh script.
+Let's say you want to decode with 
+the acoustic model stored in exp/tri2b_bmmi,
+then you need files listed below:
+
+================================= =====================================================================================
+mfcc.conf                          Speech parametrisation (MFCC) settings. Training and decoding setup must match.
+exp/tri2b_bmmi/graph/HCLG.fst      Decoding Graph. Graph part of AM plus lexicon, phone->3phone & LM representation.
+exp/tri2b_bmmi/graph/words.txt     Word symbol table, a mapping between words and integers which are decoded.
+exp/tri2b_bmmi/graph/silence.csl   List of phone integer ids, which represent silent phones. 
+exp/tri2b_bmmi/final.mdl           Trained acoustic model (AM).
+exp/tri2b_bmmi/final.mat           Trained matrix of feature/space transformations (E.g. LDA and bMMI).
+================================= =====================================================================================
 
 
-.. code-block:: tex
+We recommend to study steps/decode.sh Kaldi standard script
+for standalone decoding with gmm-latgen-faster Kaldi decoder.
 
-    @todo{todo_lrec_2014,
-      author = {Korvas, Matěj; Pl\'{a}tek, Ondřej; Du\v{s}ek, Ondřej; \v{Z}ilka, Luk\'{a}\v{s}; Jur\v{c}\'{i}\v{c}ek, Filip},
-      title = {Free English and Czech telephone speech corpus shared under the CC-BY-SA 3.0 license},
-      year = {2014},
-      language = {eng},
-      institution = {Faculty of Mathematics and Physics, Charles University in Prague, {UFAL}}
-    }
+In order to build your own decoding graph HCLG 
+you need LM in ARPA format and files in table below. 
+
+* Note 1: Building HCLG decoding graph is out of scope this README.
+* Note 2: Each acoustic model needs corresponding HCLG graph.
+* Note 3: The phonetic dictionary applied on the vocabulary 
+  should always generate only a subset of phones seen in training data!
+
+===============================  =========================================================================
+LM.arpa                           Language model in ARPA format [You should supply it]
+vocabulary.txt                    List of words you want to decode [You should supply it]
+OOV_SYMBOL                        String representing out of vocabulary word. [You should supply it]
+dictionary.txt                    Phonetic dictionary. [You should supply it]
+exp/tri2b_bmmi/final.mdl          Trained acoustic model (AM).
+exp/tri2b_bmmi/final.tree         Phonetic decision tree.
+===============================  =========================================================================
