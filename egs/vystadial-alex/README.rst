@@ -60,7 +60,7 @@ The expected results were obtained simply by running
 bash train_voip_cs.sh OR bash train_voip_en.sh.
 Note that you need SRILM installed in path or at kaldi/tools/ directory!
 
-.. raw::
+.. code-block::bash
 
     build2 - bigram LM from train data, estimated by the scripts using SRILM
     build0 - zerogram LM from test data, estimated by scripts using Python code
