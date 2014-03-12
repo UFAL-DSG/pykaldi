@@ -60,9 +60,10 @@ The expected results were obtained simply by running
 bash train_voip_cs.sh OR bash train_voip_en.sh.
 Note that you need SRILM installed in path or at kaldi/tools/ directory!
 
-build2 - bigram LM from train data, estimated by the scripts using SRILM
-build0 - zerogram LM from test data, estimated by scripts using Python code
-LMW - Language model weight, we picked the best from (min_lmw, max_lmw) based on decoding results on DEV set
+.. raw::
+    build2 - bigram LM from train data, estimated by the scripts using SRILM
+    build0 - zerogram LM from test data, estimated by scripts using Python code
+    LMW - Language model weight, we picked the best from (min_lmw, max_lmw) based on decoding results on DEV set
 
     Full Czech data: 
     exp             set     LM      LMW     WER     SER  
