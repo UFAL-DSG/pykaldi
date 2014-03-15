@@ -16,10 +16,10 @@
 from __future__ import unicode_literals
 
 try:
-    from unittest import skipIf as ut_skipIf, ut_TestCase, main as ut_main
+    from unittest import skipIf as ut_skipIf, TestCase as ut_TestCase, main as ut_main
 except ImportError:
     try:
-        from unittest2 import skipIf as ut_skipIf, ut_TestCase, main as ut_main
+        from unittest2 import skipIf as ut_skipIf, TestCase as ut_TestCase, main as ut_main
     except ImportError:
         print(('For Python 2.7+ you need unittest module.'
                'For Python 2.6 you need unittest 2 module'))
