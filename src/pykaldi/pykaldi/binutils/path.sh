@@ -27,8 +27,12 @@ MFCC=models/mfcc.conf
 SILENCE=models/silence.csl
 
 pykaldi_dir=`pwd`/../..
-export LD_LIBRARY_PATH=$pykaldi_dir:$LD_LIBRARY_PATH
+openfstlib_dir=`pwd`/../../../../tools/openfst/lib
+export LD_LIBRARY_PATH=$openfstlib_dir:$openfstlib_dir/fst:$pykaldi_dir/pykaldi:$LD_LIBRARY_PATH
 export PYTHONPATH=$pykaldi_dir:$pykaldi_dir/pyfst:$PYTHONPATH
+
+kaldisrc=`pwd`/../../..
+export PATH=$kaldisrc/bin:$kaldisrc/fgmmbin:$kaldisrc/gmmbin:$kaldisrc/nnetbin:$kaldisrc/sgmm2bin:$kaldisrc/tiedbin:$kaldisrc/featbin:$kaldisrc/fstbin:$kaldisrc/latbin:$kaldisrc/onlinebin:$kaldisrc/sgmmbin:"$PATH"
 
 
 beam=16.0

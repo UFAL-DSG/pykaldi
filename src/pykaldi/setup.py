@@ -11,8 +11,10 @@ from Cython.Distutils import build_ext
 
 STATIC = False
 
+print '\n which python? \n'
 install_requires = []
 if python_version < (2, 7):
+    print '\n python 2.6 \n'
     new_27 = ['ordereddict', 'argparse']
     install_requires.extend(new_27)
 
@@ -58,7 +60,7 @@ setup(
     cmdclass={'build_ext': build_ext},
     version='0.1-' + str(git_version),
     install_requires=install_requires,
-    setup_requires=['cython>=0.19.1'],
+    setup_requires=['cython>=0.19.1', 'nose>=1.0'],
     ext_modules=ext_modules,
     test_suite="nose.collector",
     tests_require=['nose>=1.0', 'pykaldi'],

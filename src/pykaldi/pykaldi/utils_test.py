@@ -14,9 +14,16 @@
 # See the Apache 2 License for the specific language governing permissions and
 # limitations under the License. #
 
-
 from __future__ import unicode_literals
-import unittest
+try:
+    from unittest import skipIf as ut_skipIf, TestCase as ut_TestCase, main as ut_main
+except ImportError:
+    try:
+        from unittest2 import skipIf as ut_skipIf, TestCase as ut_TestCase, main as ut_main
+    except ImportError as e:
+        print(('For Python 2.7+ you need unittest module.'
+               'For Python 2.6 you need unittest 2 module'))
+        raise e
 import copy
 from .utils import expand_prefix
 from .utils import fst_shortest_path_to_lists
@@ -25,7 +32,7 @@ import os
 from subprocess import call
 
 
-class TestExpandPref(unittest.TestCase):
+class TestExpandPref(ut_TestCase):
 
     def setUp(self):
         self.test = {'x': '1',
@@ -57,8 +64,8 @@ class TestExpandPref(unittest.TestCase):
         self.assertTrue(gold['innerlist'][0] == test['innerlist'][0], 'list expansion fails')
 
 
-@unittest.skipIf(call(['which', 'fstcompile']) != 0, 'We need to compile testing fst using fstcompile')
-class TestLatticeToNbest(unittest.TestCase):
+@ut_skipIf(call(['which', 'fstcompile']) != 0, 'We need to compile testing fst using fstcompile')
+class TestLatticeToNbest(ut_TestCase):
 
     def setUp(self):
         shortest_txt = os.path.join(os.path.dirname(__file__), 'test_shortest.txt')
@@ -80,4 +87,4 @@ class TestLatticeToNbest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    ut_main()

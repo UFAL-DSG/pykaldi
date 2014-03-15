@@ -34,7 +34,7 @@ void test_fst_equal() {
 
 
 void test_posterior_sum_to_one(const std::vector<std::string> & tests) {
-  typedef typename LogArc::StateId StateId;
+  typedef LogArc::StateId StateId;
   for (size_t k = 0; k < tests.size(); ++k) {
     VectorFst<LogArc> *t = VectorFst<LogArc>::Read(tests[k]);
     std::vector<double> alpha;
