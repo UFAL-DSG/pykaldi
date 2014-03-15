@@ -11,10 +11,8 @@ from Cython.Distutils import build_ext
 
 STATIC = False
 
-print '\n which python? \n'
 install_requires = []
 if python_version < (2, 7):
-    print '\n python 2.6 \n'
     new_27 = ['ordereddict', 'argparse']
     install_requires.extend(new_27)
 
@@ -50,7 +48,7 @@ try:
     git_version = check_output(['git', 'rev-parse', 'HEAD'])
 except:
     git_version = 'Unknown Git version'
-    print git_version
+    print(git_version)
 
 setup(
     name='pykaldi',
