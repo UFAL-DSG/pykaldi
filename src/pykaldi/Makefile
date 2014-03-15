@@ -52,7 +52,7 @@ pykaldi/decoders.so: $(LIBFILE) pyfst_compiled
 all: pykaldi/decoders.so
 
 test: all
-	LD_LIBRARY_PATH=.:$(FSTDIR)/lib:$(FSTDIR)/lib/fst \
+	LD_LIBRARY_PATH=./pykaldi:$(FSTDIR)/lib:$(FSTDIR)/lib/fst \
 	LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include \
 	PYTHONPATH=$(PWD)/pyfst:$$PYTHONPATH \
 	python setup.py nosetests
