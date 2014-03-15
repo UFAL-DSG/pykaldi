@@ -54,23 +54,27 @@ int main(int argc, char *argv[])
   GmmLatgenWrapper rec;
   rec.Setup(args.size() - 2, argv + 2);
 
-  // TOOD the use case is to switch FrameIn and decode
+  // TODO the use case is to switch FrameIn and decode
   // often so the decoder can decode as the user speaks
   rec.FrameIn(wave_to_std_vector, len_wave);
-
-  size_t decoded_frames = 0;
-  size_t decoded_now = 0;
-  size_t max_decoded = 10;
-  do {
-    decoded_frames += decoded_now;
-    decode_now = rec.Decode(max_decoded);
-  } while(decoded_now > 0);
+  while(get_audio()) {
+    size_t decoded_frames = 0; size_t decoded_now = 0; size_t max_decoded = 10;
+    do {
+      decoded_frames += decoded_now;
+      decoded_now = rec.Decode(max_decoded);
+    } while(decoded_now > 0);
+  }
 
   rec.PruneFinal();
   
-  fst::VectorFst<fst::LogArc> word_post_lat;
-  double tot_lik;
+  double tot_lik; fst::VectorFst<fst::LogArc> word_post_lat;
   rec.GetLattice(&word_post_lat, &tot_lik);
+  // optional
+  std::vector<std::string> nbest;
+  Lattice2Nbest(&nbest);
+
+  bool clear_data = false;  // True: The buffered unprocessed audio will be cleared
+  rec.Reset(clear_data);  // Ready for new utterance
 
   std::cout << "Likelihood of the utterance is " << tot_lik << std::endl;
 
