@@ -14,5 +14,4 @@ export decode_cmd=run.pl
 
 # The number of parallel jobs to be started for some parts of the recipe
 # Make sure you have enough resources(CPUs and RAM) to accomodate this number of jobs
-njobs=10
-
+njobs=2
