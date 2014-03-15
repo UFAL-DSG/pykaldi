@@ -47,8 +47,7 @@ class TestPyGmmLatgenWrappeNotInit(unittest.TestCase):
 
     def test_frame_in_assert(self):
         wav = b"cau"  # 16 bit audio ->1.5 samples == bad
-        with self.assertRaises(AssertionError):
-            self.d.frame_in(wav)
+        self.assertRaises(AssertionError, lambda: self.d.frame_in(wav))
 
     def get_best_path(self):
         self.assertEqual(self.d.get_best_path(), [])
