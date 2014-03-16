@@ -48,7 +48,7 @@ try:
     git_version = check_output(['git', 'rev-parse', 'HEAD'])
 except:
     git_version = 'Unknown Git version'
-    print git_version
+    print(git_version)
 
 setup(
     name='pykaldi',
@@ -58,7 +58,7 @@ setup(
     cmdclass={'build_ext': build_ext},
     version='0.1-' + git_version,
     install_requires=install_requires,
-    setup_requires=['cython>=0.19.1'],
+    setup_requires=['cython>=0.19.1', 'nose>=1.0'],
     ext_modules=ext_modules,
     test_suite="nose.collector",
     tests_require=['nose>=1.0', 'pykaldi'],

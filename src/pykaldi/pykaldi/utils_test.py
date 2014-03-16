@@ -20,9 +20,10 @@ try:
 except ImportError:
     try:
         from unittest2 import skipIf as ut_skipIf, TestCase as ut_TestCase, main as ut_main
-    except ImportError:
+    except ImportError as e:
         print(('For Python 2.7+ you need unittest module.'
                'For Python 2.6 you need unittest 2 module'))
+        raise e
 import copy
 from utils import expand_prefix
 from utils import fst_shortest_path_to_lists
