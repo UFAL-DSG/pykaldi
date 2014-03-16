@@ -28,8 +28,8 @@ install:
     # Configure with ATLAS (default)
     - pushd src && ./configure --shared && popd
     - pushd src && make -j 4 && popd
-    - pushd src/dec-wrap && make -j 4 && popd
+    - pushd src/onl-rec && make -j 4 && popd
 
 script:
-    - pushd src/dec-wrap && make -j 4 test ; RET=$?; popd ; (exit $RET)
+    - pushd src/onl-rec && make -j 4 test ; RET=$?; popd ; (exit $RET)
     - pushd src/pykaldi && make -j 4 test ; RET=$? ; popd ; (exit $RET)
