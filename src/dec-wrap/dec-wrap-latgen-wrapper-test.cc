@@ -32,17 +32,23 @@ using namespace kaldi;
 using std::string;
 
 
-void ReadWav(const std::string & wav_path, Vector<BaseFloat> &out_v) {
-
-  std::cout << "<<<=== Reading waveform\n";
+size_t ReadWav(const std::string & wav_path, unsigned char **arr_out) {
 
   std::ifstream is(wav_path.c_str());
   WaveData wave;
   wave.Read(is);
   Matrix<BaseFloat> data(wave.Data());
   KALDI_ASSERT(data.NumRows() == 1);
-  out_v.Resize(data.NumCols());
-  out_v.CopyFromVec(data.Row(0));
+
+  delete[] (*arr_out);
+  (*arr_out) = new unsigned char[data.NumCols()];
+  for (size_t i = 0; i < data.NumCols(); ++i) {
+    (*arr_out)[i] = data(0, i);
+  }
+
+  std::cout << std::endl << " Waveform loaded" << std::endl << std::endl;
+
+  return data.NumCols();
 }
 
 
@@ -51,21 +57,19 @@ bool recognitionOn(size_t simAudioProcessed, size_t simAudioSize) {
 }
 
 
-size_t getAudio(unsigned char* simAudioInput, size_t simAudioSize, size_t simAudioProcessed, unsigned char *new_audio_array) {
-  delete [] new_audio_array;
+size_t getAudio(unsigned char* simAudioInput, size_t simAudioSize, 
+    size_t *simAudioProcessed, unsigned char **audio_array) {
+
+  delete [] (*audio_array);
+  std::cout << std::endl << " Previous chunk deleted." << std::endl << std::endl;
   size_t chunk_size = 4560; // TODO comment why?
-  chunk_size = std::min(chunk_size, ((simAudioSize - 1) - simAudioProcessed));
-  new_audio_array = new unsigned char[chunk_size];
+  chunk_size = std::min(chunk_size, ((simAudioSize - 1) - (*simAudioProcessed)));
+  (*audio_array) = new unsigned char[chunk_size];
   for (size_t i = 0; i < chunk_size; ++i) {
-    simAudioProcessed++;
-    new_audio_array[i] = simAudioInput[simAudioProcessed]; 
+    (*audio_array)[i] = simAudioInput[*simAudioProcessed]; 
+    (*simAudioProcessed)++;
   }
   return chunk_size;
-}
-
-
-size_t ConvertVector2RawData(Vector<BaseFloat> &v_in, unsigned char *arr_out) {
-  return v_in.Dim();
 }
 
 
@@ -77,29 +81,32 @@ int main(int argc, char *argv[]) {
     return 0;
   }
 
-  Vector<BaseFloat> wave;
-  ReadWav(args[1], wave);
-
   size_t simAudioProcessed = 0;
   unsigned char* simAudioInput = NULL;
   // Asuming default 16Khz sampling, 16Bit=2B. Can be changed in  audio buffer options.
-  size_t simAudioSize = ConvertVector2RawData(wave, simAudioInput);
+  size_t simAudioSize = ReadWav(args[1], &simAudioInput);
 
   GmmLatgenWrapper rec;
   // Pass commandline arguments except for the wave file name.
   rec.Setup(args.size() - 2, argv + 2);
+
+  std::cout << std::endl << " Recogniser initialized." << std::endl << std::endl;
 
   unsigned char * audio_array = NULL;
   size_t decoded_frames = 0; 
   size_t decoded_now = 0; 
   size_t max_decoded = 10;
   while(recognitionOn(simAudioProcessed, simAudioSize)) {
-    size_t audio_len = getAudio(simAudioInput, simAudioSize, simAudioProcessed, audio_array);
+    std::cout << std::endl << " Still some new audio for forward decoding." << std::endl << std::endl;
+    size_t audio_len = getAudio(simAudioInput, simAudioSize, &simAudioProcessed, &audio_array);
+    std::cout << std::endl << " Audio chunk prepared. Size " << audio_len << std::endl << std::endl;
     rec.FrameIn(audio_array, audio_len);
+    std::cout << std::endl << " Audio chunk buffered into decoder." << std::endl << std::endl;
     do {
       decoded_frames += decoded_now;
       decoded_now = rec.Decode(max_decoded);
     } while(decoded_now > 0);
+    std::cout << std::endl << " Audio chunk forward-decoded." << std::endl << std::endl;
   }
 
   rec.PruneFinal();
@@ -108,14 +115,13 @@ int main(int argc, char *argv[]) {
   fst::VectorFst<fst::LogArc> word_post_lat;
   rec.GetLattice(&word_post_lat, &tot_lik);
 
-  bool clear_data = false;  // True: The buffered unprocessed audio will be cleared
-  rec.Reset(clear_data);  // Ready for new utterance
-
+  std::cout << std::endl << " Posterior lattice extracted." << std::endl << std::endl;
   std::cout << "Likelihood of the utterance is " << tot_lik << std::endl;
 
   // Writing the word posterior lattice to file
   std::ofstream logfile;
-  logfile.open("latgen-wrapper-test.fst");
+  string fstname = args[1] + ".fst";
+  logfile.open(fstname.c_str());
   word_post_lat.Write(logfile, fst::FstWriteOptions());
   logfile.close();
 
@@ -128,6 +134,11 @@ int main(int argc, char *argv[]) {
   //   }
   //   std::cout << std::endl;
   // }
+
+  bool clear_data = false;  // True: The buffered unprocessed audio will be cleared
+  rec.Reset(clear_data);  // Ready for new utterance
+
+  std::cout << std::endl << " Recogniser resetted and prepared for next utterance." << std::endl << std::endl;
 
   return 0;
 }
