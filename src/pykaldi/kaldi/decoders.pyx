@@ -9,7 +9,7 @@ from libcpp cimport bool
 cimport fst._fst
 cimport fst.libfst
 import fst
-from pykaldi.utils import lattice_to_nbest
+from kaldi.utils import lattice_to_nbest
 
 
 cdef extern from "dec-wrap/dec-wrap-latgen-wrapper.h" namespace "kaldi":

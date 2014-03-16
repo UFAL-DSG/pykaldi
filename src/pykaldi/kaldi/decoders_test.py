@@ -16,18 +16,7 @@
 from __future__ import unicode_literals
 
 import unittest
-from pykaldi.decoders import PyGmmLatgenWrapper, DummyDecoder
-
-
-# class TestHelperFunction(unittest.TestCase):
-#     def test_version(self):
-#         print 'pykaldi %s' % (str(pykaldi.__version__))
-#         b, m, p = pykaldi.__version__
-#         self.assertTrue(b + m + p > 0)
-#
-#     def test_git_revision(self):
-#         print 'pykaldi last commit: %s' % (str(pykaldi.__git_revision__))
-#         self.assertTrue(len(pykaldi.__git_revision__) == 40)
+from kaldi.decoders import PyGmmLatgenWrapper, DummyDecoder
 
 
 class TestPyGmmLatgenWrappeNotInit(unittest.TestCase):

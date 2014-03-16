@@ -24,7 +24,7 @@ ADDLIBS = ../dec-wrap/dec-wrap.a ../decoder/kaldi-decoder.a \
 
 # ifeq ($(KALDI_FLAVOR), dynamic)
 # dynamic compilation
-LIBFILE=pykaldi/lib$(LIBNAME).so
+LIBFILE=kaldi/lib$(LIBNAME).so
 $(LIBFILE): $(ADDLIBS)
 	# Building shared library from static librariess.
 	# The static libraries were compiled with -fPIC.
@@ -45,14 +45,14 @@ pyfst/fst/_fst.so: pyfst
 
 pyfst_compiled: pyfst/fst/_fst.so
 
-pykaldi/decoders.so: $(LIBFILE) pyfst_compiled
+kaldi/decoders.so: $(LIBFILE) pyfst_compiled
 	LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include \
 	python setup.py build_ext --inplace
 
-all: pykaldi/decoders.so
+all: kaldi/decoders.so
 
 test: all
-	LD_LIBRARY_PATH=./pykaldi:$(FSTDIR)/lib:$(FSTDIR)/lib/fst \
+	LD_LIBRARY_PATH=./kaldi:$(FSTDIR)/lib:$(FSTDIR)/lib/fst \
 	LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include \
 	PYTHONPATH=$(PWD)/pyfst:$$PYTHONPATH \
 	python setup.py nosetests
@@ -60,7 +60,7 @@ test: all
 clean:
 	@# removing build directory
 	-python setup.py clean --all
-	rm -f pykaldi/decoders.so pykaldi/decoders.cpp $(LIBFILE)
+	rm -f kaldi/decoders.so kaldi/decoders.cpp $(LIBFILE)
 	rm -rf dist build *.egg-info
 
 install: all

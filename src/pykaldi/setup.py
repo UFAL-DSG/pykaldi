@@ -26,16 +26,16 @@ if STATIC:
     extra_objects = ['pykaldi.a', ]
 else:
     # DYNAMIC
-    library_dirs = ['pykaldi', ]
+    library_dirs = ['kaldi', ]
     libraries = ['pykaldi', ]
     extra_objects = []
-ext_modules.append(Extension('pykaldi.decoders',
+ext_modules.append(Extension('kaldi.decoders',
                              language='c++',
                              include_dirs=['..', 'pyfst', ],
                              library_dirs=library_dirs,
                              libraries=libraries,
                              extra_objects=extra_objects,
-                             sources=['pykaldi/decoders.pyx', ],
+                             sources=['kaldi/decoders.pyx', ],
                              ))
 
 
@@ -52,8 +52,8 @@ except:
 
 setup(
     name='pykaldi',
-    packages=['pykaldi', ],
-    package_data={'pykaldi': ['libpykaldi.so', 'test_shortest.txt']},
+    packages=['kaldi', ],
+    package_data={'kaldi': ['libpykaldi.so', 'test_shortest.txt']},
     include_package_data=True,
     cmdclass={'build_ext': build_ext},
     version='0.1-' + git_version,
