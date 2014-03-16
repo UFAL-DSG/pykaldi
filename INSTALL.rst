@@ -5,29 +5,31 @@ The official Kaldi toolkit installation is well documented at `installation guid
 
 KALDI on Ubuntu 12.04
 ~~~~~~~~~~~~~~~~~~~~~
-In order to use Kaldi decoder, build ``pykaldi`` fork of Kaldi from https://github.com/UFAL-DSG/pykaldi,
-install patched ``OpenFST`` from ``pykaldi``, then ``pyfst`` from https://github.com/UFAL-DSG/pyfst, and finally 
-install ``pykaldi`` Python extension.
+Note that demo examples setup PYTHONPATH and LD_LIBRARY_PATH variables,
+and does not require any preparation.
+In order to use Kaldi decoder system wide, build fork of Kaldi from https://github.com/UFAL-DSG/pykaldi,
+install patched ``OpenFST``, then ``pyfst`` from https://github.com/UFAL-DSG/pyfst, and finally 
+install Python extension.
 
-First,  build Kaldi fork ``pykaldi`` as follows:
+First,  build Kaldi fork as follows:
 
 .. code-block:: bash
 
   git clone https://github.com/UFAL-DSG/pykaldi
-  cd pykaldi/tools
+  cd kaldi/tools
   make atlas   # Just downloads headers
   make openfst_tgt  # Install patched OpenFST LOCALLY!
   cd ../src
   ./configure  # Should find ATLAS libraries which you have installed via apptitude (easier way).
   make && make test
-  cd dec-wrap && make && make test  # Directory needed for pykaldi Python wrapper
+  cd onl-rec && make && make test  # Directory needed for Python wrapper
 
 Install patched ``OpenFST`` system wide. The following commands install the already built ``OpenFST`` 
 library from previous step:
 
 .. code-block:: bash
 
-    cd pykaldi/tools/openfst
+    cd kaldi/tools/openfst
     ./configure  --prefix=/usr  # Sets the path to system wide installation directory
     sudo make install  # Copies the already built and pathced libraries from 'make openfst_tgt' step.
 
@@ -43,11 +45,11 @@ Install ``pyfst`` by
     sudo python setup.py install
 
 
-Finally, install the ``pykaldi`` Python extension (a wrapper around Kaldi decoders):
+Finally, install the Python extension (a wrapper around Kaldi decoders):
 
 .. code-block:: bash
 
-    cd pykaldi/src/pykaldi
+    cd kaldi/src/kaldi
     sudo make install
 
 Installing external dependencies
@@ -55,6 +57,8 @@ Installing external dependencies
 
 How have I installed OpenBlas?
 ------------------------------
+Previously, I used OpenBLAS instead of ATLAS.
+
 .. code-block:: bash
 
     cd tools
@@ -82,12 +86,6 @@ Since by *default it is turned of! I always forget about that!*
     make depend && make ext_depend && make && make ext 
     # optional test
     make test && make ext_test
-
-How have I installed cython?
-----------------------------
-.. code-block:: bash
-
-    pip install --user cython
 
 
 How have I installed PortAudio?
