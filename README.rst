@@ -46,7 +46,7 @@ LICENSE
 
 Other info
 ----------
-* Pykaldi is developed under `Vystadial project <https://sites.google.com/site/filipjurcicek/projects/vystadial>`_.
+* This Kaldi fork is developed under `Vystadial project <https://sites.google.com/site/filipjurcicek/projects/vystadial>`_.
 * Based on the `Svn trunk of Kaldi project <svn://svn.code.sf.net/p/kaldi/code/trunk>`_ which is mirrored to branch ``svn-mirror``.
 * The svn trunk is mirrored via ``git svn``. 
   Checkout tutorials: `Git svn <http://viget.com/extend/effectively-using-git-with-subversion>`_, 
