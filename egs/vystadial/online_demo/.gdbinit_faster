@@ -31,8 +31,7 @@ directory ../../../src/decoder
 directory ../../../src/feat
 
 # extractor->Compute
-b pykaldi-feat-input.h:166
-# display frame
-b feature-mfcc.cc:75
+b onl-rec-audio-source.cc:49
+b onl-rec-audio-source.cc:31
 
 run

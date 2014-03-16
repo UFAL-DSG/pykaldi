@@ -78,14 +78,15 @@ class LiveDemo:
             # if is data on input
             while (select.select([sys.stdin], [], [], 1) == ([sys.stdin], [], [])):
                 c = sys.stdin.read(1)
-                print 'character %s' % c
                 if c == 'u':
+                    print('\nMarked end of utterance\n')
                     self.utt_end = True
                 elif c == 'c':
                     self.dialog_end = True
+                    print('\nMarked end of dialogue\n')
         finally:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
-        print """Chunks: %d ; Utterance %d ; end %d : press 'u'\nFor terminating press 'c'\n\n""" % (len(self.frames), self.utt_frames, self.utt_end)
+        print("""Chunks: %d ; Utterance %d ; end %d : press 'u'\nFor terminating press 'c'\n\n""" % (len(self.frames), self.utt_frames, self.utt_end))
 
     def run(self):
         while True:
@@ -94,20 +95,20 @@ class LiveDemo:
             new_frames = self.d.decode(max_frames=10)
             while new_frames > 0:
                 self.utt_frames += new_frames
-                print('Decoded %d new frames' % new_frames)
                 new_frames = self.d.decode(max_frames=10)
             if self.utt_end or self.dialog_end:
                 start = time.time()
                 self.d.prune_final()
                 prob, lat = self.d.get_lattice()
-                nbest = lattice_to_nbest(lat, n=1)
+                # lat.write('live-demo-recorded.fst')
+                nbest = lattice_to_nbest(lat, n=10)
                 if nbest:
                     best_prob, best_path = nbest[0]
-                    decoded = [wst[w] for w in best_path]
+                    decoded = ' '.join([wst[w] for w in best_path])
                 else:
                     decoded = 'Empty hypothesis'
-                print "%s secs, frames: %d, prob: %f, %s " % (
-                    str(time.time() - start), self.utt_frames, prob, decoded.encode('UTF-8'))
+                print("%s secs, frames: %d, prob: %f, %s " % (
+                    str(time.time() - start), self.utt_frames, prob, decoded))
                 self.utt_frames = 0
                 self.d.reset(keep_buffer_data=False)
             if self.dialog_end:
