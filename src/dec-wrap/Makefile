@@ -13,7 +13,8 @@ ADDLIBS = ../decoder/kaldi-decoder.a ../thread/kaldi-thread.a \
 
 BINFILES =
 
-TESTFILES = dec-wrap-feat-input-test dec-wrap-latgen-wrapper-test \
+TESTFILES = dec-wrap-feat-input-test \
+			dec-wrap-latgen-wrapper-test \
 			dec-wrap-audio-source-test read-wav-test dec-wrap-utils-test
 
 OBJFILES = dec-wrap-latgen-decoder.o dec-wrap-latgen-wrapper.o \

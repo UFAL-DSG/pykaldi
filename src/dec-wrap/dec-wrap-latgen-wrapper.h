@@ -28,6 +28,9 @@ namespace fst{
   typedef TropicalWeightTpl<float> TropicalWeight;
   typedef ArcTpl<TropicalWeight> StdArc;
   typedef Fst<StdArc> StdFst;
+  template <class W> class LogWeightTpl;
+  typedef LogWeightTpl<float> LogWeight;
+  typedef ArcTpl<LogWeight> LogArc;
   template<class FloatType> class LatticeWeightTpl;
   template <class A> class VectorFst;
   template<class WeightType, class IntType> class CompactLatticeWeightTpl; 
