@@ -16,13 +16,13 @@
 from __future__ import unicode_literals
 
 import unittest
-from kaldi.decoders import PyGmmLatgenWrapper, DummyDecoder
+from kaldi.decoders import PyOnlineLatgenRecogniser
 
 
-class TestPyGmmLatgenWrappeNotInit(unittest.TestCase):
+class TestPyOnlineLatgenRecogniserNotInit(unittest.TestCase):
 
     def setUp(self):
-        self.d = PyGmmLatgenWrapper()
+        self.d = PyOnlineLatgenRecogniser()
 
     def test_setup(self, args=['bad args']):
         self.assertFalse(self.d.setup(args))
@@ -57,25 +57,9 @@ class TestPyGmmLatgenWrappeNotInit(unittest.TestCase):
         self.d.reset(keep_buffer_data)
 
 
-class TestPyGmmLatgenWrappeRealInit(unittest.TestCase):
-    # TODO how to initialize decoder without data
+class TestPyOnlineLatgenRecogniserRealInit(unittest.TestCase):
     # TODO create working dummy data
     pass
-
-
-class TestDummyDecoder(unittest.TestCase):
-
-    def setUp(self):
-        self.d = DummyDecoder()
-
-    def test_frame_in(self):
-        self.d.frame_in("Ahoj")
-
-    def test_decode(self):
-        self.d.decode()
-
-    def test_getNbest(self):
-        self.assertEqual([(1.0, 'answer')], self.d.get_Nbest())
 
 if __name__ == '__main__':
     unittest.main()

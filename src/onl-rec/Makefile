@@ -13,15 +13,15 @@ ADDLIBS = ../decoder/kaldi-decoder.a ../thread/kaldi-thread.a \
 
 BINFILES =
 
-TESTFILES = dec-wrap-feat-input-test \
-			dec-wrap-latgen-wrapper-test \
-			dec-wrap-audio-source-test read-wav-test dec-wrap-utils-test
+TESTFILES = onl-rec-feat-input-test \
+			onl-rec-latgen-wrapper-test \
+			onl-rec-audio-source-test read-wav-test onl-rec-utils-test
 
-OBJFILES = dec-wrap-latgen-decoder.o dec-wrap-latgen-wrapper.o \
-		   dec-wrap-audio-source.o  dec-wrap-utils.o \
-		   dec-wrap-decodable.o dec-wrap-feat-input.o
+OBJFILES = onl-rec-latgen-decoder.o onl-rec-latgen-wrapper.o \
+		   onl-rec-audio-source.o  onl-rec-utils.o \
+		   onl-rec-decodable.o onl-rec-feat-input.o
 
-LIBNAME = dec-wrap
+LIBNAME = onl-rec
 
 
 include ../makefiles/default_rules.mk

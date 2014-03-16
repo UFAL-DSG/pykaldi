@@ -1,4 +1,4 @@
-// dec-wrap/read-wav-test.cc
+// onl-rec/read-wav-test.cc
 
 // Copyright 2013 Ondrej Platek
 

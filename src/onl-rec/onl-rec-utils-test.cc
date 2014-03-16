@@ -14,8 +14,8 @@
  * MERCHANTABLITY OR NON-INFRINGEMENT.
  * See the Apache 2 License for the specific language governing permissions and
  * limitations under the License. */
-#include "dec-wrap/dec-wrap-utils.h"
-#include "dec-wrap/fst-equal.h"
+#include "onl-rec/onl-rec-utils.h"
+#include "onl-rec/fst-equal.h"
 #include <fst/fst.h>
 #include <stdlib.h>
 

@@ -12,8 +12,8 @@ import fst
 from kaldi.utils import lattice_to_nbest
 
 
-cdef extern from "dec-wrap/dec-wrap-latgen-wrapper.h" namespace "kaldi":
-    cdef cppclass GmmLatgenWrapper:
+cdef extern from "onl-rec/onl-rec-latgen-recogniser.h" namespace "kaldi":
+    cdef cppclass OnlineLatgenRecogniser:
         size_t Decode(size_t max_frames) except +
         void FrameIn(unsigned char *frame, size_t frame_len) except +
         bool GetBestPath(vector[int] v_out, float *lik) except +
@@ -24,14 +24,14 @@ cdef extern from "dec-wrap/dec-wrap-latgen-wrapper.h" namespace "kaldi":
         int Setup(int argc, char **argv) except +
 
 
-cdef class PyGmmLatgenWrapper:
-    """PyGmmLatgenWrapper"""
-    cdef GmmLatgenWrapper * thisptr
+cdef class PyOnlineLatgenRecogniser:
+    """PyOnlineLatgenRecogniser"""
+    cdef OnlineLatgenRecogniser * thisptr
     cdef long fs
     cdef int nchan, bits
 
     def __cinit__(self):
-        self.thisptr = new GmmLatgenWrapper()
+        self.thisptr = new OnlineLatgenRecogniser()
 
     def __init__(self, fs=16000, nchan=1, bits=16):
         """ __init__(self, fs=16000, nchan=1, bits=16)"""
@@ -86,7 +86,7 @@ cdef class PyGmmLatgenWrapper:
 
     def setup(self, args):
         """setup(self, args)"""
-        args = ['PyGmmLatgenWrapper'] + args
+        args = ['PyOnlineLatgenRecogniser'] + args
         cdef char **string_buf = <char**>malloc(len(args) * sizeof(char*))
         if string_buf is NULL:
             raise MemoryError()
@@ -96,21 +96,3 @@ cdef class PyGmmLatgenWrapper:
             self.thisptr.Setup(len(args), string_buf)
         finally:
             free(string_buf)
-
-
-class DummyDecoder(object):
-    """For debugging purposes."""
-
-    def __init__(self):
-        print 'DummyDecoder initialized'
-
-    def frame_in(self, frame):
-        """rec_in(self, frame)"""
-        print 'Dummy enqueing frame of length %d' % len(frame)
-
-    def decode(self):
-        """decode(self)"""
-        pass
-
-    def get_Nbest(self):
-        return [(1.0, 'answer')]

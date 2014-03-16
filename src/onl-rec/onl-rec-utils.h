@@ -1,4 +1,4 @@
-// dec-wrap/dec-wrap-util.h
+// onl-rec/onl-rec-util.h
 
 // Copyright 2012 Cisco Systems (author: Matthias Paulik)
 
@@ -75,6 +75,6 @@ void LatticeToVectorNbest(const fst::VectorFst<Arc> & lat, std::vector<std::vect
 
 } // namespace kaldi
 
-#include "dec-wrap-utils-inl.h"
+#include "onl-rec-utils-inl.h"
 
 #endif // KALDI_DEC_WRAP_UTILS_H_
