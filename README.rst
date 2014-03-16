@@ -4,7 +4,7 @@ Fork of Kaldi for developing online-lattice recogniser
 Summary
 -------
 The fork presents three new Kaldi features:
-* Online Lattice Recogniser. The best decoding uses MFCC, LDA+MLLT, bMMI acoustic models and feature transformations.
+* Online Lattice Recogniser. The best results were obtained using MFCC, LDA+MLLT, bMMI acoustic models and feature transformations.
 * Python wrapper which interfaces the ``OnlineLatticeRecogniser`` to Python.
 * Training scripts which can be used with standard Kaldi tools or with the new ``OnlineLatticeRecogniser``.
   The scripts for Czech and English support acoustic models obtained using MFCC, LDA+MLLT/delta+delta-delta feature transformations and acoustic models trained generatively or by MPE or bMMI training.

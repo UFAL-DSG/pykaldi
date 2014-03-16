@@ -20,11 +20,11 @@ published for LREC 2014 (To Appear).
 
 The main purpose of providing the data and scripts
 is training acoustic models for real-time speech recognition unit
-for dialog system ALEX, which uses modified real-time Kaldi LatticeFasterDecoder.
+for dialog system ALEX, which uses modified real-time Kaldi OnlineLatgenRecogniser.
 The modified Kaldi decoders are NOT required for running the scripts!
 WE USE COMMON KALDI DECODERS IN THE SCRIPTS (gmm-latgen-faster through steps/decode.sh)
 
-The modified LatticeFasterDecoder is actively developed at 
+The modified OnlineLatgenRecogniser is actively developed at 
 https://github.com/UFAL-DSG/pykaldi/tree/master/src/onl-rec
 and has Python wrapper:
 https://github.com/UFAL-DSG/pykaldi/tree/master/src/pykaldi
