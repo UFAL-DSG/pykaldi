@@ -26,19 +26,9 @@
 # Martin Jiricka slides in czech:
 # http://www.ms.mff.cuni.cz/~jirim7am/data/gdb/gdb.pdf (or in my Calibre library)
 
-directory ../../../dec-wrap
-directory ../../../decoder
-directory ../../../feat
-
-# setup
-# b pykaldi-faster-wrapper.cc:175
-# b pykaldi-faster-wrapper.cc:220
-
-# decode
-# b pykaldi-faster-wrapper.cc:74
-
-# decode - decoder
-# b pykaldi-faster-decoder.cc:46
+directory ../../../src/onl-rec
+directory ../../../src/decoder
+directory ../../../src/feat
 
 # extractor->Compute
 b pykaldi-feat-input.h:166

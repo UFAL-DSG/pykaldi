@@ -1,4 +1,4 @@
-#include "dec-wrap/dec-wrap-latgen-decoder.h"
+#include "onl-rec/onl-rec-latgen-decoder.h"
 #include "decoder/lattice-faster-decoder.h"
 
 namespace kaldi {

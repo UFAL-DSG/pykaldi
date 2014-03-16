@@ -1,4 +1,4 @@
-// dec-wrap/dec-wrap-decodable.h
+// onl-rec/onl-rec-decodable.h
 
 // Copyright 2012 Cisco Systems (author: Matthias Paulik)
 
@@ -23,7 +23,7 @@
 #ifndef KALDI_DEC_WRAP_DEC_WRAP_DECODABLE_H_
 #define KALDI_DEC_WRAP_DEC_WRAP_DECODABLE_H_
 
-#include "dec-wrap/dec-wrap-feat-input.h"
+#include "onl-rec/onl-rec-feat-input.h"
 #include "gmm/decodable-am-diag-gmm.h"
 
 namespace kaldi {

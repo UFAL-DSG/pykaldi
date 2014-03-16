@@ -1,4 +1,4 @@
-// dec-wrap/dec-wrap-feat-input.h
+// onl-rec/onl-rec-feat-input.h
 
 // Copyright 2012 Cisco Systems (author: Matthias Paulik)
 //           2012-2013  Vassil Panayotov
@@ -21,7 +21,7 @@
 #define KALDI_DEC_WRAP_DEC_WRAP_FEAT_INPUT_H_
 
 #include "feat/feature-functions.h"
-#include "dec-wrap/dec-wrap-audio-source.h"
+#include "onl-rec/onl-rec-audio-source.h"
 
 
 namespace kaldi {

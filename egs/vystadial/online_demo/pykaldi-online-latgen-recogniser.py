@@ -15,8 +15,8 @@
 # limitations under the License. #
 from __future__ import unicode_literals
 
-from pykaldi.utils import load_wav, wst2dict, lattice_to_nbest
-from pykaldi.decoders import PyGmmLatgenWrapper
+from kaldi.utils import load_wav, wst2dict, lattice_to_nbest
+from kaldi.decoders import PyOnlineLatgenRecogniser
 import sys
 import fst
 import time
@@ -66,7 +66,7 @@ def decode(d, pcm):
 
 def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
     wst = wst2dict(wst_path)
-    d = PyGmmLatgenWrapper()
+    d = PyOnlineLatgenRecogniser()
     d.setup(argv)
     for wav_name, wav_path in wav_paths:
         sw, sr = 2, 16000  # 16-bit audio so 1 sample_width = 2 chars

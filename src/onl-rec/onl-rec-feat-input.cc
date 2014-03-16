@@ -1,4 +1,4 @@
-// dec-wrap/dec-wrap-feat-input.cc
+// onl-rec/onl-rec-feat-input.cc
 
 // Copyright 2012 Cisco Systems (author: Matthias Paulik)
 
@@ -20,7 +20,7 @@
 // See the Apache 2 License for the specific language governing permissions and
 // limitations under the License.
 
-#include "dec-wrap/dec-wrap-feat-input.h"
+#include "onl-rec/onl-rec-feat-input.h"
 
 namespace kaldi {
 

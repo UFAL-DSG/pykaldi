@@ -1,4 +1,5 @@
-// -*- coding: utf-8 -*-
+// onl-rec/onl-rec-latgen-decoder.h
+
 /* Copyright (c) 2013, Ondrej Platek, Ufal MFF UK <oplatek@ufal.mff.cuni.cz>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");

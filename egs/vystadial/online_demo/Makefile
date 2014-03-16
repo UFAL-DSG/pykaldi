@@ -47,10 +47,10 @@ build_scp: data/vystadial-sample-$(LANG)/test/input_best.scp data/vystadial-samp
 download_models: $(SILENCE) $(WST) $(HCLG) $(AM) $(MAT) $(MFCC)
 
 pyonline-recogniser: build_scp download_models
-	bash run_pykaldi-latgen-faster-decoder.sh
+	bash run_pyonline-latgen-recogniser.sh
 
 online-recogniser: build_scp download_models
-	bash run_dec-wrap-latgen-wrapper.sh
+	bash run_online-latgen-recogniser.sh
 
 gmm-latgen-faster: build_scp download_models
 	bash run_gmm-latgen-faster.sh

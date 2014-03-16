@@ -25,7 +25,7 @@ The modified Kaldi decoders are NOT required for running the scripts!
 WE USE COMMON KALDI DECODERS IN THE SCRIPTS (gmm-latgen-faster through steps/decode.sh)
 
 The modified LatticeFasterDecoder is actively developed at 
-https://github.com/UFAL-DSG/pykaldi/tree/master/src/dec-wrap
+https://github.com/UFAL-DSG/pykaldi/tree/master/src/onl-rec
 and has Python wrapper:
 https://github.com/UFAL-DSG/pykaldi/tree/master/src/pykaldi
 Note that I am currently moving the online decoder to:

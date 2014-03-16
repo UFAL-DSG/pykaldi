@@ -14,10 +14,10 @@ ADDLIBS = ../decoder/kaldi-decoder.a ../thread/kaldi-thread.a \
 BINFILES =
 
 TESTFILES = onl-rec-feat-input-test \
-			onl-rec-latgen-wrapper-test \
+			onl-rec-latgen-recogniser-test \
 			onl-rec-audio-source-test read-wav-test onl-rec-utils-test
 
-OBJFILES = onl-rec-latgen-decoder.o onl-rec-latgen-wrapper.o \
+OBJFILES = onl-rec-latgen-decoder.o onl-rec-latgen-recogniser.o \
 		   onl-rec-audio-source.o  onl-rec-utils.o \
 		   onl-rec-decodable.o onl-rec-feat-input.o
 

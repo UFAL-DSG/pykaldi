@@ -24,8 +24,8 @@
 #include "base/kaldi-types.h"
 #include "base/kaldi-math.h"
 #include "feat/wave-reader.h"
-#include "dec-wrap/dec-wrap-latgen-wrapper.h"
-#include "dec-wrap/dec-wrap-utils.h"
+#include "onl-rec/onl-rec-latgen-recogniser.h"
+#include "onl-rec/onl-rec-utils.h"
 #include "fstext/fstext-utils.h"
 
 using namespace kaldi;
@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
   // Asuming default 16Khz sampling, 16Bit=2B. Can be changed in  audio buffer options.
   size_t simAudioSize = ReadWav(args[1], &simAudioInput);
 
-  GmmLatgenWrapper rec;
+  OnlineLatgenRecogniser rec;
   // Pass commandline arguments except for the wave file name.
   rec.Setup(args.size() - 2, argv + 2);
 

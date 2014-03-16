@@ -17,7 +17,7 @@
 from __future__ import unicode_literals
 
 import pyaudio
-from pykaldi.decoders import PyGmmLatgenWrapper
+from pykaldi.decoders import PyOnlineLatgenRecogniser
 from pykaldi.utils import wst2dict, lattice_to_nbest
 import sys
 import time
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     Pres 'Enter' to see output at the end of utterance
     Prec 'Esc' for terminating the program"""
     wst = wst2dict(wst_path)
-    d = PyGmmLatgenWrapper()
+    d = PyOnlineLatgenRecogniser()
     d.setup(argv)
 
     p, stream = setup_pyaudio(audio_batch_size)

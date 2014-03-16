@@ -1,4 +1,4 @@
-// -*- coding: utf-8 -*-
+// onl-rec/onl-rec-latgen-recogniser.h
 /* Copyright (c) 2013, Ondrej Platek, Ufal MFF UK <oplatek@ufal.mff.cuni.cz>
  *               2012-2013  Vassil Panayotov
  *
@@ -60,12 +60,12 @@ class OnlDecodableDiagGmmScaled;
 class TransitionModel;
 class AmDiagGmm;
 class OnlLatticeFasterDecoder;
-class GmmLatgenWrapper;
+class OnlineLatgenRecogniser;
 struct OptionsItf;
 
-struct KaldiDecoderGmmLatgenWrapperOptions  {
+struct OnlineLatgenRecogniserOptions  {
   /// Input sampling frequency is fixed to 16KHz
-  explicit KaldiDecoderGmmLatgenWrapperOptions():kSampleFreq(16000), 
+  explicit OnlineLatgenRecogniserOptions():kSampleFreq(16000), 
   acoustic_scale(0.1),
   lat_acoustic_scale(1.0), lat_lm_scale(1.0),
   left_context(4), right_context(4)
@@ -84,13 +84,13 @@ struct KaldiDecoderGmmLatgenWrapperOptions  {
 };
 
 
-class GmmLatgenWrapper {
+class OnlineLatgenRecogniser {
   public:
-    GmmLatgenWrapper(): audio(NULL), mfcc(NULL), feat_input(NULL),
+    OnlineLatgenRecogniser(): audio(NULL), mfcc(NULL), feat_input(NULL),
     feat_transform(NULL), feat_matrix(NULL), decodable(NULL),
     trans_model(NULL), amm(NULL), decoder(NULL), decode_fst(NULL) { }
 
-    virtual ~GmmLatgenWrapper();
+    virtual ~OnlineLatgenRecogniser();
     size_t Decode(size_t max_frames);
     void FrameIn(unsigned char *frame, size_t frame_len);
     bool GetBestPath(std::vector<int> &v_out, BaseFloat *prob);
