@@ -26,14 +26,12 @@ WST=models/words.txt
 MFCC=models/mfcc.conf
 SILENCE=models/silence.csl
 
-pykaldi_dir=`pwd`/../..
-openfstlib_dir=`pwd`/../../../../tools/openfst/lib
-export LD_LIBRARY_PATH=$openfstlib_dir:$openfstlib_dir/fst:$pykaldi_dir/pykaldi:$LD_LIBRARY_PATH
-export PYTHONPATH=$pykaldi_dir:$pykaldi_dir/pyfst:$PYTHONPATH
+kaldisrc=`pwd`/../../../src
+openfst=`pwd`/../../../tools/openfst/
 
-kaldisrc=`pwd`/../../..
-export PATH=$kaldisrc/bin:$kaldisrc/fgmmbin:$kaldisrc/gmmbin:$kaldisrc/nnetbin:$kaldisrc/sgmm2bin:$kaldisrc/tiedbin:$kaldisrc/featbin:$kaldisrc/fstbin:$kaldisrc/latbin:$kaldisrc/onlinebin:$kaldisrc/sgmmbin:"$PATH"
-
+export PATH=$kaldisrc/bin:$kaldisrc/fgmmbin:$kaldisrc/gmmbin:$kaldisrc/nnetbin:$kaldisrc/sgmm2bin:$kaldisrc/tiedbin:$kaldisrc/featbin:$kaldisrc/fstbin:$kaldisrc/latbin:$kaldisrc/onlinebin:$kaldisrc/sgmmbin:$kaldisrc/dec-wrap:$openfst/bin:"$PATH"
+export LD_LIBRARY_PATH=$kaldisrc/dec-wrap:$kaldisrc/pykaldi/pykaldi:$openfst/lib:$openfst/lib/fst:$LD_LIBRARY_PATH
+export PYTHONPATH=$kaldisrc/pykaldi:$kaldisrc/pykaldi/pyfst:$PYTHONPATH
 
 beam=16.0
 latbeam=10.0

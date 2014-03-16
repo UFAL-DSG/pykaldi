@@ -75,4 +75,3 @@ install: all
 cleanall: clean
 	# recursive make clean
 	rm -rf pyfst
-	$(MAKE) -C pykaldi/binutils clean

@@ -52,7 +52,7 @@ except:
 
 setup(
     name='pykaldi',
-    packages=['pykaldi', 'pykaldi.binutils'],
+    packages=['pykaldi', ],
     package_data={'pykaldi': ['libpykaldi.so', 'test_shortest.txt']},
     include_package_data=True,
     cmdclass={'build_ext': build_ext},
@@ -62,11 +62,6 @@ setup(
     ext_modules=ext_modules,
     test_suite="nose.collector",
     tests_require=['nose>=1.0', 'pykaldi'],
-    # entry_points={
-    #     'console_scripts': [
-    #         'live_demo=pykaldi.binutils.main',
-    #     ],
-    # },
     author='Ondrej Platek',
     author_email='ondrej.platek@seznam.cz',
     url='https://github.com/DSG-UFAL/pykaldi',
