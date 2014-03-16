@@ -38,8 +38,10 @@ LICENSE
 --------
 * This Kaldi fork is released under the `Apache license, Version 2.0 <http://www.apache.org/licenses/LICENSE-2.0>`_, which is also used by Kaldi itself. 
 * We also publicly released Czech and English data for ``kaldi/egs/vystadial`` recipe under Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0) license:
-  - Czech data https://lindat.mff.cuni.cz/repository/xmlui/handle/11858/00-097C-0000-0023-4670-6
-  - English data https://lindat.mff.cuni.cz/repository/xmlui/handle/11858/00-097C-0000-0023-4671-4
+
+  * Czech data https://lindat.mff.cuni.cz/repository/xmlui/handle/11858/00-097C-0000-0023-4670-6
+  * English data https://lindat.mff.cuni.cz/repository/xmlui/handle/11858/00-097C-0000-0023-4671-4
+
   Note that the data are automatically downloaded in the recipe scripts.
 
 Other info
