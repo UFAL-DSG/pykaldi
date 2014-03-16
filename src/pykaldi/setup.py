@@ -8,7 +8,6 @@ from sys import version_info as python_version
 from os import path
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
-from subprocess import check_output
 
 STATIC = False
 
@@ -45,6 +44,7 @@ long_description = open(path.join(path.dirname(__file__), 'README.rst')).read()
 try:
     # In order to find out the pykaldi version from installed package at runtime use:
     # import pgk_resources as pkg; pkg.get_distribution('pykaldi')
+    from subprocess import check_output
     git_version = check_output(['git', 'rev-parse', 'HEAD'])
 except:
     git_version = 'Unknown Git version'

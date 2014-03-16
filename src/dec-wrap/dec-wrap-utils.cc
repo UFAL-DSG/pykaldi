@@ -32,7 +32,7 @@ void MovePostToArcs(fst::VectorFst<fst::LogArc> * lat,
                           const std::vector<double> &alpha,
                           const std::vector<double> &beta) {
   using namespace fst;
-  typedef typename LogArc::StateId StateId;
+  typedef LogArc::StateId StateId;
   StateId num_states = lat->NumStates();
   for (StateId i = 0; i < num_states; ++i) {
     for (MutableArcIterator<VectorFst<LogArc> > aiter(lat, i); 

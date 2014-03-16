@@ -34,11 +34,11 @@ def write_decoded(f, wav_name, word_ids, wst):
         decoded = [unicode(w) for w in best_path]
     line = u' '.join([wav_name] + decoded + ['\n'])
     if DEBUG:
-        print >> sys.stderr, '%s best path %s' % (wav_name, decoded.encode('UTF-8'))
+        print '%s best path %s' % (wav_name, decoded.encode('UTF-8'))
         for i, s in enumerate(word_ids):
             if i > 0:
                 break
-            print >> sys.stderr, 'best path %d: %s' % (i, str(s))
+            print 'best path %d: %s' % (i, str(s))
     f.write(line.encode('UTF-8'))
 
 
@@ -46,6 +46,7 @@ def write_decoded(f, wav_name, word_ids, wst):
 def decode(d, pcm):
     frame_len = (2 * audio_batch_size)  # 16-bit audio so 1 sample = 2 chars
     i, decoded_frames, max_end = 0, 0, len(pcm)
+    start = time.time()
     while i * frame_len < len(pcm):
         i, begin, end = i + 1, i * frame_len, min(max_end, (i + 1) * frame_len)
         audio_chunk = pcm[begin:end]
@@ -54,10 +55,11 @@ def decode(d, pcm):
         while dec_t > 0:
             decoded_frames += dec_t
             dec_t = d.decode(max_frames=10)
+    print "forward decode: %s secs" % str(time.time() - start)
     start = time.time()
     d.prune_final()
     lik, lat = d.get_lattice()
-    print >> sys.stderr, "get_lattice: %s secs" % str(time.time() - start)
+    print "backward decode: %s secs" % str(time.time() - start)
     d.reset(keep_buffer_data=False)
     return (lat, lik, decoded_frames)
 
@@ -67,21 +69,17 @@ def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
     d = PyGmmLatgenWrapper()
     d.setup(argv)
     for wav_name, wav_path in wav_paths:
-        # 16-bit audio so 1 sample_width = 2 chars
-        pcm = load_wav(wav_path, def_sample_width=2, def_sample_rate=16000)
-        if DEBUG:
-            print >> sys.stderr, '%s has %f sec' % (
-                wav_name, (float(len(pcm)) / 2) / 16000)
+        sw, sr = 2, 16000  # 16-bit audio so 1 sample_width = 2 chars
+        pcm = load_wav(wav_path, def_sample_width=sw, def_sample_rate=sr)
+        print '%s has %f sec' % (wav_name, (float(len(pcm)) / sw) / sr)
         lat, lik, decoded_frames = decode(d, pcm)
         lat.isyms = lat.osyms = fst.read_symbols_text(wst_path)
         if DEBUG:
             with open('pykaldi_%s.svg' % wav_name, 'w') as f:
                 f.write(lat._repr_svg_())
             lat.write('%s_pykaldi.fst' % wav_name)
-            print >> sys.stderr, "Expected num of frames %d vs decoded %d" % (
-                (len(pcm) / 2) / (16000 / 100), decoded_frames)
 
-        print >> sys.stderr, "Log-likelihood per frame for utterance %s is %f over %d frames" % (
+        print "Log-likelihood per frame for utterance %s is %f over %d frames" % (
             wav_name, (lik / decoded_frames), decoded_frames)
         word_ids = lattice_to_nbest(lat, n=10)
         write_decoded(file_output, wav_name, word_ids, wst)
