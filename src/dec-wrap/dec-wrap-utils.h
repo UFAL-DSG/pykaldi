@@ -64,11 +64,13 @@ void MovePostToArcs(fst::VectorFst<fst::LogArc> * lat,
 // the input lattice has to have log-likelihood weights
 double CompactLatticeToWordsPost(CompactLattice &lat, fst::VectorFst<fst::LogArc> *pst);
 
-// TODO convert lattice to tropical semiring
-// TODO SingleShortestPaht http://openfst.cs.nyu.edu/doxygen/fst/html/shortest-path_8h.html
-// TODO write shortest path labels to output
+
 template<typename Arc>
-void LatticeToVectorNbest(const fst::VectorFst<Arc> & lat, std::vector<std::vector<int> > *nbest_out_ids);
+void LatticeToVectorNbest(const fst::VectorFst<Arc> & lat, std::vector<std::vector<int> > *nbest_out_ids) {
+  std::cout << "TODOconvert lattice to tropical semiring" << std::endl <<
+    "TODO SingleShortestPaht http://openfst.cs.nyu.edu/doxygen/fst/html/shortest-path_8h.html" << std::endl <<
+    "TODO extract labels to vectors of std::vector<ids>" << std::endl;
+}
 
 
 } // namespace kaldi

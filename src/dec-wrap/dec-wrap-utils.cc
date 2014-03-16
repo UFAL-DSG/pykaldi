@@ -217,13 +217,5 @@ std::vector<int32> phones_to_vector(const std::string & s) {
   return return_phones;
 } // phones_to_vector
 
-template<typename Arc>
-void LatticeToVectorNbest(const fst::VectorFst<Arc> & lat, std::vector<std::vector<int> > *nbest_out_ids) {
-  std::cout << "TODOconvert lattice to tropical semiring" << std::endl <<
-    "TODO SingleShortestPaht http://openfst.cs.nyu.edu/doxygen/fst/html/shortest-path_8h.html" << std::endl <<
-    "TODO extract labels to vectors of std::vector<ids>" << std::endl;
-
-// TODO write shortest path labels to output
-}
 
 } // namespace kaldi

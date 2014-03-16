@@ -26,6 +26,7 @@
 #include "feat/wave-reader.h"
 #include "dec-wrap/dec-wrap-latgen-wrapper.h"
 #include "dec-wrap/dec-wrap-utils.h"
+#include "fstext/fstext-utils.h"
 
 using namespace kaldi;
 using std::string;
@@ -73,13 +74,14 @@ int main(int argc, char *argv[]) {
   if (args.size() < 2) {
     std::cerr << "Usage: " << args[0] << ": <wave_file> <GmmLatgenOptions>" 
       << std::endl;
+    return 0;
   }
 
   Vector<BaseFloat> wave;
   ReadWav(args[1], wave);
 
-  size_t simAudioProcessed=0;
-  unsigned char* simAudioInput;
+  size_t simAudioProcessed = 0;
+  unsigned char* simAudioInput = NULL;
   // Asuming default 16Khz sampling, 16Bit=2B. Can be changed in  audio buffer options.
   size_t simAudioSize = ConvertVector2RawData(wave, simAudioInput);
 
@@ -87,7 +89,7 @@ int main(int argc, char *argv[]) {
   // Pass commandline arguments except for the wave file name.
   rec.Setup(args.size() - 2, argv + 2);
 
-  unsigned char * audio_array;
+  unsigned char * audio_array = NULL;
   size_t decoded_frames = 0; 
   size_t decoded_now = 0; 
   size_t max_decoded = 10;
@@ -102,18 +104,22 @@ int main(int argc, char *argv[]) {
 
   rec.PruneFinal();
   
-  double tot_lik; 
+  double tot_lik = 0; 
   fst::VectorFst<fst::LogArc> word_post_lat;
-  // rec.GetLattice(&word_post_lat, &tot_lik);
+  rec.GetLattice(&word_post_lat, &tot_lik);
 
   bool clear_data = false;  // True: The buffered unprocessed audio will be cleared
   rec.Reset(clear_data);  // Ready for new utterance
 
   std::cout << "Likelihood of the utterance is " << tot_lik << std::endl;
 
-  // TODO save the lattice so it can be displayed
+  // Writing the word posterior lattice to file
+  std::ofstream logfile;
+  logfile.open("latgen-wrapper-test.fst");
+  word_post_lat.Write(logfile, fst::FstWriteOptions());
+  logfile.close();
 
-  // optional print the lattice to
+  // // Optional printing the nbest list from the lattice
   // std::vector<std::vector<int> > word_ids_nbest;
   // LatticeToVectorNbest(word_post_lat, &word_ids_nbest); // TODO not yet implemented
   // for(size_t n ; n < word_ids_nbest.size(); ++n) {
