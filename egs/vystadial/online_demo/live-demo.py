@@ -17,103 +17,118 @@
 from __future__ import unicode_literals
 
 import pyaudio
-from pykaldi.decoders import PyOnlineLatgenRecogniser
-from pykaldi.utils import wst2dict, lattice_to_nbest
+from kaldi.decoders import PyOnlineLatgenRecogniser
+from kaldi.utils import wst2dict, lattice_to_nbest
 import sys
 import time
 import select
 import tty
 import termios
+import wave
+
+CHANNELS, RATE, FORMAT = 1, 16000, pyaudio.paInt16
 
 
-def setup_pyaudio(samples_per_frame):
-    p = pyaudio.PyAudio()
-    stream = p.open(format=p.get_format_from_width(pyaudio.paInt32),
-                    channels=1,
-                    rate=16000,
-                    input=True,
-                    output=True,
-                    frames_per_buffer=samples_per_frame)
-    return (p, stream)
+class LiveDemo:
 
+    def __init__(self, audio_batch_size, wst, dec_args):
+        self.batch_size = audio_batch_size
+        self.wst = wst
+        self.args = dec_args
+        self.d = PyOnlineLatgenRecogniser()
+        self.pin, self.stream = None, None
+        self.frames = []
+        self.utt_frames, self.new_frames = 0, 0
+        self.utt_end, self.dialog_end = False, False
 
-def teardown_pyaudio(p, stream):
-    stream.stop_stream()
-    stream.close()
-    p.terminate()
-    p, stream = None, None
+    def setup(self):
+        self.d.reset()
+        self.d.setup(argv)
+        self.pin = pyaudio.PyAudio()
+        self.stream = self.pin.open(format=FORMAT, channels=CHANNELS,
+                                    rate=RATE, input=True, frames_per_buffer=self.batch_size,
+                                    stream_callback=self.get_audio_callback())
+        self.utt_frames, self.new_frames = 0, 0
+        self.utt_end, self.dialog_end = False, False
+        self.frames = []
 
+    def tear_down(self):
+        if self.stream is not None:
+            self.stream.stop_stream()
+            self.stream.close()
+        if self.pin is not None:
+            self.pin.terminate()
+        p, stream = None, None
+        self.frames = []
 
-def user_control(pause):
-    '''Simply stupid sollution how to control state of recognizer.
-    Three boolean states which should be
-    set up by are returned by the function.'''
+    def get_audio_callback(self):
+        def frame_in(in_data, frame_count, time_info, status):
+            self.d.frame_in(in_data)
+            self.frames.append(in_data)
+            return in_data, pyaudio.paContinue
+        return frame_in
 
-    utt_end, dialog_end = False, False
-    old_settings = termios.tcgetattr(sys.stdin)
-    # raise NotImplementedError('TODO not working reading characters from terminal')
-    try:
-        tty.setcbreak(sys.stdin.fileno())
-        # if is data on input
-        while (select.select([sys.stdin], [], [], 1) == ([sys.stdin], [], [])):
-            c = sys.stdin.read(1)
-            print 'character %s' % c
-            if c == 'u':
-                utt_end = True
-            elif c == 'p':
-                pause = not pause
-            elif c == 'c':
-                dialog_end = True
-    finally:
-        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
-    print """
-Utterance end %d : press 'u'
-The recognition is paused %d: press 'p'
-For terminating the program press 'c'\n\n""" % (utt_end, pause)
+    def _user_control(self):
+        '''Simply stupid sollution how to control state of recogniser.'''
 
-    return (utt_end, dialog_end, pause)
+        self.utt_end, self.dialog_end = False, False
+        old_settings = termios.tcgetattr(sys.stdin)
+        try:
+            tty.setcbreak(sys.stdin.fileno())
+            # if is data on input
+            while (select.select([sys.stdin], [], [], 1) == ([sys.stdin], [], [])):
+                c = sys.stdin.read(1)
+                print 'character %s' % c
+                if c == 'u':
+                    self.utt_end = True
+                elif c == 'c':
+                    self.dialog_end = True
+        finally:
+            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+        print """Chunks: %d ; Utterance %d ; end %d : press 'u'\nFor terminating press 'c'\n\n""" % (len(self.frames), self.utt_frames, self.utt_end)
 
-
-def decode_loop(d, audio_batch_size, wst, stream):
-    utt_frames, new_frames, pause = 0, 0, False
-    while True:
-        utt_end, dialog_end, pause = user_control(pause)
-        if pause:
-            d.reset(keep_buffer_data=False)
+    def run(self):
+        while True:
             time.sleep(0.1)
-            continue
-        new_frames = d.decode(max_frames=10)
-        if utt_end or dialog_end:
-            start = time.time()
-            d.prune_final()
-            prob, lat = d.get_lattice()
-            nbest = lattice_to_nbest(lat, n=1)
-            best_prob, best_path = nbest[0]
-            decoded = [wst[w] for w in best_path]
-            print "%s secs, frames: %d, prob: %f, %s " % (
-                str(time.time() - start), utt_frames, prob, decoded.encode('UTF-8'))
-            utt_frames = 0
-        if dialog_end:
-            d.reset(keep_buffer_data=False)
-            break
-        if new_frames == 0:
-            frame = stream.read(2 * audio_batch_size)  # 16bit audio 16/8=2
-            d.frame_in(frame)
-        else:
-            utt_frames += new_frames
+            self._user_control()
+            new_frames = self.d.decode(max_frames=10)
+            while new_frames > 0:
+                self.utt_frames += new_frames
+                print('Decoded %d new frames' % new_frames)
+                new_frames = self.d.decode(max_frames=10)
+            if self.utt_end or self.dialog_end:
+                start = time.time()
+                self.d.prune_final()
+                prob, lat = self.d.get_lattice()
+                nbest = lattice_to_nbest(lat, n=1)
+                if nbest:
+                    best_prob, best_path = nbest[0]
+                    decoded = [wst[w] for w in best_path]
+                else:
+                    decoded = 'Empty hypothesis'
+                print "%s secs, frames: %d, prob: %f, %s " % (
+                    str(time.time() - start), self.utt_frames, prob, decoded.encode('UTF-8'))
+                self.utt_frames = 0
+                self.d.reset(keep_buffer_data=False)
+            if self.dialog_end:
+                self.save_wav()
+                break
+
+    def save_wav(self):
+        wf = wave.open('live-demo-record.wav', 'wb')
+        wf.setnchannels(CHANNELS)
+        wf.setframerate(RATE)
+        wf.setsampwidth(self.pin.get_sample_size(FORMAT))
+        wf.writeframes(b''.join(self.frames))
+        wf.close()
+
 
 if __name__ == '__main__':
     audio_batch_size, wst_path = int(sys.argv[1]), sys.argv[2]
     argv = sys.argv[3:]
     print >> sys.stderr, 'Python args: %s' % str(sys.argv)
 
-    print """ Press space for pause
-    Pres 'Enter' to see output at the end of utterance
-    Prec 'Esc' for terminating the program"""
     wst = wst2dict(wst_path)
-    d = PyOnlineLatgenRecogniser()
-    d.setup(argv)
-
-    p, stream = setup_pyaudio(audio_batch_size)
-    decode_loop(d, audio_batch_size, wst, stream)
-    teardown_pyaudio(p, stream)
+    demo = LiveDemo(audio_batch_size, wst, argv)
+    demo.setup()
+    demo.run()
