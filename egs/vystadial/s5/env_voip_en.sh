@@ -6,7 +6,6 @@ export EVERY_N=1
 export TEST_SETS="dev test"
 
 # Directories set up
-export KALDI_ROOT=../../..
 export DATA_ROOT=`pwd`/data_voip_en  # expects subdirectories train + $TEST_SETS
 export WORK=`pwd`/model_voip_en
 export EXP=`pwd`/model_voip_en/exp

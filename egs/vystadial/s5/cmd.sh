@@ -9,9 +9,14 @@
 #export decode_cmd="queue.pl -q all.q@a*.clsp.jhu.edu"
 # export train_cmd="queue.pl -l mf=5g"
 # export decode_cmd="queue.pl -l mf=5g"
-export train_cmd=run.pl
-export decode_cmd=run.pl
+export train_cmd="queue.pl -l arch=*64*"
+export decode_cmd="queue.pl -l arch=*64*"
 
 # The number of parallel jobs to be started for some parts of the recipe
 # Make sure you have enough resources(CPUs and RAM) to accomodate this number of jobs
-njobs=2
+njobs=20
+
+# If you have no GridEngine you can do:
+#export train_cmd=run.pl
+#export decode_cmd=run.pl
+#njobs=2

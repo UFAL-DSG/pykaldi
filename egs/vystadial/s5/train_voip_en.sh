@@ -7,7 +7,7 @@ renice 20 $$
 # Source optional config if exists
 [ -f env_voip_en_CUSTOM.sh ] && . ./env_voip_en_CUSTOM.sh
 
-. ./path.sh "$KALDI_ROOT"
+. ./path.sh
 
 # If you have cluster of machines running GridEngine you may want to
 # change the train and decode commands in the file below
