@@ -3,10 +3,9 @@ OnlineLatticeRecogniser
 
 Summary
 -------
-The code present ``OnlineLatticeRecogniser``,
-which wraps online decoder and online 
-preprocessing (MFCC, Delta+Delta-Delta or splicing 
-and feature transformations-> LDA+MLLT respectively MPE).
+The ``OnlineLatticeRecogniser`` wraps online OnlLatticeFasterDecoder 
+and online speech parametrisation and feature transformations.
+Follwoing methods are supported MFCC, Delta+Delta-Delta, LDA+MLLT, BMMI and MPE.
 
 The ``OnlLatticeFasterDecoder`` just reorganises the functionality 
 of ``LatticeFasterDecoder``, so it match the online interface.

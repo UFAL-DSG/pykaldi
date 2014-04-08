@@ -23,6 +23,10 @@
 // Do not include this file directly.  It is included by factor.h.
 
 namespace kaldi {
+
+/// \addtogroup online_latgen_utils
+/// @{
+
 // FIXME Copied from lat/lattice-functions.cc
 // There is no no declaration in lat/lattice-functions.h!
 // Computes (normal or Viterbi) alphas and betas; returns (total-prob, or
@@ -81,6 +85,8 @@ static double ComputeLatticeAlphasAndBetas(const LatticeType &lat,
   // Split the difference when returning... they should be the same.
   return 0.5 * (tot_backward_prob + tot_forward_prob);
 }
+
+/// @} end of "addtogroup online_latgen_utils"
 
 } // namespace kaldi
 

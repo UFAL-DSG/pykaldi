@@ -1,0 +1,63 @@
+// doc/online_latgen.dox
+
+
+// Copyright (c) 2013, Ondrej Platek, Ufal MFF UK oplatek@ufal.mff.cuni.cz
+
+// See ../../COPYING for clarification regarding multiple authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//  http://www.apache.org/licenses/LICENSE-2.0
+
+// THIS CODE IS PROVIDED *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+// WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+// See the Apache 2 License for the specific language governing permissions and
+// limitations under the License.
+
+namespace kaldi {
+/**
+  \page Online_latgen_recogniser
+
+  The OnlineLatticeRecogniser wraps online OnlLatticeFaster decoder 
+  and online speech parametrisation and feature transformations.
+  Following methods are supported MFCC, Delta+Delta-Delta, LDA+MLLT, BMMI and MPE.
+
+  The OnlLatticeFasterDecoder just reorganises the functionality 
+  of LatticeFasterDecoder, so it match the online interface.
+
+  The onl-rec-latgen-recogniser-test can be used for decoding 1 wave file.
+  It demonstrates the OnlineLatticeRecogniser usage.
+
+
+  \section other_info
+
+   - This Kaldi fork is developed under <a href="https://sites.google.com/site/filipjurcicek/projects/vystadial">Vystadial project</a>.
+   - The Python thin wrapper PyOnlineLatticeRecogniser is in src/pykaldi
+   - The PyOnlineLatticeRecogniser recogniser was evaluated on Alex domain in March 2014.
+   - See graphs evaluating OnlineLatticeRecogniser performance at http://nbviewer.ipython.org/github/oplatek/pykaldi-eval/blob/master/Pykaldi-evaluation.ipynb.
+   - An example posterior word lattice output for one Czech utterance can be seen at http://oplatek.blogspot.it/2014/02/ipython-demo-pykaldi-decoders-on-short.html
+   - The OnlineLatticeRecogniser is used in Alex dialogue system: https://github.com/UFAL-DSG/alex.
+ 
+*/
+
+/**
+ \defgroup online_latgen Classes and functions related to OnlineLatgenRecogniser 
+ See \ref Online_latgen_recogniser.
+
+ \defgroup online_latgen_feat Classes and functions related to online speach parametrisation and feature transformation used for OnlineLatgenRecogniser. 
+ \ingroup online_latgen 
+ See \ref Online_latgen_recogniser.
+
+ \defgroup online_latgen_utils Utilities for converting outputs of OnlineLatticeFasterDecoder.
+ \ingroup online_latgen 
+ See \ref Online_latgen_recogniser.
+
+ \defgroup online_latgen_test Functions for testing OnlineLatgenRecogniser.
+ \ingroup online_latgen 
+ See \ref Online_latgen_recogniser.
+*/
+}

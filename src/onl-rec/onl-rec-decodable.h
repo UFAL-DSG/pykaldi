@@ -28,6 +28,9 @@
 
 namespace kaldi {
 
+/// \addtogroup online_latgen
+/// @{
+
 // A decodable, taking input from an OnlFeatureInput object on-demand
 class OnlDecodableDiagGmmScaled : public DecodableInterface {
  public:
@@ -63,6 +66,8 @@ class OnlDecodableDiagGmmScaled : public DecodableInterface {
 
   KALDI_DISALLOW_COPY_AND_ASSIGN(OnlDecodableDiagGmmScaled);
 };
+
+/// @} end of "addtogroup online_latgen"
 
 } // namespace kaldi
 

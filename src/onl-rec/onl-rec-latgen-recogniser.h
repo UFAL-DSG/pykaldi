@@ -63,6 +63,9 @@ class OnlLatticeFasterDecoder;
 class OnlineLatgenRecogniser;
 struct OptionsItf;
 
+/// \addtogroup online_latgen 
+/// @{
+
 struct OnlineLatgenRecogniserOptions  {
   /// Input sampling frequency is fixed to 16KHz
   explicit OnlineLatgenRecogniserOptions():kSampleFreq(16000), 
@@ -115,6 +118,8 @@ class OnlineLatgenRecogniser {
     BaseFloat lat_lm_scale_, lat_acoustic_scale_;
     void Deallocate();
 };
+
+/// @} end of "addtogroup online_latgen"
 
 } // namespace kaldi
 

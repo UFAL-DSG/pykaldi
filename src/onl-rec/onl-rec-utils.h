@@ -31,6 +31,9 @@
 
 namespace kaldi {
 
+/// \addtogroup online_latgen_utils
+/// @{
+
 // Reads a decoding graph from a file
 fst::Fst<fst::StdArc> *ReadDecodeGraph(std::string filename);
 
@@ -72,6 +75,7 @@ void LatticeToVectorNbest(const fst::VectorFst<Arc> & lat, std::vector<std::vect
     "TODO extract labels to vectors of std::vector<ids>" << std::endl;
 }
 
+/// @} end of "addtogroup online_latgen_utils"
 
 } // namespace kaldi
 

@@ -26,6 +26,9 @@
 
 namespace fst {
 
+/// \addtogroup online_latgen_test
+/// @{
+
 // Tests if two Fsts have the same states and arcs in the same order.
 template<class Arc>
 bool Equal(const Fst<Arc> &fst1, const Fst<Arc> &fst2, float delta = kDelta) {
@@ -117,6 +120,8 @@ bool Equal(const Fst<Arc> &fst1, const Fst<Arc> &fst2, float delta = kDelta) {
   }
   return true;
 }
+
+/// @} end of "addtogroup online_latgen_test"
 
 }  // namespace fst
 

@@ -26,6 +26,8 @@
 
 namespace kaldi {
 
+/// \addtogroup online_latgen_feat
+/// @{
 
 // Interface specification COPY -> because OnlFeatInputItf
 // requires portaudio to be installed through various includes
@@ -276,6 +278,7 @@ class OnlDeltaInput: public OnlFeatInputItf {
   KALDI_DISALLOW_COPY_AND_ASSIGN(OnlDeltaInput);
 };
 
+/// @} end of "addtogroup online_latgen_feat"
 
 } // namespace kaldi
 

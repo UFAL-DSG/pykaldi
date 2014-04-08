@@ -26,6 +26,8 @@
 
 namespace kaldi {
 
+/// \addtogroup online_latgen_feat
+/// @{
 
 // Copied and renamed from online -> in order to get rid of portaudio dependency
 class OnlAudioSourceItf {
@@ -80,6 +82,8 @@ class OnlBuffSource: public OnlAudioSourceItf {
 
   KALDI_DISALLOW_COPY_AND_ASSIGN(OnlBuffSource);
 };
+
+/// @} end of "addtogroup online_latgen_feat"
 
 } // namespace kaldi
 

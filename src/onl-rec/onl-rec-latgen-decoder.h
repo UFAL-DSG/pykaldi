@@ -22,6 +22,9 @@
 
 namespace kaldi {
 
+/// \addtogroup online_latgen
+/// @{
+
 class OnlLatticeFasterDecoder: public LatticeFasterDecoder {
  public:
   OnlLatticeFasterDecoder(const fst::Fst<fst::StdArc> &fst,
@@ -39,6 +42,8 @@ class OnlLatticeFasterDecoder: public LatticeFasterDecoder {
  private:
   int32 frame_;
 };
+
+/// @} end of "addtogroup online_latgen"
 
 }  // namespace kaldi
 
