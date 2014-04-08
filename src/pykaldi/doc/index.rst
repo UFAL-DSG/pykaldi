@@ -3,15 +3,16 @@
    contain the root `toctree` directive.
 
 Welcome to pykaldi documentation!
-===========================================================
+=================================
 
-Pykaldi directory is a Python wrapper around C++ OnlineLatgenRecogniser.
+Pykaldi directory stores a Python Kaldi wrapper around C++ OnlineLatgenRecogniser.
 Currently, only OnlineLatgenRecogniser class from whole Kaldi library is interfaced to Python,
 but probably the support will be growing.
 Note that also OpenFST objects are interfaced through Python.
 
 Contents
-----------------------------------------------------------
+--------
+
 .. toctree::
    :maxdepth: 1
 
@@ -20,12 +21,12 @@ Contents
    _man_rst/index.rst
 
 Pykaldi modules
-------------
+---------------
 
 .. toctree::
    :maxdepth: 2
 
-   _rst/pykaldi
+   _rst/kaldi
 
 Indices and tables
 ------------------
