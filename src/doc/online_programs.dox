@@ -2,6 +2,7 @@
 
 
 // Copyright 2013 Polish-Japanese Institute of Information Technology (author: Danijel Korzinek)
+// Copyright (c) 2013, Ondrej Platek, Ufal MFF UK oplatek@ufal.mff.cuni.cz
 
 // See ../../COPYING for clarification regarding multiple authors
 //
@@ -24,10 +25,15 @@ namespace kaldi {
 
 \page online_programs Online Recognizers
 
+
 There are several programs in the Kaldi toolkit that can be used for online recognition. 
-They are all located in the src/onlinebin folder and require the files from
+They are located in the src/onlinebin folder and require the files from
 the src/online folder to be compiled as well (you can currently compile these with
-"make ext"). Many of these programs will also require the
+"make ext"). 
+There is also OnlineLatgenRecogniser which is able to generate lattices,
+it is stored in src/onl-rec.
+
+Many of these programs will also require the
 Portaudio library present in the tools folder, which can be downloaded using the appropriate
 script found there. The programs are as follows:
   - online-gmm-decode-faster - records audio from the microphone and outputs the result on stdout 
@@ -314,6 +320,8 @@ where there is only one active token. That means that this (immortal) token is a
 active tokens. Moreover by keeping track of the previous such token(for the previously processed batches), 
 the decoder can produce a partial result, by taking the output symbols along the traceback from the current immortal
 token to the previous one.
+
+OnlineLatticeFaster has slightly different feature preprocessing it and it is able to generate lattices
 
 */
 
