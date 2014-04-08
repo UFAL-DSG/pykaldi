@@ -1,3 +1,8 @@
+"""
+Presents live demo of PyOnlineLatgenRecogniser decoding.
+The audio recording requires working PyAudio.
+Requieres arguments specifying AM, HCLG graph, etc ...
+"""
 #!/usr/bin/env python
 # encoding: utf-8
 # Copyright (c) 2013, Ondrej Platek, Ufal MFF UK <oplatek@ufal.mff.cuni.cz>
@@ -31,7 +36,17 @@ CHANNELS, RATE, FORMAT = 1, 16000, pyaudio.paInt16
 
 class LiveDemo:
 
+    """When properly initialize, runs a simple demo of speech recognition.
+    The user should manually detects end of utterance and the ASR output
+    is extracted.
+    The one-best hypothesis is displayed and the lattice is saved to file."""
+
     def __init__(self, audio_batch_size, wst, dec_args):
+        """
+        audio_batch_size - size of chunks passed to PyOnlineLatgenRecogniser
+        wst - word symbol table so the output of integer labels
+              can be printed as words
+        dec_args - arguments needed for PyOnlineLatgenRecogniser"""
         self.batch_size = audio_batch_size
         self.wst = wst
         self.args = dec_args
@@ -42,6 +57,7 @@ class LiveDemo:
         self.utt_end, self.dialog_end = False, False
 
     def setup(self):
+        """Prepares the demo for decoding"""
         self.d.reset()
         self.d.setup(argv)
         self.pin = pyaudio.PyAudio()
@@ -53,6 +69,7 @@ class LiveDemo:
         self.frames = []
 
     def tear_down(self):
+        """Close the PyAudio streams to audio"""
         if self.stream is not None:
             self.stream.stop_stream()
             self.stream.close()
@@ -62,6 +79,7 @@ class LiveDemo:
         self.frames = []
 
     def get_audio_callback(self):
+        """Returns a callback - function which handle incomming audio"""
         def frame_in(in_data, frame_count, time_info, status):
             self.d.frame_in(in_data)
             self.frames.append(in_data)
@@ -69,7 +87,7 @@ class LiveDemo:
         return frame_in
 
     def _user_control(self):
-        '''Simply stupid sollution how to control state of recogniser.'''
+        """Simply stupid sollution how to control state of recogniser."""
 
         self.utt_end, self.dialog_end = False, False
         old_settings = termios.tcgetattr(sys.stdin)
@@ -89,6 +107,8 @@ class LiveDemo:
         print("""Chunks: %d ; Utterance %d ; end %d : press 'u'\nFor terminating press 'c'\n\n""" % (len(self.frames), self.utt_frames, self.utt_end))
 
     def run(self):
+        """Run the loop of decoding and user input parsing and optionally
+        extracting ASR output"""
         while True:
             time.sleep(0.1)
             self._user_control()

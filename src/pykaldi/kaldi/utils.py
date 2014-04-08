@@ -12,6 +12,9 @@
 # MERCHANTABLITY OR NON-INFRINGEMENT.
 # See the Apache 2 License for the specific language governing permissions and
 # limitations under the License. #
+"""
+Utils module contains mostly conversion functions
+"""
 from __future__ import unicode_literals
 
 import os
@@ -23,6 +26,7 @@ import codecs
 
 
 def fst_shortest_path_to_lists(fst_shortest):
+    """Converts openfst lattice produced by n-shortest path algorithm to n lists of output labels."""
     # There are n - eps arcs from 0 state which mark beginning of each list
     # Following one path there are 2 eps arcs at beginning
     # and one at the end before final state
@@ -54,6 +58,7 @@ def fst_shortest_path_to_lists(fst_shortest):
 
 
 def lattice_to_nbest(lat, n=1):
+    """Extract n Python lists of output label ids, which corresponds to n most probable paths."""
     # Log semiring -> no best path
     # Converting the lattice to tropical semiring
     std_v = fst.StdVectorFst(lat)
@@ -62,8 +67,7 @@ def lattice_to_nbest(lat, n=1):
 
 
 def load_wav(file_name, def_sample_width=2, def_sample_rate=16000):
-    """ Source: from Alex/utils/audio.py
-    Reads all audio data from the file and returns it in a string.
+    """Reads all audio data from the file and returns it in as bytes.
 
     The content is re-sampled into the default sample rate."""
     try:
@@ -71,7 +75,7 @@ def load_wav(file_name, def_sample_width=2, def_sample_rate=16000):
         if wf.getnchannels() != 1:
             raise Exception('Input wave is not in mono')
         if wf.getsampwidth() != def_sample_width:
-            raise Exception('Input wave is not in 16bit')
+            raise Exception('Input wave is not in %d Bytes' % def_sample_width)
         sample_rate = wf.getframerate()
         # read all the samples
         chunk, pcm = 1024, b''
@@ -91,28 +95,9 @@ def load_wav(file_name, def_sample_width=2, def_sample_rate=16000):
     return pcm
 
 
-def config_is_yes(config, keystr):
-    try:
-        return config[keystr] == 'yes'
-    except:
-        return False
-
-
-# TODO remove
-# import json
-# import argparse
-# def parse_config_from_arguments():
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument("config", help='The main config file')
-#     args = parser.parse_args()
-#     with open(args.config, 'r') as r:
-#         config = json.load(r)
-#     # Replace {'prefix':'key_to_path', 'value':'suffix_of_path'} with correct path
-#     config = expand_prefix(config, config)
-#     return config
-
-
 def make_dir(path):
+    """Create specify path of directories if not exists.
+    Do not throw exception if path exists."""
     try:
         os.makedirs(path)
     except OSError as exception:
@@ -162,8 +147,9 @@ def wst2dict(wst_path, encoding='utf-8'):
 
 
 def int_to_txt(inp_path, out_path, wst_dict, unknown_symbol=None):
-    ''' based on:  cat exp/tri2a/decode/scoring/15.tra | utils/int2sym.pl -f 2-
-    exp/tri2a/graph/words.txt | sed s:\<UNK\>::g'''
+    """Converts file with integer labels representing decoded utterance to its text form.
+
+    The mapping from integer labels to words based on word symbol table dictionary"""
     if unknown_symbol is None:
         unknown_symbol = '\<UNK\>'
     with open(inp_path, 'r') as r:
@@ -171,8 +157,6 @@ def int_to_txt(inp_path, out_path, wst_dict, unknown_symbol=None):
             for line in r:
                 tmp = line.split()
                 name, dec = tmp[0], tmp[1:]
-                # For now we are throwing away align -> not working
-                # name = name.split('_')[0]
                 w.write('%s ' % name)
                 for iw in dec:
                     try:
@@ -185,6 +169,10 @@ def int_to_txt(inp_path, out_path, wst_dict, unknown_symbol=None):
 
 
 def compact_hyp(hyp_path, comp_hyp_path):
+    """Converts transcriptions of single hypotheses on multiple lines
+    to one hypothesis per line.
+
+    Read from hyp_path file and save the results to comp_hyp_path"""
     d = DefaultOrderedDict(list)
     with open(hyp_path, 'rb') as hyp:
         for line in hyp:

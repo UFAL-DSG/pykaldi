@@ -1,3 +1,7 @@
+"""
+Build reference in Kaldi transcription format
+from test transcriptions in Vystadial dataset format.
+"""
 #!/usr/bin/env python
 # encoding: utf-8
 from __future__ import unicode_literals
@@ -6,6 +10,7 @@ import glob
 import sys
 import os
 import codecs
+
 
 def build_reference(wav_scp, ref_path):
     print wav_scp, ref_path

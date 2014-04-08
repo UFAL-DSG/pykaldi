@@ -1,5 +1,5 @@
 """
-Combine functionality from ordered and default dict.
+DefaultOrderedDict combine functionality from ordered and default dict.
 """
 
 # ATTRIBUTION
@@ -20,6 +20,8 @@ except:
 
 
 class DefaultOrderedDict(OrderedDict):
+
+    """Combine functionality from ordered and default dict."""
 
     def __init__(self, default_factory=None, *a, **kw):
         if (default_factory is not None and not isinstance(default_factory, Callable)):

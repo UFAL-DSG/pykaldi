@@ -34,6 +34,8 @@ from subprocess import call
 
 class TestExpandPref(ut_TestCase):
 
+    """ Test demo setup config parsing """
+
     def setUp(self):
         self.test = {'x': '1',
                      'prefixdir': 'myownpath',

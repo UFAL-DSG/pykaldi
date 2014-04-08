@@ -1,3 +1,7 @@
+"""
+Example Python script shows PyOnlineFasterRecogniser decoding.
+Requieres arguments specifying AM, HCLG graph, etc ...
+"""
 #!/usr/bin/env python
 # Copyright (c) 2013, Ondrej Platek, Ufal MFF UK <oplatek@ufal.mff.cuni.cz>
 #
@@ -26,6 +30,7 @@ DEBUG = False
 
 
 def write_decoded(f, wav_name, word_ids, wst):
+    """Stores the decoded ASR hypothesis to file"""
     assert(len(word_ids) > 0)
     best_weight, best_path = word_ids[0]
     if wst is not None:
@@ -44,6 +49,11 @@ def write_decoded(f, wav_name, word_ids, wst):
 
 # @profile
 def decode(d, pcm):
+    """d - PyOnlineLatgenRecogniser
+    pcm - raw bytes which is interpreted as audio with sample width 2 Bytes
+
+    Performs simulated on-line decoding.
+    The audio is queued in small chunks and immediately decoded."""
     frame_len = (2 * audio_batch_size)  # 16-bit audio so 1 sample = 2 chars
     i, decoded_frames, max_end = 0, 0, len(pcm)
     start = time.time()
@@ -64,8 +74,9 @@ def decode(d, pcm):
     return (lat, lik, decoded_frames)
 
 
-def decode_wrap(argv, audio_batch_size, wav_paths,
-        file_output, wst_path=None):
+def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
+    """Prepares the setup for decoding.
+    After decoding also saves the results."""
     wst = wst2dict(wst_path)
     d = PyOnlineLatgenRecogniser()
     d.setup(argv)

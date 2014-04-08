@@ -58,8 +58,7 @@ class TestPyOnlineLatgenRecogniserNotInit(unittest.TestCase):
 
 
 class TestPyOnlineLatgenRecogniserRealInit(unittest.TestCase):
-    # TODO create working dummy data
-    pass
+    pass  # TODO create working dummy data
 
 if __name__ == '__main__':
     unittest.main()
