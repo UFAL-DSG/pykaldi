@@ -14,6 +14,12 @@
 import sys
 import os
 
+try:
+    import kaldi.decoders
+except ImportError:
+    raise RuntimeError('Cannot import kaldi.decoders, please fix it before launching build docs')
+
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -24,10 +30,27 @@ sys.path.insert(0, os.path.abspath('..'))
 # If your documentation needs a minimal Sphinx version, state it here.
 #needs_sphinx = '1.0'
 
+# If extensions (or modules to document with autodoc) are in another directory,
+# add these directories to sys.path here. If the directory is relative to the
+# documentation root, use os.path.abspath to make it absolute, like shown here.
+sys.path.append(os.path.abspath('sphinxext'))
+
+
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.pngmath', 'sphinx.ext.viewcode',
-              'sphinx.ext.coverage', 'sphinx.ext.graphviz', 'sphinx.ext.todo', ]
+
+extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.doctest',
+              'sphinx.ext.intersphinx',
+              'sphinx.ext.todo',
+              'sphinx.ext.coverage',
+              'sphinx.ext.pngmath',
+              'sphinx.ext.ifconfig',
+              'sphinx.ext.autosummary',
+              'github']
+
+# ghissue config
+github_project_url = "https://github.com/UFAL-DSG/pykaldi"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -83,6 +106,8 @@ exclude_patterns = ['_build']
 #show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
+highlight_language = 'cython'
+embedsignatures=True
 pygments_style = 'sphinx'
 
 # A list of ignored prefixes for module index sorting.

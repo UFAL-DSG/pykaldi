@@ -3,6 +3,7 @@
 # On Windows, you need to execute:
 # set VS90COMNTOOLS=%VS100COMNTOOLS%
 # python setup.py build_ext --compiler=msvc
+#cython: embedsignature=True
 from setuptools import setup
 from sys import version_info as python_version
 from os import path

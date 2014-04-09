@@ -13,14 +13,17 @@ Note that also OpenFST objects are interfaced through Python.
 Contents
 --------
 
-.. toctree::
-   :maxdepth: 1
 
-   _man_rst/README
-   _man_rst/INSTALL
-   _man_rst/index.rst
+:mod:`kaldi.decoders` Module
+----------------------------
 
-Pykaldi modules
+.. automodule:: kaldi.decoders
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Other Pykaldi modules
 ---------------
 
 .. toctree::

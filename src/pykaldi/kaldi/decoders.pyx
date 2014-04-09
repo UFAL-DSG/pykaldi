@@ -29,7 +29,8 @@ cdef class PyOnlineLatgenRecogniser:
     """PyOnlineLatgenRecogniser
 
     Python wrapper around C++ Kaldi OnlineLatgenRecogniser
-    which provides on-line speech recognition interface"""
+    which provides on-line speech recognition interface
+    """
 
     cdef OnlineLatgenRecogniser * thisptr
     cdef long fs
@@ -115,7 +116,7 @@ cdef class PyOnlineLatgenRecogniser:
     def reset(self, keep_buffer_data=True):
         """reset(self, keep_buffer_data)
 
-        Reset the frame counter and prepare decoder for new utterance.
+        Resets the frame counter and prepare decoder for new utterance.
         Dependently on keep_buffer_data parameter clear the buffered data.
         If the (audio) data are kept they are the first
         input data for new utterance."""

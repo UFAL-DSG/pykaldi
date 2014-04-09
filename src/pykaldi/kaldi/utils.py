@@ -26,7 +26,15 @@ import codecs
 
 
 def fst_shortest_path_to_lists(fst_shortest):
-    """Converts openfst lattice produced by n-shortest path algorithm to n lists of output labels."""
+    """Converts openfst lattice produced by n-shortest path algorithm to n lists of output labels.
+
+    Args:
+        fst_shortest(fst.StdVectorFst): result of shortest_path algorithm
+
+    Returns:
+        list of pairs (path_weight, [path])
+    """
+
     # There are n - eps arcs from 0 state which mark beginning of each list
     # Following one path there are 2 eps arcs at beginning
     # and one at the end before final state
@@ -58,7 +66,14 @@ def fst_shortest_path_to_lists(fst_shortest):
 
 
 def lattice_to_nbest(lat, n=1):
-    """Extract n Python lists of output label ids, which corresponds to n most probable paths."""
+    """Extract n Python lists of output label ids, which corresponds to n most probable paths.
+
+    Args:
+        lat(fst.LogVectorFst): or alternatively (StdVectorFst) representing lattice
+        n(int): number of list to be extracted
+    Returns:
+        n-best lists
+    """
     # Log semiring -> no best path
     # Converting the lattice to tropical semiring
     std_v = fst.StdVectorFst(lat)
@@ -97,7 +112,11 @@ def load_wav(file_name, def_sample_width=2, def_sample_rate=16000):
 
 def make_dir(path):
     """Create specify path of directories if not exists.
-    Do not throw exception if path exists."""
+
+    Do not throw exception if path exists.
+
+    Args:
+        path(str): directory structure to create"""
     try:
         os.makedirs(path)
     except OSError as exception:
@@ -106,8 +125,13 @@ def make_dir(path):
 
 
 def expand_prefix(d, bigd):
-    '''Supports only strings, list and dictionaries and its combinations.
-    Replace {'prefix':'key_to_path', 'value':'suffix_of_path'} with correct path'''
+    """Replace {'prefix':'key_to_path', 'value':'suffix_of_path'} with correct path
+
+    Args:
+        d(dict, list, str): based on the type executes the substitution
+    Returns:
+        dictionary
+    """
     if isinstance(d, dict):
         if len(d) == 2 and 'prefix' in d and 'value' in d:
             pref = bigd[d['prefix']]
@@ -130,10 +154,12 @@ def expand_prefix(d, bigd):
 
 
 def wst2dict(wst_path, encoding='utf-8'):
-    ''' Stores word symbol table (WST) like dictionary.
-    The numbers are stored like string values
-    Example line of WST looks like:
-    sample_word  1234
+    ''' Loads word symbol table (WST) to python dictionary.
+
+    Args:
+        wst_path(str): path to file with integer and word per line
+    Returns:
+        Python dictionary which maps int ids to words
     '''
     with codecs.open(wst_path, encoding=encoding) as r:
         # split removes empty and white space only splits
@@ -149,7 +175,14 @@ def wst2dict(wst_path, encoding='utf-8'):
 def int_to_txt(inp_path, out_path, wst_dict, unknown_symbol=None):
     """Converts file with integer labels representing decoded utterance to its text form.
 
-    The mapping from integer labels to words based on word symbol table dictionary"""
+    The mapping from integer labels to words based on word symbol table dictionary
+
+    Args:
+        inp_path(str): path to file with hypotheses name and integer labels per line
+        out_path(str): path to save the textual version of hypothesis and the transcription
+        wst_dict(dict): dictionary which maps integer labels to words
+        unknown_symbol(string, optional): symbol for unknown id labels in wst_dict
+    """
     if unknown_symbol is None:
         unknown_symbol = '\<UNK\>'
     with open(inp_path, 'r') as r:
@@ -172,7 +205,12 @@ def compact_hyp(hyp_path, comp_hyp_path):
     """Converts transcriptions of single hypotheses on multiple lines
     to one hypothesis per line.
 
-    Read from hyp_path file and save the results to comp_hyp_path"""
+    Read from hyp_path file and save the results to comp_hyp_path
+
+    Args:
+        hyp_path(str): path to file with hypotheses on multiple lines
+        comp_hyp_path(str): path to save the hypotheses one on each line
+    """
     d = DefaultOrderedDict(list)
     with open(hyp_path, 'rb') as hyp:
         for line in hyp:
