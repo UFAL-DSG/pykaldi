@@ -16,11 +16,11 @@ First,  build Kaldi fork as follows:
 .. code-block:: bash
 
   git clone https://github.com/UFAL-DSG/pykaldi
-  cd kaldi/tools
+  cd pykaldi/tools
   make atlas   # Just downloads headers
   make openfst_tgt  # Install patched OpenFST LOCALLY!
   cd ../src
-  ./configure  # Should find ATLAS libraries which you have installed via apptitude (easier way).
+  ./configure  # Should find ATLAS libraries which you have installed via aptitude (easier way).
   make && make test
   cd onl-rec && make && make test  # Directory needed for Python wrapper
 
@@ -171,3 +171,21 @@ How I install Atlas:
     ../configure --shared --incdir=`pwd`/../../atlas_install
     make 
     make install
+
+
+(Note for Ubuntu 13.10: Atlas headers are packaged under the name 
+``libatlas-dev`` and install, at least for Ubuntu 13.10 Saucy, directly 
+into ``/usr/include/atlas``. As of May 2014, the Atlas version used in 
+Ubuntu is newer than the one included in the Kaldi package, and hence if 
+you want to install pykaldi system-wide, you should point the ``configure`` 
+script to the system-wide Atlas headers using the ``--atlas-root`` 
+argument.  So far so good.  The catch is that the ``configure`` script 
+cannot find the system headers, since it always looks for them under a path 
+whose last component is ``/include``. A tried workaround is creating the 
+``include`` component as a symlink to the actual directory with headers, 
+like this:
+
+.. code-block:: bash
+
+  sudo ln -s . /usr/include/atlas/include
+  cd $PYKALDI/pykaldi/src && ./configure --atlas-root=/usr/include/atlas

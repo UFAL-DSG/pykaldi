@@ -47,7 +47,7 @@ try:
     # import pgk_resources as pkg; pkg.get_distribution('pykaldi')
     from subprocess import check_output
     git_version = check_output(['git', 'rev-parse', 'HEAD'])
-except:
+except Exception:
     git_version = 'Unknown Git version'
     print(git_version)
 
@@ -74,8 +74,8 @@ setup(
         Programming Language :: Python :: 2
         License :: OSI Approved :: Apache License, Version 2
         Operating System :: POSIX :: Linux
-        Intended Audiance :: Speech Recognition scientist
-        Intended Audiance :: Students
+        Intended Audience :: Speech Recognition scientist
+        Intended Audience :: Students
         Environment :: Console
         '''.strip().splitlines(),
 )
