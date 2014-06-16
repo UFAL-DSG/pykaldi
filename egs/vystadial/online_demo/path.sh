@@ -1,9 +1,10 @@
 #!/bin/bash
+LANG=en
 
 # data location
 PWD=`pwd`
 exp_dir=$PWD
-data_dir=$PWD/data/vystadial-sample-cs/test
+data_dir=$PWD/data/vystadial-sample-${LANG}/test
 decode_dir=$exp_dir/decode
 
 # IO parameters
@@ -17,8 +18,6 @@ pykaldi_latgen_tra=$decode_dir/pykaldi-latgen.tra
 pykaldi_latgen_tra_txt=${pykaldi_faster_tra}.txt
 lattice=$decode_dir/lat.gz
 
-# Czech language models 
-LANG=cs
 HCLG=models/HCLG_tri2b_bmmi.fst
 AM=models/tri2b_bmmi.mdl
 MAT=models/tri2b_bmmi.mat  # matrix trained in tri2b models 

@@ -1,9 +1,9 @@
 BEST_LINE=18
-MODEL_PREFIX_URL=http://vystadial.ms.mff.cuni.cz/download/kaldi/src/pykaldi/pykaldi/binutils/
-DATA_PREFIX_URL=http://vystadial.ms.mff.cuni.cz/download/kaldi/src/pykaldi/pykaldi/binutils/
+MODEL_PREFIX_URL=http://vystadial.ms.mff.cuni.cz/download/pykaldi/egs/vystadial/online_demo/
+DATA_PREFIX_URL=http://vystadial.ms.mff.cuni.cz/download/pykaldi/egs/vystadial/online_demo/
 
 # Czech language models 
-LANG=cs
+LANG=en
 HCLG=models/HCLG_tri2b_bmmi.fst
 AM=models/tri2b_bmmi.mdl
 MAT=models/tri2b_bmmi.mat  # matrix trained in tri2b models 
