@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+{% block body %}
+<script type=text/javascript>
+    var intervalId = 'nothing'
+    $(function() {
+    var finish_decoding = function(e) {
+      clearInterval(intervalId);
+      $.getJSON($SCRIPT_ROOT + '/get_lattice', {}, function(data) {
+        $('#result').text(data.nbest);
+        $('#decoded').text(data.dec_frames);
+      });
+      return false;
+    };
+
+    function get_decoded() {
+      $.getJSON($SCRIPT_ROOT + '/get_decoded', {}, function(data) {
+        $('#decoded').text(data.dec_frames);
+      });
+      return false;
+    };
+
+    function start_decoding() {
+        intervalId = setInterval(get_decoded, 50);
+    }
+
+    $('a#get_lattice').bind('click', finish_decoding);
+    $('a#decode').bind('click', start_decoding);
+    {# clearInterval(intervalId); #}
+
+    });
+
+
+
+</script>
+<h1>OnlineLatgenDecoder demo</h1>
+<a href=# id=get_lattice>Finish Decoding</a>
+<a href=# id=decode>Start Decoding</a>
+<p>
+Decoded frames:<span id=decoded>?</span>
+<p>
+  <textarea id=result style="width: 300px;">(Nothing decoded yet)</textarea>
+{% endblock %}

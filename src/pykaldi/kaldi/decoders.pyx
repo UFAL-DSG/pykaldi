@@ -35,9 +35,11 @@ cdef class PyOnlineLatgenRecogniser:
     cdef OnlineLatgenRecogniser * thisptr
     cdef long fs
     cdef int nchan, bits
+    cdef utt_decoded
 
     def __cinit__(self):
         self.thisptr = new OnlineLatgenRecogniser()
+        self.utt_decoded = 0
 
     def __init__(self, fs=16000, nchan=1, bits=16):
         """ __init__(self, fs=16000, nchan=1, bits=16)
@@ -58,7 +60,9 @@ cdef class PyOnlineLatgenRecogniser:
         The decoding has RTF < 1.0 on common computer.
         Consequently, for frames shift 10 ms the decoding
         should be faster than 0.01 * max_frames seconds."""
-        return self.thisptr.Decode(max_frames)
+        new_dec = self.thisptr.Decode(max_frames)
+        self.utt_decoded += new_dec
+        return new_dec
 
     def frame_in(self, bytes frame_str):
         """frame_in(self, bytes frame_str, int num_samples)
@@ -93,9 +97,11 @@ cdef class PyOnlineLatgenRecogniser:
 
         Return word posterior lattice and its likelihood.
         It may last non-trivial amount of time e.g. 100 ms."""
-        cdef double lik
+        cdef double lik = -1
         r = fst.LogVectorFst()
-        self.thisptr.GetLattice((<fst._fst.LogVectorFst?>r).fst, address(lik))
+        if self.utt_decoded > 0:
+            self.thisptr.GetLattice((<fst._fst.LogVectorFst?>r).fst, address(lik))
+        self.utt_decoded = 0
         return (lik, r)
 
     def get_raw_lattice(self):
