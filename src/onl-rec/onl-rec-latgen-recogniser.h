@@ -96,7 +96,7 @@ class OnlineLatgenRecogniser {
     virtual ~OnlineLatgenRecogniser();
     size_t Decode(size_t max_frames);
     void FrameIn(unsigned char *frame, size_t frame_len);
-    bool GetBestPath(std::vector<int> &v_out, BaseFloat *prob);
+    bool GetBestPath(std::vector<int> *v_out, BaseFloat *prob);
     bool GetRawLattice(fst::VectorFst<fst::StdArc> *fst_out);
     bool GetLattice(fst::VectorFst<fst::LogArc> * out_fst, double *tot_lik);
     void PruneFinal();

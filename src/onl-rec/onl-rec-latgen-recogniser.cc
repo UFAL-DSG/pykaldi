@@ -81,7 +81,7 @@ void OnlineLatgenRecogniser::FrameIn(unsigned char *frame, size_t frame_len) {
 }
 
 
-bool OnlineLatgenRecogniser::GetBestPath(std::vector<int> &out_ids, BaseFloat *prob) {
+bool OnlineLatgenRecogniser::GetBestPath(std::vector<int> *out_ids, BaseFloat *prob) {
   *prob = -1.0;  // default value for failures
   if (! initialized_)
     return false;
@@ -90,7 +90,7 @@ bool OnlineLatgenRecogniser::GetBestPath(std::vector<int> &out_ids, BaseFloat *p
   LatticeWeight weight;
   fst::GetLinearSymbolSequence(lat,
                                static_cast<vector<int32> *>(0),
-                               &out_ids,
+                               out_ids,
                                &weight);
 
     *prob = weight.Value1() + weight.Value2();
