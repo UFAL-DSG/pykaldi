@@ -16,7 +16,7 @@ cdef extern from "onl-rec/onl-rec-latgen-recogniser.h" namespace "kaldi":
     cdef cppclass OnlineLatgenRecogniser:
         size_t Decode(size_t max_frames) except +
         void FrameIn(unsigned char *frame, size_t frame_len) except +
-        bool GetBestPath(vector[int] v_out, float *lik) except +
+        bool GetBestPath(vector[int] *v_out, float *lik) except +
         bool GetRawLattice(fst.libfst.StdVectorFst *fst_out) except +
         bool GetLattice(fst.libfst.LogVectorFst *fst_out, double *tot_lik) except +
         void PruneFinal() except +
@@ -81,7 +81,7 @@ cdef class PyOnlineLatgenRecogniser:
         directly from internal representation."""
         cdef vector[int] t
         cdef float lik
-        self.thisptr.GetBestPath(t, address(lik))
+        self.thisptr.GetBestPath(address(t), address(lik))
         ids = [t[i] for i in xrange(t.size())]
         return (lik, ids)
 
