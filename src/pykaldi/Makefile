@@ -20,6 +20,11 @@ ADDLIBS = ../onl-rec/onl-rec.a ../decoder/kaldi-decoder.a \
 		../fstext/kaldi-fstext.a ../tree/kaldi-tree.a ../matrix/kaldi-matrix.a \
 		../feat/kaldi-feat.a ../util/kaldi-util.a ../base/kaldi-base.a
 
+ifeq ($(shell uname),Darwin)
+	LINKER_OPTIONS=-Wl,-all_load $^
+else
+	LINKER_OPTIONS=-Wl,-soname=lib$(LIBNAME).so,--whole-archive $^ -Wl,--no-whole-archive
+endif
 
 
 # ifeq ($(KALDI_FLAVOR), dynamic)
@@ -28,7 +33,7 @@ LIBFILE=kaldi/lib$(LIBNAME).so
 $(LIBFILE): $(ADDLIBS)
 	# Building shared library from static librariess.
 	# The static libraries were compiled with -fPIC.
-	$(CXX) -shared -DPIC -o $@ -Wl,-soname=lib$(LIBNAME).so,--whole-archive $^ -Wl,--no-whole-archive $(EXTRA_LDLIBS) $(LDFLAGS) $(LDLIBS)
+	$(CXX) -shared -DPIC -o $@ $(LINKER_OPTIONS) $(EXTRA_LDLIBS) $(LDFLAGS) $(LDLIBS)
 # else
 # # TODO
 # # static compilation
