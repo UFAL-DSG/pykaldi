@@ -6,6 +6,7 @@ sudo apt-get install build-essential libatlas-base-dev python-{dev,pyaudio,yaml}
 
 sudo pip install pystache
 sudo pip install cython
+sudo pip install flask
 
 pushd tools
   make atlas openfst_tgt
