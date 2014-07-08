@@ -2,6 +2,8 @@
 
 set -e # Stop on any error
 
+sudo apt-get install build-essential
+
 pushd tools
   make atlas openfst_tgt
 popd
