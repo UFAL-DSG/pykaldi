@@ -2,7 +2,7 @@
 
 set -e # Stop on any error
 
-sudo apt-get install build-essentiallibatlas-base-dev
+sudo apt-get install build-essential libatlas-base-dev
 
 pushd tools
   make atlas openfst_tgt
