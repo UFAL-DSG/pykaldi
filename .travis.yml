@@ -5,10 +5,19 @@ branches:
     only:
         - master
 
+
+# settings according http://blog.travis-ci.com/2012-12-18-travis-artifacts/#How-to-use%3F
+env:
+ global:
+   - "ARTIFACTS_AWS_REGION=us-east-1"
+   - "ARTIFACTS_S3_BUCKET=ufal-dsg"
+   - secure: "QJa3uAw5I+3b/hirylmpAg8JxQ/RZVXWenMCTmp+CvOS4GaRZPT5Q0+vx8k3CDFtqxnVlWVmpes/akbLvYbCFXfxFTscyY/dkmm3A4IOzBsxTLPXx9WNsWuCbqw+AwmqkOUPwhoneBTcbDpZqNF2YdE677tQen4V5qPu7DVb3ec="
+   - secure: "bCjjvj7yorDD1iUpFVl7MZLMl9qVNQXIrP7+06iO0sX+KPxnYzVUQavq8MJUABngSf+wji0oi7JSgU+RxI/ktFPj9BhYID3L5EJ3Tk4LKtwEMZjr7Ad78ebLK1S9a8J52HktrOAMiHsP7yCkkWDXcBjx/VIV8IHr1Yw8gOFaoNI="
+
 language: python
 python:
     - "2.6"
-    - "2.7" 
+    - "2.7"
 compiler:
     - gcc
 
@@ -18,11 +27,14 @@ before_install:
     # ATLAS matrix library
     - sudo apt-get install libatlas3gf-base libblas-dev libatlas-dev libblas-dev libblas3gf
 
-install: 
+install:
     - pip install -q cython pystache pyyaml --use-mirrors
     - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]] ; then pip install --use-mirrors unittest2 ordereddict argparse ; fi
-    # Openfst: building
-    - pushd tools && make -j 4 openfst_tgt && popd
+    # Openfst: skip building Openfst ~ 30 min
+    # # - pushd tools && make -j 4 openfst_tgt && popd
+    # Openfst: download
+    # - wget http://s3.amazonaws.com/ufal-dsg/openfst/travis-openfst.tar.gz
+    - pushd tools && wget https://s3-eu-west-1.amazonaws.com/ufal-dsg/artifacts/10/10.1/travis-openfst.tar.gz -O travis-openfst.tar.gz && tar xfj travis-openfst.tar.gz && ln -s travis-openfst openfst && popd
     # hack how to make available clapack.h
     - pushd tools && make -j 4 atlas && popd
     # Configure with ATLAS (default)
@@ -33,3 +45,7 @@ install:
 script:
     - pushd src/onl-rec && make -j 4 test ; RET=$?; popd ; (exit $RET)
     - pushd src/pykaldi && make -j 4 test ; RET=$? ; popd ; (exit $RET)
+
+after_success: # and this only on success
+    - tar cvzf pykaldi.tar.gz src/pykaldi
+    - travis-artifacts upload --path pykaldi_src_pykaldi.tar.gz --target-path pykaldi/pykaldi_src_pykaldi.tar.gz
