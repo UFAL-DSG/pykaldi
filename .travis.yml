@@ -33,7 +33,6 @@ install:
     # Openfst: skip building Openfst ~ 30 min
     # # - pushd tools && make -j 4 openfst_tgt && popd
     # Openfst: download
-    # - wget http://s3.amazonaws.com/ufal-dsg/openfst/travis-openfst.tar.gz
     - pushd tools && wget https://s3-eu-west-1.amazonaws.com/ufal-dsg/artifacts/10/10.1/travis-openfst.tar.gz -O travis-openfst.tar.gz && tar xfj travis-openfst.tar.gz && ln -s travis-openfst openfst && popd
     # hack how to make available clapack.h
     - pushd tools && make -j 4 atlas && popd
