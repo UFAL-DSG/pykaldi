@@ -49,3 +49,4 @@ script:
 after_success: # and this only on success
     - tar cvzf pykaldi.tar.gz src/pykaldi
     - travis-artifacts upload --path pykaldi_src_pykaldi.tar.gz --target-path pykaldi/pykaldi_src_pykaldi.tar.gz
+    - travis-artifacts upload --path pykaldi_src_pykaldi.tar.gz --target-path artifacts/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID
