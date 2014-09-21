@@ -7,12 +7,13 @@ branches:
 
 
 # settings according http://blog.travis-ci.com/2012-12-18-travis-artifacts/#How-to-use%3F
+# LZ owns the access keys
 env:
  global:
    - "ARTIFACTS_AWS_REGION=us-east-1"
    - "ARTIFACTS_S3_BUCKET=ufal-dsg"
-   - secure: "QJa3uAw5I+3b/hirylmpAg8JxQ/RZVXWenMCTmp+CvOS4GaRZPT5Q0+vx8k3CDFtqxnVlWVmpes/akbLvYbCFXfxFTscyY/dkmm3A4IOzBsxTLPXx9WNsWuCbqw+AwmqkOUPwhoneBTcbDpZqNF2YdE677tQen4V5qPu7DVb3ec="
-   - secure: "bCjjvj7yorDD1iUpFVl7MZLMl9qVNQXIrP7+06iO0sX+KPxnYzVUQavq8MJUABngSf+wji0oi7JSgU+RxI/ktFPj9BhYID3L5EJ3Tk4LKtwEMZjr7Ad78ebLK1S9a8J52HktrOAMiHsP7yCkkWDXcBjx/VIV8IHr1Yw8gOFaoNI="
+   - secure: "WBfd5tHszuzZxvI0slNPyRObYgMCi6pm07OEecuOfVtgLdMQWRaaRAxChM+m8gMTkV44TuTY4ony1XVIItc+8jcXOL+DhIbj8dt+kpd927QYjiQVQf0vhVBQpIJIyYr40tPeezr7/vBbktl/c4cVF7Vd/k1SVX5/dnLtt4s05JE=" 
+   - secure: "TC4N7oiqeGmy2f9GfoZoZrTxDGEJLIDH3L4YoZQ7tl7Pu93SRv6Yo0L2j2Jn8aziM4XqOSEJNwP/F1o3/n8n7+LhPsyRd4FjHEIQomGlgR9im/zRJ6BHn6nChYldq/t4x4LcIVwdSRyLRykgXYRTr2xLOELBeVO9HUxChMYTpFo="
 
 language: python
 python:
@@ -34,7 +35,7 @@ install:
     # # - pushd tools && make -j 4 openfst_tgt && popd
     # Openfst: download
     - ls -al
-    - pushd tools && wget https://s3-eu-west-1.amazonaws.com/ufal-dsg/artifacts/10/10.1/travis-openfst.tar.gz -O travis-openfst.tar.gz && tar zxvf travis-openfst.tar.gz && ln -s travis-openfst openfst && popd
+    - pushd tools && wget https://s3-eu-west-1.amazonaws.com/ufal-dsg/artifacts/openfst-patched/travis-openfst.tar.gz -O travis-openfst.tar.gz && tar zxvf travis-openfst.tar.gz && ln -s travis-openfst openfst && popd
     # hack how to make available clapack.h
     - pushd tools && make -j 4 atlas && popd
     # Configure with ATLAS (default)
