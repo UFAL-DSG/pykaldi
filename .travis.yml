@@ -35,7 +35,7 @@ install:
     # # - pushd tools && make -j 4 openfst_tgt && popd
     # Openfst: download
     - ls -al
-    - pushd tools && wget https://s3-eu-west-1.amazonaws.com/ufal-dsg/openfst-patched/travis-openfst.tar.gz -O travis-openfst.tar.gz && tar zxvf travis-openfst.tar.gz && ln -s travis-openfst openfst && popd
+    - pushd tools && wget https://s3-eu-west-1.amazonaws.com/ufal-dsg/openfst/travis-openfst.tar.gz -O travis-openfst.tar.gz && tar zxvf travis-openfst.tar.gz && ln -s travis-openfst openfst && popd
     # hack how to make available clapack.h
     - pushd tools && make -j 4 atlas && popd
     # Configure with ATLAS (default)
