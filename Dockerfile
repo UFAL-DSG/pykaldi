@@ -29,11 +29,11 @@ RUN make && make test && echo 'OnlineLatgenRecogniser build OK'
 
 # Compile Kaldi module for Python.
 WORKDIR ../pykaldi
-RUN pip install pykaldi-requirements.txt
+RUN pip install -r pykaldi-requirements.txt
 RUN make && echo 'Pykaldi BUILD Works OK'
 RUN make install && echo 'Pykaldi INSTALL Works OK'
 RUN ldconfig
 
 # Misc.
-WORKDIR /app/pykaldi/egs/vystadial/online_demo/
-RUN make gmm-latgen-faster
+# WORKDIR /app/pykaldi/egs/vystadial/online_demo/
+# RUN make gmm-latgen-faster
