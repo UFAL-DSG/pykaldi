@@ -2,12 +2,14 @@
 
 set -e # Stop on any error
 
-sudo apt-get install build-essential libatlas-base-dev python-{dev,yaml} git portaudio-dev
+sudo apt-get update
+sudo apt-get install build-essential libatlas-base-dev python-{dev,yaml} git 
+# sudo apt-get install portaudio-dev
 
 sudo pip install pystache
 sudo pip install cython
 sudo pip install flask
-sudo pip install pyaudio
+# sudo pip install pyaudio
 
 pushd tools
   make atlas openfst_tgt
