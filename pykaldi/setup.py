@@ -3,14 +3,13 @@
 # On Windows, you need to execute:
 # set VS90COMNTOOLS=%VS100COMNTOOLS%
 # python setup.py build_ext --compiler=msvc
-#cython: embedsignature=True
+# cython: embedsignature=True
 from setuptools import setup
 from sys import version_info as python_version
 from os import path
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
-
-STATIC = False
+from os import environ
 
 install_requires = []
 if python_version < (2, 7):
@@ -19,20 +18,14 @@ if python_version < (2, 7):
 
 
 ext_modules = []
-
-# pykaldi library compilation (static|dynamic)
-if STATIC:
-    # STATIC TODO extract linking parameters from Makefile
-    library_dirs, libraries = [], []
-    extra_objects = ['pykaldi.a', ]
-else:
-    # DYNAMIC
-    library_dirs = ['kaldi', ]
-    libraries = ['pykaldi', ]
-    extra_objects = []
+# pykaldi static library compilation (extension is always built as shared) 
+extra_objects = environ['PYKALDI_ADDLIBS'].split()
+library_dirs = ['/usr/lib', '../tools/openfst/lib']
+# libraries = ['fst', 'lapack_atlas', 'cblas', 'atlas', 'f77blas',]
+libraries = ['fst', 'lapack_atlas', 'cblas', 'atlas', 'f77blas', 'm', 'pthread', 'dl']
 ext_modules.append(Extension('kaldi.decoders',
                              language='c++',
-                             include_dirs=['..', 'pyfst', ],
+                             include_dirs=['../src', 'pyfst', ],
                              library_dirs=library_dirs,
                              libraries=libraries,
                              extra_objects=extra_objects,
@@ -54,7 +47,7 @@ except Exception:
 setup(
     name='pykaldi',
     packages=['kaldi', ],
-    package_data={'kaldi': ['libpykaldi.so', 'test_shortest.txt']},
+    package_data={'kaldi': ['test_shortest.txt']},
     include_package_data=True,
     cmdclass={'build_ext': build_ext},
     version='0.1-' + git_version,
@@ -64,7 +57,7 @@ setup(
     test_suite="nose.collector",
     tests_require=['nose>=1.0', 'pykaldi'],
     author='Ondrej Platek',
-    author_email='ondrej.platek@seznam.cz',
+    author_email='oplatek@ufal.mff.cuni.cz',
     url='https://github.com/DSG-UFAL/pykaldi',
     license='Apache, Version 2.0',
     keywords='Kaldi speech recognition Python bindings',
