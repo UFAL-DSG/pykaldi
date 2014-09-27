@@ -4,12 +4,14 @@
 # set VS90COMNTOOLS=%VS100COMNTOOLS%
 # python setup.py build_ext --compiler=msvc
 # cython: embedsignature=True
+from __future__ import print_function
 from setuptools import setup
 from sys import version_info as python_version
 from os import path
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
 from os import environ
+from sys import stderr
 
 install_requires = []
 if python_version < (2, 7):
@@ -19,7 +21,11 @@ if python_version < (2, 7):
 
 ext_modules = []
 # pykaldi static library compilation (extension is always built as shared) 
-extra_objects = environ['PYKALDI_ADDLIBS'].split()
+try:
+    extra_objects = environ['PYKALDI_ADDLIBS'].split()
+except:
+    print('Specify pykaldi dependant libraries in PYKALDI_ADDLIBS shell variable', file=stderr)
+    extra_objects = []
 library_dirs = ['/usr/lib', '../tools/openfst/lib']
 # libraries = ['fst', 'lapack_atlas', 'cblas', 'atlas', 'f77blas',]
 libraries = ['fst', 'lapack_atlas', 'cblas', 'atlas', 'f77blas', 'm', 'pthread', 'dl']
@@ -47,7 +53,7 @@ except Exception:
 setup(
     name='pykaldi',
     packages=['kaldi', ],
-    package_data={'kaldi': ['test_shortest.txt']},
+    package_data={'kaldi': ['test_shortest.txt', 'decoders.so']},
     include_package_data=True,
     cmdclass={'build_ext': build_ext},
     version='0.1-' + git_version,
