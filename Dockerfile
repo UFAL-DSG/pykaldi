@@ -10,14 +10,12 @@ RUN apt-get update
 RUN apt-get install -y build-essential libatlas-base-dev python-dev python-pip git wget
 # RUN apt-get libportaudio-dev portaudio19-dev libsox-dev  # not necessary
 
-WORKDIR /app
-RUN git clone https://github.com/UFAL-DSG/pykaldi/
+ADD . /app/pykaldi/
 WORKDIR /app/pykaldi
 
 # PyKaldi tools.
 WORKDIR tools
 RUN make atlas openfst_tgt
-RUN ldconfig
 
 # Compile the Kaldi src.
 WORKDIR ../src
@@ -31,9 +29,5 @@ RUN make && make test && echo 'OnlineLatgenRecogniser build OK'
 WORKDIR ../pykaldi
 RUN pip install -r pykaldi-requirements.txt
 RUN make && echo 'Pykaldi BUILD Works OK'
-RUN make install && echo 'Pykaldi INSTALL Works OK'
-RUN ldconfig
 
-# Misc.
-# WORKDIR /app/pykaldi/egs/vystadial/online_demo/
-# RUN make gmm-latgen-faster
+# TODO ONBUILD 
