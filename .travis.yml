@@ -27,7 +27,8 @@ before_install:
     - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y && sudo apt-get update -qq && sudo apt-get install -y g++-4.8 gcc-4.8 && sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 50 && sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 80 && gcc --version && g++ --version
     - sudo apt-get install python-dev
     # ATLAS matrix library
-    - sudo apt-get install libatlas3gf-base libblas-dev libatlas-dev libblas-dev libblas3gf
+    # - sudo apt-get install -y libatlas3gf-base libblas-dev libatlas-dev libblas-dev libblas3gf
+    - sudo apt-get install -y build-essential libatlas-base-dev python-dev python-pip git wget
 
 install:
     - pip install -q cython pystache pyyaml --use-mirrors
