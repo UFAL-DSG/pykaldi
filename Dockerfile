@@ -26,8 +26,8 @@ WORKDIR onl-rec
 RUN make && make test && echo 'OnlineLatgenRecogniser build OK'
 
 # Compile Kaldi module for Python.
-WORKDIR ../pykaldi
+WORKDIR ../../pykaldi
 RUN pip install -r pykaldi-requirements.txt
-RUN make && echo 'Pykaldi BUILD Works OK'
+RUN make deploy && echo 'Pykaldi build and installation files prepared: OK'
 
 # TODO ONBUILD 
