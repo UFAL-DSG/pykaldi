@@ -50,5 +50,6 @@ script:
 
 after_success: # and this only on success
     - pushd pykaldi; make deploy ; popd
+    - "gem install travis-artifacts"
     - travis-artifacts upload --path pykaldi/pykaldi*.tar.gz --target-path pykaldi/pykaldi-travis.tar.gz
     # - travis-artifacts upload --path pykaldi_src_pykaldi.tar.gz --target-path artifacts/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID
