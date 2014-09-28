@@ -11,8 +11,8 @@ The fork presents three new Kaldi features:
   The scripts for Czech and English support acoustic models obtained using MFCC, LDA+MLLT/delta+delta-delta feature transformations and acoustic models trained generatively or by MPE or bMMI training.
 
 The new functionality is separated to different directories:
- * kaldi/src/onl-rec stores C++ code for ``OnlineLatticeRecogniser``.
- * kaldi/scr/pykaldi stores Python wrapper ``PyOnlineLatticeRecogniser``.
+ * pykaldi/src/onl-rec stores C++ code for ``OnlineLatticeRecogniser``.
+ * pykaldi/pykaldi stores Python wrapper ``PyOnlineLatticeRecogniser``.
  * kaldi/egs/vystadial/s5 stores training scripts.
  * kaldi/egs/vystadial/online_demo shows Kaldi standard decoder, ``OnlineLatticeRecogniser`` and ``PyOnlineLatticeRecogniser``, which produce the exact same lattices using the same setup.
 

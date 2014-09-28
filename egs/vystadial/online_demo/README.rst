@@ -25,7 +25,7 @@ http://oplatek.blogspot.it/2014/02/ipython-demo-pykaldi-decoders-on-short.html
 
 Dependencies
 ------------
-* Build (make) and test (make test) the code under  ``kaldi/src``, ``kaldi/src/pykaldi`` and ``kaldi/src/onl-rec``
+* Build (make) and test (make test) the code under  ``pykaldi/src``, ``pykaldi/pykaldi`` and ``pykaldi/src/onl-rec``
 * For inspecting the saved lattices you need `dot` binary 
   from `Graphviz <http://www.graphviz.org/Download..php>`_ library.
 * For running the live demo you need ``pyaudio`` package.
@@ -75,9 +75,9 @@ Notes
  The scripts for Czech and English support acoustic models obtained using MFCC, LDA+MLLT/delta+delta-delta feature transformations and acoustic models trained generatively or by MPE or bMMI training.
 
 The new functionality is separated to different directories:
- * kaldi/src/onl-rec stores C++ code for ``OnlineLatticeRecogniser``.
- * kaldi/scr/pykaldi stores Python wrapper ``PyOnlineLatticeRecogniser``.
- * kaldi/egs/vystadial/s5 stores training scripts.
- * kaldi/egs/vystadial/online_demo shows Kaldi standard decoder, ``OnlineLatticeRecogniser`` and ``PyOnlineLatticeRecogniser``, which produce the exact same lattices using the same setup.
+ * pykaldi/src/onl-rec stores C++ code for ``OnlineLatticeRecogniser``.
+ * pykaldi/pykaldi stores Python wrapper ``PyOnlineLatticeRecogniser``.
+ * pykaldi/egs/vystadial/s5 stores training scripts.
+ * pykaldi/egs/vystadial/online_demo shows Kaldi standard decoder, ``OnlineLatticeRecogniser`` and ``PyOnlineLatticeRecogniser``, which produce the exact same lattices using the same setup.
 
 The ``OnlineLatticeRecogniser`` is used in Alex dialogue system (https://github.com/UFAL-DSG/alex).
