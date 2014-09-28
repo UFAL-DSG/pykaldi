@@ -35,7 +35,6 @@ install:
     # Openfst: skip building Openfst ~ 30 min
     # # - pushd tools && make -j 4 openfst_tgt && popd
     # Openfst: download
-    - ls -al
     - pushd tools && wget https://s3-eu-west-1.amazonaws.com/ufal-dsg/openfst/travis-openfst.tar.gz -O travis-openfst.tar.gz && tar zxvf travis-openfst.tar.gz && ln -s travis-openfst openfst && popd
     # hack how to make available clapack.h
     - pushd tools && make -j 4 atlas && popd
@@ -46,9 +45,9 @@ install:
 
 script:
     - pushd src/onl-rec && make -j 4 test ; RET=$?; popd ; (exit $RET)
-    - pushd src/pykaldi && make -j 4 test ; RET=$? ; popd ; (exit $RET)
+    - pushd pykaldi && make -j 4 test ; RET=$? ; popd ; (exit $RET)
 
 after_success: # and this only on success
-    - tar cvzf pykaldi.tar.gz src/pykaldi
-    - travis-artifacts upload --path pykaldi_src_pykaldi.tar.gz --target-path pykaldi/pykaldi_src_pykaldi.tar.gz
+    - pushd pykaldi; make deploy ; popd
+    - travis-artifacts upload --path pykaldi/pykaldi*.tar.gz --target-path pykaldi/pykaldi-travis.tar.gz
     # - travis-artifacts upload --path pykaldi_src_pykaldi.tar.gz --target-path artifacts/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID
