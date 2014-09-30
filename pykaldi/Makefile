@@ -14,7 +14,7 @@ pyfst:
 # If you want to develop or install pyfst
 # use setup.py develop --user or setup.py install respectively
 pyfst/fst/_fst.so: pyfst
-	cd pyfst ; LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include python setup.py build_ext --inplace
+	cd pyfst ; LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include python setup.py build_ext --inplace ; cd ..
 
 pyfst_compiled: pyfst/fst/_fst.so
 
@@ -38,7 +38,7 @@ clean:
 	rm -rf dist build *.egg-info
 
 install: all
-	cd pyfst;  python setup.py install; cd ..
+	cd pyfst ; LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include python setup.py install ; cd .. && \
 	PYKALDI_ADDLIBS="$(ADDLIBS)" \
 	LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include \
 	python setup.py install
