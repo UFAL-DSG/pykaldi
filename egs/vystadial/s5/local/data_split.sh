@@ -88,21 +88,21 @@ echo "Set 1:1 relation for spk2utt: spk in $test_sets AND train, sort in place"
 sort "$locdata/spk2gender" -k1 -o "$locdata/spk2gender" 
 
 echo "--- Distributing the file lists to train and ($test_sets x $LMs) directories ..."
-mkdir -p $WORK/train
-cp $locdata/train/wav.scp $WORK/train/wav.scp || exit 1;
-cp $locdata/train/trans.txt $WORK/train/text || exit 1;
-cp $locdata/train/spk2utt $WORK/train/spk2utt || exit 1;
-cp $locdata/train/utt2spk $WORK/train/utt2spk || exit 1;
-utils/filter_scp.pl $WORK/train/spk2utt $locdata/spk2gender > $WORK/train/spk2gender || exit 1;
+mkdir -p $tgt_dir/train
+cp $locdata/train/wav.scp $tgt_dir/train/wav.scp || exit 1;
+cp $locdata/train/trans.txt $tgt_dir/train/text || exit 1;
+cp $locdata/train/spk2utt $tgt_dir/train/spk2utt || exit 1;
+cp $locdata/train/utt2spk $tgt_dir/train/utt2spk || exit 1;
+utils/filter_scp.pl $tgt_dir/train/spk2utt $locdata/spk2gender > $tgt_dir/train/spk2gender || exit 1;
 
 for s in $test_sets ; do 
     for lm in $LMs; do
-        tgt_dir=$WORK/${s}_`basename ${lm}`
-        mkdir -p $tgt_dir
-        cp $locdata/${s}/wav.scp $tgt_dir/wav.scp || exit 1;
-        cp $locdata/${s}/trans.txt $tgt_dir/text || exit 1;
-        cp $locdata/${s}/spk2utt $tgt_dir/spk2utt || exit 1;
-        cp $locdata/${s}/utt2spk $tgt_dir/utt2spk || exit 1;
-        utils/filter_scp.pl $tgt_dir/spk2utt $locdata/spk2gender > $tgt_dir/spk2gender || exit 1;
+        tgt=$tgt_dir/${s}_`basename ${lm}`
+        mkdir -p $tgt
+        cp $locdata/${s}/wav.scp $tgt/wav.scp || exit 1;
+        cp $locdata/${s}/trans.txt $tgt/text || exit 1;
+        cp $locdata/${s}/spk2utt $tgt/spk2utt || exit 1;
+        cp $locdata/${s}/utt2spk $tgt/utt2spk || exit 1;
+        utils/filter_scp.pl $tgt/spk2utt $locdata/spk2gender > $tgt/spk2gender || exit 1;
     done
 done
