@@ -62,7 +62,6 @@ flags = [
     '-Wno-sign-compare',
     '-Wno-variadic-macros',
     '-fexceptions',
-    '-DNDEBUG',
     '-DUSE_CLANG_COMPLETER',
     # THIS IS IMPORTANT! Without a "-std=<something>" flag, clang won't know which
     # language to use when compiling headers. So it will guess. Badly. So C++
