@@ -16,8 +16,8 @@ if [ -f "$name" ] ; then
   echo "found! Skipping!"
 else
   echo -e " will be created.\nRunning $@.\n"
-  "$@" || return $?
+  "$@" || exit $?
   echo "$fullname" > "$name"
 fi
 
-return 0
+exit 0
