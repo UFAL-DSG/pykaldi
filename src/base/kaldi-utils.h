@@ -25,6 +25,12 @@
 #include <string>
 
 #if defined(_MSC_VER)
+# define WIN32_LEAN_AND_MEAN
+# define NOMINMAX
+# include <windows.h>
+#endif
+
+#if defined(_MSC_VER)
 #pragma warning(disable: 4244 4056 4305 4800 4267 4996 4756 4661)
 #define __restrict__
 #endif
@@ -114,6 +120,13 @@ template<> class KaldiCompileTimeAssert<true> {
 #define KALDI_ASSERT_IS_FLOATING_TYPE(F) \
   KaldiCompileTimeAssert<std::numeric_limits<F>::is_specialized \
                 && !std::numeric_limits<F>::is_integer>::Check()
+
+#ifdef _MSC_VER
+#include <stdio.h>
+#define unlink _unlink
+#else
+#include <unistd.h>
+#endif
 
 
 #ifdef _MSC_VER

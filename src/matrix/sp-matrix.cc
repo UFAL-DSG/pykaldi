@@ -85,9 +85,9 @@ template<typename Real>
 void SpMatrix<Real>::Exp() {
   // The most natural way to do this would be to do a symmetric eigenvalue
   // decomposition, but in order to work with basic ATLAS without CLAPACK, we
-  // don't have symmetric eigenvalue decomposition code.  Instead we use the
-  // MatrixExponential class which expands it out as a Taylor series (with a
-  // pre-scaling trick to make it reasonably fast).
+  // don't have symmetric eigenvalue decomposition code (correction: didn't have
+  // it).  Instead we use the MatrixExponential class which expands it out as a
+  // Taylor series (with a pre-scaling trick to make it reasonably fast).
 
   KALDI_ASSERT(this->NumRows() != 0);
   Matrix<Real> M(*this), expM(this->NumRows(), this->NumRows());
@@ -206,7 +206,7 @@ Real SpMatrix<Real>::Trace() const {
 // diagonal update, this <-- this + diag(v)
 template<typename Real>
 template<typename OtherReal>
-void  SpMatrix<Real>::AddVec(const Real alpha, const VectorBase<OtherReal> &v) {
+void  SpMatrix<Real>::AddDiagVec(const Real alpha, const VectorBase<OtherReal> &v) {
   int32 num_rows = this->num_rows_;
   KALDI_ASSERT(num_rows == v.Dim() && num_rows > 0);
   const OtherReal *src = v.Data();
@@ -221,16 +221,20 @@ void  SpMatrix<Real>::AddVec(const Real alpha, const VectorBase<OtherReal> &v) {
 
 // instantiate the template above.
 template
-void SpMatrix<float>::AddVec(const float alpha, const VectorBase<double> &v);
+void SpMatrix<float>::AddDiagVec(const float alpha,
+                                 const VectorBase<double> &v);
 
 template
-void SpMatrix<double>::AddVec(const double alpha, const VectorBase<float> &v);
+void SpMatrix<double>::AddDiagVec(const double alpha,
+                                  const VectorBase<float> &v);
 
 template
-void SpMatrix<float>::AddVec(const float alpha, const VectorBase<float> &v);
+void SpMatrix<float>::AddDiagVec(const float alpha,
+                                 const VectorBase<float> &v);
 
 template
-void SpMatrix<double>::AddVec(const double alpha, const VectorBase<double> &v);
+void SpMatrix<double>::AddDiagVec(const double alpha,
+                                  const VectorBase<double> &v);
 
 template<>
 template<>
@@ -554,7 +558,7 @@ bool SpMatrix<Real>::ApproxEqual(const SpMatrix<Real> &other, float tol) const {
 // function Floor: A = Floor(B, alpha * C) ... see tutorial document.
 template<typename Real>
 int SpMatrix<Real>::ApplyFloor(const SpMatrix<Real> &C, Real alpha,
-                               bool verbose, bool is_psd) {
+                               bool verbose) {
   MatrixIndexT dim = this->NumRows();
   int nfloored = 0;
   KALDI_ASSERT(C.NumRows() == dim);
@@ -573,14 +577,9 @@ int SpMatrix<Real>::ApplyFloor(const SpMatrix<Real> &C, Real alpha,
 
   Vector<Real> l(dim);
   Matrix<Real> U(dim, dim);
-  if (is_psd)
-    D.SymPosSemiDefEig(&l, &U);
-  else
-    D.Eig(&l, &U);
-  // We added the "Eig" function more recently.  It's not as accurate as in the
-  // symmetric positive semidefinite case, so we only use it if the user says
-  // the calling matrix is not positive semidefinite.
-  // [Note: we since changed it to be more accurate.]
+
+  D.Eig(&l, &U);
+
   if (verbose) {
     KALDI_LOG << "ApplyFloor: flooring following diagonal to 1: " << l;
   }
@@ -604,7 +603,8 @@ template<typename Real>
 Real SpMatrix<Real>::LogDet(Real *det_sign) const {
   Real log_det;
   SpMatrix<Real> tmp(*this);
-  tmp.Invert(&log_det, det_sign, false);  // false== output not needed (saves some computation).
+  // false== output not needed (saves some computation).
+  tmp.Invert(&log_det, det_sign, false);  
   return log_det;
 }
 
@@ -801,7 +801,7 @@ SolveQuadraticMatrixProblem(const SpMatrix<Real> &Q,
   Vector<Real> l(cols);
   Q.SymPosSemiDefEig(&l, &U);  // does svd Q = U L V^T and checks that Q == U L U^T to within a tolerance.
   // floor l.
-  Real f = std::max(static_cast<Real>(opts.eps), l.Max() / opts.K);
+  Real f = std::max<Real>(static_cast<Real>(opts.eps), l.Max() / opts.K);
   MatrixIndexT nfloored = 0;
   for (MatrixIndexT i = 0; i < cols; i++) {  // floor l.
     if (l(i) < f) { nfloored++; l(i) = f; }

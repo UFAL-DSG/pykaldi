@@ -1,6 +1,7 @@
 // latbin/lattice-lmrescore.cc
 
 // Copyright 2009-2011  Microsoft Corporation
+//                2014  Johns Hopkins University (author: Daniel Povey)
 
 // See ../../COPYING for clarification regarding multiple authors
 //
@@ -38,12 +39,16 @@ int main(int argc, char *argv[]) {
         "paths through lattice.  Does this by composing with LM FST, then\n"
         "lattice-determinizing (it has to negate weights first if lm_scale<0)\n"
         "Usage: lattice-lmrescore [options] lattice-rspecifier lm-fst-in lattice-wspecifier\n"
-        " e.g.: lattice-lmrescore --lm-scale=-1.0 ark:in.lats data/G.fst ark:out.lats\n";
+        " e.g.: lattice-lmrescore --lm-scale=-1.0 ark:in.lats 'fstproject --project_output=true data/lang/G.fst|' ark:out.lats\n";
       
     ParseOptions po(usage);
     BaseFloat lm_scale = 1.0;
+    int32 num_states_cache = 50000;
     
     po.Register("lm-scale", &lm_scale, "Scaling factor for language model costs; frequently 1.0 or -1.0");
+    po.Register("num-states-cache", &num_states_cache,
+                "Number of states we cache when mapping LM FST to lattice type. "
+                "More -> more memory but faster.");
     
     po.Read(argc, argv);
 
@@ -68,9 +73,10 @@ int main(int argc, char *argv[]) {
     // mapped_fst is the LM fst interpreted using the LatticeWeight semiring,
     // with all the cost on the first member of the pair (since it's a graph
     // weight).
+    fst::CacheOptions cache_opts(true, num_states_cache);    
     fst::StdToLatticeMapper<BaseFloat> mapper;
     fst::MapFst<StdArc, LatticeArc, fst::StdToLatticeMapper<BaseFloat> >
-        lm_fst(*std_lm_fst, mapper);
+        lm_fst(*std_lm_fst, mapper, cache_opts);
     delete std_lm_fst;
     
     // The next fifteen or so lines are a kind of optimization and

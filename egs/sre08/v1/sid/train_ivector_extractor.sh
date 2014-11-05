@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Copyright   2013  Daniel Povey
+#             2014  David Snyder
 # Apache 2.0.
 
 # This script trains the i-vector extractor.  Note: there are 3 separate levels
@@ -38,6 +39,8 @@ num_iters=10
 min_post=0.025 # Minimum posterior to use (posteriors below this are pruned out)
 num_samples_for_weights=3 # smaller than the default for speed (relates to a sampling method)
 cleanup=true
+posterior_scale=1.0 # This scale helps to control for successve features being highly
+                    # correlated.  E.g. try 0.1 or 0.3
 sum_accs_opt=
 # End configuration section.
 
@@ -70,6 +73,7 @@ fi
 fgmm_model=$1
 data=$2
 dir=$3
+srcdir=$(dirname $fgmm_model)
 
 for f in $fgmm_model $data/feats.scp ; do
   [ ! -f $f ] && echo "No such file $f" && exit 1;
@@ -81,9 +85,14 @@ nj_full=$[$nj*$num_processes]
 sdata=$data/split$nj_full;
 utils/split_data.sh $data $nj_full || exit 1;
 
+delta_opts=`cat $srcdir/delta_opts 2>/dev/null`
+if [ -f $srcdir/delta_opts ]; then
+  cp $srcdir/delta_opts $dir/ 2>/dev/null
+fi
+
 parallel_opts="-pe smp $[$num_threads*$num_processes]"
 ## Set up features.
-feats="ark,s,cs:add-deltas scp:$sdata/JOB/feats.scp ark:- | apply-cmvn-sliding --norm-vars=false --center=true --cmn-window=300 ark:- ark:- | select-voiced-frames ark:- scp,s,cs:$sdata/JOB/vad.scp ark:- |"
+feats="ark,s,cs:add-deltas $delta_opts scp:$sdata/JOB/feats.scp ark:- | apply-cmvn-sliding --norm-vars=false --center=true --cmn-window=300 ark:- ark:- | select-voiced-frames ark:- scp,s,cs:$sdata/JOB/vad.scp ark:- |"
 
 # Initialize the i-vector extractor using the FGMM input
 if [ $stage -le -2 ]; then
@@ -103,7 +112,8 @@ if [ $stage -le -1 ]; then
   $cmd JOB=1:$nj_full $dir/log/gselect.JOB.log \
     gmm-gselect --n=$num_gselect $dir/final.dubm "$feats" ark:- \| \
     fgmm-global-gselect-to-post --min-post=$min_post $dir/final.ubm "$feats" \
-       ark,s,cs:- "ark:|gzip -c >$dir/post.JOB.gz" || exit 1;
+      ark,s,cs:-  ark:- \| \
+    scale-post ark:- $posterior_scale "ark:|gzip -c >$dir/post.JOB.gz" || exit 1;
 else
   if ! [ $nj_full -eq $(cat $dir/num_jobs) ]; then
     echo "Num-jobs mismatch $nj_full versus $(cat $dir/num_jobs)"

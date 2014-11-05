@@ -15,7 +15,16 @@
 . path.sh
 set -e # exit on error
 
-local/swbd1_data_prep.sh /home/dpovey/data/LDC97S62
+# Prepare Switchboard data. This command can also take a second optional argument
+# which specifies the directory to Switchboard documentations. Specifically, if
+# this argument is given, the script will look for the conv.tab file and correct
+# speaker IDs to the actual speaker personal identification numbers released in
+# the documentations. The documentations can be found here: 
+# https://catalog.ldc.upenn.edu/docs/LDC97S62/
+# Note: if you are using this link, make sure you rename conv_tab.csv to conv.tab
+# after downloading.
+# Usage: local/swbd1_data_prep.sh /path/to/SWBD [/path/to/SWBD_docs]
+local/swbd1_data_prep.sh /export/corpora3/LDC/LDC97S62
 # local/swbd1_data_prep.sh /home/dpovey/data/LDC97S62
 # local/swbd1_data_prep.sh /data/corpora0/LDC97S62
 # local/swbd1_data_prep.sh /mnt/matylda2/data/SWITCHBOARD_1R2
@@ -208,7 +217,7 @@ steps/align_fmllr.sh --nj 30 --cmd "$train_cmd" \
 
 
 steps/train_sat.sh  --cmd "$train_cmd" \
-  11500 200000 data/train_nodup data/lang exp/tri3b_ali_nodup exp/tri4b 
+  11500 200000 data/train_nodup data/lang exp/tri3b_ali_nodup exp/tri4b
 
 for lm_suffix in tg fsh_tgpr; do
   (
@@ -324,6 +333,9 @@ done
 
 # local/run_sgmm2.sh
 
+# demonstration script for raw-fMLLR.  You should probably ignore this.
+# local/run_raw_fmllr.sh
+
 
 # # Karel's DNN recipe on top of fMLLR features
 # local/run_dnn.sh
@@ -334,6 +346,9 @@ done
 # # rather than just running the whole thing.
 # local/run_nnet2.sh
 
+# # Dan's nnet recipe with online decoding.
+# local/online/run_nnet2.sh
+# local/online/run_nnet2_baseline.sh
 
 
 # # getting results (see RESULTS file)

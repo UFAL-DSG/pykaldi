@@ -33,7 +33,7 @@
 #include "nnet/nnet-activation.h"
 #include "nnet/nnet-nnet.h"
 #include "nnet/nnet-pdf-prior.h"
-#include "util/timer.h"
+#include "base/timer.h"
 #include "cudamatrix/cu-device.h"
 
 #include <iomanip>
@@ -167,7 +167,8 @@ int main(int argc, char *argv[]) {
     Nnet nnet;
     nnet.Read(model_filename);
     // using activations directly: remove softmax, if present
-    if (nnet.GetComponent(nnet.NumComponents()-1).GetType() == Component::kSoftmax) {
+    if (nnet.GetComponent(nnet.NumComponents()-1).GetType() ==
+        kaldi::nnet1::Component::kSoftmax) {
       KALDI_LOG << "Removing softmax from the nnet " << model_filename;
       nnet.RemoveComponent(nnet.NumComponents()-1);
     } else {
@@ -235,10 +236,10 @@ int main(int argc, char *argv[]) {
         continue;
       }
       if (mat.NumRows() > max_frames) {
-	KALDI_WARN << "Utterance " << utt << ": Skipped because it has " << mat.NumRows() << 
-	  " frames, which is more than " << max_frames << ".";
-	num_other_error++;
-	continue;
+    KALDI_WARN << "Utterance " << utt << ": Skipped because it has " << mat.NumRows() << 
+      " frames, which is more than " << max_frames << ".";
+    num_other_error++;
+    continue;
       }
       
       // 2) get the denominator lattice, preprocess
@@ -337,7 +338,7 @@ int main(int argc, char *argv[]) {
       }
 
       // Report
-      KALDI_VLOG(1) << "Processed lattice for utterance " << num_done + 1
+      KALDI_VLOG(1) << "Lattice #" << num_done + 1 << " processed"
                     << " (" << utt << "): found " << den_lat.NumStates()
                     << " states and " << fst::NumArcs(den_lat) << " arcs.";
 
@@ -413,6 +414,10 @@ int main(int argc, char *argv[]) {
         KALDI_VLOG(1) << "After " << num_done << " utterances: time elapsed = "
                       << time_now/60 << " min; processed " << total_frames/time_now
                       << " frames per second.";
+#if HAVE_CUDA==1
+        // check the GPU is not overheated
+        CuDevice::Instantiate().CheckGpuHealth();
+#endif
       }
     }
        

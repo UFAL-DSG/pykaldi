@@ -1,7 +1,8 @@
 // hmm/posterior.cc
 
 // Copyright 2009-2011  Microsoft Corporation
-//                2013  Johns Hopkins University (author: Daniel Povey)
+//           2013-2014  Johns Hopkins University (author: Daniel Povey)
+//                2014  Guoguo Chen
 //                2014  Guoguo Chen
 
 // See ../../COPYING for clarification regarding multiple authors
@@ -72,7 +73,7 @@ bool PosteriorHolder::Read(std::istream &is) {
 
   bool is_binary;
   if (!InitKaldiInputStream(is, &is_binary)) {
-    KALDI_WARN << "Reading Table object, failed reading binary header\n";
+    KALDI_WARN << "Reading Table object, failed reading binary header";
     return false;
   }
   try {
@@ -80,13 +81,13 @@ bool PosteriorHolder::Read(std::istream &is) {
       int32 sz;
       ReadBasicType(is, true, &sz);
       if (sz < 0)
-        KALDI_ERR << "Reading posteriors: got negative size\n";
+        KALDI_ERR << "Reading posteriors: got negative size";
       t_.resize(sz);
       for (Posterior::iterator iter = t_.begin(); iter != t_.end(); ++iter) {
         int32 sz2;
         ReadBasicType(is, true, &sz2);
         if (sz2 < 0)
-          KALDI_ERR << "Reading posteriors: got negative size\n";
+          KALDI_ERR << "Reading posteriors: got negative size";
         iter->resize(sz2);
         for (std::vector<std::pair<int32, BaseFloat> >::iterator iter2=iter->begin();
              iter2 != iter->end();
@@ -167,20 +168,20 @@ bool GaussPostHolder::Read(std::istream &is) {
 
   bool is_binary;
   if (!InitKaldiInputStream(is, &is_binary)) {
-    KALDI_WARN << "Reading Table object, failed reading binary header\n";
+    KALDI_WARN << "Reading Table object, failed reading binary header";
     return false;
   }
   try {
     int32 sz;
     ReadBasicType(is, is_binary, &sz);
     if (sz < 0)
-      KALDI_ERR << "Reading posteriors: got negative size\n";
+      KALDI_ERR << "Reading posteriors: got negative size";
     t_.resize(sz);
     for (GaussPost::iterator iter = t_.begin(); iter != t_.end(); ++iter) {
       int32 sz2;
       ReadBasicType(is, is_binary, &sz2);
       if (sz2 < 0)
-        KALDI_ERR << "Reading posteriors: got negative size\n";
+        KALDI_ERR << "Reading posteriors: got negative size";
       iter->resize(sz2);
       for (std::vector<std::pair<int32, Vector<BaseFloat> > >::iterator
                iter2=iter->begin();
@@ -210,6 +211,18 @@ void ScalePosterior(BaseFloat scale, Posterior *post) {
         (*post)[i][j].second *= scale;
     }
   }
+}
+
+BaseFloat TotalPosterior(const Posterior &post) {
+  double sum =  0.0;
+  size_t T = post.size();
+  for (size_t t = 0; t < T; t++) {
+    size_t I = post[t].size();
+    for (size_t i = 0; i < I; i++) {
+      sum += post[t][i].second;
+    }
+  }
+  return sum;
 }
 
 bool PosteriorEntriesAreDisjoint(
@@ -298,7 +311,7 @@ void ConvertPosteriorToPdfs(const TransitionModel &tmodel,
   post_out->clear();
   post_out->resize(post_in.size());
   for (size_t i = 0; i < post_out->size(); i++) {
-    std::map<int32, BaseFloat> pdf_to_post;
+    unordered_map<int32, BaseFloat> pdf_to_post;
     for (size_t j = 0; j < post_in[i].size(); j++) {
       int32 tid = post_in[i][j].first,
           pdf_id = tmodel.TransitionIdToPdf(tid);
@@ -309,7 +322,7 @@ void ConvertPosteriorToPdfs(const TransitionModel &tmodel,
         pdf_to_post[pdf_id] += post;
     }
     (*post_out)[i].reserve(pdf_to_post.size());
-    for (std::map<int32, BaseFloat>::const_iterator iter =
+    for (unordered_map<int32, BaseFloat>::const_iterator iter =
              pdf_to_post.begin(); iter != pdf_to_post.end(); ++iter) {
       if (iter->second != 0.0)
         (*post_out)[i].push_back(
@@ -397,6 +410,61 @@ void WeightSilencePostDistributed(const TransitionModel &trans_model,
     }
     (*post)[i].swap(this_post);    
   }
+}
+
+// comparator object that can be used to sort from greatest to
+// least posterior.
+struct CompareReverseSecond {
+  // view this as an "<" operator used for sorting, except it behaves like
+  // a ">" operator on the .second field of the pair because we want the
+  // sort to be in reverse order (greatest to least) on posterior.
+  bool operator() (const std::pair<int32, BaseFloat> &a,
+                   const std::pair<int32, BaseFloat> &b) {
+    return (a.second > b.second);
+  }
+};
+
+BaseFloat VectorToPosteriorEntry(
+    const VectorBase<BaseFloat> &log_likes,
+    int32 num_gselect,
+    BaseFloat min_post,
+    std::vector<std::pair<int32, BaseFloat> > *post_entry) {
+  KALDI_ASSERT(num_gselect > 0 && min_post >= 0 && min_post < 1.0);
+  // we name num_gauss assuming each entry in log_likes represents a Gaussian;
+  // it doesn't matter if they don't.
+  int32 num_gauss = log_likes.Dim();
+  KALDI_ASSERT(num_gauss > 0);
+  if (num_gselect > num_gauss)
+    num_gselect = num_gauss;
+  Vector<BaseFloat> log_likes_normalized(log_likes);
+  BaseFloat ans = log_likes_normalized.ApplySoftMax();
+  std::vector<std::pair<int32, BaseFloat> > temp_post(num_gauss);
+  for (int32 g = 0; g < num_gauss; g++)
+    temp_post[g] = std::pair<int32, BaseFloat>(g, log_likes_normalized(g));
+  CompareReverseSecond compare;
+  // Sort in decreasing order on posterior.  For efficiency we
+  // first do nth_element and then sort, as we only need the part we're
+  // going to output, to be sorted.
+  std::nth_element(temp_post.begin(),
+                   temp_post.begin() + num_gselect, temp_post.end(),
+                   compare);
+  std::sort(temp_post.begin(), temp_post.begin() + num_gselect,
+            compare);
+
+  post_entry->clear();
+  post_entry->insert(post_entry->end(),
+                     temp_post.begin(), temp_post.begin() + num_gselect);
+  while (post_entry->size() > 1 && post_entry->back().second < min_post)
+    post_entry->pop_back();  
+  // Now renormalize to sum to one after pruning.
+  BaseFloat tot = 0.0;
+  size_t size = post_entry->size();
+  for (size_t i = 0; i < size; i++)
+    tot += (*post_entry)[i].second;
+  BaseFloat inv_tot = 1.0 / tot;
+  for (size_t i = 0; i < size; i++)
+    (*post_entry)[i].second *= inv_tot;
+  return ans;
 }
 
 

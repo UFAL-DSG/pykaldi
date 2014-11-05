@@ -1,6 +1,7 @@
 // nnet2bin/nnet-copy-egs.cc
 
 // Copyright 2012  Johns Hopkins University (author:  Daniel Povey)
+// Copyright 2014  Vimal Manohar
 
 // See ../../COPYING for clarification regarding multiple authors
 //
@@ -20,7 +21,7 @@
 #include "base/kaldi-common.h"
 #include "util/common-utils.h"
 #include "hmm/transition-model.h"
-#include "nnet2/nnet-randomize.h"
+#include "nnet2/nnet-example-functions.h"
 
 namespace kaldi {
 namespace nnet2 {
@@ -98,10 +99,8 @@ int main(int argc, char *argv[]) {
     for (; !example_reader.Done(); example_reader.Next(), num_read++) {
       int32 count = GetCount(keep_proportion);
       for (int32 c = 0; c < count; c++) {
-        int32 index = (random ? rand() : num_written) % num_outputs;
-        std::ostringstream ostr;
-        ostr << num_written;
-        example_writers[index]->Write(ostr.str(),
+        int32 index = (random ? Rand() : num_written) % num_outputs;
+        example_writers[index]->Write(example_reader.Key(),
                                       example_reader.Value());
         num_written++;
       }

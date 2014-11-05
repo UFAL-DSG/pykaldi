@@ -26,7 +26,7 @@
 #include "fstext/fstext-lib.h"
 #include "decoder/faster-decoder.h"
 #include "gmm/decodable-am-diag-gmm.h"
-#include "util/timer.h"
+#include "base/timer.h"
 #include "lat/kaldi-lattice.h" // for CompactLatticeArc
 
 namespace kaldi {
@@ -41,7 +41,7 @@ fst::Fst<fst::StdArc> *ReadNetwork(std::string filename) {
     KALDI_ERR << "Reading FST: error reading FST header.";
   }
   if (hdr.ArcType() != fst::StdArc::Type()) {
-    KALDI_ERR << "FST with arc type " << hdr.ArcType() << " not supported.\n";
+    KALDI_ERR << "FST with arc type " << hdr.ArcType() << " not supported.";
   }
   fst::FstReadOptions ropts("<unspecified>", &hdr);
 
@@ -160,8 +160,6 @@ int main(int argc, char *argv[]) {
           KALDI_WARN << "Decoder did not reach end-state, "
                      << "outputting partial traceback since --allow-partial=true";
         num_success++;
-        if (!decoder.ReachedFinal())
-          KALDI_WARN << "Decoder did not reach end-state, outputting partial traceback.";
         std::vector<int32> alignment;
         std::vector<int32> words;
         LatticeWeight weight;
@@ -174,8 +172,10 @@ int main(int argc, char *argv[]) {
           alignment_writer.Write(key, alignment);
           
         if (lattice_wspecifier != "") {
-          if (acoustic_scale != 0.0) // We'll write the lattice without acoustic scaling
-            fst::ScaleLattice(fst::AcousticLatticeScale(1.0 / acoustic_scale), &decoded);
+          // We'll write the lattice without acoustic scaling.
+          if (acoustic_scale != 0.0)
+            fst::ScaleLattice(fst::AcousticLatticeScale(1.0 / acoustic_scale),
+                              &decoded);
           fst::VectorFst<CompactLatticeArc> clat;
           ConvertLattice(decoded, &clat, true);
           clat_writer.Write(key, clat);

@@ -21,11 +21,14 @@
 namespace kaldi {
 
 void UnitTestPldaEstimation(int32 dim) {
-  int32 num_classes = 4000 + rand() % 10;
+  int32 num_classes = 4000 + Rand() % 10;
   Matrix<double> between_proj(dim, dim);
-  between_proj.SetRandn();
+  while (between_proj.Cond() > 100)
+    between_proj.SetRandn();
   Matrix<double> within_proj(dim, dim);
-  within_proj.SetRandn();
+  while (within_proj.Cond() > 100)
+    within_proj.SetRandn();
+
   
   Vector<double> global_mean(dim);
   global_mean.SetRandn();
@@ -34,7 +37,7 @@ void UnitTestPldaEstimation(int32 dim) {
   PldaStats stats;
   
   for (int32 n = 0; n < num_classes; n++) {
-    int32 num_egs = 1 + rand() % 30;
+    int32 num_egs = 1 + Rand() % 30;
     Vector<double> rand_vec(dim);
     rand_vec.SetRandn();
     Vector<double> class_mean(global_mean);
@@ -47,7 +50,7 @@ void UnitTestPldaEstimation(int32 dim) {
                          kTrans, 0.0);
     offset_mat.AddVecToRows(1.0, class_mean);
 
-    double weight = 1.0 + (0.1 * (rand() % 30));
+    double weight = 1.0 + (0.1 * (Rand() % 30));
     stats.AddSamples(weight,
                      offset_mat);
   }

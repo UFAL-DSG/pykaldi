@@ -39,8 +39,8 @@ namespace nnet1 {
 class MaxPooling2DComponent : public Component {
  public:
   MaxPooling2DComponent(int32 dim_in, int32 dim_out) 
-    : Component(dim_in, dim_out), 
-      fmap_x_len_(0), fmap_y_len_(0), pool_x_len_(0), pool_y_len_(0), pool_x_step_(0), pool_y_step_(0)
+      : Component(dim_in, dim_out), 
+        fmap_x_len_(0), fmap_y_len_(0), pool_x_len_(0), pool_y_len_(0), pool_x_step_(0), pool_y_step_(0)
   { }
   ~MaxPooling2DComponent()
   { }
@@ -120,9 +120,9 @@ class MaxPooling2DComponent : public Component {
 
   }
 
-  void PropagateFnc(const CuMatrix<BaseFloat> &in, CuMatrix<BaseFloat> *out) {
+  void PropagateFnc(const CuMatrixBase<BaseFloat> &in, CuMatrixBase<BaseFloat> *out) {
     
-        // useful dims
+    // useful dims
     int32 num_input_fmaps = input_dim_ / (fmap_x_len_ * fmap_y_len_);
     // int32 inp_fmap_size = fmap_x_len_ * fmap_y_len_;
     // int32 out_fmap_x_len = (fmap_x_len_ - pool_x_len_)/pool_x_step_ + 1;
@@ -134,24 +134,24 @@ class MaxPooling2DComponent : public Component {
     int out_fmap_cnt=0;
     for (int32 m=0; m < fmap_x_len_-pool_x_len_+1;m=m+pool_x_step_){
       for (int32 n=0; n< fmap_y_len_-pool_y_len_+1; n=n+pool_y_step_){
-	int32 st=0;
-	st=(m*fmap_y_len_+n)*num_input_fmaps;	  
-	CuSubMatrix<BaseFloat> pool(out->ColRange(out_fmap_cnt*num_input_fmaps, num_input_fmaps));
-	pool.Set(-1e20); // reset (large neg value)
-	for (int32 i=0; i< pool_x_len_; i++){
-	  for (int32 j=0; j< pool_y_len_; j++){
-	    int32 c=0;
-	    c=st+i*(num_input_fmaps*fmap_y_len_)+j*num_input_fmaps;
-	    pool.Max(in.ColRange(c, num_input_fmaps));
-	    }
-	  }
-	out_fmap_cnt++;
-	}
+        int32 st=0;
+        st=(m*fmap_y_len_+n)*num_input_fmaps;      
+        CuSubMatrix<BaseFloat> pool(out->ColRange(out_fmap_cnt*num_input_fmaps, num_input_fmaps));
+        pool.Set(-1e20); // reset (large neg value)
+        for (int32 i=0; i< pool_x_len_; i++){
+          for (int32 j=0; j< pool_y_len_; j++){
+            int32 c=0;
+            c=st+i*(num_input_fmaps*fmap_y_len_)+j*num_input_fmaps;
+            pool.Max(in.ColRange(c, num_input_fmaps));
+          }
+        }
+        out_fmap_cnt++;
       }
+    }
   }
 
-  void BackpropagateFnc(const CuMatrix<BaseFloat> &in, const CuMatrix<BaseFloat> &out,
-                        const CuMatrix<BaseFloat> &out_diff, CuMatrix<BaseFloat> *in_diff) {
+  void BackpropagateFnc(const CuMatrixBase<BaseFloat> &in, const CuMatrixBase<BaseFloat> &out,
+                        const CuMatrixBase<BaseFloat> &out_diff, CuMatrixBase<BaseFloat> *in_diff) {
 
     // useful dims
     int32 num_input_fmaps = input_dim_ / (fmap_x_len_ * fmap_y_len_);
@@ -174,42 +174,42 @@ class MaxPooling2DComponent : public Component {
     int out_fmap_cnt=0;
     for (int32 m=0; m < fmap_x_len_-pool_x_len_+1;m=m+pool_x_step_){
       for (int32 n=0; n< fmap_y_len_-pool_y_len_+1; n=n+pool_y_step_){
-    	int32 st=0;
-    	st=(m*fmap_y_len_+n)*num_input_fmaps;
+        int32 st=0;
+        st=(m*fmap_y_len_+n)*num_input_fmaps;
 
 
-    	for (int32 i=0; i< pool_x_len_; i++){
-    	  for (int32 j=0; j< pool_y_len_; j++){
-    	    int32 c=0;
-    	    c=st+i*(num_input_fmaps*fmap_y_len_)+j*num_input_fmaps;
-	    
-	    //
-	    CuSubMatrix<BaseFloat> in_p(in.ColRange(c, num_input_fmaps));
-	    CuSubMatrix<BaseFloat> out_p(out.ColRange(out_fmap_cnt*num_input_fmaps, num_input_fmaps));
-	    //
-	    
-    	    CuSubMatrix<BaseFloat> tgt(in_diff->ColRange(c, num_input_fmaps));	    
-	    CuMatrix<BaseFloat> src(out_diff.ColRange(out_fmap_cnt*num_input_fmaps, num_input_fmaps));
+        for (int32 i=0; i< pool_x_len_; i++){
+          for (int32 j=0; j< pool_y_len_; j++){
+            int32 c=0;
+            c=st+i*(num_input_fmaps*fmap_y_len_)+j*num_input_fmaps;
+        
+            //
+            CuSubMatrix<BaseFloat> in_p(in.ColRange(c, num_input_fmaps));
+            CuSubMatrix<BaseFloat> out_p(out.ColRange(out_fmap_cnt*num_input_fmaps, num_input_fmaps));
+            //
+        
+            CuSubMatrix<BaseFloat> tgt(in_diff->ColRange(c, num_input_fmaps));        
+            CuMatrix<BaseFloat> src(out_diff.ColRange(out_fmap_cnt*num_input_fmaps, num_input_fmaps));
 
-	    CuMatrix<BaseFloat> mask;
-	    in_p.EqualElementMask(out_p, &mask);
-	    src.MulElements(mask);
-	    tgt.AddMat(1.0, src, 1.0);
+            CuMatrix<BaseFloat> mask;
+            in_p.EqualElementMask(out_p, &mask);
+            src.MulElements(mask);
+            tgt.AddMat(1.0, src);
 
-    	    patch_summands[c/num_input_fmaps] += 1;
-    	    }
-    	  }
-    	out_fmap_cnt++;
-    	}
+            patch_summands[c/num_input_fmaps] += 1;
+          }
+        }
+        out_fmap_cnt++;
       }
+    }
     
     // divide diff by #summands (compensate for patches used in more pools)
     for (int i=0; i<fmap_x_len_; i++){
       for (int32 j=0; j<fmap_y_len_; j++){
-    	int32 c=i*fmap_y_len_+j;
-    	CuSubMatrix<BaseFloat> tgt(in_diff->ColRange(c*num_input_fmaps, num_input_fmaps));
-    	KALDI_ASSERT(patch_summands[c] > 0); // patch at least in one pool
-    	tgt.Scale(1.0/patch_summands[c]);
+        int32 c=i*fmap_y_len_+j;
+        CuSubMatrix<BaseFloat> tgt(in_diff->ColRange(c*num_input_fmaps, num_input_fmaps));
+        KALDI_ASSERT(patch_summands[c] > 0); // patch at least in one pool
+        tgt.Scale(1.0/patch_summands[c]);
       }
     }
 

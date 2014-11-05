@@ -5,6 +5,7 @@
 //                      Bagher BabaAli
 //                2013  Cisco Systems (author: Neha Agrawal) [code modified
 //                      from original code in ../gmmbin/gmm-rescore-lattice.cc]
+//                2014  Guoguo Chen
 
 // See ../../COPYING for clarification regarding multiple authors
 //
@@ -25,14 +26,14 @@
 #include "lat/lattice-functions.h"
 #include "hmm/transition-model.h"
 #include "util/stl-utils.h"
+#include "base/kaldi-math.h"
 
 namespace kaldi {
 using std::map;
 using std::vector;
 
 int32 LatticeStateTimes(const Lattice &lat, vector<int32> *times) {
-  kaldi::uint64 props = lat.Properties(fst::kFstProperties, false);
-  if (!(props & fst::kTopSorted))
+  if (!lat.Properties(fst::kTopSorted, true))
     KALDI_ERR << "Input lattice must be topologically sorted.";
   KALDI_ASSERT(lat.Start() == 0);
   int32 num_states = lat.NumStates();
@@ -65,8 +66,7 @@ int32 LatticeStateTimes(const Lattice &lat, vector<int32> *times) {
 }
 
 int32 CompactLatticeStateTimes(const CompactLattice &lat, vector<int32> *times) {
-  kaldi::uint64 props = lat.Properties(fst::kFstProperties, false);
-  if (!(props & fst::kTopSorted))
+  if (!lat.Properties(fst::kTopSorted, true))
     KALDI_ERR << "Input lattice must be topologically sorted.";
   KALDI_ASSERT(lat.Start() == 0);
   int32 num_states = lat.NumStates();
@@ -111,19 +111,20 @@ bool PruneLattice(BaseFloat beam, LatType *lat) {
   typedef typename Arc::StateId StateId;
   
   KALDI_ASSERT(beam > 0.0);
-  kaldi::uint64 props = lat->Properties(fst::kFstProperties, false);
-  if (!(props & fst::kTopSorted)) {
+  if (!lat->Properties(fst::kTopSorted, true)) {
     if (fst::TopSort(lat) == false) {
       KALDI_WARN << "Cycles detected in lattice";
       return false;
     }
   }
-  KALDI_ASSERT(lat->Start() == 0); // since top sorted.
+  // We assume states before "start" are not reachable, since
+  // the lattice is topologically sorted.
+  int32 start = lat->Start();
   int32 num_states = lat->NumStates();
   if (num_states == 0) return false;
   std::vector<double> forward_cost(num_states,
                                    std::numeric_limits<double>::infinity()); // viterbi forward.
-  forward_cost[0] = 0.0; // lattice can't have cycles so couldn't be
+  forward_cost[start] = 0.0; // lattice can't have cycles so couldn't be
   // less than this.
   double best_final_cost = std::numeric_limits<double>::infinity();
   // Update the forward probs.
@@ -604,8 +605,11 @@ bool LatticeBoost(const TransitionModel &trans,
                   BaseFloat b,
                   BaseFloat max_silence_error,
                   Lattice *lat) {
-
   TopSortLatticeIfNeeded(lat);
+
+  // get all stored properties (test==false means don't test if not known).
+  uint64 props = lat->Properties(fst::kFstProperties,
+                                 false);
   
   KALDI_ASSERT(IsSortedAndUniq(silence_phones));
   KALDI_ASSERT(max_silence_error >= 0.0 && max_silence_error <= 1.0);
@@ -643,6 +647,12 @@ bool LatticeBoost(const TransitionModel &trans,
       }
     }
   }
+  // All we changed is the weights, so any properties that were
+  // known before, are still known, except for whether or not the
+  // lattice was weighted.
+  lat->SetProperties(props,
+                     ~(fst::kWeighted|fst::kUnweighted));
+      
   return true;
 }
 
@@ -713,7 +723,8 @@ BaseFloat LatticeForwardBackwardMpeVariants(
   }
   // First Pass Forward-Backward Check
   double tot_backward_prob = beta[0];
-  if (!ApproxEqual(tot_forward_prob, tot_backward_prob, 1e-8)) {
+  // may loose the condition somehow here 1e-6 (was 1e-8)
+  if (!ApproxEqual(tot_forward_prob, tot_backward_prob, 1e-6)) {
     KALDI_ERR << "Total forward probability over lattice = " << tot_forward_prob
               << ", while total backward probability = " << tot_backward_prob;
   }
@@ -987,8 +998,7 @@ bool RescoreCompactLatticeInternal(
     KALDI_WARN << "Rescoring empty lattice";
     return false;
   }
-  uint64 props = clat->Properties(fst::kFstProperties, false);
-  if (!(props & fst::kTopSorted)) {
+  if (!clat->Properties(fst::kTopSorted, true)) {
     if (fst::TopSort(clat) == false) {
       KALDI_WARN << "Cycles detected in lattice.";
       return false;
@@ -1036,9 +1046,9 @@ bool RescoreCompactLatticeInternal(
   }
 
   for (int32 t = 0; t < utt_len; t++) {
-    if ((t < utt_len - 1) == decodable->IsLastFrame(t)) {
-      // this if-statement compares two boolean values.
-      KALDI_WARN << "Mismatch in lattice and feature length";
+    if ((t < utt_len - 1) && decodable->IsLastFrame(t)) {
+      KALDI_WARN << "Features are too short for lattice: utt-len is "
+                 << utt_len << ", " << t << " is last frame";
       return false;
     }
     // frame_scale is the scale we put on the computed acoustic probs for this
@@ -1128,8 +1138,7 @@ bool RescoreLattice(DecodableInterface *decodable,
     KALDI_WARN << "Rescoring empty lattice";
     return false;
   }
-  uint64 props = lat->Properties(fst::kFstProperties, false);
-  if (!(props & fst::kTopSorted)) {
+  if (!lat->Properties(fst::kTopSorted, true)) {  
     if (fst::TopSort(lat) == false) {
       KALDI_WARN << "Cycles detected in lattice.";
       return false;
@@ -1144,16 +1153,16 @@ bool RescoreLattice(DecodableInterface *decodable,
   KALDI_ASSERT(num_states == state_times.size());
   for (size_t state = 0; state < num_states; state++) {
     int32 t = state_times[state];
-    KALDI_ASSERT(t >= 0 && t <= utt_len);
-    if (t < utt_len)
+    // Don't check t >= 0 because non-accessible states could have t = -1.
+    KALDI_ASSERT(t <= utt_len);  
+    if (t >= 0 && t < utt_len)
       time_to_state[t].push_back(state);
   }
 
-
   for (int32 t = 0; t < utt_len; t++) {
-    if ((t < utt_len - 1) == decodable->IsLastFrame(t)) {
-      // this if-statement compares two boolean values.
-      KALDI_WARN << "Mismatch in lattice and feature length";
+    if ((t < utt_len - 1) && decodable->IsLastFrame(t)) {
+      KALDI_WARN << "Features are too short for lattice: utt-len is "
+                 << utt_len << ", " << t << " is last frame";
       return false;
     }
     for (size_t i = 0; i < time_to_state[t].size(); i++) {
@@ -1214,5 +1223,193 @@ BaseFloat LatticeForwardBackwardMmi(
   return ans;
 }
 
+
+int32 LongestSentenceLength(const Lattice &lat) {
+  typedef Lattice::Arc Arc;
+  typedef Arc::Label Label;
+  typedef Arc::StateId StateId;
+  
+  if (lat.Properties(fst::kTopSorted, true) == 0) {
+    Lattice lat_copy(lat);
+    if (!TopSort(&lat_copy))
+      KALDI_ERR << "Was not able to topologically sort lattice (cycles found?)";
+    return LongestSentenceLength(lat_copy);
+  }
+  std::vector<int32> max_length(lat.NumStates(), 0);
+  int32 lattice_max_length = 0;
+  for (StateId s = 0; s < lat.NumStates(); s++) {
+    int32 this_max_length = max_length[s];
+    for (fst::ArcIterator<Lattice> aiter(lat, s); !aiter.Done(); aiter.Next()) {
+      const Arc &arc = aiter.Value();
+      bool arc_has_word = (arc.olabel != 0);
+      StateId nextstate = arc.nextstate;
+      KALDI_ASSERT(static_cast<size_t>(nextstate) < max_length.size());
+      if (arc_has_word) {
+        // A lattice should ideally not have cycles anyway; a cycle with a word
+        // on is something very bad.
+        KALDI_ASSERT(nextstate > s && "Lattice has cycles with words on.");
+        max_length[nextstate] = std::max(max_length[nextstate],
+                                         this_max_length + 1);
+      } else {
+        max_length[nextstate] = std::max(max_length[nextstate],
+                                         this_max_length);
+      }
+    }
+    if (lat.Final(s) != LatticeWeight::Zero())
+      lattice_max_length = std::max(lattice_max_length, max_length[s]);
+  }
+  return lattice_max_length;
+}
+
+int32 LongestSentenceLength(const CompactLattice &clat) {
+  typedef CompactLattice::Arc Arc;
+  typedef Arc::Label Label;
+  typedef Arc::StateId StateId;
+  
+  if (clat.Properties(fst::kTopSorted, true) == 0) {
+    CompactLattice clat_copy(clat);
+    if (!TopSort(&clat_copy))
+      KALDI_ERR << "Was not able to topologically sort lattice (cycles found?)";
+    return LongestSentenceLength(clat_copy);
+  }
+  std::vector<int32> max_length(clat.NumStates(), 0);
+  int32 lattice_max_length = 0;
+  for (StateId s = 0; s < clat.NumStates(); s++) {
+    int32 this_max_length = max_length[s];
+    for (fst::ArcIterator<CompactLattice> aiter(clat, s);
+         !aiter.Done(); aiter.Next()) {
+      const Arc &arc = aiter.Value();
+      bool arc_has_word = (arc.ilabel != 0); // note: olabel == ilabel.
+      // also note: for normal CompactLattice, e.g. as produced by
+      // determinization, all arcs will have nonzero labels, but the user might
+      // decide to remplace some of the labels with zero for some reason, and we
+      // want to support this.
+      StateId nextstate = arc.nextstate;
+      KALDI_ASSERT(static_cast<size_t>(nextstate) < max_length.size());
+      KALDI_ASSERT(nextstate > s && "CompactLattice has cycles");
+      if (arc_has_word)
+        max_length[nextstate] = std::max(max_length[nextstate],
+                                         this_max_length + 1);
+      else
+        max_length[nextstate] = std::max(max_length[nextstate],
+                                         this_max_length);
+    }
+    if (clat.Final(s) != CompactLatticeWeight::Zero())
+      lattice_max_length = std::max(lattice_max_length, max_length[s]);
+  }
+  return lattice_max_length;
+}
+
+void ComposeCompactLatticeDeterministic(
+    const CompactLattice& clat,
+    fst::DeterministicOnDemandFst<fst::StdArc>* det_fst,
+    CompactLattice* composed_clat) {
+  // StdFst::Arc and CompactLatticeArc has the same StateId type.
+  typedef fst::StdArc::StateId StateId;
+  typedef fst::StdArc::Weight Weight1;
+  typedef CompactLatticeArc::Weight Weight2;
+  typedef std::pair<StateId, StateId> StatePair;
+  typedef unordered_map<StatePair, StateId, PairHasher<StateId> > MapType;
+  typedef MapType::iterator IterType;
+
+  // Empties the output FST.
+  KALDI_ASSERT(composed_clat != NULL);
+  composed_clat->DeleteStates();
+
+  MapType state_map;
+  std::queue<StatePair> state_queue;
+
+  // Sets start state in <composed_clat>.
+  StateId start_state = composed_clat->AddState();
+  StatePair start_pair(clat.Start(), det_fst->Start());
+  composed_clat->SetStart(start_state);
+  state_queue.push(start_pair);
+  std::pair<IterType, bool> result =
+      state_map.insert(std::make_pair(start_pair, start_state));
+  KALDI_ASSERT(result.second == true);
+
+  // Starts composition here.
+  while (!state_queue.empty()) {
+    // Gets the first state in the queue.
+    StatePair s = state_queue.front();
+    StateId s1 = s.first;
+    StateId s2 = s.second;
+    state_queue.pop();
+
+    // If the product of the final weights of the two states is not zero, then
+    // we should create final state in fst_composed. We compute the product
+    // manually since this is more efficient.
+    Weight2 final_weight(LatticeWeight(clat.Final(s1).Weight().Value1() +
+                                       det_fst->Final(s2).Value(),
+                                       clat.Final(s1).Weight().Value2()),
+                         clat.Final(s1).String());
+    if (final_weight != Weight2::Zero()) {
+      KALDI_ASSERT(state_map.find(s) != state_map.end());
+      composed_clat->SetFinal(state_map[s], final_weight);
+    }
+
+    // Loops over pair of edges at s1 and s2.
+    for (fst::ArcIterator<CompactLattice> aiter(clat, s1);
+         !aiter.Done(); aiter.Next()) {
+      const CompactLatticeArc& arc1 = aiter.Value();
+      fst::StdArc arc2;
+      StateId next_state1 = arc1.nextstate, next_state2;
+      bool matched = false;
+
+      if (arc1.olabel == 0) {
+        // If the symbol on <arc1> is <epsilon>, we transit to the next state
+        // for <clat>, but keep <det_fst> at the current state.
+        matched = true;
+        next_state2 = s2;
+      } else {
+        // Otherwise try to find the matched arc in <det_fst>.
+        matched = det_fst->GetArc(s2, arc1.olabel, &arc2);
+        if (matched) {
+          next_state2 = arc2.nextstate;
+        }
+      }
+
+      // If matched arc is found in <det_fst>, then we have to add new arcs to
+      // <composed_clat>.
+      if (matched) {
+        StatePair next_state_pair(next_state1, next_state2);
+        IterType siter = state_map.find(next_state_pair);
+        StateId next_state;
+
+        // Adds composed state to <state_map>.
+        if (siter == state_map.end()) {
+          // If the composed state has not been created yet, create it.
+          next_state = composed_clat->AddState();
+          std::pair<const StatePair, StateId> next_state_map(next_state_pair,
+                                                             next_state);
+          std::pair<IterType, bool> result = state_map.insert(next_state_map);
+          KALDI_ASSERT(result.second);
+          state_queue.push(next_state_pair);
+        } else {
+          // If the combposed state is already in <state_map>, we can directly
+          // use that.
+          next_state = siter->second;
+        }
+
+        // Adds arc to <composed_clat>.
+        if (arc1.olabel == 0) {
+          composed_clat->AddArc(state_map[s],
+                                CompactLatticeArc(0, 0,
+                                                  arc1.weight, next_state));
+        } else {
+          Weight2 composed_weight(
+              LatticeWeight(arc1.weight.Weight().Value1() +
+                            arc2.weight.Value(),
+                            arc1.weight.Weight().Value2()),
+              arc1.weight.String());
+          composed_clat->AddArc(state_map[s],
+                                CompactLatticeArc(arc1.ilabel, arc1.olabel,
+                                                  composed_weight, next_state));
+        }
+      }
+    }
+  }
+  fst::Connect(composed_clat);
+}
 
 }  // namespace kaldi

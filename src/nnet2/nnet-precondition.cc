@@ -45,7 +45,7 @@ void PreconditionDirections(const CuMatrixBase<BaseFloat> &R,
     // G += 1.0/(N-1) * R^T R.
     G.SymAddMat2(1.0 / (N-1), R, kTrans, 1.0);
     G.CopyLowerToUpper();
-    if (GetVerboseLevel() >= 5 && rand() % 20 == 0) {
+    if (GetVerboseLevel() >= 5 && Rand() % 20 == 0) {
       CuSpMatrix<BaseFloat> tmp(G, kTakeLower);
       SpMatrix<BaseFloat> G_cpu(tmp);
       G_cpu.PrintEigs("G");
@@ -58,7 +58,7 @@ void PreconditionDirections(const CuMatrixBase<BaseFloat> &R,
     // Through a lot of rearrangements, it turns out that
     // if we let  S = (\lambda I + 1/(N-1) R R^T)^{-1}
     // then what we need is
-    // Q <-- R S.
+    // Q <-- S R.
     // It is curious and (to me) unexpected that the actual code is basically
     // the same when transposed.
     CuMatrix<BaseFloat> S(N, N);
@@ -69,7 +69,7 @@ void PreconditionDirections(const CuMatrixBase<BaseFloat> &R,
     S.SymAddMat2(1.0 / (N-1), R, kNoTrans, 1.0);
     S.CopyLowerToUpper();
     // invert S, so now S = (\lambda I + (N-1) R R^T)^{-1}.
-    if (GetVerboseLevel() >= 5 && rand() % 20 == 0) {
+    if (GetVerboseLevel() >= 5 && Rand() % 20 == 0) {
       CuSpMatrix<BaseFloat> tmp(S, kTakeLower);
       SpMatrix<BaseFloat> S_cpu(tmp);
       S_cpu.PrintEigs("S");
@@ -290,11 +290,6 @@ We can get it from the previous minibatch.
    [we can check that for each i, p_n^T r_n >= 0].
    The following computation obtains P:
 
-   C <-- 3/4.  # C is a constant that determines when to use the Morrison-Woodbury formula
-               # or to do direct inversion.  It needs to be tuned empirically based on speed,
-               # if we plan to use minibatch sizes about equal to the dimension of
-               # the hidden layers.
-   
    \lambda <-- (\alpha/N) \trace(R R^T).   # 0 < \alpha <= 1 is a global constant, e.g.
                                            # \alpha = 0.1, but should try different
                                            # values, this will be important (note: if the
@@ -302,14 +297,15 @@ We can get it from the previous minibatch.
                                            # then we can let \alpha be quite small, e.g.
                                            # 0.001.
 
-   if N >= C D, then
+   if N >= D, then
      # compute G by direct inversion.
      G <-- (\lambda I  +  1/(N-1) R^T R)^{-1}
      Q <-- R G.
    else   # number of samples is less than dimension, use
           # morrison-Woodbury formula, it's more efficient.
-      # We'd first compute
+      # We'd first compute:
       # L <-- ((N-1) I + 1/\lambda R R^T)
+      # (note: L is something that appears in the morrison-Woodbury expansion of G)
       # M <-- L^{-1}
       # Note: G is  1/\lambda I  -  (1/\lambda^2) R^T M R
       # We're doing Q <-- R G, which is:
@@ -318,7 +314,7 @@ We can get it from the previous minibatch.
       # by something, i.e. bracket as:
       # Q <-- 1/\lambda R - (1/\lambda^2) (R R^T M) R
       # so let's write it as
-      # Q <-- G S, with
+      # Q <-- S R, with
       # S = 1/\lambda I - 1/\lambda^2 R R^T M
       #   = 1/\lambda (I - 1/\lambda R R^T M)
       # Now, -1/\lambda R R^T = (N-1) I - L, and L M = I, so
@@ -331,12 +327,8 @@ We can get it from the previous minibatch.
       # S = (\lambda I + 1/(N-1) R R^T)^{-1}. 
 
       S <-- (\lambda I + 1/(N-1) R R^T)^{-1}.
-      Q <- R S
+      Q <-- S R
    fi
-
-   Let
-
-
 
    Here, we're right multiplying each row r_n of r by the symmetric matrix G, to get
    the corresponding row q_n of q.  Note: in practice Q will be the same memory as P.

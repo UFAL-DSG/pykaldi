@@ -172,16 +172,18 @@ void WaveData::Read(std::istream &is) {
   Read4ByteTag(is, next_chunk_name);
   riff_chunk_read += 4;
 
-  if (!strncmp(next_chunk_name, "fact", 4)) {
-    // will just ignore the "fact" chunk.  for non-compressed data
-    // (which we don't support anyway), it doesn't contain useful information.
+  // Skip any subchunks between "fmt" and "data".  Usually there will
+  // be a single "fact" subchunk, but on Windows there can also be a
+  // "list" subchunk.
+  while (strncmp(next_chunk_name, "data", 4) != 0) {
+    // We will just ignore the data in these chunks.  
     uint32 chunk_sz = ReadUint32(is, swap);
-    if (chunk_sz != 4)
+    if (chunk_sz != 4 && strncmp(next_chunk_name, "fact", 4) == 0)
       KALDI_WARN << "Expected fact chunk to be 4 bytes long.";
     for (uint32 i = 0; i < chunk_sz; i++)
       is.get();
     riff_chunk_read += 4 + chunk_sz;  // for chunk_sz (4) + chunk contents (chunk-sz)
-
+    
     // Now read the next chunk name.
     Read4ByteTag(is, next_chunk_name);
     riff_chunk_read += 4;
@@ -193,24 +195,53 @@ void WaveData::Read(std::istream &is) {
 
   uint32 data_chunk_size = ReadUint32(is, swap);
   riff_chunk_read += 4;
-  std::vector<char> chunk_data_vec(data_chunk_size);
+
+  if (riff_chunk_read + data_chunk_size != riff_chunk_size) {
+    KALDI_ERR << "Expected " << riff_chunk_size << " bytes in RIFF chunk, but "
+              << "after first data block there will be " << riff_chunk_read
+              << " + " << data_chunk_size << " bytes "
+              << "(we do not support reading multiple data chunks).";
+  }
+
+  std::vector<char*> data_pointer_vec;
+  std::vector<int> data_size_vec;
+  uint32 num_bytes_read = 0;
+  for (int32 remain_chunk_size = data_chunk_size; remain_chunk_size > 0;
+       remain_chunk_size -= kBlockSize) {
+    int32 this_block_size = remain_chunk_size;
+    if (kBlockSize < remain_chunk_size)
+      this_block_size = kBlockSize;
+    char *block_data_vec = new char[this_block_size];
+    is.read(block_data_vec, this_block_size);
+    num_bytes_read += is.gcount();
+    data_size_vec.push_back(is.gcount());
+    data_pointer_vec.push_back(block_data_vec);
+    if (num_bytes_read < this_block_size)
+      break;
+  }
+
+  std::vector<char> chunk_data_vec(num_bytes_read);
+  uint32 data_address = 0;
+  for (int i = 0; i < data_pointer_vec.size(); i++) {
+    memcpy(&(chunk_data_vec[data_address]), data_pointer_vec[i],
+           data_size_vec[i]);
+    delete[] data_pointer_vec[i];
+    data_address += data_size_vec[i];
+  }
+
   char *data_ptr = &(chunk_data_vec[0]);
-  is.read(data_ptr, data_chunk_size);
-  riff_chunk_read += data_chunk_size;
-
-  if (riff_chunk_read != riff_chunk_size)
-    KALDI_WARN << "Expected " << riff_chunk_size << " bytes in RIFF chunk, but got "
-               << riff_chunk_read << " (do not support reading multiple data chunks).";
-  if (is.fail())
-    KALDI_ERR << "WaveData: failed to read data chunk.";
-
-  if (data_chunk_size % block_align != 0)
-    KALDI_ERR << "WaveData: data chunk size has unexpected length "
-              << data_chunk_size << "; block-align = " << block_align;
+  if (num_bytes_read == 0 && num_bytes_read != data_chunk_size) {
+    KALDI_ERR << "WaveData: failed to read data chunk (read no bytes)";
+  } else if (num_bytes_read != data_chunk_size) {
+    KALDI_ASSERT(num_bytes_read < data_chunk_size);
+    KALDI_WARN << "Read fewer bytes than specified in the header: "
+               << num_bytes_read << " < " << data_chunk_size;    
+  }
+  
   if (data_chunk_size == 0)
     KALDI_ERR << "WaveData: empty file (no data)";
-
-  uint32 num_samp = data_chunk_size / block_align;
+  
+  uint32 num_samp = num_bytes_read / block_align;
   data_.Resize(num_channels, num_samp);
   for (uint32 i = 0; i < num_samp; i++) {
     for (uint32 j = 0; j < num_channels; j++) {

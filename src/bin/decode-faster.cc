@@ -26,7 +26,7 @@
 #include "fstext/fstext-lib.h"
 #include "decoder/faster-decoder.h"
 #include "decoder/decodable-matrix.h"
-#include "util/timer.h"
+#include "base/timer.h"
 #include "lat/kaldi-lattice.h" // for {Compact}LatticeArc
 
 int main(int argc, char *argv[]) {
@@ -38,8 +38,10 @@ int main(int argc, char *argv[]) {
     using fst::StdArc;
 
     const char *usage =
-        "Decode, reading log-likelihoods (of transition-ids or whatever symbol is on the graph) as matrices\n"
-        "Usage:   decode-faster [options] fst-in loglikes-rspecifier words-wspecifier [alignments-wspecifier]\n";
+        "Decode, reading log-likelihoods (of transition-ids or whatever symbol is on the graph)\n"
+        "as matrices.  Note: you'll usually want decode-faster-mapped rather than this program.\n"
+        "\n"
+        "Usage:   decode-faster [options] <fst-in> <loglikes-rspecifier> <words-wspecifier> [<alignments-wspecifier>]\n";
     ParseOptions po(usage);
     bool binary = true;
     BaseFloat acoustic_scale = 0.1;

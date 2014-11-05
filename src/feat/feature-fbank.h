@@ -42,7 +42,7 @@ struct FbankOptions {
   bool raw_energy;  // If true, compute energy before preemphasis and windowing
   bool htk_compat;  // If true, put energy last (if using energy)
   bool use_log_fbank;  // if true (default), produce log-filterbank, else linear
-
+  
   FbankOptions(): mel_opts(23),
                  // defaults the #mel-banks to 23 for the FBANK computations.
                  // this seems to be common for 16khz-sampled data,
@@ -73,21 +73,43 @@ struct FbankOptions {
 class MelBanks;
 
 
-/// Class for computing FBANK features; see \ref feat_mfcc for more information.
+/// Class for computing mel-filterbank features; see \ref feat_mfcc for more
+/// information.
 class Fbank {
  public:
   explicit Fbank(const FbankOptions &opts);
   ~Fbank();
 
-  /// Will throw exception on failure (e.g. if file too short for
-  /// even one frame).
+  int32 Dim() const { return opts_.mel_opts.num_bins; }
+
+  /// Will throw exception on failure (e.g. if file too short for even one
+  /// frame).  The output "wave_remainder" is the last frame or two of the
+  /// waveform that it would be necessary to include in the next call to Compute
+  /// for the same utterance.  It is not exactly the un-processed part (it may
+  /// have been partly processed), it's the start of the next window that we
+  /// have not already processed.
   void Compute(const VectorBase<BaseFloat> &wave,
                BaseFloat vtln_warp,
                Matrix<BaseFloat> *output,
                Vector<BaseFloat> *wave_remainder = NULL);
-
+  
+  /// Const version of Compute()
+  void Compute(const VectorBase<BaseFloat> &wave,
+               BaseFloat vtln_warp,
+               Matrix<BaseFloat> *output,
+               Vector<BaseFloat> *wave_remainder = NULL) const;
+  typedef FbankOptions Options;
  private:
+  void ComputeInternal(const VectorBase<BaseFloat> &wave,
+                       const MelBanks &mel_banks,
+                       Matrix<BaseFloat> *output,
+                       Vector<BaseFloat> *wave_remainder = NULL) const;
+  
   const MelBanks *GetMelBanks(BaseFloat vtln_warp);
+
+  const MelBanks *GetMelBanks(BaseFloat vtln_warp,
+                              bool *must_delete) const;
+
   FbankOptions opts_;
   BaseFloat log_energy_floor_;
   std::map<BaseFloat, MelBanks*> mel_banks_;  // BaseFloat is VTLN coefficient.

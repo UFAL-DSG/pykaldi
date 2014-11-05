@@ -20,12 +20,20 @@
 // See the Apache 2 License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
 #include <cmath>
+#include <vector>
 
-#include "util/timer.h"
+
+#ifndef KALDI_NO_PORTAUDIO
+#include "base/timer.h"
+#endif //KALDI_NO_PORTAUDIO
+
 #include "online-audio-source.h"
 
 namespace kaldi {
+
+#ifndef KALDI_NO_PORTAUDIO
 
 // The actual PortAudio callback - delegates to OnlinePaSource->PaCallback()
 int PaCallback(const void *input, void *output,
@@ -115,8 +123,8 @@ bool OnlinePaSource::Read(Vector<BaseFloat> *data) {
     }
     Pa_Sleep(2);
   }
-  int16 buf[nsamples_req];
-  rbs_t nsamples_rcv = PaUtil_ReadRingBuffer(&pa_ringbuf_, buf, nsamples_req);
+  std::vector<int16> buf(nsamples_req);
+  rbs_t nsamples_rcv = PaUtil_ReadRingBuffer(&pa_ringbuf_, buf.data(), nsamples_req);
   if (nsamples_rcv != nsamples_req) {
     KALDI_WARN << "Requested: " << nsamples_req
                << "; Received: " << nsamples_rcv << " samples";
@@ -147,6 +155,7 @@ int OnlinePaSource::Callback(const void *input, void *output,
   return paContinue;
 }
 
+#endif //KALDI_NO_PORTAUDIO
 
 bool OnlineVectorSource::Read(Vector<BaseFloat> *data) {
   KALDI_ASSERT(data->Dim() > 0);

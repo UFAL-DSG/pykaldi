@@ -1,4 +1,4 @@
-// doc/decoders.dox
+// doc/online_programs.dox
 
 
 // Copyright 2013 Polish-Japanese Institute of Information Technology (author: Danijel Korzinek)
@@ -25,6 +25,8 @@ namespace kaldi {
 
 \page online_programs Online Recognizers
 
+Warning, this page is deprecated as it refers to the older online-decoding setup.
+The page for the new setup is \ref online_decoding.
 
 There are several programs in the Kaldi toolkit that can be used for online recognition. 
 They are located in the src/onlinebin folder and require the files from
@@ -51,15 +53,26 @@ recognized word as output. The plugin is based on  \ref OnlineFasterDecoder, as 
 
 \section audio_server Online Audio Server
 
-The main difference between the online-server-gmm-decode-faster and online-audio-server-decode-faster programs is the input: the former accepts feature vectors, while the latter accepts RAW audio.
-The advantage of the latter is that it can be deployed directly as a back-end for any client: whether it is another computer on the Internet or a mobile device. 
-Main thing here is that the client doesn't need to know anything about the feature set used to train the models and provided it can record standard audio at the predetermined sampling
-frequency and bit-depth, it will always be compatible with the server. An advantage of the server that accepts feature vectors, instead of audio, is a lower cost of data transfer between
-the client and the server, but this can be easily outperformed by simply using a state-of-the-art codec for audio (which is something that may be done in the future).
+The main difference between the online-server-gmm-decode-faster and
+online-audio-server-decode-faster programs is the input: the former accepts
+feature vectors, while the latter accepts RAW audio.  The advantage of the
+latter is that it can be deployed directly as a back-end for any client: whether
+it is another computer on the Internet or a mobile device.  Main thing here is
+that the client doesn't need to know anything about the feature set used to
+train the models and provided it can record standard audio at the predetermined
+sampling frequency and bit-depth, it will always be compatible with the
+server. An advantage of the server that accepts feature vectors, instead of
+audio, is a lower cost of data transfer between the client and the server, but
+this can be easily outperformed by simply using a state-of-the-art codec for
+audio (which is something that may be done in the future).
 
-The communication between the online-audio-client and online-audio-server-decode-faster consists of two phases: first the client sends packets of raw audio to the server, second the server
-replies with the output of the recognition. The two phases may happen asynchronously, meaning that the decoder can output results online, as fast as it is certain of their outcome and not
-wait for the end of the data to arrive. This opens up more possibilities for creating applications in the future.
+The communication between the online-audio-client and
+online-audio-server-decode-faster consists of two phases: first the client sends
+packets of raw audio to the server, second the server replies with the output of
+the recognition. The two phases may happen asynchronously, meaning that the
+decoder can output results online, as fast as it is certain of their outcome and
+not wait for the end of the data to arrive. This opens up more possibilities for
+creating applications in the future.
 
 \subsection audio_data Audio Data
 
@@ -69,19 +82,26 @@ and even (because of 16-bit sampling). The last packet of size 0 is treated as t
 
 \subsection results Recognition Results
 
-The results are sent by the server as soon as they are recognized. Each result packet is prepended by a header starting with the characters "RESULT:".  Following that is a comma separated
-list of key=value parameters containing some useful information:
+ There are two types of packets sent by the server. Time-aligned results and partial results. Partial results are sent as fast as the decoder recognizes each word and time-alignment is performed
+every time the decoder recognizes the end of an utterance (which may or may not correspond to silences and/or sentance boundaries).
+
+ Each partial result packet is prepended by the characters "PARTIAL:" follwed by exactly one word. Each word is sent in a different partial packet.
+
+ Time-aligned results are prepended by a header starting with the characters "RESULT:".  Following that is a comma separated list of key=value parameters containing some useful information:
   - NUM - number of words to follow
-  - FORMAT - the format of the result to follow; currently only WSE (word-start-end), but it will allow modification in the future
+  - FORMAT - the format of the result to follow; currently only WSEC (word-start-end-confidence), but it will allow modification in the future
   - RECO-DUR - time it took to recognize the sequence (as a floating point value in seconds)
   - INPUT-DUR - length of the input audio sequence (as a floating point value in seconds)
-  
+
+ You can divide INPUT-DUR by RECO-DUR to get real-time recognition speed of the decoder.  
+
  The header "RESULT:DONE" is sent when there are no more results that can be returned by the server. In this case, the server simply waits for either more data by the client, or for a disconnect.
   
  The data underneath the header consists of exactly NUM lines of words formatted in the way determined by the FORMAT parameter. In the case of WSE format, this is simply a comma separated list
- containing 3 tokens: the word (as present in the dictionary), start time and end time (as floating point values in seconds). Beware that the words are going to be encoded exactly as they are
- in the dictionary provided to the server and therefore, the client must make sure to perform the appropriate character conversion if necessary. The online-audio-client, for example, doesn't
- perform any character conversion while generating WebVTT files (which require UTF8), so you need to convert the resulting files to UTF8 using iconv (or a similar program).
+containing 4 tokens: the word (as present in the dictionary), start time and end time (as floating point values in seconds). Beware that the words 
+are going to be encoded exactly as they are in the dictionary provided to the server and therefore, the client must make sure to perform the appropriate character conversion if necessary. The 
+online-audio-client, for example, doesn't perform any character conversion while generating WebVTT files (which require UTF8), so you need to convert the resulting files to UTF8 using iconv (or 
+a similar program).
  
  An example of the results of the server is as follows:
  \verbatim
@@ -97,7 +117,7 @@ list of key=value parameters containing some useful information:
 Command line to start the server:
 \verbatim
 online-audio-server-decode-faster --verbose=1 --rt-min=0.5 --rt-max=3.0 --max-active=6000 --beam=72.0 --acoustic-scale=0.0769 
-final.mdl graph/HCLG.fst graph/words.txt '1:2:3:4:5' 5010 graph/word_boundary_phones.txt final.mat
+final.mdl graph/HCLG.fst graph/words.txt '1:2:3:4:5' graph/word_boundary.int 5010 final.mat
 \endverbatim
 
 Arguments are as follow:
@@ -106,7 +126,7 @@ Arguments are as follow:
   - words.txt - word dictionary (mapping word ids to their textual representation)
   - '1:2:3:4:5' - list of silence phoneme ids
   - 5010 - port the server is listening on
-  - word_boundary_phones.txt - a list of phoneme boundary information mapping phoneme ids to words: nonword,begin,end,internal,singleton
+  - word_boundary.int - a list of phoneme boundary information required for word alignemnt
   - final.mat - feature LDA matrix
   
  Command line to start the client:

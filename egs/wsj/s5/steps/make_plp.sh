@@ -18,7 +18,8 @@ if [ -f path.sh ]; then . ./path.sh; fi
 . parse_options.sh || exit 1;
 
 if [ $# != 3 ]; then
-   echo "usage: make_plp.sh [options] <data-dir> <log-dir> <path-to-plpdir>";
+   echo "Usage: $0 [options] <data-dir> <log-dir> <path-to-plpdir>";
+   echo "e.g.: $0 data/train exp/make_plp/train plp"
    echo "options: "
    echo "  --plp-config <config-file>                      # config passed to compute-plp-feats "
    echo "  --nj <nj>                                        # number of parallel jobs"
@@ -40,6 +41,12 @@ name=`basename $data`
 mkdir -p $plpdir || exit 1;
 mkdir -p $logdir || exit 1;
 
+if [ -f $data/feats.scp ]; then
+  mkdir -p $data/.backup
+  echo "$0: moving $data/feats.scp to $data/.backup"
+  mv $data/feats.scp $data/.backup
+fi
+
 scp=$data/wav.scp
 
 required="$scp $plp_config"
@@ -52,15 +59,24 @@ for f in $required; do
 done
 utils/validate_data_dir.sh --no-text --no-feats $data || exit 1;
 
-# note: in general, the double-parenthesis construct in bash "((" is "C-style
-# syntax" where we can get rid of the $ for variable names, and omit spaces.
-# The "for" loop in this style is a special construct.
+if [ -f $data/spk2warp ]; then
+  echo "$0 [info]: using VTLN warp factors from $data/spk2warp"
+  vtln_opts="--vtln-map=ark:$data/spk2warp --utt2spk=ark:$data/utt2spk"
+elif [ -f $data/utt2warp ]; then
+  echo "$0 [info]: using VTLN warp factors from $data/utt2warp"
+  vtln_opts="--vtln-map=ark:$data/utt2warp"
+fi
 
+for n in $(seq $nj); do
+  # the next command does nothing unless $plpdir/storage/ exists, see
+  # utils/create_data_link.pl for more info.
+  utils/create_data_link.pl $plpdir/raw_plp_$name.$n.ark  
+done
 
 if [ -f $data/segments ]; then
   echo "$0 [info]: segments file exists: using that."
   split_segments=""
-  for ((n=1; n<=nj; n++)); do
+  for n in $(seq $nj); do
     split_segments="$split_segments $logdir/segments.$n"
   done
 
@@ -68,8 +84,8 @@ if [ -f $data/segments ]; then
   rm $logdir/.error 2>/dev/null
 
   $cmd JOB=1:$nj $logdir/make_plp_${name}.JOB.log \
-    extract-segments scp:$scp $logdir/segments.JOB ark:- \| \
-    compute-plp-feats --verbose=2 --config=$plp_config ark:- ark:- \| \
+    extract-segments scp,p:$scp $logdir/segments.JOB ark:- \| \
+    compute-plp-feats $vtln_opts --verbose=2 --config=$plp_config ark:- ark:- \| \
     copy-feats --compress=$compress ark:- \
       ark,scp:$plpdir/raw_plp_$name.JOB.ark,$plpdir/raw_plp_$name.JOB.scp \
      || exit 1;
@@ -77,14 +93,14 @@ if [ -f $data/segments ]; then
 else
   echo "$0: [info]: no segments file exists: assuming wav.scp indexed by utterance."
   split_scps=""
-  for ((n=1; n<=nj; n++)); do
-    split_scps="$split_scps $logdir/wav.$n.scp"
+  for n in $(seq $nj); do
+    split_scps="$split_scps $logdir/wav_${name}.$n.scp"
   done
 
   utils/split_scp.pl $scp $split_scps || exit 1;
  
   $cmd JOB=1:$nj $logdir/make_plp_${name}.JOB.log \
-    compute-plp-feats  --verbose=2 --config=$plp_config scp:$logdir/wav.JOB.scp ark:- \| \
+    compute-plp-feats  $vtln_opts --verbose=2 --config=$plp_config scp,p:$logdir/wav_${name}.JOB.scp ark:- \| \
     copy-feats --compress=$compress ark:- \
       ark,scp:$plpdir/raw_plp_$name.JOB.ark,$plpdir/raw_plp_$name.JOB.scp \
       || exit 1;
@@ -99,11 +115,11 @@ if [ -f $logdir/.error.$name ]; then
 fi
 
 # concatenate the .scp files together.
-for ((n=1; n<=nj; n++)); do
+for n in $(seq $nj); do
   cat $plpdir/raw_plp_$name.$n.scp || exit 1;
 done > $data/feats.scp
 
-rm $logdir/wav.*.scp  $logdir/segments.* 2>/dev/null
+rm $logdir/wav_${name}.*.scp  $logdir/segments.* 2>/dev/null
 
 nf=`cat $data/feats.scp | wc -l` 
 nu=`cat $data/utt2spk | wc -l` 

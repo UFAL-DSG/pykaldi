@@ -75,7 +75,7 @@ class WaveData {
   const Matrix<BaseFloat> &Data() const { return data_; }
 
   BaseFloat SampFreq() const { return samp_freq_; }
-
+  
   // Returns the duration in seconds
   BaseFloat Duration() const { return data_.NumCols()/samp_freq_; }
 
@@ -90,6 +90,7 @@ class WaveData {
   }
 
  private:
+  static const uint32 kBlockSize = 1048576;  // 1024 * 1024, use 1M bytes
   Matrix<BaseFloat> data_;
   BaseFloat samp_freq_;
   static void Expect4ByteTag(std::istream &is, const char *expected);

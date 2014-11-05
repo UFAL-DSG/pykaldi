@@ -31,9 +31,11 @@ int main(int argc, char *argv[]) {
         "Copy matrices, or archives of matrices (e.g. features or transforms)\n"
         "Also see copy-feats which has other format options\n"
         "\n"
-        "Usage: copy-matrix [options] (matrix-in-rspecifier|matrix-in-rxfilename) (matrix-out-wspecifier|matrix-out-wxfilename)\n"
+        "Usage: copy-matrix [options] <matrix-in-rspecifier> <matrix-out-wspecifier>\n"
+        "  or: copy-matrix [options] <matrix-in-rxfilename> <matrix-out-wxfilename>\n"
         " e.g.: copy-matrix --binary=false 1.mat -\n"
-        "   copy-matrix ark:2.trans ark,t:-\n";
+        "   copy-matrix ark:2.trans ark,t:-\n"
+        "See also: copy-feats\n";
     
     bool binary = true;
     ParseOptions po(usage);
@@ -61,7 +63,7 @@ int main(int argc, char *argv[]) {
          != kNoWspecifier);
 
     if (in_is_rspecifier != out_is_wspecifier)
-      KALDI_ERR << "Cannot mix archives with regular files (copying matrices)\n";
+      KALDI_ERR << "Cannot mix archives with regular files (copying matrices)";
     
     if (!in_is_rspecifier) {
       Matrix<BaseFloat> mat;

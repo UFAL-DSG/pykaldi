@@ -65,7 +65,7 @@ void GenRandStats(int32 dim, int32 num_stats, int32 N, int32 P,
   for (int32 i = 0;i < num_stats || (ensure_all_phones_covered && !all_covered);i++) {
     // decide randomly on a phone-in-context.
     std::vector<int32> phone_vec(N);
-    for (size_t i = 0;i < (size_t)N;i++) phone_vec[i] = phone_ids[(rand() % num_phones)];
+    for (size_t i = 0;i < (size_t)N;i++) phone_vec[i] = phone_ids[(Rand() % num_phones)];
 
     int32 hmm_length = phone2hmm_length[phone_vec[P]];
     KALDI_ASSERT(hmm_length > 0);
@@ -105,7 +105,7 @@ void GenRandStats(int32 dim, int32 num_stats, int32 N, int32 P,
         for (int32 k = 0; k < N; k++)
           mean.AddVec(weights(k), phone_vecs.Row(phone_vec[k]));
         BaseFloat count;
-        if (rand() % 2 == 0) count = 1000.0 * RandUniform();
+        if (Rand() % 2 == 0) count = 1000.0 * RandUniform();
         else count = 100.0 * RandUniform();
 
         int32 num_samples = 10;
@@ -461,7 +461,7 @@ void ReadSymbolTableAsIntegers(std::string filename,
 /// and all the non-leaf-level clusters.
 static void ObtainSetsOfPhones(const std::vector<std::vector<int32> > &phone_sets,  // the original phone sets, may
                                // just be individual phones.
-                               const std::vector<int32> &assignments,  // phones->clusters
+                               const std::vector<int32> &assignments,  // phone-sets->clusters
                                const std::vector<int32> &clust_assignments,  // clust->parent
                                int32 num_leaves,  // number of clusters present..
                                std::vector<std::vector<int32> > *sets_out) {
@@ -544,6 +544,21 @@ void AutomaticallyObtainQuestions(BuildTreeStatsType &stats,
                    true,  // retain only the listed positions
                    &retained_stats);
 
+  if (retained_stats.size() * 10 < stats.size()) {
+    std::ostringstream ss;
+    for (size_t i = 0; i < all_pdf_classes.size(); i++)
+      ss << all_pdf_classes[i] << ' ';
+    KALDI_WARN << "After filtering the tree statistics to retain only stats where "
+               << "pdf-class is in the set { " << ss.str() << "}, most of your "
+               << "stats disappeared: the size changed from " << stats.size()
+               << " to " << retained_stats.size() << ".  You might be using "
+               << "a nonstandard topology but forgot to modify the "
+               << "--pdf-class-list option (it defaults to { 1 } which is "
+               << "the central state in a 3-state left-to-right topology)."
+               << " E.g. a 1-state HMM topology would require the option "
+               << "--pdf-class-list=0.";
+  }
+
 
   std::vector<BuildTreeStatsType> split_stats;  // split by phone.
   SplitStatsByKey(retained_stats, P, &split_stats);
@@ -577,8 +592,10 @@ void AutomaticallyObtainQuestions(BuildTreeStatsType &stats,
       summed_stats_per_set[i]->Add(*(summed_stats[this_set[j]]));
   }
 
+  int32 num_no_data = 0;
   for (size_t i = 0; i < summed_stats_per_set.size(); i++) {  // A check.
     if (summed_stats_per_set[i]->Normalizer() == 0.0) {
+      num_no_data++;
       std::ostringstream ss;
       ss << "AutomaticallyObtainQuestions: no stats available for phone set: ";
       for (size_t j = 0; j < phone_sets[i].size(); j++)
@@ -586,6 +603,18 @@ void AutomaticallyObtainQuestions(BuildTreeStatsType &stats,
       KALDI_WARN  << ss.str();
     }
   }
+  if (num_no_data + 1 >= summed_stats_per_set.size()) {
+    std::ostringstream ss;
+    for (size_t i = 0; i < all_pdf_classes.size(); i++)
+      ss << all_pdf_classes[i] << ' ';
+    KALDI_WARN << "All or all but one of your classes of phones had no data. "
+               << "Note that we only consider data where pdf-class is in the "
+               << "set ( " << ss.str() << ").  If you have an unusual HMM "
+               << "topology this may not be what you want; use the "
+               << "--pdf-class-list option to change this if needed. See "
+               << "also any warnings above.";
+  }
+  
 
   TreeClusterOptions topts;
   topts.kmeans_cfg.num_tries = 10;  // This is a slow-but-accurate setting,

@@ -50,11 +50,13 @@ class Component {
      
     kUpdatableComponent = 0x0100, 
     kAffineTransform,
+    kLinearTransform,
     kConvolutionalComponent,
     kConvolutional2DComponent,
 
     kActivationFunction = 0x0200, 
     kSoftmax, 
+    kBlockSoftmax, 
     kSigmoid,
     kTanh,
     kDropout,
@@ -74,6 +76,7 @@ class Component {
     kAveragePooling2DComponent,
     kMaxPoolingComponent,
     kMaxPooling2DComponent,
+    kFramePoolingComponent, 
     kParallelComponent
   } ComponentType;
   /// A pair of type and marker 
@@ -114,12 +117,12 @@ class Component {
   }
  
   /// Perform forward pass propagation Input->Output
-  void Propagate(const CuMatrix<BaseFloat> &in, CuMatrix<BaseFloat> *out); 
+  void Propagate(const CuMatrixBase<BaseFloat> &in, CuMatrix<BaseFloat> *out); 
   /// Perform backward pass propagation, out_diff -> in_diff
   /// '&in' and '&out' will sometimes be unused... 
-  void Backpropagate(const CuMatrix<BaseFloat> &in,
-                     const CuMatrix<BaseFloat> &out,
-                     const CuMatrix<BaseFloat> &out_diff,
+  void Backpropagate(const CuMatrixBase<BaseFloat> &in,
+                     const CuMatrixBase<BaseFloat> &out,
+                     const CuMatrixBase<BaseFloat> &out_diff,
                      CuMatrix<BaseFloat> *in_diff); 
 
   /// Initialize component from a line in config file
@@ -137,13 +140,13 @@ class Component {
  /// Abstract interface for propagation/backpropagation 
  protected:
   /// Forward pass transformation (to be implemented by descending class...)
-  virtual void PropagateFnc(const CuMatrix<BaseFloat> &in,
-                            CuMatrix<BaseFloat> *out) = 0;
+  virtual void PropagateFnc(const CuMatrixBase<BaseFloat> &in,
+                            CuMatrixBase<BaseFloat> *out) = 0;
   /// Backward pass transformation (to be implemented by descending class...)
-  virtual void BackpropagateFnc(const CuMatrix<BaseFloat> &in,
-                                const CuMatrix<BaseFloat> &out,
-                                const CuMatrix<BaseFloat> &out_diff,
-                                CuMatrix<BaseFloat> *in_diff) = 0;
+  virtual void BackpropagateFnc(const CuMatrixBase<BaseFloat> &in,
+                                const CuMatrixBase<BaseFloat> &out,
+                                const CuMatrixBase<BaseFloat> &out_diff,
+                                CuMatrixBase<BaseFloat> *in_diff) = 0;
 
   /// Initialize internal data of a component
   virtual void InitData(std::istream &is) { }
@@ -189,8 +192,8 @@ class UpdatableComponent : public Component {
   virtual void GetParams(Vector<BaseFloat> *params) const = 0;
 
   /// Compute gradient and update parameters
-  virtual void Update(const CuMatrix<BaseFloat> &input,
-                      const CuMatrix<BaseFloat> &diff) = 0;
+  virtual void Update(const CuMatrixBase<BaseFloat> &input,
+                      const CuMatrixBase<BaseFloat> &diff) = 0;
 
   /// Sets the training options to the component
   virtual void SetTrainOptions(const NnetTrainOptions &opts) {
@@ -209,7 +212,7 @@ class UpdatableComponent : public Component {
 };
 
 
-inline void Component::Propagate(const CuMatrix<BaseFloat> &in,
+inline void Component::Propagate(const CuMatrixBase<BaseFloat> &in,
                                  CuMatrix<BaseFloat> *out) {
   // Check the dims
   if (input_dim_ != in.NumCols()) {
@@ -223,9 +226,9 @@ inline void Component::Propagate(const CuMatrix<BaseFloat> &in,
 }
 
 
-inline void Component::Backpropagate(const CuMatrix<BaseFloat> &in,
-                                     const CuMatrix<BaseFloat> &out,
-                                     const CuMatrix<BaseFloat> &out_diff,
+inline void Component::Backpropagate(const CuMatrixBase<BaseFloat> &in,
+                                     const CuMatrixBase<BaseFloat> &out,
+                                     const CuMatrixBase<BaseFloat> &out_diff,
                                      CuMatrix<BaseFloat> *in_diff) {
   // Check the dims
   if (output_dim_ != out_diff.NumCols()) {

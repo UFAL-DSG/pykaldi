@@ -2,6 +2,7 @@
 
 # Copyright   2012  Johns Hopkins University (Author: Daniel Povey)
 #             2013  Daniel Povey
+#             2014  David Snyder
 # Apache 2.0.
 
 # This is a modified version of steps/train_diag_ubm.sh, specialized for
@@ -10,7 +11,7 @@
 # the data directory.  We initialize the GMM using gmm-global-init-from-feats,
 # which sets the means to random data points and then does some iterations of
 # E-M in memory.  After the in-memory initialization we train for a few
-# iteration in parallel.
+# iterations in parallel.
 
 
 # Begin configuration section.
@@ -20,7 +21,7 @@ num_iters=4
 stage=-2
 num_gselect=30 # Number of Gaussian-selection indices to use while training
                # the model.
-num_frames=500000 # number of frames to keep in memory
+num_frames=500000 # number of frames to keep in memory for initialization
 num_iters_init=20
 initial_gauss_proportion=0.5 # Start with half the target number of Gaussians
 subsample=5 # subsample all features with this periodicity, in the main E-M phase.
@@ -29,6 +30,8 @@ min_gaussian_weight=0.0001
 remove_low_count_gaussians=true # set this to false if you need #gauss to stay fixed.
 num_threads=32
 parallel_opts="-pe smp 32"
+delta_window=3
+delta_order=2
 # End configuration section.
 
 echo "$0 $@"  # Print the command line for logging
@@ -63,6 +66,9 @@ if [ $# != 3 ]; then
   echo " --min-gaussian-weight <weight|0.0001>             # min Gaussian weight allowed in GMM"
   echo "                                                   # initialization (this relatively high"
   echo "                                                   # value keeps counts fairly even)"
+  echo " --delta-window <n|3>                              # number of frames of context used to"
+  echo "                                                   # calculate delta"
+  echo " --delta-order <n|2>                               # number of delta features"
   exit 1;
 fi
 
@@ -80,11 +86,13 @@ for f in $data/feats.scp $data/vad.scp; do
    [ ! -f $f ] && echo "$0: expecting file $f to exist" && exit 1
 done
 
+delta_opts="--delta-window=$delta_window --delta-order=$delta_order"
+echo $delta_opts > $dir/delta_opts
 
 # Note: there is no point subsampling all_feats, because gmm-global-init-from-feats
 # effectively does subsampling itself (it keeps a random subset of the features).
-all_feats="ark,s,cs:add-deltas scp:$data/feats.scp ark:- | apply-cmvn-sliding --norm-vars=false --center=true --cmn-window=300 ark:- ark:- | select-voiced-frames ark:- scp,s,cs:$data/vad.scp ark:- |"
-feats="ark,s,cs:add-deltas scp:$sdata/JOB/feats.scp ark:- | apply-cmvn-sliding --norm-vars=false --center=true --cmn-window=300 ark:- ark:- | select-voiced-frames ark:- scp,s,cs:$sdata/JOB/vad.scp ark:- | subsample-feats --n=$subsample ark:- ark:- |"
+all_feats="ark,s,cs:add-deltas $delta_opts scp:$data/feats.scp ark:- | apply-cmvn-sliding --norm-vars=false --center=true --cmn-window=300 ark:- ark:- | select-voiced-frames ark:- scp,s,cs:$data/vad.scp ark:- |"
+feats="ark,s,cs:add-deltas $delta_opts scp:$sdata/JOB/feats.scp ark:- | apply-cmvn-sliding --norm-vars=false --center=true --cmn-window=300 ark:- ark:- | select-voiced-frames ark:- scp,s,cs:$sdata/JOB/vad.scp ark:- | subsample-feats --n=$subsample ark:- ark:- |"
 
 num_gauss_init=$(perl -e "print int($initial_gauss_proportion * $num_gauss); ");
 ! [ $num_gauss_init -gt 0 ] && echo "Invalid num-gauss-init $num_gauss_init" && exit 1;

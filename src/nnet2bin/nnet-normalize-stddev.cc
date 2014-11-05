@@ -1,6 +1,7 @@
 // nnet2bin/nnet-normalize-stddev.cc
 
 // Copyright 2013  Guoguo Chen
+//           2014  Johns Hopkins University (author: Daniel Povey)
 
 // See ../../COPYING for clarification regarding multiple authors
 //
@@ -20,7 +21,6 @@
 #include "base/kaldi-common.h"
 #include "util/common-utils.h"
 #include "hmm/transition-model.h"
-#include "nnet2/nnet-randomize.h"
 #include "nnet2/train-nnet.h"
 #include "nnet2/am-nnet.h"
 
@@ -36,14 +36,19 @@ int main(int argc, char *argv[]) {
         "This program first identifies any affine or block affine layers that\n"
         "are followed by pnorm and then renormalize layers. Then it rescales\n"
         "those layers such that the parameter stddev is 1.0 after scaling.\n"
+        "If you supply the option --stddev-from=<model-filename>, it rescales\n"
+        "those layers to match the standard deviation of those in the specified\n"
+        "model.\n"
         "\n"
         "Usage: nnet-normalize-stddev [options] <model-in> <model-out>\n"
         " e.g.: nnet-normalize-stddev final.mdl final.mdl\n";
 
     bool binary_write = true;
+    std::string reference_model_filename;
     
     ParseOptions po(usage);
     po.Register("binary", &binary_write, "Write output in binary mode");
+    po.Register("stddev-from", &reference_model_filename, "Reference model");
 
     po.Read(argc, argv);
 
@@ -71,32 +76,71 @@ int main(int argc, char *argv[]) {
     vector<int32> identified_components;
     for (int32 c = 0; c < am_nnet.GetNnet().NumComponents() - 2; c++) {
       // Checks if the current layer is an affine layer or block affine layer.
-      Component *component = &(am_nnet.GetNnet().GetComponent(c));
+      // Also includes PreconditionedAffineComponent and
+      // PreconditionedAffineComponentOnline, since they are child classes of
+      // AffineComponent.
+      kaldi::nnet2::Component *component = &(am_nnet.GetNnet().GetComponent(c));
       AffineComponent *ac = dynamic_cast<AffineComponent*>(component);
       BlockAffineComponent *bac =
         dynamic_cast<BlockAffineComponent*>(component);
       if (ac == NULL && bac == NULL)
         continue;
-
+      
       // Checks if the next layer is a pnorm layer.
       component = &(am_nnet.GetNnet().GetComponent(c + 1));
       PnormComponent *pc = dynamic_cast<PnormComponent*>(component);
       if (pc == NULL)
         continue;
 
-      // Checks if the layer behind the pnorm layer is a normalize layer.
+      // Checks if the layer after the pnorm layer is a NormalizeComponent
+      // or a PowerComponent followed by a NormalizeComponent
       component = &(am_nnet.GetNnet().GetComponent(c + 2));
       NormalizeComponent *nc = dynamic_cast<NormalizeComponent*>(component);
-      if (nc == NULL)
+      PowerComponent *pwc = dynamic_cast<PowerComponent*>(component);
+      if (nc == NULL && pwc == NULL)
         continue;
-
+      if (pwc != NULL) {  // verify it's PowerComponent followed by
+                         // NormalizeComponent.
+        if (c + 3 >= am_nnet.GetNnet().NumComponents())
+          continue;
+        component = &(am_nnet.GetNnet().GetComponent(c + 3));
+        nc = dynamic_cast<NormalizeComponent*>(component);
+        if (nc == NULL)
+          continue;
+      }
       // This is the layer that we would like to normalize.
       identified_components.push_back(c);
     }
 
+    AmNnet am_nnet_ref;
+    if (!reference_model_filename.empty()) {
+      bool binary_read;
+      Input ki(reference_model_filename, &binary_read);
+      trans_model.Read(ki.Stream(), binary_read);
+      am_nnet_ref.Read(ki.Stream(), binary_read);
+      KALDI_ASSERT(am_nnet_ref.GetNnet().NumComponents() == am_nnet.GetNnet().NumComponents());
+    }
+
+    BaseFloat ref_stddev =0.0;
+
     // Normalizes the identified layers.
     for (int32 c = 0; c < identified_components.size(); c++) {
-      Component *component = 
+      ref_stddev = 0.0;
+      if (!reference_model_filename.empty()) {
+        kaldi::nnet2::Component *component =
+            &(am_nnet_ref.GetNnet().GetComponent(identified_components[c]));
+        UpdatableComponent *uc = dynamic_cast<UpdatableComponent*>(component);
+        KALDI_ASSERT(uc != NULL);
+        Vector<BaseFloat> params(uc->GetParameterDim());
+        uc->Vectorize(&params);
+        BaseFloat params_average = params.Sum()
+            / static_cast<BaseFloat>(params.Dim());
+        params.Add(-1.0 * params_average);
+        ref_stddev = sqrt(VecVec(params, params)
+            / static_cast<BaseFloat>(params.Dim()));
+      }
+
+      kaldi::nnet2::Component *component =
           &(am_nnet.GetNnet().GetComponent(identified_components[c]));
       UpdatableComponent *uc = dynamic_cast<UpdatableComponent*>(component);
       KALDI_ASSERT(uc != NULL);
@@ -108,8 +152,11 @@ int main(int argc, char *argv[]) {
       BaseFloat params_stddev = sqrt(VecVec(params, params)
           / static_cast<BaseFloat>(params.Dim()));
       if (params_stddev > 0.0) {
-        uc->Scale(1.0 / params_stddev);
-        KALDI_LOG << "Normalizd component " << identified_components[c];
+        if(ref_stddev > 0.0)
+          uc->Scale(ref_stddev / params_stddev);
+        else
+          uc->Scale(1.0 / params_stddev);
+        KALDI_LOG << "Normalized component " << identified_components[c];
       }
     }
 

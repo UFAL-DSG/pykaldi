@@ -80,7 +80,7 @@ bool WriteCompactLattice(std::ostream &os, bool binary,
                                                NULL, acceptor, write_one);
     printer.Print(&os, "<unknown>");
     if (os.fail())
-      KALDI_WARN << "Stream failure detected.\n";
+      KALDI_WARN << "Stream failure detected.";
     // Write another newline as a terminating character.  The read routine will
     // detect this [this is a Kaldi mechanism, not somethig in the original
     // OpenFst code].
@@ -125,9 +125,9 @@ class LatticeReader {
       if (col.size() > 5) {
         KALDI_WARN << "Reading lattice: bad line in FST: " << line;
         if (fst) delete fst;
-        if (cfst) delete cfst;	
+        if (cfst) delete cfst;    
         return PairT(static_cast<Lattice*>(NULL),
-			         static_cast<CompactLattice*>(NULL));
+                     static_cast<CompactLattice*>(NULL));
       }
       StateId s;
       if (!ConvertStringToInteger(col[0], &s)) {
@@ -135,7 +135,7 @@ class LatticeReader {
         if (fst) delete fst;
         if (cfst) delete cfst;
         return PairT(static_cast<Lattice*>(NULL),
-			         static_cast<CompactLattice*>(NULL));
+                     static_cast<CompactLattice*>(NULL));
       }
       if (fst)
         while (s >= fst->NumStates())
@@ -248,7 +248,7 @@ class LatticeReader {
           if (col.empty()) break;
         }
         return PairT(static_cast<Lattice*>(NULL), 
-			         static_cast<CompactLattice*>(NULL));
+                     static_cast<CompactLattice*>(NULL));
       }
     }
     return PairT(fst, cfst);
@@ -405,7 +405,7 @@ bool WriteLattice(std::ostream &os, bool binary, const Lattice &t) {
                                         NULL, acceptor, write_one);
     printer.Print(&os, "<unknown>");
     if (os.fail())
-      KALDI_WARN << "Stream failure detected.\n";
+      KALDI_WARN << "Stream failure detected.";
     // Write another newline as a terminating character.  The read routine will
     // detect this [this is a Kaldi mechanism, not somethig in the original
     // OpenFst code].

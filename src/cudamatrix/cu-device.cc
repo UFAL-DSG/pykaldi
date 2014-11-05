@@ -35,6 +35,7 @@
 
 #include "cudamatrix/cu-common.h"
 #include "cudamatrix/cu-device.h"
+#include "cudamatrix/cu-matrix.h"
 #include "base/kaldi-error.h"
 #include "util/common-utils.h"
 
@@ -80,7 +81,7 @@ void CuDevice::SelectGpuId(std::string use_gpu) {
   // Check that we have a gpu available
   int32 n_gpu = 0;
   cudaGetDeviceCount(&n_gpu);
-  if(n_gpu == 0) {
+  if (n_gpu == 0) {
     if (use_gpu == "yes") {
       KALDI_ERR << "No CUDA GPU detected!";
     }
@@ -126,8 +127,7 @@ void CuDevice::SelectGpuId(std::string use_gpu) {
   } else {
     // Or suggest to use compute exclusive mode
     if(n_gpu > 1) { 
-      KALDI_WARN << "Hint: It is practical to set the GPUs into ``compute exclusive mode''."
-                 << " Selection of free GPUs would be done by OS automatically.";
+      KALDI_WARN << "Suggestion: use 'nvidia-smi -c 1' to set compute exclusive mode";
     }
     // And select the GPU according to proportion of free memory
     if(SelectGpuIdAuto()) {
@@ -321,13 +321,21 @@ void CuDevice::PrintProfile() {
     os << "-----\n[cudevice profile]\n";
     std::map<std::string, double>::iterator it;
     std::vector<std::pair<double, std::string> > pairs;
-    for(it = profile_map_.begin(); it != profile_map_.end(); ++it)
-      pairs.push_back(std::make_pair(it->second, it->first));
+    double total_time = 0.0;
+    for(it = profile_map_.begin(); it != profile_map_.end(); ++it) {
+      std::string function_name = it->first;
+      double elapsed_time = it->second;
+      total_time += elapsed_time;
+      pairs.push_back(std::make_pair(elapsed_time, function_name));
+    }
+    // display from shortest to longest time, so tail will show the longest
+    // times at the end.
     std::sort(pairs.begin(), pairs.end());
     size_t max_print = 15, start_pos = (pairs.size() <= max_print ?
                                         0 : pairs.size() - max_print);
     for (size_t i = start_pos; i < pairs.size(); i++) 
       os << pairs[i].second << "\t" << pairs[i].first << "s\n";
+    os << "Total GPU time:\t" << total_time << "s (may involve some double-counting)\n";
     os << "-----";
     KALDI_LOG << os.str();
     PrintMemoryUsage();
@@ -406,6 +414,27 @@ void CuDevice::DeviceGetName(char* name, int32 len, int32 dev) {
     //close the library
     dlclose(libcuda);
   }
+}
+
+
+void CuDevice::CheckGpuHealth() {
+  if(!Enabled()) return;
+  Timer t;
+  // prepare small matrices for a quick test
+  Matrix<BaseFloat> a(50, 100);
+  Matrix<BaseFloat> b(100 ,50);
+  a.SetRandn();
+  b.SetRandUniform();
+  // multiply 2 small matrices in CPU:
+  Matrix<BaseFloat> c(50, 50);
+  c.AddMatMat(1.0, a, kNoTrans, b, kNoTrans, 0.0);
+  // multiply same matrices in GPU:
+  CuMatrix<BaseFloat> c1(50, 50);
+  c1.AddMatMat(1.0, CuMatrix<BaseFloat>(a), kNoTrans, CuMatrix<BaseFloat>(b), kNoTrans, 0.0);
+  // check that relative differnence is <1%
+  AssertEqual(c, Matrix<BaseFloat>(c1), 0.01);
+  // measure time spent in this check
+  AccuProfile(__func__, t.Elapsed());
 }
 
 

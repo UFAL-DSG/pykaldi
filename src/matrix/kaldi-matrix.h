@@ -22,7 +22,7 @@
 #ifndef KALDI_MATRIX_KALDI_MATRIX_H_
 #define KALDI_MATRIX_KALDI_MATRIX_H_ 1
 
-#include "matrix-common.h"
+#include "matrix/matrix-common.h"
 
 namespace kaldi {
 
@@ -240,8 +240,9 @@ class MatrixBase {
   /// each row by a scalar taken from that dimension of the vector.
   void MulRowsVec(const VectorBase<Real> &scale);
 
-  /// divide each row into src.NumCols() groups, 
-  /// and then scale i'th row's jth group of elements by src[i, j].   
+  /// Divide each row into src.NumCols() equal groups, and then scale i'th row's
+  /// j'th group of elements by src(i, j).  Requires src.NumRows() ==
+  /// this->NumRows() and this->NumCols() % src.NumCols() == 0.
   void MulRowsGroupMat(const MatrixBase<Real> &src);
     
   /// Returns logdet of matrix.
@@ -298,6 +299,12 @@ class MatrixBase {
   /// Applies power to all matrix elements
   void ApplyPow(Real power);
 
+  /// Apply power to the absolute value of each element. 
+  /// Include the sign of the input element if include_sign == true.
+  /// If the power is negative and the input to the power is zero,
+  /// The output will be set zero.
+  void ApplyPowAbs(Real power, bool include_sign=false);
+  
   /// Applies the Heaviside step function (x > 0 ? 1 : 0) to all matrix elements
   /// Note: in general you can make different choices for x = 0, but for now
   /// please leave it as it (i.e. returning zero) because it affects the
@@ -365,7 +372,8 @@ class MatrixBase {
   void TestUninitialized() const; // This function is designed so that if any element
   // if the matrix is uninitialized memory, valgrind will complain.
   
-  /// returns condition number by computing Svd.  Works even if cols > rows.
+  /// Returns condition number by computing Svd.  Works even if cols > rows.
+  /// Returns infinity if all singular values are zero.
   Real Cond() const;
 
   /// Returns true if matrix is Symmetric.
@@ -374,8 +382,10 @@ class MatrixBase {
   /// Returns true if matrix is Diagonal.
   bool IsDiagonal(Real cutoff = 1.0e-05) const;  // replace magic number
 
-  /// returns true if matrix is all zeros, but ones on diagonal
-  /// (not necessarily square).
+  /// Returns true if the matrix is all zeros, except for ones on diagonal.  (it
+  /// does not have to be square).  More specifically, this function returns
+  /// false if for any i, j, (*this)(i, j) differs by more than cutoff from the
+  /// expression (i == j ? 1 : 0).
   bool IsUnit(Real cutoff = 1.0e-05) const;     // replace magic number
 
   /// Returns true if matrix is all zeros.
@@ -412,8 +422,8 @@ class MatrixBase {
   /// Set each element to y = log(1 + exp(x))
   void SoftHinge(const MatrixBase<Real> &src);
   
-  /// Apply the function y(i) = (sum_{j = i*G}^{(i+1)*G-1} x_j ^ (power)) ^ (1 / p)
-  /// where G = x.NumCols() / y.NumCols() must be an integer.
+  /// Apply the function y(i) = (sum_{j = i*G}^{(i+1)*G-1} x_j^(power))^(1 / p).
+  /// Requires src.NumRows() == this->NumRows() and  src.NumCols() % this->NumCols() == 0.
   void GroupPnorm(const MatrixBase<Real> &src, Real power);
 
 
@@ -502,7 +512,7 @@ class MatrixBase {
  
   /// *this = a * b / c (by element; when c = 0, *this = a)
   void AddMatMatDivMat(const MatrixBase<Real>& A,
-             	       const MatrixBase<Real>& B,
+                        const MatrixBase<Real>& B,
                        const MatrixBase<Real>& C);
 
   /// A version of AddMatMat specialized for when the second argument
@@ -865,7 +875,7 @@ bool ApproxEqual(const MatrixBase<Real> &A,
 }
 
 template<typename Real>
-inline void AssertEqual(MatrixBase<Real> &A, MatrixBase<Real> &B,
+inline void AssertEqual(const MatrixBase<Real> &A, const MatrixBase<Real> &B,
                         float tol = 0.01) {
   KALDI_ASSERT(A.ApproxEqual(B, tol));
 }

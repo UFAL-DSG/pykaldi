@@ -45,8 +45,9 @@ void Fmpe::SetContexts(std::string context_str) {
                    "Mal-formed context string: bad --context-expansion option?");
       int32 pos;
       BaseFloat weight;
-      if (!ConvertStringToInteger(one_pair[0], &pos)
-          || !ConvertStringToReal(one_pair[1], &weight))
+      bool ok = ConvertStringToInteger(one_pair[0], &pos);
+      ok = ConvertStringToReal(one_pair[1], &weight) && ok;
+      if (!ok)
         KALDI_ERR << "Mal-formed context string: bad --context-expansion option?";
       contexts_[i].push_back(std::make_pair(pos, weight));
     }
@@ -65,7 +66,7 @@ void Fmpe::ComputeC() {
   DiagGmmNormal ngmm(gmm_);
   for (int32 pdf = 0; pdf < ngmm.NumGauss(); pdf++) {
     x2_stats.AddVec2(ngmm.weights_(pdf), ngmm.means_.Row(pdf));
-    x2_stats.AddVec(ngmm.weights_(pdf), ngmm.vars_.Row(pdf)); // add diagonal
+    x2_stats.AddDiagVec(ngmm.weights_(pdf), ngmm.vars_.Row(pdf)); // add diagonal
     // covar to diagonal elements of x2_stats.
     x_stats.AddVec(ngmm.weights_(pdf), ngmm.means_.Row(pdf));
     tot_count += ngmm.weights_(pdf);

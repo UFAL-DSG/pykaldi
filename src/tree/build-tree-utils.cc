@@ -496,7 +496,7 @@ class DecisionTreeSplitter {
       KALDI_WARN << "DecisionTreeSplitter::FindBestSplit(), no keys available to split on (maybe no key covered all of your events, or there was a problem with your questions configuration?)";
     }
     best_split_impr_ = 0;
-    for (size_t i = 0;i < all_keys.size();i++) {
+    for (size_t i = 0; i < all_keys.size(); i++) {
       if (q_opts_.HasQuestionsForKey(all_keys[i])) {
         std::vector<EventValueType> temp_yes_set;
         BaseFloat split_improvement = FindBestSplitForKey(stats_, q_opts_, all_keys[i], &temp_yes_set);
@@ -560,7 +560,8 @@ EventMap *SplitDecisionTree(const EventMap &input_map,
     std::priority_queue<std::pair<BaseFloat, size_t> > queue;  // use size_t because logically these
     // are just indexes into the array, not leaf-ids (after splitting they are no longer leaf id's).
     // Initialize queue.
-    for (size_t i = 0;i<builders.size();i++) queue.push(std::make_pair(builders[i]->BestSplit(), i));
+    for (size_t i = 0; i < builders.size(); i++)
+      queue.push(std::make_pair(builders[i]->BestSplit(), i));
     // Note-- queue's size never changes from now.  All the alternatives leaves to split are
     // inside the "DecisionTreeSplitter*" objects, in a tree structure.
     while (queue.top().first > thresh
@@ -583,9 +584,9 @@ EventMap *SplitDecisionTree(const EventMap &input_map,
 
   {  // Create the output EventMap.
     std::vector<EventMap*> sub_trees(builders.size());
-    for (size_t i = 0;i<sub_trees.size();i++) sub_trees[i] = builders[i]->GetMap();
+    for (size_t i = 0; i < sub_trees.size();i++) sub_trees[i] = builders[i]->GetMap();
     answer = input_map.Copy(sub_trees);
-    for (size_t i = 0;i < sub_trees.size();i++) delete sub_trees[i];
+    for (size_t i = 0; i < sub_trees.size();i++) delete sub_trees[i];
   }
   // Free up memory.
   for (size_t i = 0;i < builders.size();i++) delete builders[i];
@@ -595,7 +596,10 @@ EventMap *SplitDecisionTree(const EventMap &input_map,
 }
 
 
-int ClusterEventMapGetMapping(const EventMap &e_in, const BuildTreeStatsType &stats, BaseFloat thresh, std::vector<EventMap*> *mapping) {
+int ClusterEventMapGetMapping(const EventMap &e_in,
+                              const BuildTreeStatsType &stats,
+                              BaseFloat thresh,
+                              std::vector<EventMap*> *mapping) {
   // First map stats
   KALDI_ASSERT(stats.size() != 0);
   std::vector<BuildTreeStatsType> split_stats;
@@ -614,7 +618,7 @@ int ClusterEventMapGetMapping(const EventMap &e_in, const BuildTreeStatsType &st
     }
   }
   if (summed_stats_contiguous.empty()) {
-    KALDI_WARN << "ClusterBottomUp: nothing to cluster.\n";
+    KALDI_WARN << "ClusterBottomUp: nothing to cluster.";
     return 0;  // nothing merged.
   }
 
@@ -633,7 +637,10 @@ int ClusterEventMapGetMapping(const EventMap &e_in, const BuildTreeStatsType &st
   int32 num_combined = summed_stats_contiguous.size() - num_clust;
   KALDI_ASSERT(num_combined >= 0);
 
-  KALDI_VLOG(2) <<  "ClusterBottomUp combined "<< num_combined << " leaves and gave a likelihood change of " << change << ", normalized = " << (change/normalizer) << ", normalizer = " << normalizer;
+  KALDI_VLOG(2) <<  "ClusterBottomUp combined "<< num_combined
+                << " leaves and gave a likelihood change of " << change
+                << ", normalized = " << (change/normalizer)
+                << ", normalizer = " << normalizer;
   KALDI_ASSERT(change < 0.0001);  // should be negative or zero.
 
   KALDI_ASSERT(mapping != NULL);
@@ -642,8 +649,11 @@ int ClusterEventMapGetMapping(const EventMap &e_in, const BuildTreeStatsType &st
   for (size_t i = 0;i < summed_stats_contiguous.size();i++) {
     size_t index = indexes[i];
     size_t new_index = indexes[assignments[i]];  // index assigned by clusterig-- map to existing indices in the map,
-    // that we clustered from, so we don't conflict with indices in other parts of the tree.
-    KALDI_ASSERT((*mapping)[index] == NULL || "Error: Cluster seems to have been called for different parts of the tree with overlapping sets of indices.");
+    // that we clustered from, so we don't conflict with indices in other parts
+    // of the tree.
+    KALDI_ASSERT((*mapping)[index] == NULL || "Error: Cluster seems to have been "
+                 "called for different parts of the tree with overlapping sets of "
+                 "indices.");
     (*mapping)[index] = new ConstantEventMap(new_index);
   }
   DeletePointers(&summed_stats);

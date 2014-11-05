@@ -151,6 +151,37 @@ function check_exists {
   if [ ! -f $1 ]; then failure "$1 not found."; fi
 }
 
+function check_for_bad_gcc {
+  if which gcc >&/dev/null; then  # gcc is on the path
+    gcc_version=$(gcc -dumpspecs 2>&1 | grep -A1 -F '*version:' | grep -v version)
+    if [ "$gcc_version" == "4.8.2" ]; then
+      echo "*** WARNING: your version of gcc seems to be 4.8.2. ***"
+      echo "*** This version of gcc has a bug in nth_element ***"
+      echo "*** in its implementation of the standard library ***"
+      echo "*** This will cause Kaldi to crash (make test   ***"
+      echo "*** should fail). Please either upgrade or downgrade gcc. ***"
+    fi
+  fi
+}
+
+function check_for_slow_expf {
+  cd probe
+  rm -f exp-test
+  make -f Makefile.slow_expf 1>/dev/null
+  ./exp-test
+  if [ $? -eq 1 ]; then
+      echo "*** WARNING: expf() seems to be slower than exp() on your machine. This is a known bug in old versions of glibc. Please consider updating glibc. ***"
+      echo "*** Kaldi will be configured to use exp() instead of expf() in base/kaldi-math.h Exp() routine for single-precision floats. ***" 
+      echo "CXXFLAGS += -DKALDI_NO_EXPF" >> ../kaldi.mk
+  fi
+  cd ..    
+}
+
+function exit_success {
+  check_for_bad_gcc;
+  check_for_slow_expf;
+  exit 0;
+}
 
 
 function linux_configure_mkllibdir {
@@ -279,7 +310,7 @@ is_set $OPENBLASROOT && echo "Force-configuring KALDI to use OPENBLAS"&& export 
 function linux_configure_cuda {
   #check for CUDA toolkit in the system
   if [ ! $CUDATKDIR ]; then
-    for base in /usr/local/share/cuda /usr/local/cuda /pkgs_local/cuda-3.2/ /opt/nvidia_cuda/cuda-5.0/ /usr/; do
+    for base in /Developer/NVIDIA/CUDA-6.0 /usr/local/share/cuda /usr/local/cuda /pkgs_local/cuda-3.2/ /opt/nvidia_cuda/cuda-6.0/ /usr/; do
       if [ -f $base/bin/nvcc ]; then
         CUDATKDIR=$base
       fi
@@ -303,6 +334,41 @@ function linux_configure_cuda {
     fi
   else
     echo "CUDA will not be used! If you have already installed cuda drivers and cuda toolkit, try using --cudatk-dir=... option.  Note: this is only relevant for neural net experiments"
+  fi
+}
+
+function linux_configure_speex {
+  #check whether the user has called tools/extras/install_speex.sh or not
+  SPEEXROOT=`pwd`/../tools/speex
+  static_speex=$1
+  if [ "foo"$static_speex == "foo" ]; then
+    static_speex=false
+  fi
+  
+  if $static_speex; then
+    spx_type=a
+  else
+    spx_type=so
+  fi
+  if [ ! -f "$SPEEXROOT/lib/libspeex.${spx_type}" ];then
+    echo "Static=[$static_speex] Speex library not found: You can still build Kaldi without Speex."
+    return
+  fi
+  
+  if [ -f $SPEEXROOT/include/speex/speex.h ]; then
+    echo >> kaldi.mk
+    echo CXXFLAGS += -DHAVE_SPEEX -I${SPEEXROOT}/include >> kaldi.mk
+    
+    if $static_speex; then
+      echo LDLIBS += $SPEEXROOT/lib/libspeex.a
+    else
+      echo LDLIBS += -L${SPEEXROOT}/lib -lspeex >> kaldi.mk
+      echo LDFLAGS += -Wl,-rpath=${SPEEXROOT}/lib >> kaldi.mk
+    fi
+    
+    echo "Successfully configured with Speex at $SPEEXROOT, (static=[$static_speex])"
+  else
+    echo "Speex will not be used. If you want to use it, run tools/extras/install_speex.sh first."
   fi
 }
 
@@ -367,7 +433,8 @@ function linux_configure_debian_ubuntu {
   fix_cxx_flag
   echo "Successfully configured for Debian/Ubuntu Linux [dynamic libraries] with ATLASLIBS =$ATLASLIBS"
   $use_cuda && linux_configure_cuda
-  exit 0;
+  linux_configure_speex
+  exit_success;
 }
 
 function linux_configure_debian7 {
@@ -384,7 +451,26 @@ function linux_configure_debian7 {
   fix_cxx_flag
   echo "Successfully configured for Debian 7 [dynamic libraries] with ATLASLIBS =$ATLASLIBS"
   $use_cuda && linux_configure_cuda
-  exit 0;
+  linux_configure_speex
+  exit_success;
+}
+
+function linux_configure_redhat {
+  m=$1  # 64 or empty.
+  ATLASLIBS="/usr/lib$m/atlas/libatlas.so.3 /usr/lib$m/atlas/libf77blas.so.3 /usr/lib$m/atlas/libcblas.so.3 /usr/lib$m/atlas/libclapack.so.3"
+  for f in $ATLASLIBS; do 
+    [ ! -f $f ] && return 1;
+  done
+  libdir=$(dirname $(echo $ATLASLIBS | awk '{print $1}'))
+  [ -z "$libdir" ] && echo "Error getting libdir in linux_configure_redhat" && exit 1;
+  echo ATLASINC = $ATLASROOT/include >> kaldi.mk
+  echo ATLASLIBS = $ATLASLIBS -Wl,-rpath=$libdir >> kaldi.mk
+  echo 
+  cat makefiles/linux_atlas.mk >> kaldi.mk
+  fix_cxx_flag
+  echo "Successfully configured for red hat [dynamic libraries] with ATLASLIBS =$ATLASLIBS"
+  $use_cuda && linux_configure_cuda
+  exit_success;
 }
 
 
@@ -436,8 +522,9 @@ function linux_configure_static {
   cat makefiles/linux_atlas.mk >> kaldi.mk
   fix_cxx_flag
   $use_cuda && linux_configure_cuda
+  linux_configure_speex
   echo "Successfully configured for Linux [static libraries] with ATLASLIBS =$ATLASLIBS"
-  exit 0;
+  exit_success;
 }
 
 function linux_check_dynamic {
@@ -504,8 +591,9 @@ function linux_configure_dynamic {
   cat makefiles/linux_atlas.mk >> kaldi.mk
   fix_cxx_flag
   $use_cuda && linux_configure_cuda
+  linux_configure_speex
   echo "Successfully configured for Linux [dynamic libraries] with ATLASLIBS =$ATLASLIBS"
-  exit 0;
+  exit_success;
 }
 
 echo "Configuring ..."
@@ -513,6 +601,7 @@ echo "Configuring ..."
 if [ ! -f makefiles/common.mk ]; then
     failure makefiles/common.mk not found
 fi
+
 
 echo "Checking OpenFST library in $FSTROOT ..."
 if [ ! -f $FSTROOT/include/fst/fst.h  ]; then
@@ -549,6 +638,7 @@ echo "Doing OS specific configurations ..."
 # which crashes on Darwin. Also the linear algebra libraries on Macs are
 # used differently (through the Accelerate framework) than on Linux.
 if [ "`uname`" == "Darwin"  ]; then
+ $use_cuda && linux_configure_cuda
   echo "On Darwin: checking for Accelerate framework ..."
   if [ ! -e /System/Library/Frameworks/Accelerate.framework ]; then
     failure "Need the Accelerate.framework to compile on Darwin."
@@ -575,11 +665,14 @@ if [ "`uname`" == "Darwin"  ]; then
   elif [ "$osx_ver" == "10.9" ]; then
     check_exists makefiles/darwin_10_9.mk
     cat makefiles/darwin_10_9.mk >> kaldi.mk 
+  elif [ "$osx_ver" == "10.10" ]; then
+    check_exists makefiles/darwin_10_10.mk
+    cat makefiles/darwin_10_10.mk >> kaldi.mk 
   else 
     failure "OS X version '$osx_ver' not supported"
   fi
   echo "Configuration succeeded for platform Darwin."
-  exit 0
+  exit_success;
 fi
 
 if [ "`uname -o`" == "Cygwin"  ]; then
@@ -593,7 +686,7 @@ if [ "`uname -o`" == "Cygwin"  ]; then
     echo FSTROOT = $FSTROOT >> kaldi.mk
     cat makefiles/cygwin.mk >> kaldi.mk
     echo "Configuration succeeded for platform cygwin"
-    exit 0
+    exit_success;
 fi
 
 if [ "`uname`" == "Linux" ]; then
@@ -637,6 +730,8 @@ if [ "`uname`" == "Linux" ]; then
         linux_configure_debian_ubuntu 64 || \
         linux_configure_debian_ubuntu || \
         linux_configure_debian7 || \
+        linux_configure_redhat 64 || \
+        linux_configure_redhat || \
         linux_atlas_failure "Failed to configure ATLAS lbiraries";
     else
       # Prefer dynamic to static math.
@@ -645,6 +740,8 @@ if [ "`uname`" == "Linux" ]; then
         linux_configure_debian_ubuntu 64 || \
         linux_configure_debian_ubuntu || \
         linux_configure_debian7 || \
+        linux_configure_redhat 64 || \
+        linux_configure_redhat || \
         linux_atlas_failure "Failed to configure ATLAS lbiraries";
     fi
 
@@ -706,8 +803,9 @@ if [ "`uname`" == "Linux" ]; then
     echo "MKLFLAGS = ${MKL_LINK_LINE} ${OMP_LINK_LINE} " >> kaldi.mk
 
     $use_cuda && linux_configure_cuda
+    linux_configure_speex
     echo "Successfully configured for Linux with MKL libs from $MKLROOT"
-    exit 0;
+    exit_success;
 
   elif [ "$MATHLIB" == "CLAPACK" ]; then
     if [ -z "$CLAPACKROOT" ]; then
@@ -728,8 +826,9 @@ if [ "`uname`" == "Linux" ]; then
     fix_cxx_flag
     echo "Warning (CLAPACK): this part of the configure process is not properly tested and will not work."
     $use_cuda && linux_configure_cuda
+    linux_configure_speex
     echo "Successfully configured for Linux with CLAPACK libs from $CLAPACKROOT"
-    exit 0
+    exit_success;
   elif [ "$MATHLIB" == "OPENBLAS" ]; then
     OPENBLASROOT=`rel2abs "$OPENBLASROOT"`
     if [ -z "$OPENBLASROOT" ]; then
@@ -752,8 +851,9 @@ if [ "`uname`" == "Linux" ]; then
     echo "OPENBLASROOT = $OPENBLASROOT" >> kaldi.mk
     echo "Warning (OPENBLAS): this part of the configure process is not properly tested and will not work."
     $use_cuda && linux_configure_cuda
+    linux_configure_speex
     echo "Successfully configured OpenBLAS from $OPENBLASROOT."
-    exit 0;
+    exit_success;
   else
     failure "Unsupported linear algebra library '$MATHLIB'"
   fi

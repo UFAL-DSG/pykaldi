@@ -3,7 +3,7 @@
 // Copyright 2009-2012  Karel Vesely
 //                      Johns Hopkins University (author: Daniel Povey)
 //                      Lucas Ondel
-//		  2013  Xiaohui Zhang	
+//          2013  Xiaohui Zhang    
 
 // See ../../COPYING for clarification regarding multiple authors
 //
@@ -57,9 +57,9 @@ class CuVectorBase {
   template <typename OtherReal>
   friend OtherReal VecVec(const CuVectorBase<OtherReal> &v1,
                           const CuVectorBase<OtherReal> &v2);
-  friend void cu::Splice<Real>(const CuMatrix<Real> &src,
+  friend void cu::Splice<Real>(const CuMatrixBase<Real> &src,
                                const CuArray<int32> &frame_offsets,
-                               CuMatrix<Real> *tgt);
+                               CuMatrixBase<Real> *tgt);
   friend class CuRand<Real>;
   
   /// Dimensions
@@ -168,8 +168,8 @@ class CuVectorBase {
     return CuValue<Real>(data_ + i);
   }
 
-  Real Norm(BaseFloat p); // Only works for p = 1 and p = 2.
-            
+  Real Norm(Real p); // Only works for p = 1 and p = 2.
+  
   inline Real operator() (MatrixIndexT i) const {
     KALDI_PARANOID_ASSERT(static_cast<UnsignedMatrixIndexT>(i) <
                           static_cast<UnsignedMatrixIndexT>(dim_));

@@ -61,7 +61,7 @@ if [ -z $loc ]; then
 fi
 
 echo "Converting '$lm' to FST"
-tmpdir=$(mktemp -d);
+tmpdir=$(mktemp -d kaldi.XXXX);
 trap 'rm -rf "$tmpdir"' EXIT
 
 for f in phones.txt words.txt L.fst L_disambig.fst phones/; do
@@ -92,7 +92,7 @@ arpa2fst $tmpdir/out_lm | fstprint \
   | utils/eps2disambig.pl | utils/s2eps.pl \
   | fstcompile --isymbols=$out_dir/words.txt --osymbols=$out_dir/words.txt \
     --keep_isymbols=false --keep_osymbols=false \
-  | fstrmepsilon > $out_dir/G.fst || exit 1;
+  | fstrmepsilon | fstarcsort --sort_type=ilabel > $out_dir/G.fst || exit 1;
 
 fstisstochastic $out_dir/G.fst
 

@@ -25,7 +25,7 @@
 #include <cublas.h>
 #endif
 
-#include "util/timer.h"
+#include "base/timer.h"
 #include "cudamatrix/cu-common.h"
 #include "cudamatrix/cu-vector.h"
 #include "cudamatrix/cu-device.h"
@@ -184,7 +184,7 @@ void CuPackedMatrix<Real>::CopyToPacked(PackedMatrix<Real> *dst) const {
     
     CU_SAFE_CALL(cudaMemcpy(dst->data_, data_, num_bytes,
                             cudaMemcpyDeviceToHost));
-    CuDevice::Instantiate().AccuProfile("CuPackedMatrixMatrix::CopyToPackedD2H",tim.Elapsed());
+    CuDevice::Instantiate().AccuProfile("CuPackedMatrix::CopyToPackedD2H",tim.Elapsed());
   } else
 #endif
   {
@@ -314,8 +314,7 @@ void CuPackedMatrix<Real>::ScaleDiag(Real alpha) {
     Timer tim;
     int dimBlock(CU1DBLOCK);
     int dimGrid(n_blocks(NumRows(),CU1DBLOCK));
-    CU_SAFE_CALL(cudaGetLastError()); // TEMP
-    cuda_scale_diag(dimGrid,dimBlock,data_,alpha,num_rows_);
+    cuda_scale_diag_packed(dimGrid,dimBlock,data_,alpha,num_rows_);
     CU_SAFE_CALL(cudaGetLastError());
     CuDevice::Instantiate().AccuProfile("CuPackedMatrix::ScaleDiag", tim.Elapsed());
   } else
@@ -352,6 +351,7 @@ void CuPackedMatrix<Real>::AddToDiag(Real r) {
     int dimBlock(CU1DBLOCK);
     int dimGrid(n_blocks(NumRows(),CU1DBLOCK));
     cuda_add_diag_packed(dimGrid,dimBlock,data_,r,num_rows_);
+    CU_SAFE_CALL(cudaGetLastError());    
     CuDevice::Instantiate().AccuProfile("CuPackedMatrix::AddToDiag", tim.Elapsed());
   } else
 #endif

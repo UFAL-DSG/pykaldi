@@ -47,8 +47,8 @@ class IvectorExtractTask {
                                              extractor_.FeatDim(),
                                              need_2nd_order_stats);
       
-    extractor_.GetStats(feats_, posterior_, &utt_stats);
-
+    utt_stats.AccStats(feats_, posterior_);
+    
     ivector_.Resize(extractor_.IvectorDim());
     ivector_(0) = extractor_.PriorOffset();
 
@@ -105,12 +105,12 @@ int main(int argc, char *argv[]) {
         "Usage:  ivector-extract [options] <model-in> <feature-rspecifier>"
         "<posteriors-rspecifier> <ivector-wspecifier>\n"
         "e.g.: \n"
-        " fgmm-global-gselect-to-post 1.fgmm '$feats' 'ark:gunzip -c gselect.1.gz|' ark:- | \\\n"
+        " fgmm-global-gselect-to-post 1.ubm '$feats' 'ark:gunzip -c gselect.1.gz|' ark:- | \\\n"
         "  ivector-extract final.ie '$feats' ark,s,cs:- ark,t:ivectors.1.ark\n";
 
     ParseOptions po(usage);
     bool compute_objf_change = true;
-    IvectorStatsOptions stats_opts;
+    IvectorExtractorStatsOptions stats_opts;
     TaskSequencerConfig sequencer_config;
     po.Register("compute-objf-change", &compute_objf_change,
                 "If true, compute the change in objective function from using "
@@ -131,6 +131,9 @@ int main(int argc, char *argv[]) {
         posteriors_rspecifier = po.GetArg(3),
         ivectors_wspecifier = po.GetArg(4);
 
+    // g_num_threads affects how ComputeDerivedVars is called when we read the
+    // extractor.
+    g_num_threads = sequencer_config.num_threads; 
     IvectorExtractor extractor;
     ReadKaldiObject(ivector_extractor_rxfilename, &extractor);
 
@@ -155,8 +158,8 @@ int main(int argc, char *argv[]) {
         const Posterior &posterior = posteriors_reader.Value(key);
 
         if (static_cast<int32>(posterior.size()) != mat.NumRows()) {
-          KALDI_WARN << "Size mismatch between posterior " << (posterior.size())
-                     << " and features " << (mat.NumRows()) << " for utterance "
+          KALDI_WARN << "Size mismatch between posterior " << posterior.size()
+                     << " and features " << mat.NumRows() << " for utterance "
                      << key;
           num_err++;
           continue;

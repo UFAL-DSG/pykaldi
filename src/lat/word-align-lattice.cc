@@ -336,6 +336,8 @@ class LatticeWordAligner {
 
   std::vector<std::pair<Tuple, StateId> > queue_;
   
+  
+  
   MapType map_; // map from tuples to StateId.
   bool error_;
   
@@ -586,12 +588,11 @@ void LatticeWordAligner::ComputationState::OutputArcForce(
     weight_ = LatticeWeight::One();
     word_labels_.clear();
   } else if (!transition_ids_.empty() && word_labels_.empty()) {
-    // Transition-ids but no word label-- either silence or
-    // partial word.
+    // Transition-ids but no word label-- either silence or partial word.
     int32 first_phone = tmodel.TransitionIdToPhone(transition_ids_[0]);
     if (info.TypeOfPhone(first_phone) == WordBoundaryInfo::kNonWordPhone) {
       // first phone is silence...
-      if (!first_phone == tmodel.TransitionIdToPhone(transition_ids_.back())
+      if (first_phone != tmodel.TransitionIdToPhone(transition_ids_.back())
           && ! *error) {
         *error = true;
         // Phone changed-- this is a code error, because the regular OutputArc
@@ -665,6 +666,11 @@ WordBoundaryInfo::WordBoundaryInfo(const WordBoundaryInfoOpts &opts) {
   partial_word_label = opts.partial_word_label;
 }
 
+WordBoundaryInfo::WordBoundaryInfo(const WordBoundaryInfoNewOpts &opts) {
+  reorder = opts.reorder;
+  silence_label = opts.silence_label;
+  partial_word_label = opts.partial_word_label;
+}
 
 WordBoundaryInfo::WordBoundaryInfo(const WordBoundaryInfoNewOpts &opts,
                                    std::string word_boundary_file) {
@@ -674,11 +680,15 @@ WordBoundaryInfo::WordBoundaryInfo(const WordBoundaryInfoNewOpts &opts,
   bool binary_in;
   Input ki(word_boundary_file, &binary_in);
   KALDI_ASSERT(!binary_in && "Not expecting binary word-boundary file.");
+  Init(ki.Stream());
+}
+
+void WordBoundaryInfo::Init(std::istream &stream) {
   std::string line;
-  while (std::getline(ki.Stream(), line)) {
+  while (std::getline(stream, line)) {
     std::vector<std::string> split_line;  
     SplitStringToVector(line, " \t\r", true, &split_line);// split the line by space or tab
-    int32 p;
+    int32 p = 0;
     if (split_line.size() != 2 ||
         !ConvertStringToInteger(split_line[0], &p))
       KALDI_ERR << "Invalid line in word-boundary file: " << line;
@@ -695,9 +705,8 @@ WordBoundaryInfo::WordBoundaryInfo(const WordBoundaryInfoNewOpts &opts,
       KALDI_ERR << "Invalid line in word-boundary file: " << line;
   }
   if (phone_to_type.empty())
-    KALDI_ERR << "Empty word-boundary file " << word_boundary_file;
+    KALDI_ERR << "Empty word-boundary file";
 }
-
   
 bool WordAlignLattice(const CompactLattice &lat,
                       const TransitionModel &tmodel,
@@ -794,8 +803,8 @@ class WordAlignedLatticeTester {
           // rest of the transition ids are the self-loop of that same
           // transition-state.
           for(size_t j = i+1; j < tids.size(); j++) {
-            if (!(tmodel_.TransitionIdToTransitionState(tids[j]))
-                == tmodel_.TransitionIdToTransitionState(tids[i])) return false;
+            if (tmodel_.TransitionIdToTransitionState(tids[j])
+                != tmodel_.TransitionIdToTransitionState(tids[i])) return false;
           }
           return true;
         }
@@ -876,7 +885,7 @@ class WordAlignedLatticeTester {
       Project(&aligned_lat, fst::PROJECT_INPUT);
     }
 
-    if (!RandEquivalent(lat_, aligned_lat, 5/*paths*/, 1.0e+10/*delta*/, rand()/*seed*/,
+    if (!RandEquivalent(lat_, aligned_lat, 5/*paths*/, 1.0e+10/*delta*/, Rand()/*seed*/,
                         200/*path length (max?)*/))
       KALDI_ERR << "Equivalence test failed (testing word-alignment of lattices.) "
                 << "Make sure your model and lattices match!";

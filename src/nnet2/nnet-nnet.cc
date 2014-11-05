@@ -1,7 +1,7 @@
 // nnet2/nnet-nnet.cc
 
 // Copyright 2011-2012  Karel Vesely
-//                      Johns Hopkins University (author: Daniel Povey)
+//           2012-2014  Johns Hopkins University (author: Daniel Povey)
 
 // See ../../COPYING for clarification regarding multiple authors
 //
@@ -432,11 +432,41 @@ void Nnet::RemovePreconditioning() {
           *(dynamic_cast<AffineComponent*>(components_[i])));
       delete components_[i];
       components_[i] = ac;
+    } else if (dynamic_cast<AffineComponentPreconditionedOnline*>(
+        components_[i]) != NULL) {
+      AffineComponent *ac = new AffineComponent(
+          *(dynamic_cast<AffineComponent*>(components_[i])));
+      delete components_[i];
+      components_[i] = ac;
     }
   }
   SetIndexes();
   Check();
 }
+
+
+void Nnet::SwitchToOnlinePreconditioning(int32 rank_in, int32 rank_out, int32 update_period,
+                                         BaseFloat num_samples_history, BaseFloat alpha) {
+  int32 switched = 0;
+  for (size_t i = 0; i < components_.size(); i++) {
+    if (dynamic_cast<AffineComponent*>(components_[i]) != NULL) {
+      AffineComponentPreconditionedOnline *ac =
+          new AffineComponentPreconditionedOnline(
+              *(dynamic_cast<AffineComponent*>(components_[i])),
+              rank_in, rank_out, update_period, num_samples_history, alpha);
+      delete components_[i];
+      components_[i] = ac;
+      switched++;
+    }
+  }
+  KALDI_LOG << "Switched " << switched << " components to use online "
+            << "preconditioning, with (input, output) rank = "
+            << rank_in << ", " << rank_out << " and num_samples_history = "
+            << num_samples_history;
+  SetIndexes();
+  Check();
+}
+
 
 void Nnet::AddNnet(const VectorBase<BaseFloat> &scale_params,
                    const Nnet &other) {
@@ -628,7 +658,72 @@ void Nnet::Collapse(bool match_updatableness) {
   }
   this->SetIndexes();
   this->Check();
-  KALDI_LOG << "Collapsed " << num_collapsed << " components.";
+  KALDI_LOG << "Collapsed " << num_collapsed << " components."
+            << (num_collapsed == 0 && match_updatableness == true ?
+                "  Try --match-updatableness=false." : "");
+}
+
+Nnet *GenRandomNnet(int32 input_dim,
+                    int32 output_dim) {
+
+  std::vector<Component*> components;
+  int32 cur_dim = input_dim;
+  // have up to 4 layers before the final one.
+  for (size_t i = 0; i < 4; i++) {
+    if (rand() % 2 == 0) {
+      // add an affine component.
+      int32 next_dim = 50 + rand() % 100;
+      BaseFloat learning_rate = 0.0001, param_stddev = 0.001,
+          bias_stddev = 0.1;
+      AffineComponent *component = new AffineComponent();
+      component->Init(learning_rate, cur_dim, next_dim,
+                      param_stddev, bias_stddev);
+      components.push_back(component);
+      cur_dim = next_dim;
+    } else if (rand() % 2 == 0) {
+      components.push_back(new SigmoidComponent(cur_dim));
+    } else if (rand() % 2 == 0 && cur_dim < 200) {
+      int32 left_context = rand() % 3, right_context = rand() % 3;
+      SpliceComponent *component = new SpliceComponent();
+      component->Init(cur_dim, left_context, right_context);
+      components.push_back(component);
+      cur_dim = cur_dim * (1 + left_context + right_context);
+    } else {
+      break;
+    }
+  }
+
+  {
+    AffineComponent *component = new AffineComponent();
+    BaseFloat learning_rate = 0.0001, param_stddev = 0.001,
+        bias_stddev = 0.1;
+    component->Init(learning_rate, cur_dim, output_dim,
+                    param_stddev, bias_stddev);
+    components.push_back(component);
+    cur_dim = output_dim;
+  }
+
+  components.push_back(new SoftmaxComponent(cur_dim));
+
+  Nnet *ans = new Nnet();
+  ans->Init(&components);
+  return ans;
+}
+
+int32 Nnet::FirstUpdatableComponent() const {
+  for (int32 i = 0; i < NumComponents(); i++) {
+    if (dynamic_cast<UpdatableComponent*>(components_[i]) != NULL)
+      return i;
+  }
+  return NumComponents();
+}
+
+
+int32 Nnet::LastUpdatableComponent() const {
+  for (int32 i = NumComponents() - 1; i >= 0; i--)
+    if (dynamic_cast<UpdatableComponent*>(components_[i]) != NULL)
+      return i;
+  return -1;
 }
 
 } // namespace nnet2

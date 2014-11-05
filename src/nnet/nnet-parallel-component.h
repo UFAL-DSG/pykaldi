@@ -159,7 +159,9 @@ class ParallelComponent : public UpdatableComponent {
     for (int32 i=0; i<nnet_.size(); i++) {
       os << "nested_network #" << i+1 << "{\n" << nnet_[i].Info() << "}\n";
     }
-    return os.str();
+    std::string s(os.str());
+    s.erase(s.end() -1); // removing last '\n'
+    return s;
   }
                        
   std::string InfoGradient() const {
@@ -167,17 +169,35 @@ class ParallelComponent : public UpdatableComponent {
     for (int32 i=0; i<nnet_.size(); i++) {
       os << "nested_gradient #" << i+1 << "{\n" << nnet_[i].InfoGradient() << "}\n";
     }
+    std::string s(os.str());
+    s.erase(s.end() -1); // removing last '\n'
+    return s;
+  }
+
+  std::string InfoPropagate() const {
+    std::ostringstream os;
+    for (int32 i=0; i<nnet_.size(); i++) {
+      os << "nested_propagate #" << i+1 << "{\n" << nnet_[i].InfoPropagate() << "}\n";
+    }
     return os.str();
   }
 
-  void PropagateFnc(const CuMatrix<BaseFloat> &in, CuMatrix<BaseFloat> *out) {
+  std::string InfoBackPropagate() const {
+    std::ostringstream os;
+    for (int32 i=0; i<nnet_.size(); i++) {
+      os << "nested_backpropagate #" << i+1 << "{\n" << nnet_[i].InfoBackPropagate() << "}\n";
+    }
+    return os.str();
+  }
+
+  void PropagateFnc(const CuMatrixBase<BaseFloat> &in, CuMatrixBase<BaseFloat> *out) {
     int32 input_offset = 0, output_offset = 0;
     for (int32 i=0; i<nnet_.size(); i++) {
       CuSubMatrix<BaseFloat> src(in.ColRange(input_offset, nnet_[i].InputDim()));
       CuSubMatrix<BaseFloat> tgt(out->ColRange(output_offset, nnet_[i].OutputDim()));
       //
       CuMatrix<BaseFloat> tgt_aux;
-      nnet_[i].Propagate(CuMatrix<BaseFloat>(src), &tgt_aux); // need CuMatrix<> here
+      nnet_[i].Propagate(src, &tgt_aux);
       tgt.CopyFromMat(tgt_aux);
       //
       input_offset += nnet_[i].InputDim();
@@ -185,16 +205,15 @@ class ParallelComponent : public UpdatableComponent {
     }
   }
 
-  void BackpropagateFnc(const CuMatrix<BaseFloat> &in, const CuMatrix<BaseFloat> &out,
-                        const CuMatrix<BaseFloat> &out_diff, CuMatrix<BaseFloat> *in_diff) {
+  void BackpropagateFnc(const CuMatrixBase<BaseFloat> &in, const CuMatrixBase<BaseFloat> &out,
+                        const CuMatrixBase<BaseFloat> &out_diff, CuMatrixBase<BaseFloat> *in_diff) {
     int32 input_offset = 0, output_offset = 0;
     for (int32 i=0; i<nnet_.size(); i++) {
       CuSubMatrix<BaseFloat> src(out_diff.ColRange(output_offset, nnet_[i].OutputDim()));
       CuSubMatrix<BaseFloat> tgt(in_diff->ColRange(input_offset, nnet_[i].InputDim()));
       // 
       CuMatrix<BaseFloat> tgt_aux;
-      CuMatrix<BaseFloat> src_aux(src);
-      nnet_[i].Backpropagate(src_aux, &tgt_aux); // need CuMatrix<> here
+      nnet_[i].Backpropagate(src, &tgt_aux);
       tgt.CopyFromMat(tgt_aux);
       //
       input_offset += nnet_[i].InputDim();
@@ -202,7 +221,7 @@ class ParallelComponent : public UpdatableComponent {
     }
   }
 
-  void Update(const CuMatrix<BaseFloat> &input, const CuMatrix<BaseFloat> &diff) {
+  void Update(const CuMatrixBase<BaseFloat> &input, const CuMatrixBase<BaseFloat> &diff) {
     ; // do nothing
   }
  

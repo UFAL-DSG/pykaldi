@@ -30,8 +30,11 @@
 
 namespace kaldi {
 
-// the same as FasterDecoderOptions for now.
-typedef FasterDecoderOptions BiglmFasterDecoderOptions;
+struct BiglmFasterDecoderOptions: public FasterDecoderOptions {
+  BiglmFasterDecoderOptions() {
+    min_active = 200;
+  }
+};
 
 /** This is as FasterDecoder, but does online composition between
     HCLG and the "difference language model", which is a deterministic
@@ -96,7 +99,7 @@ class BiglmFasterDecoder {
   }
 
   bool ReachedFinal() {
-    for (Elem *e = toks_.GetList(); e != NULL; e = e->tail) {
+    for (const Elem *e = toks_.GetList(); e != NULL; e = e->tail) {
       PairId state_pair = e->key;
       StateId state = PairToState(state_pair),
           lm_state = PairToLmState(state_pair);
@@ -109,9 +112,11 @@ class BiglmFasterDecoder {
     return false;
   }
 
-  bool GetBestPath(fst::MutableFst<LatticeArc> *fst_out) {
-    // GetBestPath gets the decoding output.  If is_final == true, it limits itself
-    // to final states; otherwise it gets the most likely token not taking into
+  bool GetBestPath(fst::MutableFst<LatticeArc> *fst_out,
+                   bool use_final_probs = true) {
+    // GetBestPath gets the decoding output.  If "use_final_probs" is true
+    // AND we reached a final state, it limits itself to final states;
+    // otherwise it gets the most likely token not taking into
     // account final-probs.  fst_out will be empty (Start() == kNoStateId) if
     // nothing was available.  It returns true if it got output (thus, fst_out
     // will be nonempty).
@@ -121,12 +126,12 @@ class BiglmFasterDecoder {
     // to the best final token (i.e. the one with best weight best_weight, below).
     bool is_final = ReachedFinal();
     if (!is_final) {
-      for (Elem *e = toks_.GetList(); e != NULL; e = e->tail)
+      for (const Elem *e = toks_.GetList(); e != NULL; e = e->tail)
         if (best_tok == NULL || *best_tok < *(e->val) )
           best_tok = e->val;
     } else {
       Weight best_weight = Weight::Zero();
-      for (Elem *e = toks_.GetList(); e != NULL; e = e->tail) {
+      for (const Elem *e = toks_.GetList(); e != NULL; e = e->tail) {
         Weight fst_final = fst_.Final(PairToState(e->key)),
             lm_final = lm_diff_fst_->Final(PairToLmState(e->key)),
             final = Times(fst_final, lm_final);
@@ -165,7 +170,7 @@ class BiglmFasterDecoder {
       fst_out->AddArc(cur_state, arc);
       cur_state = arc.nextstate;
     }
-    if (is_final) {
+    if (is_final && use_final_probs) {
       fst_out->SetFinal(cur_state, LatticeWeight(best_final.Value(), 0.0));
     } else {
       fst_out->SetFinal(cur_state, LatticeWeight::One());
@@ -238,7 +243,8 @@ class BiglmFasterDecoder {
                       BaseFloat *adaptive_beam, Elem **best_elem) {
     BaseFloat best_weight = 1.0e+10;  // positive == high cost == bad.
     size_t count = 0;
-    if (opts_.max_active == std::numeric_limits<int32>::max()) {
+    if (opts_.max_active == std::numeric_limits<int32>::max() &&
+        opts_.min_active == 0) {
       for (Elem *e = list_head; e != NULL; e = e->tail, count++) {
         BaseFloat w = static_cast<BaseFloat>(e->val->weight_.Value());
         if (w < best_weight) {
@@ -260,22 +266,40 @@ class BiglmFasterDecoder {
         }
       }
       if (tok_count != NULL) *tok_count = count;
-      if (tmp_array_.size() <= static_cast<size_t>(opts_.max_active)) {
-        if (adaptive_beam) *adaptive_beam = opts_.beam;
-        return best_weight + opts_.beam;
-      } else {
-        // the lowest elements (lowest costs, highest likes)
-        // will be put in the left part of tmp_array.
+
+      BaseFloat beam_cutoff = best_weight + opts_.beam,
+        min_active_cutoff = std::numeric_limits<BaseFloat>::infinity(),
+        max_active_cutoff = std::numeric_limits<BaseFloat>::infinity();
+
+      if (tmp_array_.size() > static_cast<size_t>(opts_.max_active)) {
         std::nth_element(tmp_array_.begin(),
-                         tmp_array_.begin()+opts_.max_active,
+                         tmp_array_.begin() + opts_.max_active,
                          tmp_array_.end());
-        // return the tighter of the two beams.
-        BaseFloat ans = std::min(best_weight + opts_.beam,
-                                 *(tmp_array_.begin()+opts_.max_active));
+        max_active_cutoff = tmp_array_[opts_.max_active];
+      }
+      if (tmp_array_.size() > static_cast<size_t>(opts_.min_active)) {
+        if (opts_.min_active == 0) min_active_cutoff = best_weight;
+        else {
+          std::nth_element(tmp_array_.begin(),
+                           tmp_array_.begin() + opts_.min_active,
+                           tmp_array_.size() > static_cast<size_t>(opts_.max_active) ?
+                           tmp_array_.begin() + opts_.max_active :
+                           tmp_array_.end());
+          min_active_cutoff = tmp_array_[opts_.min_active];
+        }
+      }
+
+      if (max_active_cutoff < beam_cutoff) { // max_active is tighter than beam.
         if (adaptive_beam)
-          *adaptive_beam = std::min(opts_.beam,
-                                    ans - best_weight + opts_.beam_delta);
-        return ans;
+          *adaptive_beam = max_active_cutoff - best_weight + opts_.beam_delta;
+        return max_active_cutoff;
+      } else if (min_active_cutoff > beam_cutoff) { // min_active is looser than beam.
+        if (adaptive_beam)
+          *adaptive_beam = min_active_cutoff - best_weight + opts_.beam_delta;
+        return min_active_cutoff;
+      } else {
+        *adaptive_beam = opts_.beam;
+        return beam_cutoff;
       }
     }
   }
@@ -349,20 +373,16 @@ class BiglmFasterDecoder {
       }
     }
 
-    // int32 n = 0, np = 0;
-
     // the tokens are now owned here, in last_toks, and the hash is empty.
-    // 'owned' is a complex thing here; the point is we need to call TokenDelete
+    // 'owned' is a complex thing here; the point is we need to call toks_.Delete(e)
     // on each elem 'e' to let toks_ know we're done with them.
     for (Elem *e = last_toks, *e_tail; e != NULL; e = e_tail) {  // loop this way
-      // n++;
       // because we delete "e" as we go.
       PairId state_pair = e->key;
       StateId state = PairToState(state_pair),
           lm_state = PairToLmState(state_pair);
       Token *tok = e->val;
       if (tok->weight_.Value() < weight_cutoff) {  // not pruned.
-        // np++;
         KALDI_ASSERT(state == tok->arc_.nextstate);
         for (fst::ArcIterator<fst::Fst<Arc> > aiter(fst_, state);
             !aiter.Done();
@@ -404,7 +424,7 @@ class BiglmFasterDecoder {
   void ProcessNonemitting(BaseFloat cutoff) {
     // Processes nonemitting arcs for one frame. 
     KALDI_ASSERT(queue_.empty());
-    for (Elem *e = toks_.GetList(); e != NULL;  e = e->tail)
+    for (const Elem *e = toks_.GetList(); e != NULL;  e = e->tail)
       queue_.push_back(e->key);
     while (!queue_.empty()) {
       PairId state_pair = queue_.back();

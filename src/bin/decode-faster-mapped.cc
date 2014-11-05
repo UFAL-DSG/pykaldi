@@ -26,7 +26,7 @@
 #include "fstext/fstext-lib.h"
 #include "decoder/faster-decoder.h"
 #include "decoder/decodable-matrix.h"
-#include "util/timer.h"
+#include "base/timer.h"
 #include "lat/kaldi-lattice.h" // for {Compact}LatticeArc
 
 int main(int argc, char *argv[]) {
@@ -40,8 +40,8 @@ int main(int argc, char *argv[]) {
     const char *usage =
         "Decode, reading log-likelihoods as matrices\n"
         " (model is needed only for the integer mappings in its transition-model)\n"
-        "Usage:   decode-faster-mapped [options] model-in fst-in "
-        "loglikes-rspecifier words-wspecifier [alignments-wspecifier]\n";
+        "Usage:   decode-faster-mapped [options] <model-in> <fst-in> "
+        "<loglikes-rspecifier> <words-wspecifier> [<alignments-wspecifier>]\n";
     ParseOptions po(usage);
     bool binary = true;
     BaseFloat acoustic_scale = 0.1;

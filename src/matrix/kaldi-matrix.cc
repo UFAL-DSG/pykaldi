@@ -66,6 +66,7 @@ void MatrixBase<Real>::Invert(Real *log_det, Real *det_sign,
     } else {
       if (log_det) *log_det = -std::numeric_limits<Real>::infinity();
       if (det_sign) *det_sign = 0;
+      delete[] pivot;
       return;
     }
   }
@@ -175,8 +176,8 @@ void MatrixBase<Real>::AddMatMat(const Real alpha,
 
 template<typename Real>
 void MatrixBase<Real>::AddMatMatDivMat(const MatrixBase<Real>& A,
-             	     		       const MatrixBase<Real>& B,
-                    		       const MatrixBase<Real>& C) {
+                                     const MatrixBase<Real>& B,
+                                   const MatrixBase<Real>& C) {
   KALDI_ASSERT(A.NumRows() == B.NumRows() && A.NumCols() == B.NumCols());
   KALDI_ASSERT(A.NumRows() == C.NumRows() && A.NumCols() == C.NumCols());
   for (int32 r = 0; r < A.NumRows(); r++) { // each frame...
@@ -227,6 +228,22 @@ void MatrixBase<Real>::SymAddMat2(const Real alpha,
                 (transA == kTrans && A.num_cols_ == num_cols_)));
   KALDI_ASSERT(A.data_ != data_);
   if (num_rows_ == 0) return;
+
+  /// When the matrix dimension(this->num_rows_) is not less than 56
+  /// and the transpose type transA == kTrans, the cblas_Xsyrk(...)
+  /// function will produce NaN in the output. This is a bug in the
+  /// ATLAS library. To overcome this, the AddMatMat function, which calls
+  /// cblas_Xgemm(...) rather than cblas_Xsyrk(...), is used in this special
+  /// sitation.
+  /// Wei Shi: Note this bug is observerd for single precision matrix
+  /// on a 64-bit machine
+#ifdef HAVE_ATLAS
+  if (transA == kTrans && num_rows_ >= 56) {
+    this->AddMatMat(alpha, A, kTrans, A, kNoTrans, beta);
+    return;
+  }
+#endif // HAVE_ATLAS
+
   MatrixIndexT A_other_dim = (transA == kNoTrans ? A.num_cols_ : A.num_rows_);
   
   // This function call is hard-coded to update the lower triangle.
@@ -563,6 +580,7 @@ inline void Matrix<Real>::Init(const MatrixIndexT rows,
     this->data_ = NULL;
     return;
   }
+  KALDI_ASSERT(rows > 0 && cols > 0);
   // initialize some helping vars
   MatrixIndexT skip;
   MatrixIndexT real_cols;
@@ -713,13 +731,9 @@ void MatrixBase<Real>::CopyFromSp(const SpMatrix<OtherReal> & M) {
 
 // Instantiate this function
 template
-void MatrixBase<float>::CopyFromSp(const SpMatrix<float> & M);
-template
 void MatrixBase<float>::CopyFromSp(const SpMatrix<double> & M);
 template
 void MatrixBase<double>::CopyFromSp(const SpMatrix<float> & M);
-template
-void MatrixBase<double>::CopyFromSp(const SpMatrix<double> & M);
 
 
 template<typename Real>
@@ -989,53 +1003,52 @@ void MatrixBase<Real>::MulRowsVec(const VectorBase<Real> &scale) {
   }
 }
 
+
 template<typename Real> 
 void MatrixBase<Real>::MulRowsGroupMat(const MatrixBase<Real> &src) {
-  KALDI_ASSERT(src.NumCols() > 0 && src.NumCols() <= this->NumCols());
-  KALDI_ASSERT(this->NumCols() % src.NumCols() == 0 || 
-  	this->NumCols() % (src.NumCols() - 1) < this->NumCols() / (src.NumCols() - 1));
-  int group_size = 0;
-  if (this->NumCols() % src.NumCols() == 0) {
-    group_size = this->NumCols() / src.NumCols();
-  } else {
-    group_size = this->NumCols() / src.NumCols() + 1; 
-  }
-  MatrixIndexT M = num_rows_, N = num_cols_;
+  KALDI_ASSERT(src.NumRows() == this->NumRows() &&
+               this->NumCols() % src.NumCols() == 0);
+  int32 group_size = this->NumCols() / src.NumCols(),
+      num_groups = this->NumCols() / group_size,
+      num_rows = this->NumRows();
 
-  for (MatrixIndexT i = 0; i < M; i++) 
-    for (MatrixIndexT j = 0; j < N; j++) 
-      (*this)(i, j) *= src(i, j / group_size);
+  for (MatrixIndexT i = 0; i < num_rows; i++) {
+    Real *data = this->RowData(i);
+    for (MatrixIndexT j = 0; j < num_groups; j++, data += group_size) {
+      Real scale = src(i, j);
+      cblas_Xscal(group_size, scale, data, 1);
+    }
+  }
 }
 
 template<typename Real> 
-void MatrixBase<Real>::GroupPnormDeriv(const MatrixBase<Real> &src1,
-                                       const MatrixBase<Real> &src2,
+void MatrixBase<Real>::GroupPnormDeriv(const MatrixBase<Real> &input,
+                                       const MatrixBase<Real> &output,
                                        Real power) {
-  KALDI_ASSERT(src2.NumCols() > 0 && src2.NumCols() <= this->NumCols());
-  KALDI_ASSERT(this->NumCols() % src2.NumCols() == 0 || 
-  	this->NumCols() % (src2.NumCols() - 1) < this->NumCols() / (src2.NumCols() - 1));
-  int group_size = 0;
-  if (this->NumCols() % src2.NumCols() == 0) {
-    group_size = this->NumCols() / src2.NumCols();
-  } else {
-    group_size = this->NumCols() / src2.NumCols() + 1; 
-  }
-  MatrixIndexT M = this->NumRows(), N = this->NumCols(); 
+  KALDI_ASSERT(input.NumCols() == this->NumCols() && input.NumRows() == this->NumRows());
+  KALDI_ASSERT(this->NumCols() % output.NumCols() == 0 &&
+               this->NumRows() == output.NumRows());
+
+  int group_size = this->NumCols() / output.NumCols(),
+    num_rows = this->NumRows(), num_cols = this->NumCols(); 
 
   if (power == 1.0) {   
-    for (MatrixIndexT i = 0; i < M; i++) 
-      for (MatrixIndexT j = 0; j < N; j++) 
-	  (*this)(i, j) = (src1(i, j) == 0 ? 0 : (src1(i, j) > 0 ? 1 : -1));
+    for (MatrixIndexT i = 0; i < num_rows; i++) { 
+      for (MatrixIndexT j = 0; j < num_cols; j++) {
+        Real input_val = input(i, j);
+        (*this)(i, j) = (input_val == 0 ? 0 : (input_val > 0 ? 1 : -1));
+      }
+    }
   } else {
-    for (MatrixIndexT i = 0; i < M; i++) {
-      for (MatrixIndexT j = 0; j < N; j++) {
-        if (src2(i, j / group_size) == 0) {
+    for (MatrixIndexT i = 0; i < num_rows; i++) {
+      for (MatrixIndexT j = 0; j < num_cols; j++) {
+        Real output_val = output(i, j / group_size),
+          input_val = input(i, j);
+        if (output_val == 0) 
           (*this)(i, j) = 0;
-        } else {
-      	  (*this)(i, j) = pow(std::abs(src1(i, j)), power - 1) * 
-              (src2(i, j / group_size) > 0 ? pow(src2(i, j / group_size), 1 - power) : 1) * 
-              (src1(i, j) >= 0 ? 1 : -1) ;
-        }
+         else
+            (*this)(i, j) = pow(std::abs(input_val), power - 1) * 
+              pow(output_val, 1 - power) * (input_val >= 0 ? 1 : -1) ;
       }
     }
   }
@@ -1079,20 +1092,24 @@ void MatrixBase<Real>::SetUnit() {
 
 template<typename Real>
 void MatrixBase<Real>::SetRandn() {
+  kaldi::RandomState rstate;
   for (MatrixIndexT row = 0; row < num_rows_; row++) {
     Real *row_data = this->RowData(row);
-    for (MatrixIndexT col = 0; col < num_cols_; col++, row_data++) {
-      *row_data = static_cast<Real>(kaldi::RandGauss());
+    MatrixIndexT nc = (num_cols_ % 2 == 1) ? num_cols_ - 1 : num_cols_;
+    for (MatrixIndexT col = 0; col < nc; col += 2) {
+      kaldi::RandGauss2(row_data + col, row_data + col + 1, &rstate);
     }
+    if (nc != num_cols_) row_data[nc] = static_cast<Real>(kaldi::RandGauss(&rstate));
   }
 }
 
 template<typename Real>
 void MatrixBase<Real>::SetRandUniform() {
+  kaldi::RandomState rstate;
   for (MatrixIndexT row = 0; row < num_rows_; row++) {
     Real *row_data = this->RowData(row);
     for (MatrixIndexT col = 0; col < num_cols_; col++, row_data++) {
-      *row_data = static_cast<Real>(kaldi::RandUniform());
+      *row_data = static_cast<Real>(kaldi::RandUniform(&rstate));
     }
   }
 }
@@ -1406,7 +1423,7 @@ Real MatrixBase<Real>::Cond() const {
     min = std::min((Real)std::abs(singular_values(i)), min); max = std::max((Real)std::abs(singular_values(i)), max);
   }
   if (min > 0) return max/min;
-  else return 1.0e+100;
+  else return std::numeric_limits<Real>::infinity();
 }
 
 template<typename Real>
@@ -1593,7 +1610,6 @@ void MatrixBase<Real>::TestUninitialized() const {
 template<typename Real>
 bool MatrixBase<Real>::IsUnit(Real cutoff) const {
   MatrixIndexT R = num_rows_, C = num_cols_;
-  // if (R != C) return false;
   Real bad_max = 0.0;
   for (MatrixIndexT i = 0; i < R;i++)
     for (MatrixIndexT j = 0; j < C;j++)
@@ -1832,6 +1848,13 @@ template<typename Real>
 void MatrixBase<Real>::ApplyPow(Real power) {
   for (MatrixIndexT i = 0; i < num_rows_; i++) {
     Row(i).ApplyPow(power);
+  }
+}
+
+template<typename Real>
+void MatrixBase<Real>::ApplyPowAbs(Real power, bool include_sign) {
+  for (MatrixIndexT i = 0; i < num_rows_; i++) {
+    Row(i).ApplyPowAbs(power, include_sign);
   }
 }
 
@@ -2252,7 +2275,7 @@ void CreateEigenvalueMatrix(const VectorBase<Real> &re, const VectorBase<Real> &
     } else {  // First of a complex pair
       KALDI_ASSERT(j+1 < n && ApproxEqual(im(j+1), -im(j))
                    && ApproxEqual(re(j+1), re(j)));
-      /// if (im(j) < 0.0) KALDI_WARN << "Negative first im part of pair\n";  // TEMP
+      /// if (im(j) < 0.0) KALDI_WARN << "Negative first im part of pair";  // TEMP
       Real lambda = re(j), mu = im(j);
       // create 2x2 block [lambda, mu; -mu, lambda]
       (*D)(j, j) = lambda;
@@ -2408,12 +2431,15 @@ void MatrixBase<Real>::SoftHinge(const MatrixBase<Real> &src) {
     }
   }
 }
+
 template<typename Real>
 void MatrixBase<Real>::GroupPnorm(const MatrixBase<Real> &src, Real power) {
-  int group_size = src.NumCols() / this->NumCols();
-  KALDI_ASSERT(src.NumCols() == this->NumCols() * group_size);
-  for (MatrixIndexT i = 0; i < src.NumRows(); i++)
-    for (MatrixIndexT j = 0; j < this->NumCols(); j++)
+  KALDI_ASSERT(src.NumCols() % this->NumCols() == 0 &&
+               src.NumRows() == this->NumRows());
+  int group_size = src.NumCols() / this->NumCols(),
+    num_rows = this->NumRows(), num_cols = this->NumCols();
+  for (MatrixIndexT i = 0; i < num_rows; i++)
+    for (MatrixIndexT j = 0; j < num_cols; j++)
       (*this)(i, j) = src.Row(i).Range(j * group_size,  group_size).Norm(power);
 }
 

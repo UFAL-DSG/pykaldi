@@ -37,7 +37,6 @@ samples_per_iter=200000 # each iteration of training, see this many samples
 num_jobs_nnet=16   # Number of neural net jobs to run in parallel.  This option
                    # is passed to get_egs.sh.
 get_egs_stage=0
-spk_vecs_dir=
 
 shuffle_buffer_size=5000 # This "buffer_size" variable controls randomization of the samples
                 # on each iter.  You could set it to 0 or to a large value for complete
@@ -58,7 +57,7 @@ randprune=4.0 # speeds up LDA.
 alpha=4.0
 max_change=10.0
 mix_up=0 # Number of components to mix up to (should be > #tree leaves, if
-        # specified.)
+         # specified.)
 num_threads=16
 parallel_opts="-pe smp 16 -l ram_free=1G,mem_free=1G" # by default we use 16 threads; this lets the queue know.
   # note: parallel_opts doesn't automatically get adjusted if you adjust num-threads.
@@ -67,6 +66,11 @@ egs_dir=
 lda_opts=
 egs_opts=
 transform_dir=
+cmvn_opts=  # will be passed to get_lda.sh and get_egs.sh, if supplied.  
+            # only relevant for "raw" features, not lda.
+feat_type=  # can be used to force "raw" feature type.
+prior_subset_size=10000 # 10k samples per job, for computing priors.  Should be
+                        # more than enough.
 # End configuration section.
 
 
@@ -115,13 +119,8 @@ if [ $# != 4 ]; then
   echo "  --splice-width <width|4>                         # Number of frames on each side to append for feature input"
   echo "                                                   # (note: we splice processed, typically 40-dimensional frames"
   echo "  --lda-dim <dim|250>                              # Dimension to reduce spliced features to with LDA"
-  echo "  --num-iters-final <#iters|10>                    # Number of final iterations to give to nnet-combine-fast to "
+  echo "  --num-iters-final <#iters|20>                    # Number of final iterations to give to nnet-combine-fast to "
   echo "                                                   # interpolate parameters (the weights are learned with a validation set)"
-  echo "  --num-utts-subset <#utts|300>                    # Number of utterances in subsets used for validation and diagnostics"
-  echo "                                                   # (the validation subset is held out from training)"
-  echo "  --num-frames-diagnostic <#frames|4000>           # Number of frames used in computing (train,valid) diagnostics"
-  echo "  --num-valid-frames-combine <#frames|10000>       # Number of frames used in getting combination weights at the"
-  echo "                                                   # very end."
   echo "  --stage <stage|-9>                               # Used to run a partially-completed training process from somewhere in"
   echo "                                                   # the middle."
   
@@ -148,15 +147,19 @@ sdata=$data/split$nj
 utils/split_data.sh $data $nj
 
 mkdir -p $dir/log
-splice_opts=`cat $alidir/splice_opts 2>/dev/null`
-cp $alidir/splice_opts $dir 2>/dev/null
-cp $alidir/norm_vars $dir 2>/dev/null
 cp $alidir/tree $dir
 
+extra_opts=()
+[ ! -z "$cmvn_opts" ] && extra_opts+=(--cmvn-opts "$cmvn_opts")
+[ ! -z "$feat_type" ] && extra_opts+=(--feat-type $feat_type)
+[ ! -z "$online_ivector_dir" ] && extra_opts+=(--online-ivector-dir $online_ivector_dir)
+[ -z "$transform_dir" ] && transform_dir=$alidir
+extra_opts+=(--transform-dir $transform_dir)
+extra_opts+=(--splice-width $splice_width)
 
 if [ $stage -le -4 ]; then
   echo "$0: calling get_lda.sh"
-  steps/nnet2/get_lda.sh $lda_opts --splice-width $splice_width --cmd "$cmd" $data $lang $alidir $dir || exit 1;
+  steps/nnet2/get_lda.sh $lda_opts "${extra_opts[@]}" --cmd "$cmd" $data $lang $alidir $dir || exit 1;
 fi
 
 # these files will have been written by get_lda.sh
@@ -165,10 +168,9 @@ lda_dim=`cat $dir/lda_dim` || exit 1;
 
 if [ $stage -le -3 ] && [ -z "$egs_dir" ]; then
   echo "$0: calling get_egs.sh"
-  [ ! -z $spk_vecs_dir ] && spk_vecs_opt="--spk-vecs-dir $spk_vecs_dir";
-  [ ! -z $transform_dir ] && $transform_dir_opt="--transform-dir $transform_dir";
-  steps/nnet2/get_egs.sh $spk_vecs_opt $transform_dir_opt --samples-per-iter $samples_per_iter \
-      --num-jobs-nnet $num_jobs_nnet --splice-width $splice_width --stage $get_egs_stage \
+  steps/nnet2/get_egs.sh $egs_opts "${extra_opts[@]}" \
+      --samples-per-iter $samples_per_iter \
+      --num-jobs-nnet $num_jobs_nnet --stage $get_egs_stage \
       --cmd "$cmd" $egs_opts --io-opts "$io_opts" \
       $data $lang $alidir $dir || exit 1;
 fi
@@ -191,24 +193,13 @@ fi
 if [ $stage -le -2 ]; then
   echo "$0: initializing neural net";
 
-  # Get spk-vec dim (in case we're using them).
-  if [ ! -z "$spk_vecs_dir" ]; then
-    spk_vec_dim=$[$(copy-vector --print-args=false "ark:cat $spk_vecs_dir/vecs.1|" ark,t:- | head -n 1 | wc -w) - 3];
-    ! [ $spk_vec_dim -gt 0 ] && echo "Error getting spk-vec dim" && exit 1;
-    ext_lda_dim=$[$lda_dim + $spk_vec_dim]
-    extend-transform-dim --new-dimension=$ext_lda_dim $dir/lda.mat $dir/lda_ext.mat || exit 1;
-    lda_mat=$dir/lda_ext.mat
-    ext_feat_dim=$[$feat_dim + $spk_vec_dim]
-  else
-    spk_vec_dim=0
-    lda_mat=$dir/lda.mat
-    ext_lda_dim=$lda_dim
-    ext_feat_dim=$feat_dim
-  fi
+  lda_mat=$dir/lda.mat
+  ext_lda_dim=$lda_dim
+  ext_feat_dim=$feat_dim
 
   stddev=`perl -e "print 1.0/sqrt($hidden_layer_dim);"`
   cat >$dir/nnet.config <<EOF
-SpliceComponent input-dim=$ext_feat_dim left-context=$splice_width right-context=$splice_width const-component-dim=$spk_vec_dim
+SpliceComponent input-dim=$ext_feat_dim left-context=$splice_width right-context=$splice_width
 FixedAffineComponent matrix=$lda_mat
 AffineComponentPreconditioned input-dim=$ext_lda_dim output-dim=$hidden_layer_dim alpha=$alpha max-change=$max_change learning-rate=$initial_learning_rate param-stddev=$stddev bias-stddev=$bias_stddev
 TanhComponent dim=$hidden_layer_dim
@@ -251,6 +242,11 @@ mix_up_iter=$[($num_iters + $finish_add_layers_iter)/2]
 if [ $num_threads -eq 1 ]; then
   train_suffix="-simple" # this enables us to use GPU code if
                          # we have just one thread.
+  if ! cuda-compiled; then
+    echo "$0: WARNING: you are running with one thread but you have not compiled"
+    echo "   for CUDA.  You may be running a setup optimized for GPUs.  If you have"
+    echo "   GPUs and have nvcc installed, go to src/ and do ./configure; make"
+  fi
 else
   train_suffix="-parallel --num-threads=$num_threads"
 fi
@@ -371,15 +367,36 @@ if [ $stage -le $num_iters ]; then
     nnet-combine-fast --use-gpu=no --num-threads=$this_num_threads \
       --verbose=3 --minibatch-size=$mb "${nnets_list[@]}" ark:$egs_dir/combine.egs \
       $dir/final.mdl || exit 1;
+
+  # Compute the probability of the final, combined model with
+  # the same subset we used for the previous compute_probs, as the
+  # different subsets will lead to different probs.
+  $cmd $dir/log/compute_prob_valid.final.log \
+    nnet-compute-prob $dir/final.mdl ark:$egs_dir/valid_diagnostic.egs &
+  $cmd $dir/log/compute_prob_train.final.log \
+    nnet-compute-prob $dir/final.mdl ark:$egs_dir/train_diagnostic.egs &
 fi
 
-# Compute the probability of the final, combined model with
-# the same subset we used for the previous compute_probs, as the
-# different subsets will lead to different probs.
-$cmd $dir/log/compute_prob_valid.final.log \
-  nnet-compute-prob $dir/final.mdl ark:$egs_dir/valid_diagnostic.egs &
-$cmd $dir/log/compute_prob_train.final.log \
-  nnet-compute-prob $dir/final.mdl ark:$egs_dir/train_diagnostic.egs &
+if [ $stage -le $[$num_iters+1] ]; then
+  echo "Getting average posterior for purposes of adjusting the priors."
+  # Note: this just uses CPUs, using a smallish subset of data.
+  rm $dir/post.*.vec 2>/dev/null
+  $cmd JOB=1:$num_jobs_nnet $dir/log/get_post.JOB.log \
+    nnet-subset-egs --n=$prior_subset_size ark:$egs_dir/egs.JOB.0.ark ark:- \| \
+    nnet-compute-from-egs "nnet-to-raw-nnet $dir/final.mdl -|" ark:- ark:- \| \
+    matrix-sum-rows ark:- ark:- \| vector-sum ark:- $dir/post.JOB.vec || exit 1;
+
+  sleep 3;  # make sure there is time for $dir/post.*.vec to appear.
+
+  $cmd $dir/log/vector_sum.log \
+   vector-sum $dir/post.*.vec $dir/post.vec || exit 1;
+
+  rm $dir/post.*.vec;
+
+  echo "Re-adjusting priors based on computed posteriors"
+  $cmd $dir/log/adjust_priors.log \
+    nnet-adjust-priors $dir/final.mdl $dir/post.vec $dir/final.mdl || exit 1;
+fi
 
 sleep 2
 
@@ -388,12 +405,11 @@ echo Done
 if $cleanup; then
   echo Cleaning up data
   if [ $egs_dir == "$dir/egs" ]; then
-    echo Removing training examples
-    rm $dir/egs/egs*
+    steps/nnet2/remove_egs.sh $dir/egs
   fi
   echo Removing most of the models
   for x in `seq 0 $num_iters`; do
-    if [ $[$x%10] -ne 0 ] && [ $x -lt $[$num_iters-$num_iters_final+1] ]; then 
+    if [ $[$x%100] -ne 0 ] && [ $x -lt $[$num_iters-$num_iters_final+1] ]; then 
        # delete all but every 10th model; don't delete the ones which combine to form the final model.
       rm $dir/$x.mdl
     fi

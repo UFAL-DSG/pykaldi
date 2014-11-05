@@ -184,8 +184,9 @@ struct DeterminizeLatticePhonePrunedOptions {
     Returns true on success, and false if it had to terminate the determinization
     earlier than specified by the "prune" beam-- that is, if it terminated because
     of the max_mem, max_loop or max_arcs constraints in the options.
+    CAUTION: you may want to use the version below which outputs to CompactLattice.
 */
-template<class Weight, class IntType>
+template<class Weight>
 bool DeterminizeLatticePruned(
     const ExpandedFst<ArcTpl<Weight> > &ifst,
     double prune,
@@ -201,6 +202,8 @@ bool DeterminizeLatticePruned(
     Returns true on success, and false if it had to terminate the determinization
     earlier than specified by the "prune" beam-- that is, if it terminated because
     of the max_mem, max_loop or max_arcs constraints in the options.
+    CAUTION: if Lattice is the input, you need to Invert() before calling this,
+    so words are on the input side.
 */
 template<class Weight, class IntType>
 bool DeterminizeLatticePruned(
@@ -240,6 +243,13 @@ void DeterminizeLatticeDeletePhones(
     true, it then does a second pass of determinization on the word lattices by
     calling DeterminizeLatticePruned(). If both are set to false, then it gives
     a warning and copying the lattices without determinization.
+
+    Note: the point of doing first a phone-level determinization pass and then
+    a word-level determinization pass is that it allows us to determinize
+    deeper lattices without "failing early" and returning a too-small lattice
+    due to the max-mem constraint.  The result should be the same as word-level
+    determinization in general, but for deeper lattices it is a bit faster,
+    despite the fact that we now have two passes of determinization by default.
 */
 template<class Weight, class IntType>
 bool DeterminizeLatticePhonePruned(

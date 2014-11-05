@@ -28,6 +28,10 @@
 #include "cudamatrix/cu-math.h"
 #include "cudamatrix/cu-array.h"
 
+#if defined(_MSC_VER)
+#include <time.h>
+#endif
+
 using namespace kaldi;
 
 
@@ -40,7 +44,7 @@ namespace kaldi {
       
 template<typename Real> 
 static void UnitTestCuMathRandomize() {
-  int32 M = 100 + rand() % 200, N = 100 + rand() % 200;
+  int32 M = 100 + Rand() % 200, N = 100 + Rand() % 200;
   CuMatrix<Real> src(M, N);
   CuMatrix<Real> tgt(M, N);
   CuArray<int32> copy_from_idx;
@@ -51,7 +55,7 @@ static void UnitTestCuMathRandomize() {
   std::vector<int32> copy_from_idx_vec;
 
   for (int32 i = 0; i < n_rows; i++) {
-    copy_from_idx_vec.push_back(rand() % n_rows);
+    copy_from_idx_vec.push_back(Rand() % n_rows);
   }
   copy_from_idx.CopyFromVec(copy_from_idx_vec);
   cu::Randomize(src, copy_from_idx, &tgt);
@@ -68,7 +72,7 @@ static void UnitTestCuMathRandomize() {
 
 template<typename Real> 
 static void UnitTestCuMathCopy() {
-  int32 M = 100 + rand() % 200, N = 100 + rand() % 200;
+  int32 M = 100 + Rand() % 200, N = 100 + Rand() % 200;
   CuMatrix<Real> src(M, N);
   CuMatrix<Real> tgt(M, N);
   CuArray<int32> copy_from_idx;
@@ -79,7 +83,7 @@ static void UnitTestCuMathCopy() {
   std::vector<int32> copy_from_idx_vec;
 
   for (int32 i = 0; i < n_columns; i++) {
-    copy_from_idx_vec.push_back(rand() % n_columns);
+    copy_from_idx_vec.push_back(Rand() % n_columns);
   }
   copy_from_idx.CopyFromVec(copy_from_idx_vec);
   cu::Copy(src, copy_from_idx, &tgt);
@@ -95,7 +99,7 @@ static void UnitTestCuMathCopy() {
 
 template<typename Real> 
 static void UnitTestCuMathSplice() {
-  int32 M = 100 + rand() % 200, N = 100 + rand() % 200;
+  int32 M = 100 + Rand() % 200, N = 100 + Rand() % 200;
   CuMatrix<Real> src(M, N);
   CuArray<int32> frame_offsets;
 
@@ -107,27 +111,28 @@ static void UnitTestCuMathSplice() {
   // The number of columns of tgt is rows(src) 
   // times n_frame_offsets, so we keep n_frame_offsets 
   // reasonably small (2 <= n <= 6).
-  int32 n_frame_offsets = rand() % 7 + 2;
+  int32 n_frame_offsets = Rand() % 7 + 2;
   for (int32 i = 0; i < n_frame_offsets; i++) {
-    frame_offsets_vec.push_back(rand() % 2 * n_columns - n_columns);
+    frame_offsets_vec.push_back(Rand() % 2 * n_columns - n_columns);
   }
 
   CuMatrix<Real> tgt(M, N * n_frame_offsets);
   frame_offsets.CopyFromVec(frame_offsets_vec);
   cu::Splice(src, frame_offsets, &tgt);
 
+  Matrix<Real> src_copy(src), tgt_copy(tgt);
   for (int32 i = 0; i < n_rows; i++) {
     for (int32 k = 0; k < n_frame_offsets; k++) {
       for (int32 j = 0; j < n_columns; j++) {
         Real src_val; 
         if (i + frame_offsets_vec.at(k) >= n_rows) {
-          src_val = src(n_rows-1, j);
+          src_val = src_copy(n_rows-1, j);
         } else if (i + frame_offsets_vec.at(k) <= 0) {
-          src_val = src(0, j);
+          src_val = src_copy(0, j);
         } else {
-          src_val = src(i + frame_offsets_vec.at(k), j); 
+          src_val = src_copy(i + frame_offsets_vec.at(k), j); 
         }
-        Real tgt_val = tgt(i, k * n_columns + j);
+        Real tgt_val = tgt_copy(i, k * n_columns + j);
         AssertEqual(src_val, tgt_val);
       }
     }
@@ -169,9 +174,9 @@ int main() {
 #endif
 
     if (loop == 0)
-      KALDI_LOG << "Tests without GPU use succeeded.\n";
+      KALDI_LOG << "Tests without GPU use succeeded.";
     else
-      KALDI_LOG << "Tests with GPU use (if available) succeeded.\n";
+      KALDI_LOG << "Tests with GPU use (if available) succeeded.";
   }
 #if HAVE_CUDA == 1
   CuDevice::Instantiate().PrintProfile();

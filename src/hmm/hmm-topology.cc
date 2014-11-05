@@ -1,6 +1,7 @@
 // hmm/hmm-topology.cc
 
 // Copyright 2009-2011  Microsoft Corporation
+//                2014  Johns Hopkins University (author: Daniel Povey)
 
 // See ../../COPYING for clarification regarding multiple authors
 //
@@ -237,7 +238,7 @@ void HmmTopology::Check() {
         // and rescoring these with a different lexicon and LM.
         if (dst_state == num_states-1 // && j != 0
             && entries_[i][j].pdf_class == kNoPdf)
-          KALDI_ERR << "We do not allow any state " // "but the first state to be "
+          KALDI_ERR << "We do not allow any state to be "
               "nonemitting and have a transition to the final-state (this would "
               "stop the SplitToPhones function from identifying the last state "
               "of a phone.";
@@ -287,6 +288,42 @@ int32 HmmTopology::NumPdfClasses(int32 phone) const {
   for (size_t i = 0; i < entry.size(); i++)
     max_pdf_class = std::max(max_pdf_class, entry[i].pdf_class);
   return max_pdf_class+1;
+}
+
+HmmTopology GetDefaultTopology(const std::vector<int32> &phones_in) {
+  std::vector<int32> phones(phones_in);
+  std::sort(phones.begin(), phones.end());
+  KALDI_ASSERT(IsSortedAndUniq(phones) && !phones.empty());
+  
+  std::ostringstream topo_string;
+  topo_string <<  "<Topology>\n"
+      "<TopologyEntry>\n"
+      "<ForPhones> ";
+  for (size_t i = 0; i < phones.size(); i++)
+    topo_string << phones[i] << " ";
+  
+  topo_string << "</ForPhones>\n"
+      "<State> 0 <PdfClass> 0\n"
+      "<Transition> 0 0.5\n"
+      "<Transition> 1 0.5\n"
+      "</State> \n"
+      "<State> 1 <PdfClass> 1 \n"
+      "<Transition> 1 0.5\n"
+      "<Transition> 2 0.5\n"
+      "</State>  \n"
+      " <State> 2 <PdfClass> 2\n"
+      " <Transition> 2 0.5\n"
+      " <Transition> 3 0.5\n"
+      " </State>   \n"
+      " <State> 3 </State>\n"
+      " </TopologyEntry>\n"
+      " </Topology>\n";
+
+  HmmTopology topo;
+  std::istringstream iss(topo_string.str());
+  topo.Read(iss, false);  
+  return topo;
+  
 }
 
 

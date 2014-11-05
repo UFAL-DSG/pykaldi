@@ -21,8 +21,7 @@ num_jobs_nnet=4    # Number of neural net jobs to run in parallel.  Note: this
                    # versa).
 samples_per_iter=400000 # measured in frames, not in "examples"
 
-spk_vecs_dir=
-modify_learning_rates=false
+modify_learning_rates=true
 last_layer_factor=1.0  # relates to modify-learning-rates
 first_layer_factor=1.0 # relates to modify-learning-rates
 shuffle_buffer_size=5000 # This "buffer_size" variable controls randomization of the samples
@@ -45,6 +44,8 @@ cleanup=true
 transform_dir=
 degs_dir=
 retroactive=false
+online_ivector_dir=
+use_preconditioning=false
 # End configuration section.
 
 
@@ -84,6 +85,8 @@ if [ $# != 6 ]; then
   echo "  --modify-learning-rates <true,false|false>       # If true, modify learning rates to try to equalize relative"
   echo "                                                   # changes across layers."
   echo "  --degs-dir <dir|"">                              # Directory for discriminative examples, e.g. exp/foo/degs"
+  echo "  --online-ivector-dir <dir|"">                    # Directory for online-estimated iVectors, used in the"
+  echo "                                                   # online-neural-net setup."
   exit 1;
 fi
 
@@ -94,9 +97,14 @@ denlatdir=$4
 src_model=$5
 dir=$6
 
+
+extra_files=
+[ ! -z $online_ivector_dir ] && \
+ extra_files="$online_ivector_dir/ivector_period $online_ivector_dir/ivector_online.scp"
+
 # Check some files.
 for f in $data/feats.scp $lang/L.fst $alidir/ali.1.gz $alidir/num_jobs $alidir/tree \
-         $denlatdir/lat.1.gz $denlatdir/num_jobs $src_model; do
+         $denlatdir/lat.1.gz $denlatdir/num_jobs $src_model $extra_files; do
   [ ! -f $f ] && echo "$0: no such file $f" && exit 1;
 done
 
@@ -115,12 +123,23 @@ mkdir -p $dir/log || exit 1;
 sdata=$data/split$nj
 utils/split_data.sh $data $nj
 
+# function to remove egs that might be soft links.
+remove () { for x in $*; do [ -L $x ] && rm $(readlink -f $x); rm $x; done }
+
 splice_opts=`cat $alidir/splice_opts 2>/dev/null`
 silphonelist=`cat $lang/phones/silence.csl` || exit 1;
-norm_vars=`cat $alidir/norm_vars 2>/dev/null` || norm_vars=false # cmn/cmvn option, default false.
+cmvn_opts=`cat $alidir/cmvn_opts 2>/dev/null`
 cp $alidir/splice_opts $dir 2>/dev/null
-cp $alidir/norm_vars $dir 2>/dev/null
+cp $alidir/cmvn_opts $dir 2>/dev/null
 cp $alidir/tree $dir
+
+if [ ! -z "$online_ivector_dir" ]; then
+  ivector_period=$(cat $online_ivector_dir/ivector_period)
+  ivector_dim=$(feat-to-dim scp:$online_ivector_dir/ivector_online.scp -) || exit 1;
+  # the 'const_dim_opt' allows it to write only one iVector per example,
+  # rather than one per time-index... it has to average over
+  const_dim_opt="--const-feat-dim=$ivector_dim"
+fi
 
 ## Set up features.
 ## Don't support deltas, only LDA or raw (mainly because deltas are less frequently used).
@@ -130,32 +149,58 @@ fi
 echo "$0: feature type is $feat_type"
 
 case $feat_type in
-  raw) feats="ark,s,cs:apply-cmvn --norm-vars=$norm_vars --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- |"
+  raw) feats="ark,s,cs:apply-cmvn $cmvn_opts --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- |"
    ;;
   lda) 
     splice_opts=`cat $alidir/splice_opts 2>/dev/null`
     cp $alidir/final.mat $dir    
-    feats="ark,s,cs:apply-cmvn --norm-vars=$norm_vars --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- | splice-feats $splice_opts ark:- ark:- | transform-feats $dir/final.mat ark:- ark:- |"
+    feats="ark,s,cs:apply-cmvn $cmvn_opts --utt2spk=ark:$sdata/JOB/utt2spk scp:$sdata/JOB/cmvn.scp scp:$sdata/JOB/feats.scp ark:- | splice-feats $splice_opts ark:- ark:- | transform-feats $dir/final.mat ark:- ark:- |"
     ;;
   *) echo "$0: invalid feature type $feat_type" && exit 1;
 esac
 
-[ -z "$transform_dir" ] && transform_dir=$alidir
-
-if [ -f $transform_dir/trans.1 ] && [ $feat_type != "raw" ]; then
-  echo "$0: using transforms from $transform_dir"
-  feats="$feats transform-feats --utt2spk=ark:$sdata/JOB/utt2spk ark:$transform_dir/trans.JOB ark:- ark:- |"
+if [ -z "$transform_dir" ]; then
+  if [ -f $transform_dir/trans.1 ] || [ -f $transform_dir/raw_trans.1 ]; then
+    transform_dir=$alidir
+  fi
 fi
-if [ -f $transform_dir/raw_trans.1 ] && [ $feat_type == "raw" ]; then
-  echo "$0: using raw-fMLLR transforms from $transform_dir"
-  feats="$feats transform-feats --utt2spk=ark:$sdata/JOB/utt2spk ark:$transform_dir/raw_trans.JOB ark:- ark:- |"
+
+if [ ! -z "$transform_dir" ]; then
+  echo "$0: using transforms from $transform_dir"
+  [ ! -s $transform_dir/num_jobs ] && \
+    echo "$0: expected $transform_dir/num_jobs to contain the number of jobs." && exit 1;
+  nj_orig=$(cat $transform_dir/num_jobs)
+  
+  if [ $feat_type == "raw" ]; then trans=raw_trans;
+  else trans=trans; fi
+  if [ $feat_type == "lda" ] && ! cmp $transform_dir/final.mat $alidir/final.mat; then
+    echo "$0: LDA transforms differ between $alidir and $transform_dir"
+    exit 1;
+  fi
+  if [ ! -f $transform_dir/$trans.1 ]; then
+    echo "$0: expected $transform_dir/$trans.1 to exist (--transform-dir option)"
+    exit 1;
+  fi
+  if [ $nj -ne $nj_orig ]; then
+    # Copy the transforms into an archive with an index.
+    for n in $(seq $nj_orig); do cat $transform_dir/$trans.$n; done | \
+       copy-feats ark:- ark,scp:$dir/$trans.ark,$dir/$trans.scp || exit 1;
+    feats="$feats transform-feats --utt2spk=ark:$sdata/JOB/utt2spk scp:$dir/$trans.scp ark:- ark:- |"
+  else
+    # number of jobs matches with alignment dir.
+    feats="$feats transform-feats --utt2spk=ark:$sdata/JOB/utt2spk ark:$transform_dir/$trans.JOB ark:- ark:- |"
+  fi
+fi
+if [ ! -z $online_ivector_dir ]; then
+  # add iVectors to the features.
+  feats="$feats paste-feats --length-tolerance=$ivector_period ark:- 'ark,s,cs:utils/filter_scp.pl $sdata/JOB/utt2spk $online_ivector_dir/ivector_online.scp | subsample-feats --n=-$ivector_period scp:- ark:- |' ark:- |"
 fi
 
 
 if [ -z "$degs_dir" ]; then
   if [ $stage -le -8 ]; then
     echo "$0: working out number of frames of training data"
-    num_frames=`feat-to-len scp:$data/feats.scp ark,t:- | awk '{x += $2;} END{print x;}'` || exit 1;
+    num_frames=$(steps/nnet2/get_num_frames.sh $data)
     echo $num_frames > $dir/num_frames
     # Working out number of iterations per epoch.
     iters_per_epoch=`perl -e "print int($num_frames/($samples_per_iter * $num_jobs_nnet) + 0.5);"` || exit 1;
@@ -175,32 +220,59 @@ else
   echo "$0: Every epoch, splitting the data up into $iters_per_epoch iterations"
 fi
 
-if [ $stage -le -7 ]; then
-  echo "$0: Copying initial model and removing any preconditioning"
-  nnet-am-copy --learning-rate=$learning_rate --remove-preconditioning=true \
-    "$src_model" $dir/0.mdl || exit 1;
+
+# we create these data links regardless of the stage, as there are situations where we
+# would want to recreate a data link that had previously been deleted.
+if [ -z "$degs_dir" ] && [ -d $dir/degs/storage ]; then
+  echo "$0: creating data links for distributed storage of degs"
+    # See utils/create_split_dir.pl for how this 'storage' directory
+    # is created.
+  for x in $(seq $num_jobs_nnet); do
+    for y in $(seq $nj); do
+      utils/create_data_link.pl $dir/degs/degs_orig.$x.$y.ark
+    done
+    for z in $(seq 0 $[$iters_per_epoch-1]); do
+      utils/create_data_link.pl $dir/degs/degs_tmp.$x.$z.ark
+      utils/create_data_link.pl $dir/degs/degs.$x.$z.ark
+    done
+  done
 fi
+
+if [ $stage -le -7 ]; then
+  echo "$0: Copying initial model and modifying preconditioning setup"
+  # We want online preconditioning with a larger number of samples of history, since
+  # in this setup the frames are only randomized at the segment level so they are highly
+  # correlated.  It might make sense to tune this a little, later on, although I doubt
+  # it matters once it's large enough.
+
+  if $use_preconditioning; then
+    $cmd $dir/log/convert.log \
+      nnet-am-copy --learning-rate=$learning_rate "$src_model" - \| \
+      nnet-am-switch-preconditioning  --num-samples-history=50000 - $dir/0.mdl || exit 1;
+  else
+    $cmd $dir/log/convert.log \
+      nnet-am-copy --learning-rate=$learning_rate "$src_model" $dir/0.mdl || exit 1;
+  fi
+fi
+
+
+
 
 if [ $stage -le -6 ] && [ -z "$degs_dir" ]; then
   echo "$0: getting initial training examples by splitting lattices"
-  if [ ! -z $spk_vecs_dir ]; then
-    [ ! -f $spk_vecs_dir/vecs.1 ] && echo "No such file $spk_vecs_dir/vecs.1" && exit 1;
-    spk_vecs_opt=("--spk-vecs=ark:cat $spk_vecs_dir/vecs.*|" "--utt2spk=ark:$data/utt2spk")
-  else
-    spk_vecs_opt=()
-  fi
 
   egs_list=
   for n in `seq 1 $num_jobs_nnet`; do
     egs_list="$egs_list ark:$dir/degs/degs_orig.$n.JOB.ark"
   done
 
+
   $cmd $io_opts JOB=1:$nj $dir/log/get_egs.JOB.log \
     nnet-get-egs-discriminative --criterion=$criterion --drop-frames=$drop_frames \
-    "${spk_vecs_opt[@]}" $dir/0.mdl "$feats" \
+     $dir/0.mdl "$feats" \
     "ark,s,cs:gunzip -c $alidir/ali.JOB.gz |" \
     "ark,s,cs:gunzip -c $denlatdir/lat.JOB.gz|" ark:- \| \
-    nnet-copy-egs-discriminative ark:- $egs_list || exit 1;
+    nnet-copy-egs-discriminative $const_dim_opt ark:- $egs_list || exit 1;
 fi
 
 if [ $stage -le -5 ] && [ -z "$degs_dir" ]; then
@@ -214,19 +286,17 @@ if [ $stage -le -5 ] && [ -z "$degs_dir" ]; then
     echo "Since iters-per-epoch == 1, just concatenating the data."
     for n in `seq 1 $num_jobs_nnet`; do
       cat $dir/degs/degs_orig.$n.*.ark > $dir/degs/degs_tmp.$n.0.ark || exit 1;
-      rm $dir/degs/degs_orig.$n.*.ark  # don't "|| exit 1", due to NFS bugs...
+      remove $dir/degs/degs_orig.$n.*.ark  # don't "|| exit 1", due to NFS bugs...
     done
   else # We'll have to split it up using nnet-copy-egs.
     egs_list=
     for n in `seq 0 $[$iters_per_epoch-1]`; do
       egs_list="$egs_list ark:$dir/degs/degs_tmp.JOB.$n.ark"
     done
-    # note, the "|| true" below is a workaround for NFS bugs
-    # we encountered running this script with Debian-7, NFS-v4.
     $cmd $io_opts JOB=1:$num_jobs_nnet $dir/log/split_egs.JOB.log \
       nnet-copy-egs-discriminative --srand=JOB \
-        "ark:cat $dir/degs/degs_orig.JOB.*.ark|" $egs_list '&&' \
-        '(' rm $dir/degs/degs_orig.JOB.*.ark '||' true ')' || exit 1;
+        "ark:cat $dir/degs/degs_orig.JOB.*.ark|" $egs_list || exit 1;
+    remove $dir/degs/degs_orig.*.*.ark
   fi
 fi
 
@@ -242,12 +312,17 @@ if [ $stage -le -4 ] && [ -z "$degs_dir" ]; then
 
   # note, the "|| true" below is a workaround for NFS bugs
   # we encountered running this script with Debian-7, NFS-v4.
+  # Also, we should note that we used to do nnet-combine-egs-discriminative
+  # at this stage, but if iVectors are used this would expand the size of
+  # the examples on disk (because they could no longer be stored in the spk_info
+  # variable of the discrminative example, no longer being constant), so
+  # now we do the nnet-combine-egs-discriminative operation on the fly during
+  # training.
   for n in `seq 0 $[$iters_per_epoch-1]`; do
     $cmd $io_opts JOB=1:$num_jobs_nnet $dir/log/shuffle.$n.JOB.log \
       nnet-shuffle-egs-discriminative "--srand=\$[JOB+($num_jobs_nnet*$n)]" \
-      ark:$dir/degs/degs_tmp.JOB.$n.ark ark:- \| \
-      nnet-combine-egs-discriminative ark:- ark:$dir/degs/degs.JOB.$n.ark '&&' \
-      '(' rm $dir/degs/degs_tmp.JOB.$n.ark '||' true ')' || exit 1;
+      ark:$dir/degs/degs_tmp.JOB.$n.ark ark:$dir/degs/degs.JOB.$n.ark || exit 1;
+    remove $dir/degs/degs_tmp.*.$n.ark
   done
 fi
 
@@ -277,7 +352,8 @@ while [ $x -lt $num_iters ]; do
       nnet-train-discriminative$train_suffix --silence-phones=$silphonelist \
        --criterion=$criterion --drop-frames=$drop_frames \
        --boost=$boost --acoustic-scale=$acoustic_scale \
-       $dir/$x.mdl ark:$degs_dir/degs.JOB.$[$x%$iters_per_epoch].ark $dir/$[$x+1].JOB.mdl \
+       $dir/$x.mdl "ark:nnet-combine-egs-discriminative ark:$degs_dir/degs.JOB.$[$x%$iters_per_epoch].ark ark:- |" \
+        $dir/$[$x+1].JOB.mdl \
       || exit 1;
 
     nnets_list=
@@ -312,7 +388,7 @@ if $cleanup; then
 
   echo Removing training examples
   if [ -d $dir/degs ] && [ ! -L $dir/degs ]; then # only remove if directory is not a soft link.
-    rm $dir/degs/degs*
+    remove $dir/degs/degs.*
   fi
 
   echo Removing most of the models

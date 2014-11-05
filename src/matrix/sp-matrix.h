@@ -172,15 +172,15 @@ class SpMatrix : public PackedMatrix<Real> {
   /// by SVD within a smaller dimension ("lanczos_dim").
   ///
   /// If *this is m by m, s should be of dimension n and P should be of
-  /// dimension m by n, with n <= m.  The columns of P are the approximate
-  /// eigenvalues; P * diag(s) * P^T would be a low-rank reconstruction of
+  /// dimension m by n, with n <= m.  The *columns* of P are the approximate
+  /// eigenvectors; P * diag(s) * P^T would be a low-rank reconstruction of
   /// *this.  The columns of P will be orthogonal, and the elements of s will be
   /// the eigenvalues of *this projected into that subspace, but beyond that
   /// there are no exact guarantees.  (This is because the convergence of this
   /// method is statistical).  Note: it only makes sense to use this
   /// method if you are in very high dimension and n is substantially smaller
   /// than m: for example, if you want the 100 top eigenvalues of a 10k by 10k
-  /// matrix.  This function calls rand() to initialize the lanczos
+  /// matrix.  This function calls Rand() to initialize the lanczos
   /// iterations and also for restarting.
   /// If lanczos_dim is zero, it will default to the greater of:
   /// s->Dim() + 50 or s->Dim() + s->Dim()/2, but not more than this->Dim().
@@ -199,9 +199,7 @@ class SpMatrix : public PackedMatrix<Real> {
 
 
   // Takes exponential of the matrix (equivalent to doing eigenvalue
-  // decomposition then taking exp of eigenvalues and reconstructing;
-  // actually not done that way as we don't have symmetric eigenvalue
-  // code).
+  // decomposition then taking exp of eigenvalues and reconstructing).
   void Exp();
 
   /// Returns the maximum of the absolute values of any of the
@@ -242,7 +240,7 @@ class SpMatrix : public PackedMatrix<Real> {
   
   /// diagonal update, this <-- this + diag(v)
   template<typename OtherReal>
-  void AddVec(const Real alpha, const VectorBase<OtherReal> &v);
+  void AddDiagVec(const Real alpha, const VectorBase<OtherReal> &v);
 
   /// rank-N update:
   /// if (transM == kNoTrans)
@@ -297,14 +295,14 @@ class SpMatrix : public PackedMatrix<Real> {
 
   ///  Floors this symmetric matrix to the matrix
   /// alpha * Floor, where the matrix Floor is positive
-  /// definite.  If is_psd = true, then the
-  /// matrix (*this) must be positive semidefinite.
+  /// definite.
   /// It is floored in the sense that after flooring,
   ///  x^T (*this) x  >= x^T (alpha*Floor) x.
   /// This is accomplished using an Svd.  It will crash
-  /// if Floor is not positive definite. returns #floored
+  /// if Floor is not positive definite. Returns the number of
+  /// elements that were floored.
   int ApplyFloor(const SpMatrix<Real> &Floor, Real alpha = 1.0,
-                 bool verbose = false, bool is_psd = true);
+                 bool verbose = false);
 
   /// Floor: Given a positive semidefinite matrix, floors the eigenvalues
   /// to the specified quantity.  A previous version of this function had

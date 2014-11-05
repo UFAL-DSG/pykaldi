@@ -41,7 +41,8 @@ class ParseOptions : public OptionsItf {
 #ifndef _MSC_VER  // This is just a convenient place to set the stderr to line
     setlinebuf(stderr);  // buffering mode, since it's called at program start.
 #endif  // This helps ensure different programs' output is not mixed up.
-    RegisterStandard("config", &config_, "Configuration file with options");
+    RegisterStandard("config", &config_, "Configuration file to read (this "
+                     "option may be repeated)");
     RegisterStandard("print-args", &print_args_,
                      "Print the command line arguments (to stderr)");
     RegisterStandard("help", &help_, "Print out usage message");
@@ -65,9 +66,7 @@ class ParseOptions : public OptionsItf {
     The options will now get registered as, e.g., --mfcc.frame-shift=10.0
     instead of just --frame-shift=10.0
    */
-  ParseOptions(const std::string &prefix, ParseOptions *other) :
-    print_args_(false), help_(false), usage_(""), argc_(0), argv_(NULL),
-    prefix_(prefix), other_parser_(other) {}
+  ParseOptions(const std::string &prefix, OptionsItf *other);
 
   ~ParseOptions() {}
 
@@ -119,13 +118,13 @@ class ParseOptions : public OptionsItf {
   void ReadConfigFile(const std::string &filename);
 
   /// Number of positional parameters (c.f. argc-1).
-  int NumArgs();
+  int NumArgs() const;
 
   /// Returns one of the positional parameters; 1-based indexing for argc/argv
   /// compatibility. Will crash if param is not >=1 and <=NumArgs().
-  std::string GetArg(int param);
+  std::string GetArg(int param) const;
 
-  std::string GetOptArg(int param) {
+  std::string GetOptArg(int param) const {
     return (param <= NumArgs() ? GetArg(param) : "");
   }
 
@@ -222,12 +221,12 @@ class ParseOptions : public OptionsItf {
   std::vector<std::string> positional_args_;
   const char *usage_;
   int argc_;
-  const char*const *argv_;
+  const char *const *argv_;
 
   /// These members are not normally used. They are only used when the object
   /// is constructed with a prefix
-  const std::string prefix_;
-  ParseOptions *other_parser_;
+  std::string prefix_;
+  OptionsItf *other_parser_;
 };
 
 /// This template is provided for convenience in reading config classes from
@@ -237,8 +236,24 @@ class ParseOptions : public OptionsItf {
 /// ParseOptions object.
 template<class C> void ReadConfigFromFile(const std::string config_filename,
                                           C *c) {
-  ParseOptions po("");
+  std::ostringstream usage_str;
+  usage_str << "Parsing config from "
+            << "from '" << config_filename << "'";
+  ParseOptions po(usage_str.str().c_str());
   c->Register(&po);
+  po.ReadConfigFile(config_filename);
+}
+
+/// This variant of the template ReadConfigFromFile is for if you need to read
+/// two config classes from the same file.
+template<class C1, class C2> void ReadConfigsFromFile(const std::string config_filename,
+                                                      C1 *c1, C2 *c2) {
+  std::ostringstream usage_str;
+  usage_str << "Parsing config from "
+            << "from '" << config_filename << "'";
+  ParseOptions po(usage_str.str().c_str());
+  c1->Register(&po);
+  c2->Register(&po);
   po.ReadConfigFile(config_filename);
 }
 

@@ -1,6 +1,7 @@
 // nnet2/nnet-example.h
 
 // Copyright 2012  Johns Hopkins University (author: Daniel Povey)
+// Copyright 2014  Vimal Manohar
 
 // See ../../COPYING for clarification regarding multiple authors
 //
@@ -23,6 +24,7 @@
 #include "nnet2/nnet-nnet.h"
 #include "util/table-types.h"
 #include "lat/kaldi-lattice.h"
+#include "thread/kaldi-semaphore.h"
 
 namespace kaldi {
 namespace nnet2 {
@@ -56,12 +58,48 @@ struct NnetExample {
   
   void Write(std::ostream &os, bool binary) const;
   void Read(std::istream &is, bool binary);
+
+  /// Set the label of this example to the specified pdf_id 
+  /// with the specified weight.
+  void SetLabelSingle(int32 pdf_id, BaseFloat weight = 1.0);
+
+  /// Get the maximum weight label (pdf_id and weight) of this example. 
+  int32 GetLabelSingle(BaseFloat *weight = NULL);
 };
 
 
 typedef TableWriter<KaldiObjectHolder<NnetExample > > NnetExampleWriter;
 typedef SequentialTableReader<KaldiObjectHolder<NnetExample > > SequentialNnetExampleReader;
 typedef RandomAccessTableReader<KaldiObjectHolder<NnetExample > > RandomAccessNnetExampleReader;
+
+
+/** This class stores neural net training examples to be used in
+    multi-threaded training.  */
+class ExamplesRepository {
+ public:
+  /// The following function is called by the code that reads in the examples,
+  /// with a batch of examples.  [It will empty the vector "examples").
+  void AcceptExamples(std::vector<NnetExample> *examples);
+
+  /// The following function is called by the code that reads in the examples,
+  /// when we're done reading examples.
+  void ExamplesDone();
+  
+  /// This function is called by the code that does the training.  It gets the
+  /// training examples, and if they are available, puts them in "examples" and
+  /// returns true.  It returns false when there are no examples left and
+  /// ExamplesDone() has been called.
+  bool ProvideExamples(std::vector<NnetExample> *examples);
+  
+  ExamplesRepository(): empty_semaphore_(1), done_(false) { }
+ private:
+  Semaphore full_semaphore_;
+  Semaphore empty_semaphore_;
+
+  std::vector<NnetExample> examples_;
+  bool done_;
+  KALDI_DISALLOW_COPY_AND_ASSIGN(ExamplesRepository);
+};
 
 
 /**
@@ -105,9 +143,10 @@ struct DiscriminativeNnetExample {
   int32 left_context;
   
 
-  /// The speaker-specific input, if any, or an empty vector if
-  /// we're not using this features.  We'll append this to each of the
-  /// input features, if used.
+  /// spk_info contains any component of the features that varies slowly or not
+  /// at all with time (and hence, we would lose little by averaging it over
+  /// time and storing the average).  We'll append this to each of the input
+  /// features, if used.
   Vector<BaseFloat> spk_info; 
 
   void Check() const; // will crash if invalid.
@@ -116,7 +155,7 @@ struct DiscriminativeNnetExample {
   void Read(std::istream &is, bool binary);
 };
 
-// Tes, the length of typenames is getting out of hand.
+// Yes, the length of typenames is getting out of hand.
 typedef TableWriter<KaldiObjectHolder<DiscriminativeNnetExample > >
    DiscriminativeNnetExampleWriter;
 typedef SequentialTableReader<KaldiObjectHolder<DiscriminativeNnetExample > >

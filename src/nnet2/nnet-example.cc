@@ -1,6 +1,7 @@
 // nnet/nnet-example.cc
 
 // Copyright 2012-2013  Johns Hopkins University (author: Daniel Povey)
+// Copyright 2014       Vimal Manohar
 
 // See ../../COPYING for clarification regarding multiple authors
 //
@@ -43,6 +44,7 @@ void NnetExample::Write(std::ostream &os, bool binary) const {
   spk_info.Write(os, binary);
   WriteToken(os, binary, "</NnetExample>");
 }
+
 void NnetExample::Read(std::istream &is, bool binary) {
   // Note: weight, label, input_frames, left_context and spk_info are members.
   // This is a struct.
@@ -64,6 +66,56 @@ void NnetExample::Read(std::istream &is, bool binary) {
   ExpectToken(is, binary, "<SpkInfo>");
   spk_info.Read(is, binary);
   ExpectToken(is, binary, "</NnetExample>");
+}
+
+void NnetExample::SetLabelSingle(int32 pdf_id, BaseFloat weight) {
+  labels.clear();
+  labels.push_back(std::make_pair(pdf_id, weight));
+}
+
+int32 NnetExample::GetLabelSingle(BaseFloat *weight) {
+  BaseFloat max = -1.0;
+  int32 pdf_id = -1;
+  for (int32 i = 0; i < labels.size(); i++) {
+    if (labels[i].second > max) {
+      pdf_id = labels[i].first;
+      max = labels[i].second;
+    }
+  }
+  if (weight != NULL) *weight = max;
+  return pdf_id;
+}
+
+void ExamplesRepository::AcceptExamples(
+    std::vector<NnetExample> *examples) {
+  KALDI_ASSERT(!examples->empty());
+  empty_semaphore_.Wait();
+  KALDI_ASSERT(examples_.empty());
+  examples_.swap(*examples);
+  full_semaphore_.Signal();
+}
+
+void ExamplesRepository::ExamplesDone() {
+  empty_semaphore_.Wait();
+  KALDI_ASSERT(examples_.empty());
+  done_ = true;
+  full_semaphore_.Signal();
+}
+
+bool ExamplesRepository::ProvideExamples(
+    std::vector<NnetExample> *examples) {
+  full_semaphore_.Wait();
+  if (done_) {
+    KALDI_ASSERT(examples_.empty());
+    full_semaphore_.Signal(); // Increment the semaphore so
+    // the call by the next thread will not block.
+    return false; // no examples to return-- all finished.
+  } else {
+    KALDI_ASSERT(!examples_.empty() && examples->empty());
+    examples->swap(examples_);
+    empty_semaphore_.Signal();
+    return true;
+  }
 }
 
 

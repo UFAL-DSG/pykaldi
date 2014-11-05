@@ -52,9 +52,9 @@ void AssertEqual(const std::vector<T> &vec1,
 template<class T>
 static void UnitTestCuArray() {
   for (int32 i = 0; i < 30; i++) {
-    int32 size = rand() % 5;
+    int32 size = Rand() % 5;
     size = size * size * size; // Have a good distribution of sizes, including >256.
-    int32 size2 = rand() % 4;
+    int32 size2 = Rand() % 4;
     std::vector<T> vec(size);
     std::vector<T> garbage_vec(size2); // We just use garbage_vec to make sure
                                        // we sometimes resize from empty,
@@ -63,7 +63,7 @@ static void UnitTestCuArray() {
     int32 byte_size = size * sizeof(T);
     std::vector<char> rand_c(byte_size);
     for (size_t i = 0; i < byte_size; i++)
-      rand_c[i] = rand() % 256;
+      rand_c[i] = Rand() % 256;
     if (!vec.empty()) {
       std::memcpy((void*)&(vec[0]), (void*)&(rand_c[0]),
                   byte_size);
@@ -127,9 +127,9 @@ int main() {
     kaldi::UnitTestCuArray<std::pair<int32, int32> >();
 
     if (loop == 0)
-      KALDI_LOG << "Tests without GPU use succeeded.\n";
+      KALDI_LOG << "Tests without GPU use succeeded.";
     else
-      KALDI_LOG << "Tests with GPU use (if available) succeeded.\n";
+      KALDI_LOG << "Tests with GPU use (if available) succeeded.";
   }
 #if HAVE_CUDA == 1
   CuDevice::Instantiate().PrintProfile();

@@ -39,13 +39,13 @@ class Softmax : public Component {
   Component* Copy() const { return new Softmax(*this); }
   ComponentType GetType() const { return kSoftmax; }
 
-  void PropagateFnc(const CuMatrix<BaseFloat> &in, CuMatrix<BaseFloat> *out) {
+  void PropagateFnc(const CuMatrixBase<BaseFloat> &in, CuMatrixBase<BaseFloat> *out) {
     // y = e^x_j/sum_j(e^x_j)
     out->ApplySoftMaxPerRow(in);
   }
 
-  void BackpropagateFnc(const CuMatrix<BaseFloat> &in, const CuMatrix<BaseFloat> &out,
-                        const CuMatrix<BaseFloat> &out_diff, CuMatrix<BaseFloat> *in_diff) {
+  void BackpropagateFnc(const CuMatrixBase<BaseFloat> &in, const CuMatrixBase<BaseFloat> &out,
+                        const CuMatrixBase<BaseFloat> &out_diff, CuMatrixBase<BaseFloat> *in_diff) {
     // simply copy the error derivative
     // (ie. assume crossentropy error function, 
     // while in_diff contains (net_output-target) :
@@ -54,6 +54,87 @@ class Softmax : public Component {
     in_diff->CopyFromMat(out_diff);
   }
 };
+
+
+
+class BlockSoftmax : public Component {
+ public:
+  BlockSoftmax(int32 dim_in, int32 dim_out) 
+    : Component(dim_in, dim_out)
+  { }
+  ~BlockSoftmax()
+  { }
+
+  Component* Copy() const { return new BlockSoftmax(*this); }
+  ComponentType GetType() const { return kBlockSoftmax; }
+  
+  void InitData(std::istream &is) {
+    // parse config
+    std::string token; 
+    while (!is.eof()) {
+      ReadToken(is, false, &token); 
+      /**/ if (token == "<BlockDims>") ReadIntegerVector(is, false, &block_dims);
+      else KALDI_ERR << "Unknown token " << token << ", a typo in config?"
+                     << " (BlockDims)";
+      is >> std::ws; // eat-up whitespace
+    }
+    // sanity check
+    int32 sum = 0;
+    for (int32 i=0; i<block_dims.size(); i++) {
+      sum += block_dims[i];
+    }
+    KALDI_ASSERT(sum == OutputDim()); 
+  }
+
+  void ReadData(std::istream &is, bool binary) {
+    ReadIntegerVector(is, binary, &block_dims);
+    block_offset.resize(block_dims.size()+1, 0);
+    for (int32 i = 0; i < block_dims.size(); i++) {
+      block_offset[i+1] = block_offset[i] + block_dims[i];
+    }
+    // check
+    KALDI_ASSERT(OutputDim() == block_offset[block_offset.size()-1]);
+  }
+
+  void WriteData(std::ostream &os, bool binary) const {
+    WriteIntegerVector(os, binary, block_dims);
+  }
+
+  void PropagateFnc(const CuMatrixBase<BaseFloat> &in, CuMatrixBase<BaseFloat> *out) {
+    // perform softmax per block:
+    for (int32 bl = 0; bl < block_dims.size(); bl++) {
+      CuSubMatrix<BaseFloat> in_bl = in.ColRange(block_offset[bl], block_dims[bl]);
+      CuSubMatrix<BaseFloat> out_bl = out->ColRange(block_offset[bl], block_dims[bl]);
+      // y = e^x_j/sum_j(e^x_j)
+      out_bl.ApplySoftMaxPerRow(in_bl);
+    }
+  }
+
+  void BackpropagateFnc(const CuMatrixBase<BaseFloat> &in, const CuMatrixBase<BaseFloat> &out,
+                        const CuMatrixBase<BaseFloat> &out_diff, CuMatrixBase<BaseFloat> *in_diff) {
+    // copy the error derivative:
+    // (assuming we already got softmax-cross-entropy derivative in out_diff)
+    in_diff->CopyFromMat(out_diff);
+    
+    // zero-out line-in-block, where sum different from zero,
+    // process per block:
+    for (int32 bl = 0; bl < block_dims.size(); bl++) {
+      CuSubMatrix<BaseFloat> diff_bl = in_diff->ColRange(block_offset[bl], block_dims[bl]);
+      CuVector<BaseFloat> row_sum(diff_bl.NumRows());
+      row_sum.AddColSumMat(1.0, diff_bl, 0.0); // 0:keep, 1:zero-out
+      // we'll scale rows by 0/1 masks
+      CuVector<BaseFloat> row_diff_mask(row_sum);
+      row_diff_mask.Scale(-1.0); // 0:keep, -1:zero-out
+      row_diff_mask.Add(1.0); // 1:keep, 0:zero-out
+      // here we should have only 0 and 1
+      diff_bl.MulRowsVec(row_diff_mask);
+    }
+  }
+
+  std::vector<int32> block_dims;
+  std::vector<int32> block_offset;
+};
+
 
 
 
@@ -68,13 +149,13 @@ class Sigmoid : public Component {
   Component* Copy() const { return new Sigmoid(*this); }
   ComponentType GetType() const { return kSigmoid; }
 
-  void PropagateFnc(const CuMatrix<BaseFloat> &in, CuMatrix<BaseFloat> *out) {
+  void PropagateFnc(const CuMatrixBase<BaseFloat> &in, CuMatrixBase<BaseFloat> *out) {
     // y = 1/(1+e^-x)
     out->Sigmoid(in);
   }
 
-  void BackpropagateFnc(const CuMatrix<BaseFloat> &in, const CuMatrix<BaseFloat> &out,
-                        const CuMatrix<BaseFloat> &out_diff, CuMatrix<BaseFloat> *in_diff) {
+  void BackpropagateFnc(const CuMatrixBase<BaseFloat> &in, const CuMatrixBase<BaseFloat> &out,
+                        const CuMatrixBase<BaseFloat> &out_diff, CuMatrixBase<BaseFloat> *in_diff) {
     // ey = y(1-y)ex
     in_diff->DiffSigmoid(out, out_diff);
   }
@@ -93,13 +174,13 @@ class Tanh : public Component {
   Component* Copy() const { return new Tanh(*this); }
   ComponentType GetType() const { return kTanh; }
 
-  void PropagateFnc(const CuMatrix<BaseFloat> &in, CuMatrix<BaseFloat> *out) {
+  void PropagateFnc(const CuMatrixBase<BaseFloat> &in, CuMatrixBase<BaseFloat> *out) {
     // y = (e^x - e^(-x)) / (e^x + e^(-x))
     out->Tanh(in);
   }
 
-  void BackpropagateFnc(const CuMatrix<BaseFloat> &in, const CuMatrix<BaseFloat> &out,
-                        const CuMatrix<BaseFloat> &out_diff, CuMatrix<BaseFloat> *in_diff) {
+  void BackpropagateFnc(const CuMatrixBase<BaseFloat> &in, const CuMatrixBase<BaseFloat> &out,
+                        const CuMatrixBase<BaseFloat> &out_diff, CuMatrixBase<BaseFloat> *in_diff) {
     // ey = (1 - y^2)ex
     in_diff->DiffTanh(out, out_diff);
   }
@@ -110,7 +191,7 @@ class Tanh : public Component {
 class Dropout : public Component {
  public:
   Dropout(int32 dim_in, int32 dim_out):
-      Component(dim_in, dim_out)
+      Component(dim_in, dim_out), dropout_retention_(0.5)
   { }
   ~Dropout()
   { }
@@ -118,26 +199,65 @@ class Dropout : public Component {
   Component* Copy() const { return new Dropout(*this); }
   ComponentType GetType() const { return kDropout; }
 
-  void PropagateFnc(const CuMatrix<BaseFloat> &in, CuMatrix<BaseFloat> *out) {
+  void InitData(std::istream &is) {
+    is >> std::ws; // eat-up whitespace
+    // parse config
+    std::string token; 
+    while (!is.eof()) {
+      ReadToken(is, false, &token); 
+      /**/ if (token == "<DropoutRetention>") ReadBasicType(is, false, &dropout_retention_);
+      else KALDI_ERR << "Unknown token " << token << ", a typo in config?"
+                     << " (DropoutRetention)";
+    }
+    KALDI_ASSERT(dropout_retention_ > 0.0 && dropout_retention_ <= 1.0);
+  }
+
+  void ReadData(std::istream &is, bool binary) {
+    if ('<' == Peek(is, binary)) {
+      ExpectToken(is, binary, "<DropoutRetention>");
+      ReadBasicType(is, binary, &dropout_retention_);
+    }
+    KALDI_ASSERT(dropout_retention_ > 0.0 && dropout_retention_ <= 1.0);
+  }
+
+  void WriteData(std::ostream &os, bool binary) const {
+    WriteToken(os, binary, "<DropoutRetention>");
+    WriteBasicType(os, binary, dropout_retention_);
+  }
+
+  void PropagateFnc(const CuMatrixBase<BaseFloat> &in, CuMatrixBase<BaseFloat> *out) {
     out->CopyFromMat(in);
     // switch off 50% of the inputs...
     dropout_mask_.Resize(out->NumRows(),out->NumCols());
-    rand_.RandUniform(&dropout_mask_);
+    dropout_mask_.Set(dropout_retention_);
     rand_.BinarizeProbs(dropout_mask_,&dropout_mask_);
     out->MulElements(dropout_mask_);
+    // rescale to keep same dynamic range as w/o dropout
+    out->Scale(1.0/dropout_retention_);
   }
 
-  void BackpropagateFnc(const CuMatrix<BaseFloat> &in, const CuMatrix<BaseFloat> &out,
-                        const CuMatrix<BaseFloat> &out_diff, CuMatrix<BaseFloat> *in_diff) {
+  void BackpropagateFnc(const CuMatrixBase<BaseFloat> &in, const CuMatrixBase<BaseFloat> &out,
+                        const CuMatrixBase<BaseFloat> &out_diff, CuMatrixBase<BaseFloat> *in_diff) {
     in_diff->CopyFromMat(out_diff);
     // use same mask on the error derivatives...
     in_diff->MulElements(dropout_mask_);
+    // enlarge output to fit dynamic range w/o dropout
+    in_diff->Scale(1.0/dropout_retention_);
+  }
+  
+  BaseFloat GetDropoutRetention() {
+    return dropout_retention_;
+  }
+
+  void SetDropoutRetention(BaseFloat dr) {
+    dropout_retention_ = dr;
+    KALDI_ASSERT(dropout_retention_ > 0.0 && dropout_retention_ <= 1.0);
   }
 
  private:
   CuRand<BaseFloat> rand_;
   CuMatrix<BaseFloat> dropout_mask_;
-
+  BaseFloat dropout_retention_;
 };
 
 

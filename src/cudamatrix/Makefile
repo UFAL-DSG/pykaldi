@@ -18,7 +18,7 @@ TESTFILES = cu-vector-test cu-matrix-test cu-math-test cu-test cu-sp-matrix-test
 OBJFILES = cu-device.o cu-math.o cu-matrix.o cu-packed-matrix.o cu-sp-matrix.o \
            cu-vector.o cu-common.o cu-tp-matrix.o cu-rand.o cu-block-matrix.o
 ifeq ($(CUDA), true)
-  OBJFILES += cu-kernels.o cu-randkernels.o cu-choleskykernels.o
+  OBJFILES += cu-kernels.o cu-randkernels.o
 endif
 
 LIBNAME = kaldi-cudamatrix
@@ -28,8 +28,7 @@ all:  $(LIBFILE)
 
 ifeq ($(CUDA), true)
   #Default compute capability architectures we compile with
-  CUDA_ARCH=-gencode arch=compute_10,code=sm_10 \
-	    -gencode arch=compute_13,code=sm_13 \
+  CUDA_ARCH=-gencode arch=compute_13,code=sm_13 \
 	    -gencode arch=compute_20,code=sm_20
   #Get the CUDA Toolkit version (remove decimal point char)
   CUDA_VERSION=$(shell $(CUDATKDIR)/bin/nvcc -V | grep release | sed -e 's|.*release ||' -e 's|,.*||' -e 's|\.||')
@@ -43,7 +42,16 @@ ifeq ($(CUDA), true)
   ifeq ($(CUDA_VER_GT_5_0), true)
     CUDA_ARCH += -gencode arch=compute_35,code=sm_35
   endif
-
+  #For toolkit 6.0 or newer, add the compute capability 5.0
+  CUDA_VER_GT_6_0 := $(shell [ $(CUDA_VERSION) -ge 60 ] && echo true)
+  ifeq ($(CUDA_VER_GT_6_0), true)
+    CUDA_ARCH += -gencode arch=compute_50,code=sm_50
+  endif
+  #For toolkit older than 6.5, add the compute capability 1.0
+  CUDA_VER_GT_6_5 := $(shell [ $(CUDA_VERSION) -ge 65 ] && echo true)
+  ifneq ($(CUDA_VER_GT_6_5), true)
+    CUDA_ARCH += -gencode arch=compute_10,code=sm_10
+  endif
 endif
 
 

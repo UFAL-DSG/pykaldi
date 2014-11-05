@@ -21,7 +21,6 @@
 #define KALDI_NNET2_DECODABLE_AM_NNET_H_
 
 #include <vector>
-
 #include "base/kaldi-common.h"
 #include "gmm/am-diag-gmm.h"
 #include "hmm/transition-model.h"
@@ -40,17 +39,24 @@ class DecodableAmNnet: public DecodableInterface {
   DecodableAmNnet(const TransitionModel &trans_model,
                   const AmNnet &am_nnet,
                   const CuMatrixBase<BaseFloat> &feats,
-                  const CuVectorBase<BaseFloat> &spk_info,
                   bool pad_input = true, // if !pad_input, the NumIndices()
-                  // will be < feats.NumRows().
+                                         // will be < feats.NumRows().
                   BaseFloat prob_scale = 1.0):
       trans_model_(trans_model) {
     // Note: we could make this more memory-efficient by doing the
     // computation in smaller chunks than the whole utterance, and not
     // storing the whole thing.  We'll leave this for later.
-    CuMatrix<BaseFloat> log_probs(feats.NumRows(), trans_model.NumPdfs());
+    int32 num_rows = feats.NumRows() -
+        (pad_input ? 0 : am_nnet.GetNnet().LeftContext() +
+                         am_nnet.GetNnet().RightContext());
+    if (num_rows <= 0) {
+      KALDI_WARN << "Input with " << feats.NumRows()  << " rows will produce "
+                 << "empty output.";
+      return;
+    }
+    CuMatrix<BaseFloat> log_probs(num_rows, trans_model.NumPdfs());
     // the following function is declared in nnet-compute.h
-    NnetComputation(am_nnet.GetNnet(), feats, spk_info, pad_input, &log_probs);
+    NnetComputation(am_nnet.GetNnet(), feats, pad_input, &log_probs);
     log_probs.ApplyFloor(1.0e-20); // Avoid log of zero which leads to NaN.
     log_probs.ApplyLog();
     CuVector<BaseFloat> priors(am_nnet.Priors());
@@ -73,14 +79,14 @@ class DecodableAmNnet: public DecodableInterface {
                       trans_model_.TransitionIdToPdf(transition_id));
   }
 
-  int32 NumFrames() { return log_probs_.NumRows(); }
+  virtual int32 NumFramesReady() const { return log_probs_.NumRows(); }
   
   // Indices are one-based!  This is for compatibility with OpenFst.
-  virtual int32 NumIndices() { return trans_model_.NumTransitionIds(); }
+  virtual int32 NumIndices() const { return trans_model_.NumTransitionIds(); }
   
-  virtual bool IsLastFrame(int32 frame) {
-    KALDI_ASSERT(frame < NumFrames());
-    return (frame == NumFrames() - 1);
+  virtual bool IsLastFrame(int32 frame) const {
+    KALDI_ASSERT(frame < NumFramesReady());
+    return (frame == NumFramesReady() - 1);
   }
 
  protected:
@@ -102,19 +108,18 @@ class DecodableAmNnetParallel: public DecodableInterface {
       const TransitionModel &trans_model,
       const AmNnet &am_nnet,
       const CuMatrix<BaseFloat> *feats,
-      const CuVector<BaseFloat> *spk_info,
       bool pad_input = true,
       BaseFloat prob_scale = 1.0):
       trans_model_(trans_model), am_nnet_(am_nnet), feats_(feats),
-      spk_info_(spk_info), pad_input_(pad_input), prob_scale_(prob_scale) {
-    KALDI_ASSERT(feats_ != NULL && spk_info_ != NULL);
+      pad_input_(pad_input), prob_scale_(prob_scale) {
+    KALDI_ASSERT(feats_ != NULL);
   }
 
   void Compute() {
     log_probs_.Resize(feats_->NumRows(), trans_model_.NumPdfs());
     // the following function is declared in nnet-compute.h
     NnetComputation(am_nnet_.GetNnet(), *feats_,
-                    *spk_info_, pad_input_, &log_probs_);
+                    pad_input_, &log_probs_);
     log_probs_.ApplyFloor(1.0e-20); // Avoid log of zero which leads to NaN.
     log_probs_.ApplyLog();
     CuVector<BaseFloat> priors(am_nnet_.Priors());
@@ -127,8 +132,6 @@ class DecodableAmNnetParallel: public DecodableInterface {
     log_probs_.Scale(prob_scale_);
     delete feats_;
     feats_ = NULL;
-    delete spk_info_;
-    spk_info_ = NULL;
   }
 
   // Note, frames are numbered from zero.  But state_index is numbered
@@ -139,21 +142,29 @@ class DecodableAmNnetParallel: public DecodableInterface {
                       trans_model_.TransitionIdToPdf(transition_id));
   }
 
-  int32 NumFrames() {
-    if (feats_) Compute();
-    return log_probs_.NumRows();
+  int32 NumFrames() const {
+    if (feats_) {
+      if (pad_input_) return feats_->NumRows();
+      else {
+        int32 ans = feats_->NumRows() - am_nnet_.GetNnet().LeftContext() -
+            am_nnet_.GetNnet().RightContext();
+        if (ans < 0) ans = 0;
+        return ans;
+      }
+    } else {
+      return log_probs_.NumRows();
+    }
   }
   
   // Indices are one-based!  This is for compatibility with OpenFst.
-  virtual int32 NumIndices() { return trans_model_.NumTransitionIds(); }
+  virtual int32 NumIndices() const { return trans_model_.NumTransitionIds(); }
   
-  virtual bool IsLastFrame(int32 frame) {
+  virtual bool IsLastFrame(int32 frame) const {
     KALDI_ASSERT(frame < NumFrames());
     return (frame == NumFrames() - 1);
   }
   ~DecodableAmNnetParallel() {
     if (feats_) delete feats_;
-    if (spk_info_) delete spk_info_;
   }
  protected:
   const TransitionModel &trans_model_;
@@ -161,7 +172,6 @@ class DecodableAmNnetParallel: public DecodableInterface {
   CuMatrix<BaseFloat> log_probs_; // actually not really probabilities, since we divide
   // by the prior -> they won't sum to one.
   const CuMatrix<BaseFloat> *feats_;
-  const CuVector<BaseFloat> *spk_info_;
   bool pad_input_;
   BaseFloat prob_scale_;
   KALDI_DISALLOW_COPY_AND_ASSIGN(DecodableAmNnetParallel);

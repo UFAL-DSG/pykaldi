@@ -1,6 +1,7 @@
 // doc/install.dox
 
 // Copyright 2009-2011 Microsoft Corporation
+//           2013-2014 Johns Hopkins University (author: Daniel Povey)
 
 // See ../../COPYING for clarification regarding multiple authors
 //
@@ -40,14 +41,10 @@
   \verbatim
     svn co https://svn.code.sf.net/p/kaldi/code/trunk kaldi-trunk
   \endverbatim
-
-  You can check out the "stable" branch of Kaldi, which is mostly a subset of the
-  "trunk" with more stringent quality control, as follows (but note: right now, it is
-  a few months behind the trunk):
-  \verbatim
-    svn co https://svn.code.sf.net/p/kaldi/code/stable kaldi-stable
-  \endverbatim
-   If you want to get updates and bug fixes you can go to some checked-out
+ We used to maintain a "stable" branch of Kaldi, but found that this
+ was too much additional work; currently, we always recommend people to use
+ the latest version of trunk, and we do our best to make sure that it always works.
+ If you want to get updates and bug fixes you can go to some checked-out
  directory, and type
   \verbatim
     svn update
@@ -77,11 +74,55 @@
  you should switch your repository over to an SSH-based link which
  will allow you to commit changes:
 \verbatim
-svn switch --relocate svn://svn.code.sf.net/p/kaldi/code svn+ssh://USERNAME@svn.code.sf.net/p/kaldi/code
+svn switch --relocate https://svn.code.sf.net/p/kaldi/code svn+ssh://USERNAME@svn.code.sf.net/p/kaldi/code
 \endverbatim
  where USERNAME is replaced by your Sourceforge username.  Do this while
  you are in the top level of your copy of the repository (e.g. in trunk/).  To avoid entering passwords
  every time you update, use ssh keys: see https://sourceforge.net/account/ssh.
+ 
+   \section git_svn Using Kaldi with git
+
+  <a href=http://git-scm.com/docs/git-svn>git-svn</a>  is a useful tool for bridging
+ between git and svn. A local git repository of the trunk branch of
+ kaldi can be created using
+  \verbatim
+    git svn clone https://svn.code.sf.net/p/kaldi/code/trunk kaldi-trunk
+  \endverbatim
+ To get the latest updates and bug-fixes from the SVN repository, type 
+  \verbatim
+    git svn rebase
+  \endverbatim
+ Your local git repository can be used like any other git repository. However,
+ it is recommended that you always maintain a linear history by avoiding
+ integrating changes into your own branches and remotes using merge. For this
+ "git rebase" must be used instead of "git merge" and "git pull --rebase"
+ instead of "git pull". It is a good practice is to leave the master branch of
+ your git repository "clean" with only commits from SVN and work on a branch
+ such as "trunk", which can be periodically rebased onto master.
+
+ As an alternative to using git-svn, you can clone or fork the git mirror at
+ https://github.com/vimal-manohar91/kaldi-git. The master branch of this is
+ synced with the trunk branch of the SVN repository. The recommendations for
+ linear history apply here as well. 
+
+    \section git_contributor Contributing from git
+  If you are a contributor, you would have to change the remote to an SSH-based
+  link which allows you to commit changes:
+\verbatim
+  git remote set-url origin svn+ssh://USERNAME@svn.code.sf.net/p/kaldi/code
+\endverbatim
+  USERNAME here is that of your Sourceforge account.
+  Changes can be committed directly to SVN using "git svn dcommit". You would
+  still need to follow the instructions in \ref install_switch. 
   
-  
+  "dcommit", by default, creates a commit in SVN for each Git commit. So it is
+  preferred that you squash all your commits into a single commit and "dcommit"
+  only this single commit. For example, if your changes are in the trunk branch, 
+  you can do 
+\verbatim 
+  git rebase -i master 
+\endverbatim
+and using the editor, choose to "squash" everything but "pick" only the oldest
+commit. You can then "git merge" the branch with master and commit it afterward
+using "git svn dcommit".
 */

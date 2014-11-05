@@ -94,7 +94,7 @@ $cmd = "";
 foreach $x (@ARGV) { 
   if ($x =~ m/^\S+$/) { $cmd .= $x . " "; } # If string contains no spaces, take
                                             # as-is.
-  elsif ($x =~ m:\":) { $cmd .= "'\''$x'\'' "; } # else if no dbl-quotes, use single
+  elsif ($x =~ m:\":) { $cmd .= "'$x' "; } # else if no dbl-quotes, use single
   else { $cmd .= "\"$x\" "; }  # else use double.
 }
 
@@ -167,7 +167,7 @@ print Q "ret=\$?\n";
 print Q "time2=\`date +\"%s\"\`\n";
 print Q "echo '#' Accounting: time=\$((\$time2-\$time1)) threads=$nof_threads >>$logfile\n";
 print Q "echo '#' Finished at \`date\` with status \$ret >>$logfile\n";
-print Q "[ \$ret -eq 137 ] && exit 100;\n"; # If process was killed (e.g. oom) it will exit with status 137; 
+print Q "[ \$ret -eq 137 ] && exit 100;\n"; # If process was killed (e.g. oom) it will exit with status 137;
   # let the script return with status 100 which will put it to E state; more easily rerunnable.
 if (!defined $jobname) { # not an array job
   print Q "touch $syncfile\n"; # so we know it's done.
@@ -207,8 +207,23 @@ if (! $sync) { # We're not submitting with -sync y, so we
     }
   }
   # We will need the sge_job_id, to check that job still exists
-  $sge_job_id=`grep "Your job" $queue_logfile | awk '{ print \$3 }' | sed 's|\\\..*||'`;
-  chomp($sge_job_id);
+  { # Get the SGE job-id from the log file in q/
+    open(L, "<$queue_logfile") || die "Error opening log file $queue_logfile";
+    undef $sge_job_id;
+    while (<L>) {
+      if (m/Your job\S* (\d+)[. ].+ has been submitted/) {
+        if (defined $sge_job_id) {
+          die "Error: your job was submitted more than once (see $queue_logfile)";
+        } else {
+          $sge_job_id = $1;
+        }
+      }
+    }
+    close(L);
+    if (!defined $sge_job_id) {
+      die "Error: log file $queue_logfile does not specify the SGE job-id.";
+    }
+  }
   $check_sge_job_ctr=1;
   #
   $wait = 0.1;
@@ -269,9 +284,10 @@ if (! $sync) { # We're not submitting with -sync y, so we
             # time elapsed between file modification and the start of this
             # program], then we assume the program really finished OK,
             # and maybe something is up with the file system.
-            print STDERR "**queue.pl: syncfile was not created but job seems to have\n" .
-              "**completed OK.  Probably your file-system has problems.\n" .
+            print STDERR "**queue.pl: syncfile $f was not created but job seems\n" .
+              "**to have finished OK.  Probably your file-system has problems.\n" .
               "**This is just a warning.\n";
+            last;
           } else {
             chop $last_line;
             print STDERR "queue.pl: Error, unfinished job no " .

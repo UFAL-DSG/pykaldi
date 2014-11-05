@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2012/2013  Brno University of Technology (Author: Karel Vesely)
+# Copyright 2012/2014  Brno University of Technology (Author: Karel Vesely)
 # Apache 2.0
 
 # Begin configuration.
@@ -11,6 +11,8 @@ mlp_init=          # select initialized MLP (override initialization)
 mlp_proto=         # select network prototype (initialize it)
 proto_opts=        # non-default options for 'make_nnet_proto.py'
 feature_transform= # provide feature transform (=splice,rescaling,...) (don't build new one)
+prepend_cnn_type=none   # (none,cnn1d,cnn2d) create nnet with convolutional layers
+cnn_proto_opts=     # extra options for 'make_cnn_proto.py'
 #
 hid_layers=4       # nr. of hidden layers (prior to sotfmax or bottleneck)
 hid_dim=1024       # select hidden dimension
@@ -20,7 +22,8 @@ dbn=               # select DBN to prepend to the MLP initialization
 init_opts=         # options, passed to the initialization script
 
 # FEATURE PROCESSING
-copy_feats=true  # resave the train features in the re-shuffled order to tmpdir
+copy_feats=true # resave the train/cv features into /tmp (disabled by default)
+ copy_feats_tmproot= # tmproot for copy-feats (optional)
 # feature config (applies always)
 apply_cmvn=false # apply normalization to input features?
  norm_vars=false # use variance normalization?
@@ -38,7 +41,7 @@ splice_after_transf=5
 lda_dim=300        # LDA dimension (applies to `lda` feat_type)
 
 # LABELS
-labels=            # use these labels to train (override deafault pdf alignments) 
+labels=            # use these labels to train (override deafault pdf alignments, has to be in 'Posterior' format, see ali-to-post) 
 num_tgt=           # force to use number of outputs in the MLP (default is autodetect)
 
 # TRAINING SCHEDULER
@@ -48,7 +51,6 @@ train_tool=        # optionally change the training tool
 frame_weights=     # per-frame weights for gradient weighting
 
 # OTHER
-use_gpu_id= # manually select GPU id to run on, (-1 disables GPU)
 seed=777    # seed value used for training data shuffling and initialization
 # End configuration.
 
@@ -62,9 +64,29 @@ echo "$0 $@"  # Print the command line for logging
 
 if [ $# != 6 ]; then
    echo "Usage: $0 <data-train> <data-dev> <lang-dir> <ali-train> <ali-dev> <exp-dir>"
-   echo " e.g.: $0 data/train data/cv data/lang exp/mono_ali exp/mono_ali_cv exp/mono_nnet"
+   echo " e.g.: $0 data/train data/cv data/lang exp/mono_ali_train exp/mono_ali_cv exp/mono_nnet"
+   echo ""
+   echo " Training data : <data-train>,<ali-train> (for optimizing cross-entropy)"
+   echo " Held-out data : <data-dev>,<ali-dev> (for learn-rate/model selection based on cross-entopy)"
+   echo " note.: <ali-train>,<ali-dev> can point to same directory, or 2 separate directories."
+   echo ""
    echo "main options (for others, see top of script file)"
-   echo "  --config <config-file>  # config containing options"
+   echo "  --config <config-file>   # config containing options"
+   echo ""
+   echo "  --apply-cmvn <bool>      # apply CMN"
+   echo "  --norm-vars <bool>       # add CVN if CMN already active"
+   echo "  --splice <N>             # concatenate input features"
+   echo "  --feat-type <type>       # select type of input features"
+   echo ""
+   echo "  --mlp-proto <file>       # use this NN prototype"
+   echo "  --feature-transform <file> # re-use this input feature transform"
+   echo "  --hid-layers <N>         # number of hidden layers"
+   echo "  --hid-dim <N>            # width of hidden layers"
+   echo "  --bn-dim <N>             # make bottle-neck network with bn-with N"
+   echo ""
+   echo "  --learn-rate <float>     # initial leaning-rate"
+   echo "  --copy-feats <bool>      # copy input features to /tmp (it's faster)"
+   echo ""
    exit 1;
 fi
 
@@ -75,10 +97,15 @@ alidir=$4
 alidir_cv=$5
 dir=$6
 
-silphonelist=`cat $lang/phones/silence.csl` || exit 1;
+# Using alidir for supervision (default)
+if [ -z "$labels" ]; then 
+  silphonelist=`cat $lang/phones/silence.csl` || exit 1;
+  for f in $alidir/final.mdl $alidir/ali.1.gz $alidir_cv/ali.1.gz; do
+    [ ! -f $f ] && echo "$0: no such file $f" && exit 1;
+  done
+fi
 
-
-for f in $alidir/final.mdl $alidir/ali.1.gz $alidir_cv/ali.1.gz $data/feats.scp $data_cv/feats.scp; do
+for f in $data/feats.scp $data_cv/feats.scp; do
   [ ! -f $f ] && echo "$0: no such file $f" && exit 1;
 done
 
@@ -94,10 +121,13 @@ mkdir -p $dir/{log,nnet}
 # skip when already trained
 [ -e $dir/final.nnet ] && printf "\nSKIPPING TRAINING... ($0)\nnnet already trained : $dir/final.nnet ($(readlink $dir/final.nnet))\n\n" && exit 0
 
+# check if CUDA is compiled in,
+cuda-compiled || { echo 'CUDA was not compiled in, skipping! Check src/kaldi.mk and src/configure' && exit 1; }
+
 ###### PREPARE ALIGNMENTS ######
 echo
 echo "# PREPARING ALIGNMENTS"
-if [ ! -z $labels ]; then
+if [ ! -z "$labels" ]; then
   echo "Using targets '$labels' (by force)"
   labels_tr="$labels"
   labels_cv="$labels"
@@ -131,17 +161,16 @@ cp $data_cv/feats.scp $dir/cv.scp
 # print the list sizes
 wc -l $dir/train.scp $dir/cv.scp
 
-# re-save the shuffled features, so they are stored sequentially on the disk in /tmp/
+# re-save the train/cv features to /tmp, reduces LAN traffic, avoids disk-seeks due to shuffled features
 if [ "$copy_feats" == "true" ]; then
-  tmpdir=$(mktemp -d); mv $dir/train.scp $dir/train.scp_non_local
-  utils/nnet/copy_feats.sh $dir/train.scp_non_local $tmpdir $dir/train.scp
-  #remove data on exit...
-  trap "echo \"Removing features tmpdir $tmpdir @ $(hostname)\"; rm -r $tmpdir" EXIT
+  tmpdir=$(mktemp -d $copy_feats_tmproot); mv $dir/train.scp{,_non_local}; mv $dir/cv.scp{,_non_local}
+  copy-feats scp:$dir/train.scp_non_local ark,scp:$tmpdir/train.ark,$dir/train.scp || exit 1
+  copy-feats scp:$dir/cv.scp_non_local ark,scp:$tmpdir/cv.ark,$dir/cv.scp || exit 1
+  trap "echo \"Removing features tmpdir $tmpdir @ $(hostname)\"; ls $tmpdir; rm -r $tmpdir" EXIT
 fi
 
 #create a 10k utt subset for global cmvn estimates
 head -n 10000 $dir/train.scp > $dir/train.scp.10k
-
 
 
 ###### PREPARE FEATURE PIPELINE ######
@@ -158,6 +187,8 @@ if [ ! -z $feature_transform ]; then
     apply_cmvn=true; norm_vars=$(cat $norm_vars_file);
   fi
   echo "Imported CMVN config from pre-training: apply_cmvn=$apply_cmvn; norm_vars=$norm_vars"
+  delta_order_file=$(dirname $feature_transform)/delta_order
+  [ -r $delta_order_file ] && delta_order=$(cat $delta_order_file) && echo "Imported delta-order $delta_order"
 fi
 # optionally add per-speaker CMVN
 if [ $apply_cmvn == "true" ]; then
@@ -173,6 +204,8 @@ else
 fi
 
 # optionally add deltas
+delta_order_file=$(dirname $feature_transform)/delta_order
+[ -e $delta_order_file ] && delta_order=$(cat $delta_order_file)
 if [ "$delta_order" != "" ]; then
   feats_tr="$feats_tr add-deltas --delta-order=$delta_order ark:- ark:- |"
   feats_cv="$feats_cv add-deltas --delta-order=$delta_order ark:- ark:- |"
@@ -272,6 +305,7 @@ else
     ark:- 2>$dir/log/nnet-forward-cmvn.log |\
   compute-cmvn-stats ark:- - | cmvn-to-nnet - - |\
   nnet-concat --binary=false $feature_transform_old - $feature_transform
+  [ ! -f $feature_transform ] && cat $dir/log/nnet-forward-cmvn.log && echo "Error: Global CMVN failed, was the CUDA GPU okay?" && echo && exit 1
 fi
 
 
@@ -304,9 +338,28 @@ if [[ -z "$mlp_init" && -z "$mlp_proto" ]]; then
   # make network prototype
   mlp_proto=$dir/nnet.proto
   echo "Genrating network prototype $mlp_proto"
-  utils/nnet/make_nnet_proto.py $proto_opts \
-    ${bn_dim:+ --bottleneck-dim=$bn_dim} \
-    $num_fea $num_tgt $hid_layers $hid_dim >$mlp_proto || exit 1
+  case "$prepend_cnn_type" in
+    none)
+      utils/nnet/make_nnet_proto.py $proto_opts \
+        ${bn_dim:+ --bottleneck-dim=$bn_dim} \
+        $num_fea $num_tgt $hid_layers $hid_dim >$mlp_proto || exit 1 
+      ;;
+    cnn1d)
+      utils/nnet/make_cnn_proto.py $cnn_proto_opts \
+        --splice $splice --delta-order $delta_order --dir $dir \
+        $num_fea >$mlp_proto || exit 1
+      cnn_fea=$(cat $mlp_proto | grep -v '^$' | tail -n1 | awk '{ print $5; }')
+      utils/nnet/make_nnet_proto.py $proto_opts \
+        --no-proto-head --no-smaller-input-weights \
+        ${bn_dim:+ --bottleneck-dim=$bn_dim} \
+        "$cnn_fea" $num_tgt $hid_layers $hid_dim >>$mlp_proto || exit 1 
+      ;;
+    cnn2d) 
+      #TODO, to be filled by Vijay...
+      ;;
+    *) echo "Unknown 'prepend-cnn' value $prepend_cnn" && exit 1;
+  esac
+
   # initialize
   mlp_init=$dir/nnet.init; log=$dir/log/nnet_initialize.log
   echo "Initializing $mlp_proto -> $mlp_init"
@@ -333,6 +386,11 @@ steps/nnet/train_scheduler.sh \
   ${config:+ --config $config} \
   $mlp_init "$feats_tr" "$feats_cv" "$labels_tr" "$labels_cv" $dir || exit 1
 
+if $prepend_cnn; then
+  echo "Preparing feature transform with CNN layers for RBM pre-training."
+  nnet-concat $dir/final.feature_transform "nnet-copy --remove-last-layers=$(((hid_layers+1)*2)) $dir/final.nnet - |" \
+    $dir/final.feature_transform_cnn 2>$dir/log/concat_transf_cnn.log || exit 1
+fi
 
 echo "$0 successfuly finished.. $dir"
 

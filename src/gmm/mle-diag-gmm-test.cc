@@ -79,8 +79,8 @@ void TestComponentAcc(const DiagGmm &gmm, const Matrix<BaseFloat> &feats) {
       "component removal during Update() call (this is normal)";
     return;
   } else {
-    AssertGeq(loglike1, loglike0, 1.0e-6);
-    AssertGeq(loglike2, loglike0, 1.0e-6);
+    KALDI_ASSERT(loglike1 >= loglike0 - (std::abs(loglike1)+std::abs(loglike0))*1.0e-06);
+    KALDI_ASSERT(loglike2 >= loglike0 - (std::abs(loglike2)+std::abs(loglike0))*1.0e-06);
   }
 }
 
@@ -194,6 +194,8 @@ test_io(const DiagGmm &gmm, const AccumDiagGmm &est_gmm, bool binary,
   }
 
   AssertEqual(loglike1, loglike2, 1.0e-6);
+  
+  unlink("tmp_stats");
 }
 
 void
@@ -380,7 +382,7 @@ UnitTestEstimateDiagGmm() {
 
     Vector<BaseFloat> weights(counter);
     for (size_t i = 0; i < counter; i++)
-      weights(i) = 0.5 + 0.1 * (rand() % 10);
+      weights(i) = 0.5 + 0.1 * (Rand() % 10);
 
     
     float loglike = 0.0;
@@ -398,6 +400,8 @@ UnitTestEstimateDiagGmm() {
 
   
   delete gmm;
+  
+  unlink("tmp_stats");
 }
 
 int main() {

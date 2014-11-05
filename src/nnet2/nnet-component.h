@@ -2,7 +2,7 @@
 
 // Copyright 2011-2013  Karel Vesely
 //                      Johns Hopkins University (author: Daniel Povey)
-//	          2013  Xiaohui Zhang	
+//              2013  Xiaohui Zhang    
 
 // See ../../COPYING for clarification regarding multiple authors
 //
@@ -27,6 +27,7 @@
 #include "matrix/matrix-lib.h"
 #include "cudamatrix/cu-matrix-lib.h"
 #include "thread/kaldi-mutex.h"
+#include "nnet2/nnet-precondition-online.h"
 
 #include <iostream>
 
@@ -70,11 +71,11 @@ class Component {
   
   /// Number of left-context frames the component sees for each output frame;
   /// nonzero only for splicing layers.
-  virtual int32 LeftContext() { return 0; }
+  virtual int32 LeftContext() const { return 0; }
 
   /// Number of right-context frames the component sees for each output frame;
   /// nonzero only for splicing layers.
-  virtual int32 RightContext() { return 0; }
+  virtual int32 RightContext() const { return 0; }
 
   /// Perform forward pass propagation Input->Output.  Each row is
   /// one frame or training example.  Interpreted as "num_chunks"
@@ -219,51 +220,6 @@ class UpdatableComponent: public Component {
   const UpdatableComponent &operator = (const UpdatableComponent &other); // Disallow.
 };
 
-/// Augments a scalar variable with powers of itself, e.g. x => {x, x^2}.
-class PowerExpandComponent: public Component {
- public:
-  void Init(int32 dim, int32 max_power = 2, BaseFloat higher_power_scale = 1.0);
-  
-  explicit PowerExpandComponent(int32 dim, int32 max_power = 2,
-                                BaseFloat higher_power_scale = 1.0) {
-    Init(dim, max_power, higher_power_scale);
-  }
-  PowerExpandComponent(): input_dim_(0), max_power_(2),
-                          higher_power_scale_(1.0) { }
-  virtual std::string Type() const { return "PowerExpandComponent"; }
-  virtual void InitFromString(std::string args); 
-  virtual int32 InputDim() const { return input_dim_; }
-  virtual int32 OutputDim() const { return max_power_ * input_dim_; }
-  virtual void Propagate(const CuMatrixBase<BaseFloat> &in,
-                         int32 num_chunks,
-                         CuMatrix<BaseFloat> *out) const;
-  virtual void Backprop(const CuMatrixBase<BaseFloat> &in_value,
-                        const CuMatrixBase<BaseFloat> &, // out_value
-                        const CuMatrixBase<BaseFloat> &out_deriv,
-                        int32 num_chunks,
-                        Component *to_update, // may be identical to "this".
-                        CuMatrix<BaseFloat> *in_deriv) const;
-  virtual bool BackpropNeedsInput() const { return true; }
-  virtual bool BackpropNeedsOutput() const { return false; }
-  virtual Component* Copy() const { return new PowerExpandComponent(input_dim_,
-                                                                    max_power_,
-                                                                    higher_power_scale_); }
-  
-  virtual void Read(std::istream &is, bool binary); // This Read function
-  // requires that the Component has the correct type.
-  
-  /// Write component to stream
-  virtual void Write(std::ostream &os, bool binary) const;
-
-  virtual std::string Info() const;
- private:
-  int32 input_dim_;
-  int32 max_power_;
-  BaseFloat higher_power_scale_; // Scale put on all powers
-  // except the first one.
-};
-
-
 /// This kind of Component is a base-class for things like
 /// sigmoid and softmax.
 class NonlinearComponent: public Component {
@@ -306,11 +262,13 @@ class NonlinearComponent: public Component {
   friend class RectifiedLinearComponent;
   friend class SoftHingeComponent;
   
+
   // This function updates the stats "value_sum_", "deriv_sum_", and
   // count_. (If deriv == NULL, it won't update "deriv_sum_").
   // It will be called from the Backprop function of child classes.
   void UpdateStats(const CuMatrixBase<BaseFloat> &out_value,
                    const CuMatrixBase<BaseFloat> *deriv = NULL);
+
   
   const NonlinearComponent &operator = (const NonlinearComponent &other); // Disallow.
   int32 dim_;
@@ -318,6 +276,8 @@ class NonlinearComponent: public Component {
   CuVector<double> deriv_sum_; // stats of the derivative of the nonlinearity (only
   // applicable to element-by-element nonlinearities, not Softmax.
   double count_;
+  // The mutex is used in UpdateStats, only for resizing vectors.
+  Mutex mutex_;
 };
 
 class MaxoutComponent: public Component {
@@ -466,6 +426,44 @@ class TanhComponent: public NonlinearComponent {
   TanhComponent &operator = (const TanhComponent &other); // Disallow.
 };
 
+/// Take the absoute values of an input vector to a power.
+/// The derivative for zero input will be treated as zero.
+class PowerComponent: public NonlinearComponent {
+ public:
+  void Init(int32 dim, BaseFloat power = 2);
+  explicit PowerComponent(int32 dim, BaseFloat power = 2) {
+    Init(dim, power);
+  }
+  PowerComponent(): dim_(0), power_(2) { }
+  virtual std::string Type() const { return "PowerComponent"; }
+  virtual void InitFromString(std::string args); 
+  virtual int32 InputDim() const { return dim_; }
+  virtual int32 OutputDim() const { return dim_; }
+  virtual void Propagate(const CuMatrixBase<BaseFloat> &in,
+                         int32 num_chunks,
+                         CuMatrix<BaseFloat> *out) const;
+  virtual void Backprop(const CuMatrixBase<BaseFloat> &in_value,
+                        const CuMatrixBase<BaseFloat> &, // out_value
+                        const CuMatrixBase<BaseFloat> &out_deriv,
+                        int32 num_chunks,
+                        Component *to_update, // may be identical to "this".
+                        CuMatrix<BaseFloat> *in_deriv) const;
+  virtual bool BackpropNeedsInput() const { return true; }
+  virtual bool BackpropNeedsOutput() const { return true; }
+  virtual Component* Copy() const { return new PowerComponent(dim_, power_); }
+  virtual void Read(std::istream &is, bool binary); // This Read function
+  // requires that the Component has the correct type.
+  
+  /// Write component to stream
+  virtual void Write(std::ostream &os, bool binary) const;
+
+  virtual std::string Info() const;
+
+ private:
+  int32 dim_;
+  BaseFloat power_;
+};
+
 class RectifiedLinearComponent: public NonlinearComponent {
  public:
   explicit RectifiedLinearComponent(int32 dim): NonlinearComponent(dim) { }
@@ -599,6 +597,11 @@ class AffineComponent: public UpdatableComponent {
   friend class SoftmaxComponent; // Friend declaration relates to mixing up.
  public:
   explicit AffineComponent(const AffineComponent &other);
+  // The next constructor is used in converting from nnet1.
+  AffineComponent(const CuMatrixBase<BaseFloat> &linear_params,
+                  const CuVectorBase<BaseFloat> &bias_params,
+                  BaseFloat learning_rate);
+  
   virtual int32 InputDim() const { return linear_params_.NumCols(); }
   virtual int32 OutputDim() const { return linear_params_.NumRows(); }
   void Init(BaseFloat learning_rate,
@@ -662,7 +665,7 @@ class AffineComponent: public UpdatableComponent {
                                                   // element.
              AffineComponent *c3);
  protected:
-  friend class AffineComponentA;
+  friend class AffineComponentPreconditionedOnline;
   // This function Update() is for extensibility; child classes may override this.
   virtual void Update(
       const CuMatrixBase<BaseFloat> &in_value,
@@ -683,74 +686,10 @@ class AffineComponent: public UpdatableComponent {
 };
 
 
-/// PiecewiseLinearComponent is a kind of trainable version of the
-/// RectifiedLinearComponent, in which each dimension of the nonlinearity has a
-/// number of parameters that can be trained.  it's of the form 
-/// alpha + beta x + gamma_1 |x - c_1| + gamma_2 |x - c_2| + ... + gamma_N |x - c_N|
-/// where c_1 ... c_N on are constants (by default, equally
-/// spaced between -1 and 1), and the alpha, beta and gamma quantities are trainable.
-/// (Each dimension has separate alpha, beta and gamma quantities).
-/// We require that N be odd so that the "middle" gamma quantity corresponds
-/// to zero; this is for convenience of initialization so that it corresponds
-/// to ReLus.
-class PiecewiseLinearComponent: public UpdatableComponent {
- public:
-  explicit PiecewiseLinearComponent(const PiecewiseLinearComponent &other);
-  virtual int32 InputDim() const { return params_.NumRows(); }
-  virtual int32 OutputDim() const { return params_.NumRows(); }
-
-  void Init(int32 dim, int32 N,
-            BaseFloat learning_rate,
-            BaseFloat max_change);
-
-  virtual std::string Info() const;
-  
-  virtual void InitFromString(std::string args);
-  
-  PiecewiseLinearComponent(): is_gradient_(false), max_change_(0.0) { } // use Init to really initialize.
-  
-  virtual std::string Type() const { return "PiecewiseLinearComponent"; }
-  virtual bool BackpropNeedsInput() const { return true; }
-  virtual bool BackpropNeedsOutput() const { return false; }
-  virtual void Propagate(const CuMatrixBase<BaseFloat> &in,
-                         int32 num_chunks,
-                         CuMatrix<BaseFloat> *out) const;
-  virtual void Scale(BaseFloat scale);
-  virtual void Add(BaseFloat alpha, const UpdatableComponent &other);
-  virtual void Backprop(const CuMatrixBase<BaseFloat> &in_value,
-                        const CuMatrixBase<BaseFloat> &out_value, // dummy
-                        const CuMatrixBase<BaseFloat> &out_deriv,
-                        int32 num_chunks,
-                        Component *to_update, // may be identical to "this".
-                        CuMatrix<BaseFloat> *in_deriv) const;
-  virtual void SetZero(bool treat_as_gradient);
-  virtual void Read(std::istream &is, bool binary);
-  virtual void Write(std::ostream &os, bool binary) const;
-  virtual BaseFloat DotProduct(const UpdatableComponent &other) const;
-  virtual Component* Copy() const;
-  virtual void PerturbParams(BaseFloat stddev);
-
-  const CuMatrix<BaseFloat> &Params() { return params_; }
-  
-  virtual int32 GetParameterDim() const;
-
-  virtual void Vectorize(VectorBase<BaseFloat> *params) const;
-  virtual void UnVectorize(const VectorBase<BaseFloat> &params);
-
- protected:
-  const PiecewiseLinearComponent &operator = (const PiecewiseLinearComponent &other); // Disallow.
-  CuMatrix<BaseFloat> params_;
-  
-  bool is_gradient_; // If true, treat this as just a gradient.
-  BaseFloat max_change_; // If nonzero, maximum change allowed per individual
-                         // parameter per minibatch.
-};
-
-
 // This is an idea Dan is trying out, a little bit like
 // preconditioning the update with the Fisher matrix, but the
 // Fisher matrix has a special structure.
-// [note: it is currently used in the standard receipe].
+// [note: it is currently used in the standard recipe].
 class AffineComponentPreconditioned: public AffineComponent {
  public:
   virtual std::string Type() const { return "AffineComponentPreconditioned"; }
@@ -769,7 +708,7 @@ class AffineComponentPreconditioned: public AffineComponent {
   virtual Component* Copy() const;
   AffineComponentPreconditioned(): alpha_(1.0), max_change_(0.0) { }
   void SetMaxChange(BaseFloat max_change) { max_change_ = max_change; }
- private:
+ protected:
   KALDI_DISALLOW_COPY_AND_ASSIGN(AffineComponentPreconditioned);
   BaseFloat alpha_;
   BaseFloat max_change_; // If > 0, this is the maximum amount of parameter change (in L2 norm)
@@ -815,240 +754,86 @@ class AffineComponentPreconditionedOnline: public AffineComponent {
   void Init(BaseFloat learning_rate,
             int32 input_dim, int32 output_dim,
             BaseFloat param_stddev, BaseFloat bias_stddev,
-            int32 rank, BaseFloat eta, BaseFloat max_change);
-  void Init(BaseFloat learning_rate, int32 rank, BaseFloat eta,
-            BaseFloat max_change, std::string matrix_filename);
+            int32 rank_in, int32 rank_out, int32 update_period,
+            BaseFloat num_samples_history, BaseFloat alpha,
+            BaseFloat max_change_per_sample);
+  void Init(BaseFloat learning_rate, int32 rank_in,
+            int32 rank_out, int32 update_period,
+            BaseFloat num_samples_history,
+            BaseFloat alpha, BaseFloat max_change_per_sample,
+            std::string matrix_filename);
+
+  // This constructor is used when converting neural networks partway through
+  // training, from AffineComponent or AffineComponentPreconditioned to
+  // AffineComponentPreconditionedOnline.
+  AffineComponentPreconditionedOnline(const AffineComponent &orig,
+                                      int32 rank_in, int32 rank_out,
+                                      int32 update_period,
+                                      BaseFloat eta, BaseFloat alpha);
   
   virtual void InitFromString(std::string args);
   virtual std::string Info() const;
   virtual Component* Copy() const;
-  AffineComponentPreconditionedOnline(): eta_(1.0), max_change_(0.0) { }
+  AffineComponentPreconditionedOnline(): max_change_per_sample_(0.0) { }
 
  private:
   KALDI_DISALLOW_COPY_AND_ASSIGN(AffineComponentPreconditionedOnline);
-  int32 rank_;           // Number of rows of N matrices.
-  BaseFloat eta_;
-  BaseFloat max_change_; // If > 0, this is the maximum amount of parameter
-                         // change (in L2 norm) that we allow per minibatch.
-                         // This was introduced in order to control instability.
-                         // Instead of the exact L2 parameter change, for
-                         // efficiency purposes we limit a bound on the exact
-                         // change.  The limit is applied via a constant <= 1.0
-                         // for each minibatch, A suitable value might be, for
-                         // example, 10 or so; larger if there are more
-                         // parameters.
 
-  // The things below are not read or written to disk.
-  CuMatrix<BaseFloat> N_input_; // N matrix for input, of dimension rank x
-                                // (InputDim() + 1)
-  CuMatrix<BaseFloat> N_output_; // N matrix, of dimension rank x OutputDim()
-  Mutex N_mutex_;    // Mutex that locks the N values.  We use this for both
-                     // reads and writes; we could have a non-exclusive lock for
-                     // reads but this is overkill because we access this very
-                     // quickly and immediately give up the lock.
 
-  /// The following function is only called if max_change_ > 0.  It returns the
-  /// greatest value alpha <= 1.0 such that (alpha times the sum over the
-  /// row-index of the two matrices of the product the l2 norms of the two rows
-  /// times learning_rate_) is <= max_change.  This is the same as in
-  /// AffinecComponentPreconditioned.
-  BaseFloat GetScalingFactor(const CuMatrix<BaseFloat> &in_value_precon,
-                             const CuMatrix<BaseFloat> &out_deriv_precon);
+  // Configs for preconditioner.  The input side tends to be better conditioned ->
+  // smaller rank needed, so make them separately configurable.
+  int32 rank_in_;
+  int32 rank_out_;
+  int32 update_period_;
+  BaseFloat num_samples_history_;
+  BaseFloat alpha_;
+  
+  OnlinePreconditioner preconditioner_in_;
+
+  OnlinePreconditioner preconditioner_out_;
+
+  BaseFloat max_change_per_sample_;
+  // If > 0, max_change_per_sample_ this is the maximum amount of parameter
+  // change (in L2 norm) that we allow per sample, averaged over the minibatch.
+  // This was introduced in order to control instability.
+  // Instead of the exact L2 parameter change, for
+  // efficiency purposes we limit a bound on the exact
+  // change.  The limit is applied via a constant <= 1.0
+  // for each minibatch, A suitable value might be, for
+  // example, 10 or so; larger if there are more
+  // parameters.
+
+  /// The following function is only called if max_change_per_sample_ > 0, it returns a
+  /// scaling factor alpha <= 1.0 (1.0 in the normal case) that enforces the
+  /// "max-change" constraint.  "in_products" is the inner product with itself
+  /// of each row of the matrix of preconditioned input features; "out_products"
+  /// is the same for the output derivatives.  gamma_prod is a product of two
+  /// scalars that are output by the preconditioning code (for the input and
+  /// output), which we will need to multiply into the learning rate.
+  /// out_products is a pointer because we modify it in-place.
+  BaseFloat GetScalingFactor(const CuVectorBase<BaseFloat> &in_products,
+                             BaseFloat gamma_prod,
+                             CuVectorBase<BaseFloat> *out_products);
+
+  // Sets the configs rank, alpha and eta in the preconditioner objects,
+  // from the class variables.
+  void SetPreconditionerConfigs();
 
   virtual void Update(
       const CuMatrixBase<BaseFloat> &in_value,
       const CuMatrixBase<BaseFloat> &out_deriv);
 };
-
-
-/// AffineComponentModified as as AffineComponent but we are careful about
-/// the lengths of rows of the parameter matrix, when we do the update.
-/// That means, for a given row, we first do an update along the direction of
-/// the existing vector; we then take the update orthogonal to that direction,
-/// but keep the length of the vector fixed.
-class AffineComponentModified: public AffineComponent {
- public:
-  virtual std::string Type() const { return "AffineComponentModified"; }
-
-  virtual void Read(std::istream &is, bool binary);
-  virtual void Write(std::ostream &os, bool binary) const;
-  void Init(BaseFloat learning_rate,
-            int32 input_dim, int32 output_dim,
-            BaseFloat param_stddev, BaseFloat bias_stddev,
-            BaseFloat cutoff_length, BaseFloat max_change);
-  void Init(BaseFloat learning_rate, BaseFloat cutoff_length,
-            BaseFloat max_change, std::string matrix_filename);
-  
-  virtual void InitFromString(std::string args);
-  virtual std::string Info() const;
-  virtual Component* Copy() const;
-  AffineComponentModified(): cutoff_length_(10.0), max_change_(0.1) { }
-  
- private:
-  KALDI_DISALLOW_COPY_AND_ASSIGN(AffineComponentModified);
-
-  BaseFloat cutoff_length_; /// If the length of the vector corresponding to
-  /// this row of the parameter matrix is less than this, we just do a regular
-  /// gradient descent update.  This would typically be less than
-  /// sqrt(InputDim())-- a value smaller than the expected length of the
-  /// parameter vector.
-  
-  BaseFloat max_change_; /// [if above the cutoff], this is the maximum
-                         /// change allowed in the vector per minibatch,
-                         /// as a proportion of the previous value.  We separately
-                         /// apply this constraint to both the length and direction.  Should
-                         /// be less than one, e.g. 0.1 or 0.01.
-
-  virtual void Update(
-      const CuMatrixBase<BaseFloat> &in_value,
-      const CuMatrixBase<BaseFloat> &out_deriv);
-};
-
 
 class RandomComponent: public Component {
  public:
   // This function is required in testing code and in other places we need
   // consistency in the random number generation (e.g. when optimizing
-  // validation-set performance), but check where else we call srand().  You'll
+  // validation-set performance), but check where else we call sRand().  You'll
   // need to call srand as well as making this call.  
   void ResetGenerator() { random_generator_.SeedGpu(0); }
  protected:
   CuRand<BaseFloat> random_generator_;
 };
-
-
-
-struct PreconditionConfig { // relates to AffineComponentA
-  BaseFloat alpha;
-  bool do_precondition;
-  bool renormalize;
-  
-  PreconditionConfig(): alpha(0.1), do_precondition(true),
-                        renormalize(true) { }
-  void Register(OptionsItf *po) {
-    po->Register("alpha", &alpha, "Smoothing constant used in "
-                 "preconditioning of updates.");
-    po->Register("do-precondition", &do_precondition, "Controls whether "
-                 "or not preconditioning is applied in the L-BFGS update.");
-    po->Register("renormalize", &renormalize, "If true, in the preconditioning "
-                 "we renormalize with a scalar so the projected scatter has the "
-                 "same trace as before preconditioning.");
-  }
-};
-
-
-/**
-   AffineComponentA is a special type of AffineComponent, that
-   stores matrices for preconditioning similar to those used
-   in the update function of AffineComponentPreconditioned.  This is
-   intended for use as a preconditioner in L-BFGS updates.
-   In this case we optionally store the preconditioning
-   information with the gradient information, in a separate
-   copy of the component.
-*/
-class AffineComponentA: public AffineComponent {
- public:
-  AffineComponentA() { }
-  
-  virtual std::string Type() const { return "AffineComponentA"; }
-  
-  virtual void Read(std::istream &is, bool binary);
-  virtual void Write(std::ostream &os, bool binary) const;
-
-  // There is no Init function for now; we only have the
-  // ability to initialize from another AffineComponent (or child
-  // class).  This is because we imagine that the L-BFGS training
-  // will be initialized from a system trained with SGD, for which
-  // something like AffineComponentPreconditioned will be more
-  // appropriate; we'll then convert the model.
-  AffineComponentA(const AffineComponent &component);
-
-  // We're not supporting initializing as this type.
-  virtual void InitFromString(std::string args) { KALDI_ASSERT(0); }
-  virtual Component* Copy() const;
-
-  virtual void Scale(BaseFloat scale);
-  virtual void Add(BaseFloat alpha, const UpdatableComponent &other);
-
-  
-  // Some functions that are specific to this class:
-  void InitializeScatter(); // Lets the class
-  // know that it should accumulate the scatter matrix; sets
-  // up input_scatter_ and output_scatter_.
-
-
-  // This function uses the input_scatter_ and output_scatter_ variables of the
-  // current class to transform the linear_params_ and bias_params_ variables of
-  // "component".  If forward == true then we transform to the preconditioned
-  // space; otherwise we transform back from the preconditioned to the canonical
-  // space.  This is done differently depending if component->is_gradient_ ==
-  // true, because gradients and parameters transform differently.  The alpha
-  // value relates to smoothing with the unit matrix; it's not defined in quite
-  // the same way as for AffineComponentPreconditioned.  See the code for
-  // details.
-  void Transform(const PreconditionConfig &config,
-                 bool forward,
-                 AffineComponent *component);
-
-  // This function uses the input_scatter_ and output_scatter_ variables
-  // current class to transform the linear_params_ and bias_params_ variables of
-  // "component".  It is equivalent to multiplying by the inverse Fisher,
-  // or approximate inverse Hessian.  It's the operation that you need
-  // in optimization methods like L-BFGS, to transform from "gradient space"
-  // into "model space".
-  // Note: it's not const in this object, because we may cache stuff with the model.
-  // See also the function "PreconditionNnet" in nnet-lbfgs.h, which
-  // does this at the whole-neural-net level (by calling this function).
-  void Precondition(const PreconditionConfig &config,
-                    AffineComponent *component);
-  
- private:
-
-  // The following variables are not used for the actual neural net, but
-  // only when is_gradient_ == true (when it's being used to store gradients),
-
-  CuSpMatrix<double> input_scatter_; // scatter of (input vectors extended with 1.)
-  // This is only set up if this->is_gradient = true, and InitializeScatter()
-  // has been called.
-  CuSpMatrix<double> output_scatter_;
-
-  // The following four quantities may be cached by the function "Transform",
-  // to avoid duplicating work.
-  CuTpMatrix<double> in_C_;
-  CuTpMatrix<double> in_C_inv_;
-  CuTpMatrix<double> out_C_;
-  CuTpMatrix<double> out_C_inv_;
-
-  // The following two quantities may be cached by the function "Precondition",
-  // to avoid duplicating work.
-  CuSpMatrix<double> inv_fisher_in_;
-  CuSpMatrix<double> inv_fisher_out_;
-  
-  // This function computes the matrix (and corresponding transpose-ness) that
-  // we'd left-multiply a vector by when transforming the parameter/gradient
-  // space.
-  static void ComputeTransforms(const CuSpMatrix<double> &scatter,
-                                const PreconditionConfig &config,
-                                double tot_count,
-                                CuTpMatrix<double> *C,
-                                CuTpMatrix<double> *C_inv);
-
-  // This function is called by "Precondition"; it pre-computes
-  // certain quantities we'll need.
-  static void ComputePreconditioner(const CuSpMatrix<double> &scatter,
-                                    const PreconditionConfig &config,
-                                    double tot_count,
-                                    CuSpMatrix<double> *inv_fisher);
-
-  void ClearPrecomputedQuantities();
-  
-  // The following update function is called when *this is
-  // a gradient.  We only override this one.
-  virtual void UpdateSimple(
-      const CuMatrixBase<BaseFloat> &in_value,
-      const CuMatrixBase<BaseFloat> &out_deriv);
-};
-
 
 /// Splices a context window of frames together [over time]
 class SpliceComponent: public Component {
@@ -1063,8 +848,8 @@ class SpliceComponent: public Component {
   virtual void InitFromString(std::string args);
   virtual int32 InputDim() const { return input_dim_; }
   virtual int32 OutputDim() const;
-  virtual int32 LeftContext() { return left_context_; }
-  virtual int32 RightContext() { return right_context_; }
+  virtual int32 LeftContext() const { return left_context_; }
+  virtual int32 RightContext() const { return right_context_; }
   virtual void Propagate(const CuMatrixBase<BaseFloat> &in,
                          int32 num_chunks,
                          CuMatrix<BaseFloat> *out) const;
@@ -1088,6 +873,7 @@ class SpliceComponent: public Component {
 };
 
 
+
 /// This is as SpliceComponent but outputs the max of
 /// any of the inputs (taking the max across time).
 class SpliceMaxComponent: public Component {
@@ -1101,8 +887,8 @@ class SpliceMaxComponent: public Component {
   virtual void InitFromString(std::string args);
   virtual int32 InputDim() const { return dim_; }
   virtual int32 OutputDim() const { return dim_; }
-  virtual int32 LeftContext() { return left_context_; }
-  virtual int32 RightContext() { return right_context_; }
+  virtual int32 LeftContext() const { return left_context_; }
+  virtual int32 RightContext() const { return right_context_; }
   virtual void Propagate(const CuMatrixBase<BaseFloat> &in,
                          int32 num_chunks,
                          CuMatrix<BaseFloat> *out) const;
@@ -1122,48 +908,6 @@ class SpliceMaxComponent: public Component {
   int32 dim_;
   int32 left_context_;
   int32 right_context_;
-};
-
-
-// Affine means a linear function plus an offset.  PreconInput means we
-// precondition using the inverse of the variance of each dimension of the input
-// data.  Note that this doesn't take into account any scaling of the samples,
-// but this doesn't really matter.  This has some relation to AdaGrad, except
-// it's being done not per input dimension, rather than per parameter, and also
-// we multiply by a separately supplied and updated learning rate which will
-// typically vary with time.  Note: avg_samples is the number of samples over
-// which we average the variance of the input data.
-class AffinePreconInputComponent: public AffineComponent {
- public:
-  void Init(BaseFloat learning_rate,
-                    int32 input_dim, int32 output_dim,
-                    BaseFloat param_stddev,
-                    BaseFloat bias_stddev,
-                    BaseFloat avg_samples);
-  virtual void Backprop(const CuMatrixBase<BaseFloat> &in_value,
-                        const CuMatrixBase<BaseFloat> &out_value, // dummy
-                        const CuMatrixBase<BaseFloat> &out_deriv,
-                        int32 num_chunks,
-                        Component *to_update, // may be identical to "this".
-                        CuMatrix<BaseFloat> *in_deriv) const;
-  AffinePreconInputComponent() { } // use Init to really initialize.
-  virtual std::string Type() const { return "AffinePreconInputComponent"; }
-  virtual void InitFromString(std::string args);
-  virtual void SetZero(bool treat_as_gradient);
-  virtual void Read(std::istream &is, bool binary);
-  virtual void Write(std::ostream &os, bool binary) const;
-  virtual Component* Copy() const;
- private:
-  KALDI_DISALLOW_COPY_AND_ASSIGN(AffinePreconInputComponent);
-  BaseFloat avg_samples_; // Config parameter; determines how many samples
-  // we average the input feature variance over during training
-  bool is_gradient_; // Set this to true if we consider this as a gradient.
-  // In this case we don't do the input preconditioning.
-
-  // Note: linear_params_ and bias_params_ are inherited from
-  // AffineComponent.
-  CuVector<BaseFloat> input_precision_; // Inverse variance of input features; used
-  // to precondition the update.
 };
 
 
@@ -1266,71 +1010,6 @@ class BlockAffineComponentPreconditioned: public BlockAffineComponent {
 };
 
 
-
-// MixtureProbComponent is a linear transform, but it's kind of a special case.
-// It's used to transform probabilities while retaining the sum-to-one
-// constraint (after the softmax), so we require nonnegative
-// elements that sum to one for each column.  In addition, this component
-// implements a linear transformation that's a block matrix... not quite
-// block diagonal, because the component matrices aren't necessarily square.
-// They start off square, but as we mix up, they may get non-square.
-//
-// From its external interface, i.e. DotProduct(), Scale(), and Backprop(), if
-// you use this class in the expected way (e.g. only calling DotProduct()
-// between a gradient and the parameters), it behaves as if the parameters were
-// stored as unnormalized log-prob and the gradients were taken w.r.t. that
-// representation.  This is the only way for the Scale() function to make sense.
-// In reality, the parameters are stored as probabilities (normalized to sum to
-// one for each row).
-
-class MixtureProbComponent: public UpdatableComponent {
- public:
-  virtual int32 InputDim() const { return input_dim_; }
-  virtual int32 OutputDim() const { return output_dim_; }
-  void Init(BaseFloat learning_rate,
-            BaseFloat diag_element,
-            const std::vector<int32> &sizes);
-  virtual void InitFromString(std::string args);  
-  MixtureProbComponent() { }
-  virtual void SetZero(bool treat_as_gradient);
-  virtual std::string Type() const { return "MixtureProbComponent"; }
-  virtual bool BackpropNeedsInput() const { return true; }
-  virtual bool BackpropNeedsOutput() const { return false; }
-  virtual void Propagate(const CuMatrixBase<BaseFloat> &in,
-                         int32 num_chunks,
-                         CuMatrix<BaseFloat> *out) const;
-  // Note: in_value and out_value are both dummy variables.
-  virtual void Backprop(const CuMatrixBase<BaseFloat> &in_value,
-                        const CuMatrixBase<BaseFloat> &out_value,
-                        const CuMatrixBase<BaseFloat> &out_deriv,
-                        int32 num_chunks,
-                        Component *to_update, // may be identical to "this".
-                        CuMatrix<BaseFloat> *in_deriv) const;
-  virtual Component* Copy() const;
-  
-  virtual void Read(std::istream &is, bool binary);
-  virtual void Write(std::ostream &os, bool binary) const;
-  virtual BaseFloat DotProduct(const UpdatableComponent &other) const;
-  virtual void Scale(BaseFloat scale);
-  virtual void Add(BaseFloat alpha, const UpdatableComponent &other);
-  virtual void PerturbParams(BaseFloat stddev);
-
-  virtual int32 GetParameterDim() const;
-  virtual void Vectorize(VectorBase<BaseFloat> *params) const;
-  virtual void UnVectorize(const VectorBase<BaseFloat> &params);
- private:
-  void Refresh(); // Refreshes params_ from log_params_.
-  KALDI_DISALLOW_COPY_AND_ASSIGN(MixtureProbComponent);
-
-  std::vector<CuMatrix<BaseFloat> > log_params_; // these are the
-  // underlying parameters that are subject to gradient descent.
-  std::vector<CuMatrix<BaseFloat> > params_; // these are derived from
-  // log_params_.
-  int32 input_dim_;
-  int32 output_dim_;
-};
-
-
 // SumGroupComponent is used to sum up groups of posteriors.
 // It's used to introduce a kind of Gaussian-mixture-model-like
 // idea into neural nets.  This is basically a degenerate case of
@@ -1377,12 +1056,16 @@ private:
 };
 
 
-/// PermuteComponent does a random permutation of the dimensions.  Useful in
-/// conjunction with block-diagonal transforms.
+/// PermuteComponent does a permutation of the dimensions (by default, a fixed
+/// random permutation, but it may be specified).  Useful in conjunction with
+/// block-diagonal transforms.
 class PermuteComponent: public Component {
  public:
   void Init(int32 dim);
+  void Init(const std::vector<int32> &reorder);
   PermuteComponent(int32 dim) { Init(dim); }
+  PermuteComponent(const std::vector<int32> &reorder) { Init(reorder); }
+
   PermuteComponent() { } // e.g. prior to Read() or Init()
   
   virtual int32 InputDim() const { return reorder_.size(); }
@@ -1398,17 +1081,17 @@ class PermuteComponent: public Component {
   virtual void Propagate(const CuMatrixBase<BaseFloat> &in,
                          int32 num_chunks,
                          CuMatrix<BaseFloat> *out) const; 
-  virtual void Backprop(const CuMatrixBase<BaseFloat> &in_value, // dummy
-                        const CuMatrixBase<BaseFloat> &out_value, // dummy
+  virtual void Backprop(const CuMatrixBase<BaseFloat> &,
+                        const CuMatrixBase<BaseFloat> &,
                         const CuMatrixBase<BaseFloat> &out_deriv,
                         int32 num_chunks,
-                        Component *to_update, // dummy
+                        Component *,
                         CuMatrix<BaseFloat> *in_deriv) const;
   
  private:
   KALDI_DISALLOW_COPY_AND_ASSIGN(PermuteComponent);
   std::vector<int32> reorder_; // This class sends input dimension i to
-  // output dimension reorder_[i].
+                               // output dimension reorder_[i].
 };
 
 
@@ -1530,12 +1213,90 @@ class FixedAffineComponent: public Component {
   virtual Component* Copy() const;
   virtual void Read(std::istream &is, bool binary);
   virtual void Write(std::ostream &os, bool binary) const;
+
+  // Function to provide access to linear_params_.
+  const CuMatrix<BaseFloat> &LinearParams() const { return linear_params_; }
  protected:
   friend class AffineComponent;
   CuMatrix<BaseFloat> linear_params_;
   CuVector<BaseFloat> bias_params_;
   
   KALDI_DISALLOW_COPY_AND_ASSIGN(FixedAffineComponent);
+};
+
+
+/// FixedScaleComponent applies a fixed per-element scale; it's similar
+/// to the Rescale component in the nnet1 setup (and only needed for nnet1
+/// model conversion.
+class FixedScaleComponent: public Component {
+ public:
+  FixedScaleComponent() { } 
+  virtual std::string Type() const { return "FixedScaleComponent"; }
+  virtual std::string Info() const;
+  
+  void Init(const CuVectorBase<BaseFloat> &scales); 
+  
+  // InitFromString takes only the option scales=<string>,
+  // where the string is the filename of a Kaldi-format matrix to read.
+  virtual void InitFromString(std::string args);
+  
+  virtual int32 InputDim() const { return scales_.Dim(); }
+  virtual int32 OutputDim() const { return scales_.Dim(); }
+  virtual void Propagate(const CuMatrixBase<BaseFloat> &in,
+                         int32 num_chunks,
+                         CuMatrix<BaseFloat> *out) const;
+  virtual void Backprop(const CuMatrixBase<BaseFloat> &in_value,
+                        const CuMatrixBase<BaseFloat> &out_value,
+                        const CuMatrixBase<BaseFloat> &out_deriv,
+                        int32 num_chunks,
+                        Component *to_update, // may be identical to "this".
+                        CuMatrix<BaseFloat> *in_deriv) const;
+  virtual bool BackpropNeedsInput() const { return false; }
+  virtual bool BackpropNeedsOutput() const { return false; }
+  virtual Component* Copy() const;
+  virtual void Read(std::istream &is, bool binary);
+  virtual void Write(std::ostream &os, bool binary) const;
+
+ protected:
+  CuVector<BaseFloat> scales_;  
+  KALDI_DISALLOW_COPY_AND_ASSIGN(FixedScaleComponent);
+};
+
+/// FixedBiasComponent applies a fixed per-element bias; it's similar
+/// to the AddShift component in the nnet1 setup (and only needed for nnet1
+/// model conversion.
+class FixedBiasComponent: public Component {
+ public:
+  FixedBiasComponent() { } 
+  virtual std::string Type() const { return "FixedBiasComponent"; }
+  virtual std::string Info() const;
+  
+  void Init(const CuVectorBase<BaseFloat> &scales); 
+  
+  // InitFromString takes only the option bias=<string>,
+  // where the string is the filename of a Kaldi-format matrix to read.
+  virtual void InitFromString(std::string args);
+  
+  virtual int32 InputDim() const { return bias_.Dim(); }
+  virtual int32 OutputDim() const { return bias_.Dim(); }
+  virtual void Propagate(const CuMatrixBase<BaseFloat> &in,
+                         int32 num_chunks,
+                         CuMatrix<BaseFloat> *out) const;
+  virtual void Backprop(const CuMatrixBase<BaseFloat> &in_value,
+                        const CuMatrixBase<BaseFloat> &out_value,
+                        const CuMatrixBase<BaseFloat> &out_deriv,
+                        int32 num_chunks,
+                        Component *to_update, // may be identical to "this".
+                        CuMatrix<BaseFloat> *in_deriv) const;
+  virtual bool BackpropNeedsInput() const { return false; }
+  virtual bool BackpropNeedsOutput() const { return false; }
+  virtual Component* Copy() const;
+  virtual void Read(std::istream &is, bool binary);
+  virtual void Write(std::ostream &os, bool binary) const;
+
+ protected:
+  CuVector<BaseFloat> bias_;  
+  KALDI_DISALLOW_COPY_AND_ASSIGN(FixedBiasComponent);
 };
 
 

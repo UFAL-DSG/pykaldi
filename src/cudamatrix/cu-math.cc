@@ -18,7 +18,7 @@
 // See the Apache 2 License for the specific language governing permissions and
 // limitations under the License.
 
-#include "util/timer.h"
+#include "base/timer.h"
 #include "cudamatrix/cu-common.h"
 #include "cudamatrix/cu-matrix.h"
 #include "cudamatrix/cu-device.h"
@@ -43,7 +43,7 @@ void RegularizeL1(CuMatrixBase<Real> *weight, CuMatrixBase<Real> *grad, Real l1,
     dim3 dimBlock(CU2DBLOCK, CU2DBLOCK);
     dim3 dimGrid(n_blocks(weight->NumCols(), CU2DBLOCK), n_blocks(weight->NumRows(), CU2DBLOCK));
 
-    cuda_regularize_l1(dimGrid, dimBlock, weight->data_, grad->data_, l1, lr, weight->Dim());
+    cuda_regularize_l1(dimGrid, dimBlock, weight->data_, grad->data_, l1, lr, weight->Dim(), grad->Stride());
     CU_SAFE_CALL(cudaGetLastError());
     
     CuDevice::Instantiate().AccuProfile(__func__, tim.Elapsed());
@@ -127,8 +127,9 @@ void Randomize(const CuMatrixBase<Real> &src,
 
 
 template<typename Real>
-void Splice(const CuMatrix<Real> &src, const CuArray<int32> &frame_offsets, CuMatrix<Real> *tgt) {
-
+void Splice(const CuMatrixBase<Real> &src, const CuArray<int32> &frame_offsets,
+            CuMatrixBase<Real> *tgt) {
+  
   KALDI_ASSERT(src.NumCols()*frame_offsets.Dim() == tgt->NumCols());
   KALDI_ASSERT(src.NumRows() == tgt->NumRows());
 
@@ -166,7 +167,8 @@ void Splice(const CuMatrix<Real> &src, const CuArray<int32> &frame_offsets, CuMa
 
 
 template<typename Real>
-void Copy(const CuMatrix<Real> &src, const CuArray<int32> &copy_from_indices, CuMatrix<Real> *tgt) { 
+void Copy(const CuMatrixBase<Real> &src, const CuArray<int32> &copy_from_indices,
+          CuMatrixBase<Real> *tgt) { 
 
   KALDI_ASSERT(copy_from_indices.Dim() == tgt->NumCols());
   KALDI_ASSERT(src.NumRows() == tgt->NumRows());
@@ -206,13 +208,17 @@ template
 void RegularizeL1(CuMatrixBase<double> *weight, CuMatrixBase<double> *grad, double l1, double lr);
 
 template
-void Splice(const CuMatrix<float> &src, const CuArray<int32> &frame_offsets, CuMatrix<float> *tgt);
+void Splice(const CuMatrixBase<float> &src, const CuArray<int32> &frame_offsets,
+            CuMatrixBase<float> *tgt);
 template
-void Splice(const CuMatrix<double> &src, const CuArray<int32> &frame_offsets, CuMatrix<double> *tgt);
+void Splice(const CuMatrixBase<double> &src, const CuArray<int32> &frame_offsets,
+            CuMatrixBase<double> *tgt);
 template
-void Copy(const CuMatrix<float> &src, const CuArray<int32> &copy_from_indices, CuMatrix<float> *tgt);
+void Copy(const CuMatrixBase<float> &src, const CuArray<int32> &copy_from_indices,
+          CuMatrixBase<float> *tgt);
 template
-void Copy(const CuMatrix<double> &src, const CuArray<int32> &copy_from_indices, CuMatrix<double> *tgt);
+void Copy(const CuMatrixBase<double> &src, const CuArray<int32> &copy_from_indices,
+          CuMatrixBase<double> *tgt);
 
 template
 void Randomize(const CuMatrixBase<float> &src,

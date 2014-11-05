@@ -24,7 +24,7 @@
 #include "nnet/nnet-randomizer.h"
 #include "base/kaldi-common.h"
 #include "util/common-utils.h"
-#include "util/timer.h"
+#include "base/timer.h"
 #include "cudamatrix/cu-device.h"
 #include "cudamatrix/cu-rand.h"
 
@@ -69,9 +69,6 @@ int main(int argc, char *argv[]) {
     kaldi::int32 max_frames = 6000; // Allow segments maximum of 30 seconds by default
     po.Register("max-frames",&max_frames, "Maximum number of frames a segment can have to be processed");
     
-    BaseFloat drop_data = 0.0; 
-    po.Register("drop-data", &drop_data, "Threshold for random dropping of the data (0 no-drop, 1 drop-all)");
-
     std::string use_gpu="yes";
     po.Register("use-gpu", &use_gpu, "yes|no|optional, only has effect if compiled with CUDA"); 
 
@@ -107,7 +104,7 @@ int main(int argc, char *argv[]) {
     Nnet nnet;
     nnet.Read(model_filename);
     KALDI_ASSERT(nnet.NumComponents()==1);
-    KALDI_ASSERT(nnet.GetComponent(0).GetType() == Component::kRbm);
+    KALDI_ASSERT(nnet.GetComponent(0).GetType() == kaldi::nnet1::Component::kRbm);
     RbmBase &rbm = dynamic_cast<RbmBase&>(nnet.GetComponent(0));
 
     // Configure the RBM,
@@ -145,8 +142,13 @@ int main(int argc, char *argv[]) {
 
     int32 num_done = 0, num_other_error = 0;
     while (!feature_reader.Done()) {
+#if HAVE_CUDA==1      
+      // check the GPU is not overheated
+      CuDevice::Instantiate().CheckGpuHealth();
+#endif
       // fill the randomizer
       for ( ; !feature_reader.Done(); feature_reader.Next()) {
+        if (feature_randomizer.IsFull()) break; // suspend, keep utt for next loop
         std::string utt = feature_reader.Key();
         KALDI_VLOG(3) << utt;
         // get feature matrix
@@ -163,25 +165,9 @@ int main(int argc, char *argv[]) {
         feats.CopyFromMat(mat);
         // apply optional feature transform
         rbm_transf.Feedforward(feats, &feats_transf);
-        // subsample training data to get faster epochs on large datasets
-        if(drop_data > 0.0) {
-          Matrix<BaseFloat> mat2(feats_transf.NumRows(), feats_transf.NumCols(),
-                                 kUndefined);
-          feats_transf.CopyToMat(&mat2);
-          for(int32 r=mat2.NumRows()-1; r >= 0; r--) {
-            if(RandUniform() < drop_data) {
-              mat2.RemoveRow(r);
-            }
-          }
-          if(mat2.NumRows() == 0) continue;
-          feats_transf.Resize(mat2.NumRows(),mat2.NumCols());
-          feats_transf.CopyFromMat(mat2);
-        }
         // add to randomizer
         feature_randomizer.AddData(feats_transf);
         num_done++;
-        // end when randomizer full
-        if (feature_randomizer.IsFull()) break;
 
         // report the speed
         if (num_done % 5000 == 0) {
@@ -198,7 +184,7 @@ int main(int argc, char *argv[]) {
       // train with data from randomizer (using mini-batches)
       for( ; !feature_randomizer.Done(); feature_randomizer.Next()) {
         // get block of feature/target pairs
-        const CuMatrix<BaseFloat>& pos_vis = feature_randomizer.Value();
+        const CuMatrixBase<BaseFloat>& pos_vis = feature_randomizer.Value();
         // get the dims 
         int32 num_frames = pos_vis.NumRows(),
               dim_hid = rbm.OutputDim();
