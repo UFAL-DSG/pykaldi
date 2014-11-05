@@ -16,7 +16,7 @@ cdef extern from "onl-rec/onl-rec-latgen-recogniser.h" namespace "kaldi":
     cdef cppclass OnlineLatgenRecogniser:
         size_t Decode(size_t max_frames) except +
         void FrameIn(unsigned char *frame, size_t frame_len) except +
-        bool GetBestPath(vector[int] v_out, float *lik) except +
+        bool GetBestPath(vector[int] *v_out, float *lik) except +
         bool GetRawLattice(fst.libfst.StdVectorFst *fst_out) except +
         bool GetLattice(fst.libfst.LogVectorFst *fst_out, double *tot_lik) except +
         void PruneFinal() except +
@@ -35,9 +35,11 @@ cdef class PyOnlineLatgenRecogniser:
     cdef OnlineLatgenRecogniser * thisptr
     cdef long fs
     cdef int nchan, bits
+    cdef utt_decoded
 
     def __cinit__(self):
         self.thisptr = new OnlineLatgenRecogniser()
+        self.utt_decoded = 0
 
     def __init__(self, fs=16000, nchan=1, bits=16):
         """ __init__(self, fs=16000, nchan=1, bits=16)
@@ -58,7 +60,9 @@ cdef class PyOnlineLatgenRecogniser:
         The decoding has RTF < 1.0 on common computer.
         Consequently, for frames shift 10 ms the decoding
         should be faster than 0.01 * max_frames seconds."""
-        return self.thisptr.Decode(max_frames)
+        new_dec = self.thisptr.Decode(max_frames)
+        self.utt_decoded += new_dec
+        return new_dec
 
     def frame_in(self, bytes frame_str):
         """frame_in(self, bytes frame_str, int num_samples)
@@ -77,7 +81,7 @@ cdef class PyOnlineLatgenRecogniser:
         directly from internal representation."""
         cdef vector[int] t
         cdef float lik
-        self.thisptr.GetBestPath(t, address(lik))
+        self.thisptr.GetBestPath(address(t), address(lik))
         ids = [t[i] for i in xrange(t.size())]
         return (lik, ids)
 
@@ -93,9 +97,11 @@ cdef class PyOnlineLatgenRecogniser:
 
         Return word posterior lattice and its likelihood.
         It may last non-trivial amount of time e.g. 100 ms."""
-        cdef double lik
+        cdef double lik = -1
         r = fst.LogVectorFst()
-        self.thisptr.GetLattice((<fst._fst.LogVectorFst?>r).fst, address(lik))
+        if self.utt_decoded > 0:
+            self.thisptr.GetLattice((<fst._fst.LogVectorFst?>r).fst, address(lik))
+        self.utt_decoded = 0
         return (lik, r)
 
     def get_raw_lattice(self):

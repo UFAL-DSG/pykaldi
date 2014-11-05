@@ -1,9 +1,10 @@
 #!/bin/bash
+LANG=en
 
 # data location
 PWD=`pwd`
 exp_dir=$PWD
-data_dir=$PWD/data/vystadial-sample-cs/test
+data_dir=$PWD/data/vystadial-sample-${LANG}/test
 decode_dir=$exp_dir/decode
 
 # IO parameters
@@ -17,8 +18,6 @@ pykaldi_latgen_tra=$decode_dir/pykaldi-latgen.tra
 pykaldi_latgen_tra_txt=${pykaldi_faster_tra}.txt
 lattice=$decode_dir/lat.gz
 
-# Czech language models 
-LANG=cs
 HCLG=models/HCLG_tri2b_bmmi.fst
 AM=models/tri2b_bmmi.mdl
 MAT=models/tri2b_bmmi.mat  # matrix trained in tri2b models 
@@ -28,10 +27,12 @@ SILENCE=models/silence.csl
 
 kaldisrc=`pwd`/../../../src
 openfst=`pwd`/../../../tools/openfst/
+pykaldi=`pwd`/../../../pykaldi
 
 export PATH=$kaldisrc/bin:$kaldisrc/fgmmbin:$kaldisrc/gmmbin:$kaldisrc/nnetbin:$kaldisrc/sgmm2bin:$kaldisrc/tiedbin:$kaldisrc/featbin:$kaldisrc/fstbin:$kaldisrc/latbin:$kaldisrc/onlinebin:$kaldisrc/sgmmbin:$kaldisrc/onl-rec:$openfst/bin:"$PATH"
-export LD_LIBRARY_PATH=$kaldisrc/onl-rec:$kaldisrc/pykaldi/kaldi:$openfst/lib:$openfst/lib/fst:$LD_LIBRARY_PATH
-export PYTHONPATH=$kaldisrc/pykaldi:$kaldisrc/pykaldi/pyfst:$PYTHONPATH
+export LD_LIBRARY_PATH=$kaldisrc/onl-rec:$openfst/lib:$openfst/lib/fst:$LD_LIBRARY_PATH
+export DYLD_LIBRARY_PATH=$kaldisrc/onl-rec:$openfst/lib:$openfst/lib/fst:$DYLD_LIBRARY_PATH
+export PYTHONPATH=$pykaldi:$pykaldi/pyfst:$PYTHONPATH
 
 beam=16.0
 latbeam=10.0

@@ -27,7 +27,7 @@ WE USE COMMON KALDI DECODERS IN THE SCRIPTS (gmm-latgen-faster through steps/dec
 The modified OnlineLatgenRecogniser is actively developed at 
 https://github.com/UFAL-DSG/pykaldi/tree/master/src/onl-rec
 and has Python wrapper:
-https://github.com/UFAL-DSG/pykaldi/tree/master/src/pykaldi
+https://github.com/UFAL-DSG/pykaldi/tree/master/pykaldi
 Note that I am currently moving the online decoder to:
 http://sourceforge.net/p/kaldi/code/HEAD/tree/sandbox/oplatek2/
 
