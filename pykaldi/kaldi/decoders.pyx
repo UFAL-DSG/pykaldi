@@ -17,9 +17,8 @@ cdef extern from "onl-rec/onl-rec-latgen-recogniser.h" namespace "kaldi":
         size_t Decode(size_t max_frames) except +
         void FrameIn(unsigned char *frame, size_t frame_len) except +
         bool GetBestPath(vector[int] *v_out, float *lik) except +
-        bool GetRawLattice(fst.libfst.StdVectorFst *fst_out) except +
         bool GetLattice(fst.libfst.LogVectorFst *fst_out, double *tot_lik) except +
-        void PruneFinal() except +
+        void FinalizeDecoding() except +
         void Reset(bool keep_buffer_data) except +
         int Setup(int argc, char **argv) except +
 
@@ -104,20 +103,11 @@ cdef class PyOnlineLatgenRecogniser:
         self.utt_decoded = 0
         return (lik, r)
 
-    def get_raw_lattice(self):
-        """get_raw_lattice(self)
-
-        Return state level lattice.
-        It may last non-trivial amount of time e.g. 100 ms."""
-        r = fst.StdVectorFst()
-        self.thisptr.GetRawLattice((<fst._fst.StdVectorFst?>r).fst)
-        return r
-
-    def prune_final(self):
-        """prune_final(self)
+    def FinalizeDecoding(self):
+        """FinalizeDecoding(self)
 
         It prepares internal representation for lattice extration."""
-        self.thisptr.PruneFinal()
+        self.thisptr.FinalizeDecoding()
 
     def reset(self, keep_buffer_data=True):
         """reset(self, keep_buffer_data)
