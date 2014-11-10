@@ -59,7 +59,7 @@ class OnlFeatureMatrix;
 class OnlDecodableDiagGmmScaled;
 class TransitionModel;
 class AmDiagGmm;
-class OnlLatticeFasterDecoder;
+class LatticeFasterDecoder;
 class OnlineLatgenRecogniser;
 struct OptionsItf;
 
@@ -97,9 +97,8 @@ class OnlineLatgenRecogniser {
     size_t Decode(size_t max_frames);
     void FrameIn(unsigned char *frame, size_t frame_len);
     bool GetBestPath(std::vector<int> *v_out, BaseFloat *prob);
-    bool GetRawLattice(fst::VectorFst<fst::StdArc> *fst_out);
     bool GetLattice(fst::VectorFst<fst::LogArc> * out_fst, double *tot_lik);
-    void PruneFinal();
+    void FinalizeDecoding();
     void Reset(bool keep_buffer_data);
     bool Setup(int argc, char **argv);
   protected:
@@ -111,7 +110,7 @@ class OnlineLatgenRecogniser {
     OnlDecodableDiagGmmScaled *decodable;
     TransitionModel *trans_model;
     AmDiagGmm *amm;
-    OnlLatticeFasterDecoder *decoder;
+    LatticeFasterDecoder *decoder;
     fst::StdFst *decode_fst;
   private:
     bool initialized_;

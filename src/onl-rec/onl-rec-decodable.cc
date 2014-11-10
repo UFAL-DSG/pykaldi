@@ -63,10 +63,6 @@ BaseFloat OnlDecodableDiagGmmScaled::LogLikelihood(int32 frame, int32 index) {
 }
 
 
-bool OnlDecodableDiagGmmScaled::IsLastFrame(int32 frame) {
-  return !features_->IsValidFrame(frame+1);
-}
-
 void OnlDecodableDiagGmmScaled::Reset() {
   cache_.resize(trans_model_.NumPdfs(), std::make_pair<int32,BaseFloat>(-1, 0.0));
   cur_frame_ = -1;

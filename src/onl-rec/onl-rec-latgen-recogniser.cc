@@ -26,7 +26,7 @@
 #include "onl-rec/onl-rec-feat-input.h"
 #include "onl-rec/onl-rec-decodable.h"
 #include "onl-rec/onl-rec-latgen-recogniser.h"
-#include "onl-rec/onl-rec-latgen-decoder.h"
+#include "decoder/lattice-faster-decoder.h"
 // debug
 #include <fstream>
 #include <iostream>
@@ -70,7 +70,9 @@ OnlineLatgenRecogniser::~OnlineLatgenRecogniser() {
 size_t OnlineLatgenRecogniser::Decode(size_t max_frames) {
   if (! initialized_)
     return 0;
-  return decoder->Decode(decodable, max_frames);
+  size_t decoded = decoder->NumFramesDecoded();
+  decoder->AdvanceDecoding(decodable, max_frames);
+  return decoder->NumFramesDecoded() - decoded;
 }
 
 
@@ -97,6 +99,10 @@ bool OnlineLatgenRecogniser::GetBestPath(std::vector<int> *out_ids, BaseFloat *p
   return ok;
 }
 
+void OnlineLatgenRecogniser::FinalizeDecoding() {
+  decoder->FinalizeDecoding();
+}
+
 
 bool OnlineLatgenRecogniser::GetLattice(fst::VectorFst<fst::LogArc> *fst_out, 
                                   double *tot_lik) {
@@ -104,6 +110,21 @@ bool OnlineLatgenRecogniser::GetLattice(fst::VectorFst<fst::LogArc> *fst_out,
     return false;
 
   CompactLattice lat;
+  // Lattice raw_lat;
+  // bool ok = decoder->GetRawLattice(&raw_lat);
+  //
+  // Invert(&raw_lat);  // make it so word labels are on the input.
+  // // (in phase where we get backward-costs).
+  // fst::ILabelCompare<LatticeArc> ilabel_comp;
+  // ArcSort(&raw_lat, ilabel_comp);  // sort on ilabel; makes
+  // // lattice-determinization more efficient.
+  //
+  // fst::DeterminizeLatticePrunedOptions lat_opts;
+  // lat_opts.max_mem = decoder->config_.det_opts.max_mem;
+  //
+  // DeterminizeLatticePruned(raw_lat, config_.lattice_beam, &lat, lat_opts);
+  // raw_lat.DeleteStates();  // Free memory-- raw_lat no longer needed.
+  // Connect(&lat);  // Remove unreachable states... there might be
   bool ok = decoder->GetLattice(&lat);
 
   KALDI_ASSERT(lat_acoustic_scale_ != 0.0 || lat_lm_scale_ != 0.0);
@@ -119,31 +140,6 @@ bool OnlineLatgenRecogniser::GetLattice(fst::VectorFst<fst::LogArc> *fst_out,
   return ok;
 }
 
-
-bool OnlineLatgenRecogniser::GetRawLattice(fst::VectorFst<fst::StdArc> *fst_out) {
-  // TODO probably to low level for the API
-  if (! initialized_)
-    return false;
-
-  Lattice lat;
-  bool ok = decoder->GetRawLattice(&lat);
-  fst::Connect(&lat); // Will get rid of this later... shouldn't have any
-
-  KALDI_ASSERT(lat_acoustic_scale_ != 0.0 || lat_lm_scale_ != 0.0);
-  fst::ScaleLattice(fst::LatticeScale(lat_lm_scale_, lat_acoustic_scale_), &lat);
-  ConvertLattice(lat, fst_out); // adds up the (lm,acoustic) costs
-
-  return ok;
-}
-
-
-void OnlineLatgenRecogniser::PruneFinal() {
-  if (! initialized_)
-    return;
-  decoder->PruneFinal();
-}
-
-
 void OnlineLatgenRecogniser::Reset(bool keep_buffer_data) {
   if (! initialized_)
     return;
@@ -154,7 +150,7 @@ void OnlineLatgenRecogniser::Reset(bool keep_buffer_data) {
   }
   feat_matrix->Reset();
   decodable->Reset();
-  decoder->Reset();
+  decoder->InitDecoding();
 }
 
 
@@ -213,7 +209,7 @@ bool OnlineLatgenRecogniser::Setup(int argc, char **argv) {
     }
 
     decode_fst = ReadDecodeGraph(recogniser_opts.fst_rxfilename);
-    decoder = new OnlLatticeFasterDecoder(
+    decoder = new LatticeFasterDecoder(
                                     *decode_fst, decoder_opts);
 
     audio = new OnlBuffSource(au_opts);

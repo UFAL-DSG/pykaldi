@@ -204,7 +204,6 @@ class LatticeFasterDecoder {
   inline int32 NumFramesDecoded() const { return active_toks_.size() - 1; }
 
  protected:
-  struct Token;
   // ForwardLinks are the links from a token to a token on the next frame.
   // or sometimes on the current frame (for input-epsilon links).
   struct Token;
