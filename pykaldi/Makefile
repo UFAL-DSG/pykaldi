@@ -8,6 +8,14 @@ ADDLIBS = ../src/onl-rec/onl-rec.a ../src/decoder/kaldi-decoder.a ../src/feat/ka
 		 ../src/transform/kaldi-transform.a ../src/gmm/kaldi-gmm.a ../src/fstext/kaldi-fstext.a \
 		 ../src/tree/kaldi-tree.a ../src/matrix/kaldi-matrix.a  ../src/util/kaldi-util.a ../src/base/kaldi-base.a
 
+kaldi_compiled: ../src/online-rec.a
+
+../src/online-rec.a:
+	cd ../tools && make openfst && make atlas 
+	cd ../src && ./configure --shared && make 
+	cd ../src/onl-rec && make
+
+
 pyfst:
 	git clone https://github.com/UFAL-DSG/pyfst.git pyfst
 
@@ -18,7 +26,7 @@ pyfst/fst/_fst.so: pyfst
 
 pyfst_compiled: pyfst/fst/_fst.so
 
-kaldi/decoders.so: pyfst_compiled $(ADDLIBS)
+kaldi/decoders.so: kaldi_compiled pyfst_compiled $(ADDLIBS)
 	PYKALDI_ADDLIBS="$(ADDLIBS)" \
 	LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include \
 	python setup.py build_ext --inplace
