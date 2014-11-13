@@ -8,25 +8,34 @@ ADDLIBS = ../src/onl-rec/onl-rec.a ../src/decoder/kaldi-decoder.a ../src/feat/ka
 		 ../src/transform/kaldi-transform.a ../src/gmm/kaldi-gmm.a ../src/fstext/kaldi-fstext.a \
 		 ../src/tree/kaldi-tree.a ../src/matrix/kaldi-matrix.a  ../src/util/kaldi-util.a ../src/base/kaldi-base.a
 
-kaldi_compiled: ../src/online-rec.a
+../src/onl-rec/onl-rec.a : ../tools/openfst/lib/libfst.so ../tools/ATLAS/include/clapack.h ../src/kaldi.mk
+	@echo Building src dictionary namely $(ADDLIBS)
+	@cd ../src ; for f in $(ADDLIBS) ; do make `echo $$f | sed 's:../src/\([a-z\-]*\)/.*:\1:'` ; done 
 
-../src/online-rec.a:
-	cd ../tools && make openfst && make atlas 
-	cd ../src && ./configure --shared && make 
-	cd ../src/onl-rec && make
 
+../tools/ATLAS/include/clapack.h: 
+	@echo "Installing Atlas headers"
+	cd ../tools && make atlas
+
+../tools/openfst/lib/libfst.so:
+	@echo "Installing openfst locally"
+	cd ../tools && make openfst
+
+../src/kaldi.mk:
+	@echo "Preparing Kaldi makefile"
+	cd ../src ; ./configure --shared
 
 pyfst:
 	git clone https://github.com/UFAL-DSG/pyfst.git pyfst
 
 # If you want to develop or install pyfst
 # use setup.py develop --user or setup.py install respectively
-pyfst/fst/_fst.so: pyfst
+pyfst/fst/_fst.so: pyfst ../tools/openfst/lib/libfst.so
 	cd pyfst ; LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include python setup.py build_ext --inplace ; cd ..
 
 pyfst_compiled: pyfst/fst/_fst.so
 
-kaldi/decoders.so: kaldi_compiled pyfst_compiled $(ADDLIBS)
+kaldi/decoders.so: pyfst/fst/_fst.so $(ADDLIBS)
 	PYKALDI_ADDLIBS="$(ADDLIBS)" \
 	LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include \
 	python setup.py build_ext --inplace
@@ -64,6 +73,8 @@ deploy: test "pykaldi_$(LINUX).tar.gz"
 	tar czf "$@" "pykaldi_$(LINUX)"
 
 
-cleanall: clean
+distclean: clean
 	# recursive make clean
+	cd ../tools && make distclean 
+	-cd ../src && make clean; 
 	rm -rf pyfst "pykaldi_$(LINUX).tar.gz" "pykaldi_$(LINUX)"
