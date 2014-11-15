@@ -12,9 +12,7 @@ Currently, we do not support CMN, so train your AM without CMN.
 Dependencies
 ------------
 * OpenFST - You should use the installation build via ``cd kaldi/src/tools; make openfst_tgt``
-* Cython 19.1+  ``pip install cython>=19.1``
-* Our fork of `PyFST <https://github.com/UFAL-DSG/pyfst>`_ which transitively requires ``pyyaml``, ``pystache``
-  - Not necessary to install. Local ``Makefile`` will install it for you.
+* Install Python dependencies via ``pip install -r pykaldi-requirements.txt'
 * For Python 2.6 also install ``pip install argparse unittest2 ordereddict``.
 
 
