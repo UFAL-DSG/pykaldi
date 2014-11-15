@@ -52,19 +52,3 @@ Other info
 * The svn trunk is mirrored via ``git svn``. 
   Checkout tutorials: `Git svn <http://viget.com/extend/effectively-using-git-with-subversion>`_, 
   `Svn branch in git <http://ivanz.com/2009/01/15/selective-import-of-svn-branches-into-a-gitgit-svn-repository>`_
-
-Vagrant
--------
-We use a Vagrant as a wrapper for Ubuntu headless virtual machine running in Virtualbox. See http://docs.vagrantup.com/v2/getting-started/ for more information about Vagrant.
-
-Below we present a Vagrantfile that has ALSA audio enabled in host machine.
-Verified with Mac 10.9.8, VirtualBox 4.2.12.
-
-- Do "vagrant up" to start everthing, then "vagrant ssh" to login to the VM.
-- Open "alsamixer" and check that microphone (F4) is not silenced
-- *cd /vagrant*
-- In VM record wave file by "rec test.wav".
-- Open test.wav in the folder with the Vagrant file (where you run vagrant up) with your favourite music player.
-- *Change back to VM*
-- *cd /vagrant*
-- Run the installation script
