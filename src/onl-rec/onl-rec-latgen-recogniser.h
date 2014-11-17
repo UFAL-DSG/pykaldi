@@ -53,6 +53,7 @@ namespace kaldi{
   class OnlineSpliceFrames;
   class OnlineTransform;
   typedef OnlineGenericBaseFeature<Mfcc> OnlineMfcc;  // Instance of template for Mfcc/PLP/FilterBanks
+  template <typename Num> class Matrix;
 
   class DecodableDiagGmmScaledOnline;
   class TransitionModel;
@@ -91,7 +92,7 @@ class OnlineLatgenRecogniser {
     DecodableDiagGmmScaledOnline *decodable_;
     TransitionModel *trans_model_;
     AmDiagGmm *am_;
-    Matrix<BaseFloat> lda_mat_;
+    Matrix<BaseFloat> *lda_mat_;
     LatticeFasterOnlineDecoder *decoder_;
     fst::StdFst *hclg_;
     OnlineLatgenRecogniserConfig *config_;

@@ -83,6 +83,7 @@ void OnlineLatgenRecogniser::Deallocate() {
   delete decoder_; decoder_ = NULL;
   delete hclg_; hclg_ = NULL;
   delete  config_; config_ = NULL;
+  delete lda_mat_; lda_mat_ = NULL;
 }
 
 OnlineLatgenRecogniser::~OnlineLatgenRecogniser() {
@@ -180,7 +181,7 @@ void OnlineLatgenRecogniser::ResetPipeline() {
     delete splice_;
     splice_ = new OnlineSpliceFrames(config_->splice_opts, mfcc_);
     delete transform_;
-    transform_ = new OnlineTransform(lda_mat_, splice_);
+    transform_ = new OnlineTransform(*lda_mat_, splice_);
     delete decodable_;
     decodable_ = new DecodableDiagGmmScaledOnline(*am_,
                                             *trans_model_,
@@ -246,7 +247,9 @@ bool OnlineLatgenRecogniser::Setup(int argc, char **argv) {
 
     bool binary_in;
     Input ki(config_->lda_mat_rspecifier, &binary_in);
-    lda_mat_.Read(ki.Stream(), binary_in);
+    delete lda_mat_;
+    lda_mat_ = new Matrix<BaseFloat>();
+    lda_mat_->Read(ki.Stream(), binary_in);
     KALDI_VLOG(1) << "LDA will be used for decoding" << std::endl;
 
     ResetPipeline();

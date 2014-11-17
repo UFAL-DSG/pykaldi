@@ -3,10 +3,11 @@ all: kaldi/decoders.so
 FSTDIR=$(PWD)/../tools/openfst
 LINUX=$(shell lsb_release -d | cut -f 2| sed 's:  *:_:g')
 
-ADDLIBS = ../src/onl-rec/onl-rec.a ../src/decoder/kaldi-decoder.a ../src/feat/kaldi-feat.a \
-		 ../src/thread/kaldi-thread.a ../src/lat/kaldi-lat.a ../src/hmm/kaldi-hmm.a \
-		 ../src/transform/kaldi-transform.a ../src/gmm/kaldi-gmm.a ../src/fstext/kaldi-fstext.a \
-		 ../src/tree/kaldi-tree.a ../src/matrix/kaldi-matrix.a  ../src/util/kaldi-util.a ../src/base/kaldi-base.a
+ADDLIBS = ../src/onl-rec/onl-rec.a ../src/online2/kaldi-online2.a \
+		  ../src/decoder/kaldi-decoder.a ../src/feat/kaldi-feat.a \
+		  ../src/thread/kaldi-thread.a ../src/lat/kaldi-lat.a ../src/hmm/kaldi-hmm.a \
+		  ../src/transform/kaldi-transform.a ../src/gmm/kaldi-gmm.a ../src/fstext/kaldi-fstext.a \
+		  ../src/tree/kaldi-tree.a ../src/matrix/kaldi-matrix.a  ../src/util/kaldi-util.a ../src/base/kaldi-base.a
 
 ../src/onl-rec/onl-rec.a : ../tools/openfst/lib/libfst.so ../tools/ATLAS/include/clapack.h ../src/kaldi.mk
 	@echo Building src dictionary namely $(ADDLIBS)
