@@ -40,7 +40,7 @@ void test_posterior_sum_to_one(const std::vector<std::string> & tests) {
     std::vector<double> alpha;
     std::vector<double> beta;
     ComputeLatticeAlphasAndBetas(*t, &alpha, &beta);
-    MovePostToArcs(t, alpha, beta);
+    MovePostToArcs(alpha, beta, t);
 
     StateId num_states = t->NumStates();
     for (StateId s = 0; s < num_states; s++) {
@@ -72,7 +72,7 @@ void test_MovePostToArc(const std::vector<std::string> &tests) {
     std::vector<double> alpha;
     std::vector<double> beta;
     ComputeLatticeAlphasAndBetas(*t, &alpha, &beta);
-    MovePostToArcs(t, alpha, beta);
+    MovePostToArcs(alpha, beta, t);
 
     // save the file with posteriors 
     std::ofstream logfile;

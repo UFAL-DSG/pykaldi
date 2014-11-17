@@ -151,7 +151,7 @@ void OnlineLatgenRecogniser::FinalizeDecoding() {
 
 
 bool OnlineLatgenRecogniser::GetLattice(fst::VectorFst<fst::LogArc> *fst_out, 
-                                  double *tot_lik, bool end_of_utterance=true) {
+                                  double *tot_lik, bool end_of_utterance) {
   if (! initialized_)
     return false;
 

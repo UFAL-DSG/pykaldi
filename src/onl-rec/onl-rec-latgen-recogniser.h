@@ -49,6 +49,9 @@ namespace kaldi{
   typedef fst::VectorFst<CompactLatticeArc> CompactLattice;
 
   template <typename Feat> class OnlineGenericBaseFeature;
+  class Mfcc;
+  class OnlineSpliceFrames;
+  class OnlineTransform;
   typedef OnlineGenericBaseFeature<Mfcc> OnlineMfcc;  // Instance of template for Mfcc/PLP/FilterBanks
 
   class DecodableDiagGmmScaledOnline;
@@ -76,7 +79,7 @@ class OnlineLatgenRecogniser {
     size_t Decode(size_t max_frames);
     void FrameIn(unsigned char *frame, size_t frame_len);
     bool GetBestPath(std::vector<int> *v_out, BaseFloat *prob);
-    bool GetLattice(fst::VectorFst<fst::LogArc> * out_fst, double *tot_lik, bool end_of_utt);
+    bool GetLattice(fst::VectorFst<fst::LogArc> * out_fst, double *tot_lik, bool end_of_utt=true);
     void FinalizeDecoding();
     void Reset(bool reset_pipeline);
     bool Setup(int argc, char **argv);
