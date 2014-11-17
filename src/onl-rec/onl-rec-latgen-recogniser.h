@@ -20,8 +20,9 @@
 #include <vector>
 #include "base/kaldi-types.h"
 
-// forward declarations from Fst
 namespace fst{
+  // forward declarations - useful for interfacing the class from Python/Java
+  // No need to include the headers
   template <typename Arc> class Fst;
   template <typename Weight> class ArcTpl; 
   template <class W> class TropicalWeightTpl;
@@ -37,6 +38,8 @@ namespace fst{
 
 }
 namespace kaldi{ 
+  // forward declarations - useful for interfacing the class from Python/Java
+  // No need to include the headers
   typedef fst::LatticeWeightTpl<BaseFloat> LatticeWeight;
   typedef fst::ArcTpl<LatticeWeight> LatticeArc;
   typedef fst::VectorFst<LatticeArc> Lattice;
@@ -44,77 +47,53 @@ namespace kaldi{
   typedef fst::CompactLatticeWeightTpl<LatticeWeight, kaldi::int32> CompactLatticeWeight;
   typedef fst::ArcTpl<CompactLatticeWeight> CompactLatticeArc;
   typedef fst::VectorFst<CompactLatticeArc> CompactLattice;
+
+  template <typename Feat> class OnlineGenericBaseFeature;
+  typedef OnlineGenericBaseFeature<Mfcc> OnlineMfcc;  // Instance of template for Mfcc/PLP/FilterBanks
+
+  class DecodableDiagGmmScaledOnline;
+  class TransitionModel;
+  class AmDiagGmm;
+  class LatticeFasterOnlineDecoder;
+  struct OnlineLatgenRecogniserConfig;
 }
 
 
 namespace kaldi {
 
-// forward declarations
-class OnlBuffSource;
-class Mfcc;
-template<typename Mfcc> class OnlFeInput;
-class OnlFeInput_Mfcc;
-class OnlFeatInputItf;
-class OnlFeatureMatrix;
-class OnlDecodableDiagGmmScaled;
-class TransitionModel;
-class AmDiagGmm;
-class LatticeFasterDecoder;
-class OnlineLatgenRecogniser;
-struct OptionsItf;
-
 /// \addtogroup online_latgen 
 /// @{
 
-struct OnlineLatgenRecogniserOptions  {
-  /// Input sampling frequency is fixed to 16KHz
-  explicit OnlineLatgenRecogniserOptions():kSampleFreq(16000), 
-  acoustic_scale(0.1),
-  lat_acoustic_scale(1.0), lat_lm_scale(1.0),
-  left_context(4), right_context(4)
-  {}
-  int32 kSampleFreq;
-  BaseFloat acoustic_scale;
-  BaseFloat lat_acoustic_scale;
-  BaseFloat lat_lm_scale;
-  int32 left_context;
-  int32 right_context;
-  std::string model_rxfilename;
-  std::string fst_rxfilename;
-  std::string lda_mat_rspecifier;
-  std::vector<int32> silence_phones;
-  void Register(OptionsItf *po);
-};
 
 
 class OnlineLatgenRecogniser {
   public:
-    OnlineLatgenRecogniser(): audio(NULL), mfcc(NULL), feat_input(NULL),
-    feat_transform(NULL), feat_matrix(NULL), decodable(NULL),
-    trans_model(NULL), amm(NULL), decoder(NULL), decode_fst(NULL) { }
+    OnlineLatgenRecogniser(): mfcc_(NULL), splice_(NULL), transform_(NULL), 
+      decodable_(NULL), trans_model_(NULL), am_(NULL), 
+      decoder_(NULL), hclg_(NULL) { }
 
     virtual ~OnlineLatgenRecogniser();
     size_t Decode(size_t max_frames);
     void FrameIn(unsigned char *frame, size_t frame_len);
     bool GetBestPath(std::vector<int> *v_out, BaseFloat *prob);
-    bool GetLattice(fst::VectorFst<fst::LogArc> * out_fst, double *tot_lik);
+    bool GetLattice(fst::VectorFst<fst::LogArc> * out_fst, double *tot_lik, bool end_of_utt);
     void FinalizeDecoding();
-    void Reset(bool keep_buffer_data);
+    void Reset(bool reset_pipeline);
     bool Setup(int argc, char **argv);
-  protected:
-    OnlBuffSource *audio;
-    Mfcc *mfcc;
-    OnlFeInput<Mfcc> *feat_input;
-    OnlFeatInputItf *feat_transform;
-    OnlFeatureMatrix *feat_matrix;
-    OnlDecodableDiagGmmScaled *decodable;
-    TransitionModel *trans_model;
-    AmDiagGmm *amm;
-    LatticeFasterDecoder *decoder;
-    fst::StdFst *decode_fst;
   private:
+    std::vector<int32> silence_phones_;
+    OnlineMfcc *mfcc_;
+    OnlineSpliceFrames *splice_;
+    OnlineTransform *transform_;
+    DecodableDiagGmmScaledOnline *decodable_;
+    TransitionModel *trans_model_;
+    AmDiagGmm *am_;
+    Matrix<BaseFloat> lda_mat_;
+    LatticeFasterOnlineDecoder *decoder_;
+    fst::StdFst *hclg_;
+    OnlineLatgenRecogniserConfig *config_;
     bool initialized_;
-    BaseFloat lat_lm_scale_, lat_acoustic_scale_;
+    void ResetPipeline();
     void Deallocate();
 };
 

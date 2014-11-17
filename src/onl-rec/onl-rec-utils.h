@@ -34,18 +34,6 @@ namespace kaldi {
 /// \addtogroup online_latgen_utils
 /// @{
 
-// Reads a decoding graph from a file
-fst::Fst<fst::StdArc> *ReadDecodeGraph(std::string filename);
-
-// Prints a string corresponding to (a possibly partial) decode result as
-// and adds a "new line" character if "line_break" argument is true
-void PrintPartialResult(const std::vector<int32>& words,
-                        const fst::SymbolTable *word_syms,
-                        bool line_break);
-
-std::vector<int32> phones_to_vector(const std::string & s);
-
-
 // FIXME Copied from lat/lattice-functions.cc no declaration in header
 // Computes (normal or Viterbi) alphas and betas; returns (total-lik, or
 // best-path negated cost) 
@@ -57,23 +45,17 @@ static double ComputeLatticeAlphasAndBetas(const LatticeType &lat,
                                            vector<double> *alpha,
                                            vector<double> *beta);
 
+// typedef double ComputeLatticeAlphasAndBetas<CompactLattice> ComputeCompactLatticeAlphasAndBetas;
+
 
 // Lattice lat has to have loglikelihoods on weights
-void MovePostToArcs(fst::VectorFst<fst::LogArc> * lat,
-                          const std::vector<double> &alpha,
-                          const std::vector<double> &beta);
+void MovePostToArcs(const std::vector<double> &alpha,
+                    const std::vector<double> &beta,
+                    fst::VectorFst<fst::LogArc> * lat);
 
 
 // the input lattice has to have log-likelihood weights
 double CompactLatticeToWordsPost(CompactLattice &lat, fst::VectorFst<fst::LogArc> *pst);
-
-
-template<typename Arc>
-void LatticeToVectorNbest(const fst::VectorFst<Arc> & lat, std::vector<std::vector<int> > *nbest_out_ids) {
-  std::cout << "TODOconvert lattice to tropical semiring" << std::endl <<
-    "TODO SingleShortestPaht http://openfst.cs.nyu.edu/doxygen/fst/html/shortest-path_8h.html" << std::endl <<
-    "TODO extract labels to vectors of std::vector<ids>" << std::endl;
-}
 
 /// @} end of "addtogroup online_latgen_utils"
 

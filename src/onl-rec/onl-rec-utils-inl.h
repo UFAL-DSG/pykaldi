@@ -27,8 +27,7 @@ namespace kaldi {
 /// \addtogroup online_latgen_utils
 /// @{
 
-// FIXME Copied from lat/lattice-functions.cc
-// There is no no declaration in lat/lattice-functions.h!
+// Copied from lat/lattice-functions.cc since in corresponding header!
 // Computes (normal or Viterbi) alphas and betas; returns (total-prob, or
 // best-path negated cost)
 // Note: in either case, the alphas and betas are negated costs.

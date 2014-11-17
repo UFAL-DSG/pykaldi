@@ -103,7 +103,7 @@ cdef class PyOnlineLatgenRecogniser:
         self.utt_decoded = 0
         return (lik, r)
 
-    def FinalizeDecoding(self):
+    def finalize_decoding(self):
         """FinalizeDecoding(self)
 
         It prepares internal representation for lattice extration."""

@@ -18,49 +18,71 @@
 #include <fst/arc-map.h>
 #include <fst/arc.h>
 #include "fstext/fstext-lib.h"
-#include "fstext/fstext-utils.h"
 #include "feat/feature-mfcc.h"
+#include "feat/feature-functions.h"
+#include "feat/online-feature.h"
+#include "util/stl-utils.h"
+#include "decoder/lattice-faster-online-decoder.h"
+#include "online2/online-gmm-decodable.h"
+#include "online2/onlinebin-util.h"
 #include "onl-rec/onl-rec-utils.h"
-#include "onl-rec/onl-rec-audio-source.h"
 #include "onl-rec/onl-rec-latgen-recogniser.h"
-#include "onl-rec/onl-rec-feat-input.h"
-#include "onl-rec/onl-rec-decodable.h"
-#include "onl-rec/onl-rec-latgen-recogniser.h"
-#include "decoder/lattice-faster-decoder.h"
-// debug
+
+#ifdef DEBUG
 #include <fstream>
 #include <iostream>
 #include <ctime>
 #include <sys/time.h>
 #include <time.h>
 #include <stdio.h>
+#endif
 
 
 namespace kaldi {
 
-void OnlineLatgenRecogniserOptions::Register(OptionsItf *po) {
-  po->Register("left-context", &left_context, "Number of frames of left context");
-  po->Register("right-context", &right_context, "Number of frames of right context");
-  po->Register("acoustic-scale", &acoustic_scale,
-              "Scaling factor for acoustic likelihoods for forward decoding");
-  po->Register("lat-acoustic-scale", &lat_acoustic_scale,
-              "Scaling factor for acoustic likelihoods after forward decoding");
-  po->Register("lat-lm-scale", &lat_lm_scale,
-              "Scaling factor for LM likelihoods after forward decoding");
-}
+struct OnlineLatgenRecogniserConfig {
+
+  explicit OnlineLatgenRecogniserConfig():acoustic_scale(0.1), bits_per_sample(16) {}
+
+  void Register(OptionsItf *po) {
+    mfcc_opts.Register(po);
+    splice_opts.Register(po);
+    // delta_feat_opts.Register(po);
+    faster_decoder_opts.Register(po);
+    po->Register("bits-per-sample", &bits_per_sample,
+                "Number of bits used for one sample in input waveform e.g. 8, 16.");
+    po->Register("acoustic-scale", &acoustic_scale,
+                "Scaling factor for acoustic likelihoods for forward decoding");
+  }
+  BaseFloat acoustic_scale;
+  int32 bits_per_sample;
+
+  std::string model_rxfilename;
+  std::string fst_rxfilename;
+  std::string silence_phones;
+  std::string lda_mat_rspecifier;
+
+  MfccOptions mfcc_opts;
+  OnlineSpliceOptions splice_opts;
+  // DeltaFeaturesOptions delta_feat_opts; TODO add support again
+  LatticeFasterDecoderConfig faster_decoder_opts;
+};
+
+
 
 void OnlineLatgenRecogniser::Deallocate() {
   initialized_ = false;
-  delete audio; audio = NULL;
-  delete mfcc; mfcc = NULL;
-  delete feat_input; feat_input = NULL;
-  delete feat_transform; feat_transform = NULL;
-  delete feat_matrix; feat_matrix = NULL;
-  delete decodable; decodable = NULL;
-  delete trans_model; trans_model = NULL;
-  delete amm; amm = NULL;
-  delete decoder; decoder = NULL;
-  delete decode_fst; decode_fst = NULL;
+
+  silence_phones_.clear();
+  delete mfcc_; mfcc_ = NULL;
+  delete splice_; splice_ = NULL;
+  delete transform_; transform_ = NULL;
+  delete decodable_; decodable_ = NULL;
+  delete trans_model_; trans_model_ = NULL;
+  delete am_; am_ = NULL;
+  delete decoder_; decoder_ = NULL;
+  delete hclg_; hclg_ = NULL;
+  delete  config_; config_ = NULL;
 }
 
 OnlineLatgenRecogniser::~OnlineLatgenRecogniser() {
@@ -70,16 +92,40 @@ OnlineLatgenRecogniser::~OnlineLatgenRecogniser() {
 size_t OnlineLatgenRecogniser::Decode(size_t max_frames) {
   if (! initialized_)
     return 0;
-  size_t decoded = decoder->NumFramesDecoded();
-  decoder->AdvanceDecoding(decodable, max_frames);
-  return decoder->NumFramesDecoded() - decoded;
+  size_t decoded = decoder_->NumFramesDecoded();
+  decoder_->AdvanceDecoding(decodable_, max_frames);
+  return decoder_->NumFramesDecoded() - decoded;
 }
 
 
 void OnlineLatgenRecogniser::FrameIn(unsigned char *frame, size_t frame_len) {
   if (! initialized_)
     return;
-  audio->Write(frame, frame_len);
+  Vector<BaseFloat> waveform(frame_len);
+  for(size_t i = 0; i < frame_len; ++i) {
+    switch(config_->bits_per_sample) {
+      case 8:
+        {
+          waveform(i) = (*frame);
+          frame++;
+          break;
+        }
+      case 16:
+        {
+          int16 k = *reinterpret_cast<uint16*>(frame);
+#ifdef __BIG_ENDDIAN__
+          KALDI_SWAP2(k);
+#endif
+          waveform(i) = k;
+          frame += 2;
+          break;
+        }
+      default:
+        KALDI_ERR << "Unsupported bits ber sample (implement yourself): "
+          << config_->bits_per_sample;
+    }
+  }
+  mfcc_->AcceptWaveform(config_->mfcc_opts.frame_opts.samp_freq, waveform);
 }
 
 
@@ -88,7 +134,7 @@ bool OnlineLatgenRecogniser::GetBestPath(std::vector<int> *out_ids, BaseFloat *p
   if (! initialized_)
     return false;
   Lattice lat;
-  bool ok = decoder->GetBestPath(&lat);
+  bool ok = decoder_->GetBestPath(&lat);
   LatticeWeight weight;
   fst::GetLinearSymbolSequence(lat,
                                static_cast<vector<int32> *>(0),
@@ -100,69 +146,61 @@ bool OnlineLatgenRecogniser::GetBestPath(std::vector<int> *out_ids, BaseFloat *p
 }
 
 void OnlineLatgenRecogniser::FinalizeDecoding() {
-  decoder->FinalizeDecoding();
+  decoder_->FinalizeDecoding();
 }
 
 
 bool OnlineLatgenRecogniser::GetLattice(fst::VectorFst<fst::LogArc> *fst_out, 
-                                  double *tot_lik) {
+                                  double *tot_lik, bool end_of_utterance=true) {
   if (! initialized_)
     return false;
 
   CompactLattice lat;
-  // Lattice raw_lat;
-  // bool ok = decoder->GetRawLattice(&raw_lat);
-  //
-  // Invert(&raw_lat);  // make it so word labels are on the input.
-  // // (in phase where we get backward-costs).
-  // fst::ILabelCompare<LatticeArc> ilabel_comp;
-  // ArcSort(&raw_lat, ilabel_comp);  // sort on ilabel; makes
-  // // lattice-determinization more efficient.
-  //
-  // fst::DeterminizeLatticePrunedOptions lat_opts;
-  // lat_opts.max_mem = decoder->config_.det_opts.max_mem;
-  //
-  // DeterminizeLatticePruned(raw_lat, config_.lattice_beam, &lat, lat_opts);
-  // raw_lat.DeleteStates();  // Free memory-- raw_lat no longer needed.
-  // Connect(&lat);  // Remove unreachable states... there might be
-  bool ok = decoder->GetLattice(&lat);
+  Lattice raw_lat;
+  if (decoder_->NumFramesDecoded() == 0)
+    KALDI_ERR << "You cannot get a lattice if you decoded no frames.";
+  bool ok = decoder_->GetRawLattice(&raw_lat, end_of_utterance);
 
-  KALDI_ASSERT(lat_acoustic_scale_ != 0.0 || lat_lm_scale_ != 0.0);
-  BaseFloat ac_scale = 1.0, acoustic_scale = decodable->GetAcousticScale();
-  if (acoustic_scale != 0.0) // We'll unapply the acoustic scaling for forward decoding
-    ac_scale = 1.0 / acoustic_scale;
-  // We apply new acoustic scaling (and we supposed the lattice is not scaled)
-  ac_scale = ac_scale * lat_acoustic_scale_;
-  fst::ScaleLattice(fst::LatticeScale(lat_lm_scale_, ac_scale), &lat);
+  if (!config_->faster_decoder_opts.determinize_lattice)
+    KALDI_ERR << "--determinize-lattice=false option is not supported at the moment";
+
+  BaseFloat lat_beam = config_->faster_decoder_opts.lattice_beam;
+  DeterminizeLatticePhonePrunedWrapper(
+      *trans_model_, &raw_lat, lat_beam, &lat, config_->faster_decoder_opts.det_opts);
 
   *tot_lik = CompactLatticeToWordsPost(lat, fst_out);
 
   return ok;
 }
 
-void OnlineLatgenRecogniser::Reset(bool keep_buffer_data) {
+
+void OnlineLatgenRecogniser::ResetPipeline() {
+    delete mfcc_;
+    mfcc_ = new OnlineMfcc(config_->mfcc_opts);
+    delete splice_;
+    splice_ = new OnlineSpliceFrames(config_->splice_opts, mfcc_);
+    delete transform_;
+    transform_ = new OnlineTransform(lda_mat_, splice_);
+    delete decodable_;
+    decodable_ = new DecodableDiagGmmScaledOnline(*am_,
+                                            *trans_model_,
+                                            config_->acoustic_scale, transform_);
+}
+
+void OnlineLatgenRecogniser::Reset(bool reset_pipeline) {
   if (! initialized_)
     return;
-  if (!keep_buffer_data) {
-    audio->Reset();
-    feat_input->Reset();
-    feat_transform->Reset();
-  }
-  feat_matrix->Reset();
-  decodable->Reset();
-  decoder->InitDecoding();
+  if(reset_pipeline)
+    ResetPipeline();
+  decoder_->InitDecoding();
 }
 
 
 bool OnlineLatgenRecogniser::Setup(int argc, char **argv) {
   initialized_ = false;
   try {
-    OnlineLatgenRecogniserOptions recogniser_opts;
-    OnlFeatureMatrixOptions feature_reading_opts;
-    MfccOptions mfcc_opts;
-    LatticeFasterDecoderConfig decoder_opts;
-    DeltaFeaturesOptions delta_feat_opts;
-    OnlBuffSourceOptions au_opts;
+    if (config_ == NULL)
+      config_ = new OnlineLatgenRecogniserConfig();  
 
     // Parsing options
     ParseOptions po("Utterance segmentation is done on-the-fly.\n"
@@ -172,76 +210,46 @@ bool OnlineLatgenRecogniser::Setup(int argc, char **argv) {
       "Example: decoder-binary-name --max-active=4000 --beam=12.0 "
       "--acoustic-scale=0.0769 model HCLG.fst words.txt '1:2:3:4:5'");
 
-    recogniser_opts.Register(&po);
-    mfcc_opts.Register(&po);
-    decoder_opts.Register(&po);
-    feature_reading_opts.Register(&po);
-    delta_feat_opts.Register(&po);
-    au_opts.Register(&po);
+    config_->Register(&po);
 
     po.Read(argc, argv);
-    if (po.NumArgs() != 3 && po.NumArgs() != 4) {
+    if (po.NumArgs() != 4) {
       po.PrintUsage();
-      // throw std::invalid_argument("Specify 3 or 4 arguments. See the usage in stderr");
       return false;
     }
-    if (po.NumArgs() == 3)
-      if (recogniser_opts.left_context % delta_feat_opts.order != 0 ||
-          recogniser_opts.left_context != recogniser_opts.right_context)
-        KALDI_ERR << "Invalid left/right context parameters!";
-
-    recogniser_opts.model_rxfilename = po.GetArg(1);
-    recogniser_opts.fst_rxfilename = po.GetArg(2);
-    recogniser_opts.silence_phones = phones_to_vector(po.GetArg(3));  // Currently not used. TODO
-    recogniser_opts.lda_mat_rspecifier = po.GetOptArg(4);
-
-    lat_lm_scale_ = recogniser_opts.lat_lm_scale;
-    lat_acoustic_scale_ = recogniser_opts.lat_acoustic_scale;
+    config_->model_rxfilename = po.GetArg(1);
+    config_->fst_rxfilename = po.GetArg(2);
+    config_->silence_phones = (po.GetArg(3));
+    config_->lda_mat_rspecifier = po.GetOptArg(4);
 
     // Setting up components
-    trans_model = new TransitionModel();
-    amm = new AmDiagGmm();
+    trans_model_ = new TransitionModel();
+    am_ = new AmDiagGmm();
     {
       bool binary;
-      Input ki(recogniser_opts.model_rxfilename, &binary);
-      trans_model->Read(ki.Stream(), binary);
-      amm->Read(ki.Stream(), binary);
+      Input ki(config_->model_rxfilename, &binary);
+      trans_model_->Read(ki.Stream(), binary);
+      am_->Read(ki.Stream(), binary);
     }
 
-    decode_fst = ReadDecodeGraph(recogniser_opts.fst_rxfilename);
-    decoder = new LatticeFasterDecoder(
-                                    *decode_fst, decoder_opts);
+    hclg_ = ReadDecodeGraph(config_->fst_rxfilename);
+    decoder_ = new LatticeFasterOnlineDecoder( *hclg_, 
+                                              config_->faster_decoder_opts);
 
-    audio = new OnlBuffSource(au_opts);
+    if (!SplitStringToIntegers(config_->silence_phones, ":", false, 
+                                &silence_phones_)) {
+      KALDI_WARN << "Bad silence-phone argument '" << config_->silence_phones << "'" ;
+      return false;
+    } else 
+      SortAndUniq(&silence_phones_);
+   
 
-    mfcc = new Mfcc(mfcc_opts);
-    int32 frame_length = mfcc_opts.frame_opts.frame_length_ms;
-    int32 frame_shift = mfcc_opts.frame_opts.frame_shift_ms;
-    feat_input = new OnlFeInput<Mfcc>(audio, mfcc,
-                               frame_length * (recogniser_opts.kSampleFreq / 1000),
-                               frame_shift * (recogniser_opts.kSampleFreq / 1000));
+    bool binary_in;
+    Input ki(config_->lda_mat_rspecifier, &binary_in);
+    lda_mat_.Read(ki.Stream(), binary_in);
+    KALDI_VLOG(1) << "LDA will be used for decoding" << std::endl;
 
-    if (recogniser_opts.lda_mat_rspecifier != "") {
-      bool binary_in;
-      Matrix<BaseFloat> lda_transform;
-      Input ki(recogniser_opts.lda_mat_rspecifier, &binary_in);
-      lda_transform.Read(ki.Stream(), binary_in);
-      // lda_transform is copied to OnlLdaInput
-      feat_transform = new OnlLdaInput(feat_input,
-                                lda_transform,
-                                recogniser_opts.left_context, recogniser_opts.right_context);
-      KALDI_VLOG(1) << "LDA will be used for decoding" << std::endl;
-    } else {
-      feat_transform = new OnlDeltaInput(delta_feat_opts, feat_input);
-      KALDI_VLOG(1) << "Delta + delta-delta will be used for decoding" << std::endl;
-    }
-
-    feat_matrix = new OnlFeatureMatrix(feature_reading_opts,
-                                       feat_transform);
-    decodable = new OnlDecodableDiagGmmScaled(*amm,
-                                            *trans_model,
-                                            recogniser_opts.acoustic_scale, feat_matrix);
-
+    ResetPipeline();
   } catch(const std::exception& e) {
     Deallocate();
     // throw e;
