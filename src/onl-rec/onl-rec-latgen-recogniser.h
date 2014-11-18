@@ -73,8 +73,8 @@ namespace kaldi {
 class OnlineLatgenRecogniser {
   public:
     OnlineLatgenRecogniser(): mfcc_(NULL), splice_(NULL), transform_(NULL), 
-      decodable_(NULL), trans_model_(NULL), am_(NULL), 
-      decoder_(NULL), hclg_(NULL) { }
+      decodable_(NULL), trans_model_(NULL), am_(NULL), lda_mat_(NULL),
+      decoder_(NULL), hclg_(NULL), config_(NULL) { }
 
     virtual ~OnlineLatgenRecogniser();
     size_t Decode(size_t max_frames);

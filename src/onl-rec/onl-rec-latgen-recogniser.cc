@@ -234,7 +234,7 @@ bool OnlineLatgenRecogniser::Setup(int argc, char **argv) {
     }
 
     hclg_ = ReadDecodeGraph(config_->fst_rxfilename);
-    decoder_ = new LatticeFasterOnlineDecoder( *hclg_, 
+    decoder_ = new LatticeFasterOnlineDecoder(*hclg_, 
                                               config_->faster_decoder_opts);
 
     if (!SplitStringToIntegers(config_->silence_phones, ":", false, 
