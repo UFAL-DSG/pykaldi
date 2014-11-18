@@ -5,8 +5,9 @@ The official Kaldi toolkit installation is well documented at `installation guid
 
 Installation
 ~~~~~~~~~~~~~~~~~~~~~
-In order to use Kaldi decoder system wide, build fork of Kaldi from https://github.com/UFAL-DSG/pykaldi,
-install patched ``OpenFST``, then ``pyfst`` from https://github.com/UFAL-DSG/pyfst, and finally 
-install Python extension.
+In order to use Kaldi decoder system wide
+follow the instructions in ``Dockerfile`` or ``.travis.yml`` (For Ubuntu 14.04 or 12.04),
+and update the build instructions for your system.
 
-For details see the ``Dockerfile`` or ``.travis.yml`` in this repository
+This fork of Kaldi is developed in master branch at https://github.com/UFAL-DSG/pykaldi.
+We use ``pyfst`` from https://github.com/UFAL-DSG/pyfst, which is installed on top of patched version of OpenFST

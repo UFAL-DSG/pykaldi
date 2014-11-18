@@ -1,32 +1,13 @@
 FROM      ubuntu:14.04
-MAINTAINER Ondrej Platek <oplatek@ufal.mff.cuni.cz>
+MAINTAINER Ondrej Platek <ondrej.platek haha gmail.com>
 
-#
-# Install PyKaldi.
-#
 
-# Prerequesities.
-RUN apt-get update
-RUN apt-get install -y build-essential libatlas-base-dev python-dev python-pip git wget
-
-ADD . /app/pykaldi/
+ADD . /app/pykaldi
 WORKDIR /app/pykaldi
+RUN locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8
+RUN apt-get install -y build-essential libatlas3-base libatlas-base-dev python-dev python-pip git wget gfortran
+RUN pip install -r pykaldi/pykaldi-requirements.txt
 
-# PyKaldi tools.
-WORKDIR tools
-RUN make atlas openfst_tgt
-
-# Compile the Kaldi src.
-WORKDIR ../src
-RUN ./configure --shared && make && echo 'KALDI LIBRARY INSTALLED OK'
-
-# Compile Online recogniser.
-WORKDIR onl-rec
-RUN make && make test && echo 'OnlineLatgenRecogniser build OK'
-
-# Compile Kaldi module for Python.
-WORKDIR ../../pykaldi
-RUN pip install -r pykaldi-requirements.txt
-RUN make deploy && echo 'Pykaldi build and installation files prepared: OK'
-
-# TODO ONBUILD 
+WORKDIR  /app/pykaldi/pykaldi
+RUN make
+RUN make test
