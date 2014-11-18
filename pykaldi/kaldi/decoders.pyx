@@ -19,7 +19,7 @@ cdef extern from "onl-rec/onl-rec-latgen-recogniser.h" namespace "kaldi":
         bool GetBestPath(vector[int] *v_out, float *lik) except +
         bool GetLattice(fst.libfst.LogVectorFst *fst_out, double *tot_lik) except +
         void FinalizeDecoding() except +
-        void Reset(bool keep_buffer_data) except +
+        void Reset(bool reset_pipeline) except +
         int Setup(int argc, char **argv) except +
 
 
@@ -109,14 +109,15 @@ cdef class PyOnlineLatgenRecogniser:
         It prepares internal representation for lattice extration."""
         self.thisptr.FinalizeDecoding()
 
-    def reset(self, keep_buffer_data=True):
+    def reset(self, reset_pipeline=False):
         """reset(self, keep_buffer_data)
 
         Resets the frame counter and prepare decoder for new utterance.
-        Dependently on keep_buffer_data parameter clear the buffered data.
-        If the (audio) data are kept they are the first
-        input data for new utterance."""
-        self.thisptr.Reset(keep_buffer_data)
+        Dependently on reset_pipeline parameter the data are 
+        buffered data are cleared in the pipeline.
+        If the (audio) data are kept they are the first input 
+        data for new utterance."""
+        self.thisptr.Reset(reset_pipeline)
 
     def setup(self, args):
         """setup(self, args)
