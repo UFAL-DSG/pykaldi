@@ -252,7 +252,11 @@ bool OnlineLatgenRecogniser::Setup(int argc, char **argv) {
     lda_mat_->Read(ki.Stream(), binary_in);
     KALDI_VLOG(1) << "LDA will be used for decoding" << std::endl;
 
-    ResetPipeline();
+    // put the peaces of pipeline setup above together
+    ResetPipeline(); 
+    // No beter place to do elsewhere
+    decoder_->InitDecoding();
+     
   } catch(const std::exception& e) {
     Deallocate();
     // throw e;
