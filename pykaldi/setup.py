@@ -11,7 +11,7 @@ from os import path
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
 from os import environ
-from sys import stderr
+from sys import stderr, platform
 
 install_requires = []
 if python_version < (2, 7):
@@ -19,17 +19,24 @@ if python_version < (2, 7):
     install_requires.extend(new_27)
 
 
-ext_modules = []
 # pykaldi static library compilation (extension is always built as shared) 
 try:
     extra_objects = environ['PYKALDI_ADDLIBS'].split()
 except:
     print('Specify pykaldi dependant libraries in PYKALDI_ADDLIBS shell variable', file=stderr)
     extra_objects = []
+
+ext_modules = []
+extra_compile_args = ['-std=c++11']
 library_dirs = ['/usr/lib', '../tools/openfst/lib']
-# libraries = ['fst', 'lapack_atlas', 'cblas', 'atlas', 'f77blas',]
 libraries = ['fst', 'lapack_atlas', 'cblas', 'atlas', 'f77blas', 'm', 'pthread', 'dl']
+
+if platform == 'darwin':
+    extra_compile_args.append('-stdlib=libstdc++')
+    libraries = ['fst', 'm', 'pthread', 'dl']
+
 ext_modules.append(Extension('kaldi.decoders',
+                             extra_compile_args=extra_compile_args,
                              language='c++',
                              include_dirs=['../src', 'pyfst', ],
                              library_dirs=library_dirs,
