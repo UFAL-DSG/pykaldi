@@ -2,6 +2,7 @@
 LANG=en
 
 # data location
+acs=0.1
 PWD=`pwd`
 exp_dir=$PWD
 data_dir=$PWD/data/vystadial-sample-${LANG}/test

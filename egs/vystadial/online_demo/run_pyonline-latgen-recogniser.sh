@@ -16,10 +16,8 @@ logname=b${beam}_lb${latbeam}_ma${max_active}_bs${batch_size}
 python \
   pykaldi-online-latgen-recogniser.py $wav_scp $batch_size $pykaldi_latgen_tra $WST \
     --verbose=0  --max-mem=500000000 --config=$MFCC \
-    --beam=$beam --lattice-beam=$latbeam --max-active=$max_active \
+    --acoustic-scale=$acs --beam=$beam --lattice-beam=$latbeam --max-active=$max_active \
     $AM $HCLG `cat $SILENCE` $MAT
-
-echo TODO lm-scale
 
 # If using callgrind display the results by running kcachegrind
 # kcachegrind callgrind_${logname}.log
