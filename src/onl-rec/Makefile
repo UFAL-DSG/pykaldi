@@ -13,8 +13,7 @@ ADDLIBS = ../online2/kaldi-online2.a ../decoder/kaldi-decoder.a \
 
 BINFILES =
 
-TESTFILES = onl-rec-latgen-recogniser-test onl-rec-utils-test \
-			read-wav-test 
+TESTFILES = onl-rec-latgen-recogniser-test onl-rec-utils-test
 
 OBJFILES = onl-rec-latgen-recogniser.o onl-rec-utils.o
 
