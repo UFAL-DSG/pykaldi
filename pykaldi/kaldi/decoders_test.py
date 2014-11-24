@@ -47,12 +47,6 @@ class TestPyOnlineLatgenRecogniserNotInit(unittest.TestCase):
     def get_lattice(self):
         self.assertEqual(self.d.get_lattice(), None)
 
-    def get_raw_lattice(self):
-        self.assertEqual(self.d.get_raw_lattice(), None)
-
-    def prune_final(self):
-        self.d.prune_final()
-
     def reset(self, keep_buffer_data=False):
         self.d.reset(keep_buffer_data)
 

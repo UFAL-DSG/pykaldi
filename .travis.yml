@@ -34,9 +34,9 @@ install:
     - pip install -q cython pystache pyyaml --use-mirrors
     - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]] ; then pip install --use-mirrors unittest2 ordereddict argparse ; fi
     # Openfst: skip building Openfst ~ 30 min
-    # # - pushd tools && make -j 4 openfst_tgt && popd
+    - pushd tools && make -j 4 openfst && popd
     # Openfst: download
-    - pushd tools && wget https://s3-eu-west-1.amazonaws.com/ufal-dsg/openfst/travis-openfst.tar.gz -O travis-openfst.tar.gz && tar zxvf travis-openfst.tar.gz && ln -s travis-openfst openfst && popd
+    # - pushd tools && wget https://s3-eu-west-1.amazonaws.com/ufal-dsg/openfst/travis-openfst.tar.gz -O travis-openfst.tar.gz && tar zxvf travis-openfst.tar.gz && ln -s travis-openfst openfst && popd
     # hack how to make available clapack.h
     - pushd tools && make -j 4 atlas && popd
     # Configure with ATLAS (default)
@@ -46,7 +46,7 @@ install:
 
 script:
     - pushd src/onl-rec && make -j 4 test ; RET=$?; popd ; (exit $RET)
-    - pushd pykaldi && make -j 4 test ; RET=$? ; popd ; (exit $RET)
+    # - pushd pykaldi && make -j 4 test ; RET=$? ; popd ; (exit $RET)
 
 after_success: # and this only on success
     - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]] ; then gem install travis-artifacts ; pushd pykaldi; make deploy ; popd ; travis-artifacts upload --path pykaldi/pykaldi*.tar.gz --target-path pykaldi/pykaldi-travis_${TRAVIS_PYTHON_VERSION}.tar.gz ; fi

@@ -39,7 +39,7 @@ def write_decoded(f, wav_name, word_ids, wst):
         decoded = [unicode(w) for w in best_path]
     line = u' '.join([wav_name] + decoded + ['\n'])
     if DEBUG:
-        print '%s best path %s' % (wav_name, decoded.encode('UTF-8'))
+        print '%s best path' % (wav_name)
         for i, s in enumerate(word_ids):
             if i > 0:
                 break
@@ -65,12 +65,19 @@ def decode(d, pcm):
         while dec_t > 0:
             decoded_frames += dec_t
             dec_t = d.decode(max_frames=10)
+            if (decoded_frames % 10) == 0 and DEBUG:
+                startbp = time.time()
+                bp_result =  d.get_best_path()
+                # print "one best path decode: %s secs" % str(time.time() - start)
+                # print "TODO", bp_result
+                print "one best path decode after frame %d: %s secs" % (decoded_frames, str(time.time() - startbp))
+                print "Hypothesis", bp_result
     print "forward decode: %s secs" % str(time.time() - start)
     start = time.time()
-    d.prune_final()
+    d.finalize_decoding()
     lik, lat = d.get_lattice()
     print "backward decode: %s secs" % str(time.time() - start)
-    d.reset(keep_buffer_data=False)
+    d.reset(reset_pipeline=False)
     return (lat, lik, decoded_frames)
 
 

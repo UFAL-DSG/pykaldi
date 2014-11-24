@@ -109,7 +109,7 @@ int main(int argc, char *argv[]) {
     std::cout << std::endl << " Audio chunk forward-decoded." << std::endl << std::endl;
   }
 
-  rec.PruneFinal();
+  rec.FinalizeDecoding();
   
   double tot_lik = 0; 
   fst::VectorFst<fst::LogArc> word_post_lat;

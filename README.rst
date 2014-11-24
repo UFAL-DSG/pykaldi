@@ -5,7 +5,8 @@ Summary
 -------
 The fork presents three new Kaldi features:
 
-* Online Lattice Recogniser. The best results were obtained using MFCC, LDA+MLLT, bMMI acoustic models and feature transformations.
+* Online Lattice Recogniser. The Python wrapper implements  MFCC, LDA+MLLT, bMMI acoustic models since it was the best speaker independent setup.
+  UPDATE: Since 11/18/2014 the Pykaldi fork uses the Kaldi official code (``src/online2``) which has very similar as our previous implementation (and was finished 08/2014).
 * Python wrapper which interfaces the ``OnlineLatticeRecogniser`` to Python.
 * Training scripts which can be used with standard Kaldi tools or with the new ``OnlineLatticeRecogniser``.
   The scripts for Czech and English support acoustic models obtained using MFCC, LDA+MLLT/delta+delta-delta feature transformations and acoustic models trained generatively or by MPE or bMMI training.
@@ -52,19 +53,3 @@ Other info
 * The svn trunk is mirrored via ``git svn``. 
   Checkout tutorials: `Git svn <http://viget.com/extend/effectively-using-git-with-subversion>`_, 
   `Svn branch in git <http://ivanz.com/2009/01/15/selective-import-of-svn-branches-into-a-gitgit-svn-repository>`_
-
-Vagrant
--------
-We use a Vagrant as a wrapper for Ubuntu headless virtual machine running in Virtualbox. See http://docs.vagrantup.com/v2/getting-started/ for more information about Vagrant.
-
-Below we present a Vagrantfile that has ALSA audio enabled in host machine.
-Verified with Mac 10.9.8, VirtualBox 4.2.12.
-
-- Do "vagrant up" to start everthing, then "vagrant ssh" to login to the VM.
-- Open "alsamixer" and check that microphone (F4) is not silenced
-- *cd /vagrant*
-- In VM record wave file by "rec test.wav".
-- Open test.wav in the folder with the Vagrant file (where you run vagrant up) with your favourite music player.
-- *Change back to VM*
-- *cd /vagrant*
-- Run the installation script

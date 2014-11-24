@@ -17,10 +17,9 @@ cdef extern from "onl-rec/onl-rec-latgen-recogniser.h" namespace "kaldi":
         size_t Decode(size_t max_frames) except +
         void FrameIn(unsigned char *frame, size_t frame_len) except +
         bool GetBestPath(vector[int] *v_out, float *lik) except +
-        bool GetRawLattice(fst.libfst.StdVectorFst *fst_out) except +
         bool GetLattice(fst.libfst.LogVectorFst *fst_out, double *tot_lik) except +
-        void PruneFinal() except +
-        void Reset(bool keep_buffer_data) except +
+        void FinalizeDecoding() except +
+        void Reset(bool reset_pipeline) except +
         int Setup(int argc, char **argv) except +
 
 
@@ -104,29 +103,21 @@ cdef class PyOnlineLatgenRecogniser:
         self.utt_decoded = 0
         return (lik, r)
 
-    def get_raw_lattice(self):
-        """get_raw_lattice(self)
-
-        Return state level lattice.
-        It may last non-trivial amount of time e.g. 100 ms."""
-        r = fst.StdVectorFst()
-        self.thisptr.GetRawLattice((<fst._fst.StdVectorFst?>r).fst)
-        return r
-
-    def prune_final(self):
-        """prune_final(self)
+    def finalize_decoding(self):
+        """FinalizeDecoding(self)
 
         It prepares internal representation for lattice extration."""
-        self.thisptr.PruneFinal()
+        self.thisptr.FinalizeDecoding()
 
-    def reset(self, keep_buffer_data=True):
+    def reset(self, reset_pipeline=False):
         """reset(self, keep_buffer_data)
 
         Resets the frame counter and prepare decoder for new utterance.
-        Dependently on keep_buffer_data parameter clear the buffered data.
-        If the (audio) data are kept they are the first
-        input data for new utterance."""
-        self.thisptr.Reset(keep_buffer_data)
+        Dependently on reset_pipeline parameter the data are 
+        buffered data are cleared in the pipeline.
+        If the (audio) data are kept they are the first input 
+        data for new utterance."""
+        self.thisptr.Reset(reset_pipeline)
 
     def setup(self, args):
         """setup(self, args)
