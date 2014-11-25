@@ -1,9 +1,10 @@
 BEST_LINE=18
-MODEL_PREFIX_URL=http://vystadial.ms.mff.cuni.cz/download/pykaldi/egs/vystadial/online_demo/
+MODEL_PREFIX_URL=http://vystadial.ms.mff.cuni.cz/download/pykaldi/egs/vystadial/online_demo/models/
+# MODEL_PREFIX_URL=https://vystadial.ms.mff.cuni.cz/download/cloudasr/cs/
 DATA_PREFIX_URL=http://vystadial.ms.mff.cuni.cz/download/pykaldi/egs/vystadial/online_demo/
 
 # Czech language models 
-LANG=en
+LANG=cs
 HCLG=models/HCLG_tri2b_bmmi.fst
 AM=models/tri2b_bmmi.mdl
 MAT=models/tri2b_bmmi.mat  # matrix trained in tri2b models 
@@ -12,22 +13,22 @@ MFCC=models/mfcc.conf
 SILENCE=models/silence.csl
 
 $(MFCC):
-	wget $(MODEL_PREFIX_URL)/$@ -O $@
+	wget $(MODEL_PREFIX_URL)/`basename $@` -O $@
 
 $(SILENCE):
-	wget $(MODEL_PREFIX_URL)/$@ -O $@
+	wget $(MODEL_PREFIX_URL)/`basename $@` -O $@
 
 $(HCLG):
-	wget $(MODEL_PREFIX_URL)/$@ -O $@
+	wget $(MODEL_PREFIX_URL)/`basename $@` -O $@
 
 $(AM):
-	wget $(MODEL_PREFIX_URL)/$@ -O $@
+	wget $(MODEL_PREFIX_URL)/`basename $@` -O $@
 
 $(MAT):
-	wget $(MODEL_PREFIX_URL)/$@ -O $@
+	wget $(MODEL_PREFIX_URL)/`basename $@` -O $@
 
 $(WST):
-	wget $(MODEL_PREFIX_URL)/$@ -O $@
+	wget $(MODEL_PREFIX_URL)/`basename $@` -O $@
 
 data/vystadial-sample-$(LANG).tar.gz:
 	wget $(DATA_PREFIX_URL)/$@ -O $@
@@ -47,13 +48,13 @@ build_scp: data/vystadial-sample-$(LANG)/test/input_best.scp data/vystadial-samp
 download_models: $(SILENCE) $(WST) $(HCLG) $(AM) $(MAT) $(MFCC)
 
 pyonline-recogniser: build_scp download_models
-	bash run_pyonline-latgen-recogniser.sh
+	LANG=$(LANG) bash run_pyonline-latgen-recogniser.sh
 
 online-recogniser: build_scp download_models
-	bash run_online-latgen-recogniser.sh
+	LANG=$(LANG) bash run_online-latgen-recogniser.sh
 
 gmm-latgen-faster: build_scp download_models
-	bash run_gmm-latgen-faster.sh
+	LANG=$(LANG) bash run_gmm-latgen-faster.sh
 
 live: download_models
 	bash run_live-demo.sh

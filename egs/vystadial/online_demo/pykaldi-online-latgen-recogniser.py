@@ -24,9 +24,12 @@ from kaldi.decoders import PyOnlineLatgenRecogniser
 import sys
 import fst
 import time
+import os
 
-# DEBUG = True
-DEBUG = False
+if os.environ.has_key('DEBUG') and os.environ['DEBUG'] == 'true':
+    DEBUG = True
+else:
+    DEBUG = False
 
 
 def write_decoded(f, wav_name, word_ids, wst):

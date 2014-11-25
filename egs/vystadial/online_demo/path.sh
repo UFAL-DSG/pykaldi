@@ -1,5 +1,5 @@
 #!/bin/bash
-LANG=en
+# LANG=en  # set up in Makefile
 
 # data location
 acs=0.1
@@ -35,9 +35,9 @@ export LD_LIBRARY_PATH=$kaldisrc/onl-rec:$openfst/lib:$openfst/lib/fst:$LD_LIBRA
 export DYLD_LIBRARY_PATH=$kaldisrc/onl-rec:$openfst/lib:$openfst/lib/fst:$DYLD_LIBRARY_PATH
 export PYTHONPATH=$pykaldi:$pykaldi/pyfst:$PYTHONPATH
 
-beam=16.0
-latbeam=10.0
-max_active=14000
+beam=12.0
+latbeam=2.0
+max_active=6000
 
 # Size of chunks are queued in "online" interface
 batch_size=4560
