@@ -26,9 +26,10 @@ WST=models/words.txt
 MFCC=models/mfcc.conf
 SILENCE=models/silence.csl
 
-kaldisrc=`pwd`/../../../src
-openfst=`pwd`/../../../tools/openfst/
-pykaldi=`pwd`/../../../pykaldi
+kaldisrc=`pwd`/../src
+openfst=`pwd`/../tools/openfst/
+pykaldi=`pwd`/../pykaldi
+
 
 export PATH=$kaldisrc/bin:$kaldisrc/fgmmbin:$kaldisrc/gmmbin:$kaldisrc/nnetbin:$kaldisrc/sgmm2bin:$kaldisrc/tiedbin:$kaldisrc/featbin:$kaldisrc/fstbin:$kaldisrc/latbin:$kaldisrc/onlinebin:$kaldisrc/sgmmbin:$kaldisrc/onl-rec:$openfst/bin:"$PATH"
 export LD_LIBRARY_PATH=$kaldisrc/onl-rec:$openfst/lib:$openfst/lib/fst:$LD_LIBRARY_PATH
