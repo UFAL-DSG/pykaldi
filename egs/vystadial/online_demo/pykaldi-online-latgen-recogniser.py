@@ -20,7 +20,7 @@ Requieres arguments specifying AM, HCLG graph, etc ...
 from __future__ import unicode_literals
 
 from kaldi.utils import load_wav, wst2dict, lattice_to_nbest
-from kaldi.decoders import PyOnlineLatgenRecogniser
+from kaldi.decoders import PyOnlineNnetLatgenRecogniser, PyOnlineLatgenRecogniser
 import sys
 import fst
 import time
@@ -88,7 +88,10 @@ def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
     """Prepares the setup for decoding.
     After decoding also saves the results."""
     wst = wst2dict(wst_path)
-    d = PyOnlineLatgenRecogniser()
+    if decoder_type == 'dnn':
+        d = PyOnlineNnetLatgenRecogniser()
+    else:
+        d = PyOnlineLatgenRecogniser()
     d.setup(argv)
     for wav_name, wav_path in wav_paths:
         sw, sr = 2, 16000  # 16-bit audio so 1 sample_width = 2 chars
@@ -110,7 +113,8 @@ def decode_wrap(argv, audio_batch_size, wav_paths, file_output, wst_path=None):
 if __name__ == '__main__':
     audio_scp, audio_batch_size = sys.argv[1], int(sys.argv[2])
     dec_hypo, wst_path = sys.argv[3], sys.argv[4]
-    argv = sys.argv[5:]
+    decoder_type = sys.argv[5]
+    argv = sys.argv[6:]
     print >> sys.stderr, 'Python args: %s' % str(sys.argv)
 
     # open audio_scp, decode and write to dec_hypo file
@@ -118,4 +122,4 @@ if __name__ == '__main__':
         with open(dec_hypo, 'wb') as w:
             lines = r.readlines()
             scp = [tuple(line.strip().split(' ', 1)) for line in lines]
-            decode_wrap(argv, audio_batch_size, scp, w, wst_path)
+            decode_wrap(argv, decoder_type, audio_batch_size, scp, w, wst_path)

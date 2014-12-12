@@ -9,7 +9,7 @@ HCLG=models/HCLG_tri2b_bmmi.fst
 AM=models/tri2b_bmmi.mdl
 MAT=models/tri2b_bmmi.mat  # matrix trained in tri2b models 
 WST=models/words.txt
-MFCC=models/mfcc.conf
+MFCC=models/gmm-online.conf
 SILENCE=models/silence.csl
 
 $(MFCC):

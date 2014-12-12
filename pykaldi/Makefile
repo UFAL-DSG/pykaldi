@@ -7,7 +7,8 @@ ADDLIBS = ../src/onl-rec/onl-rec.a ../src/online2/kaldi-online2.a \
 		  ../src/decoder/kaldi-decoder.a ../src/feat/kaldi-feat.a \
 		  ../src/thread/kaldi-thread.a ../src/lat/kaldi-lat.a ../src/hmm/kaldi-hmm.a \
 		  ../src/transform/kaldi-transform.a ../src/gmm/kaldi-gmm.a ../src/fstext/kaldi-fstext.a \
-		  ../src/tree/kaldi-tree.a ../src/matrix/kaldi-matrix.a  ../src/util/kaldi-util.a ../src/base/kaldi-base.a
+		  ../src/tree/kaldi-tree.a ../src/matrix/kaldi-matrix.a  ../src/util/kaldi-util.a ../src/base/kaldi-base.a \
+		  ../src/ivector/kaldi-ivector.a ../src/cudamatrix/kaldi-cudamatrix.a ../src/nnet2/kaldi-nnet2.a 
 
 ../src/onl-rec/onl-rec.a : ../tools/openfst/lib/libfst.so ../tools/ATLAS/include/clapack.h ../src/kaldi.mk
 	@echo Building src dictionary namely $(ADDLIBS)
@@ -36,7 +37,7 @@ pyfst/fst/_fst.so: pyfst ../tools/openfst/lib/libfst.so
 
 pyfst_compiled: pyfst/fst/_fst.so
 
-kaldi/decoders.so: pyfst/fst/_fst.so $(ADDLIBS)
+kaldi/decoders.so: pyfst/fst/_fst.so $(ADDLIBS) kaldi/py_online_latgen_recogniser.pyx kaldi/py_online_nnet_latgen_recogniser.pyx 
 	PYKALDI_ADDLIBS="$(ADDLIBS)" \
 	LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include \
 	python setup.py build_ext --inplace

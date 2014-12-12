@@ -27,15 +27,17 @@ except:
     print('Specify pykaldi dependant libraries in PYKALDI_ADDLIBS shell variable', file=stderr)
     extra_objects = []
 library_dirs = ['/usr/lib', '../tools/openfst/lib']
-# libraries = ['fst', 'lapack_atlas', 'cblas', 'atlas', 'f77blas',]
 libraries = ['fst', 'lapack_atlas', 'cblas', 'atlas', 'f77blas', 'm', 'pthread', 'dl']
+libraries = ['fst', 'libatlas', 'cblas', 'atlas', 'f77blas', 'm', 'pthread', 'dl']
 ext_modules.append(Extension('kaldi.decoders',
                              language='c++',
                              include_dirs=['../src', 'pyfst', ],
                              library_dirs=library_dirs,
                              libraries=libraries,
                              extra_objects=extra_objects,
-                             sources=['kaldi/decoders.pyx', ],
+                             # sources=['kaldi/py_online_latgen_recogniser.pyx', 
+                             #     'kaldi/py_online_nnet_latgen_recogniser.pyx'],
+                             sources=['kaldi/py_online_nnet_latgen_recogniser.pyx'],
                              ))
 
 

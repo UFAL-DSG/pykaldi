@@ -15,9 +15,9 @@ logname=b${beam}_lb${latbeam}_ma${max_active}_bs${batch_size}
 # cgdb -q -x .gdbinit_latgen --args python \
 python \
   pykaldi-online-latgen-recogniser.py $wav_scp $batch_size $pykaldi_latgen_tra $WST \
-    --verbose=0  --max-mem=500000000 --config=$GMM \
+    --verbose=0  --max-mem=500000000 --config=$DNN \
     --acoustic-scale=$acs --beam=$beam --lattice-beam=$latbeam --max-active=$max_active \
-    $AM $HCLG `cat $SILENCE` $MAT
+    $NNAM $NNHCLG `cat $SILENCE`
 
 # If using callgrind display the results by running kcachegrind
 # kcachegrind callgrind_${logname}.log

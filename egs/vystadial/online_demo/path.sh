@@ -23,8 +23,13 @@ HCLG=models/HCLG_tri2b_bmmi.fst
 AM=models/tri2b_bmmi.mdl
 MAT=models/tri2b_bmmi.mat  # matrix trained in tri2b models 
 WST=models/words.txt
-MFCC=models/mfcc.conf
+GMM=models/gmm-online.conf
 SILENCE=models/silence.csl
+
+NNHCLG=models/HCLG_nnet.fst
+NNAM=models/nnet.mdl
+DNN=models/nnet-online.conf
+
 
 kaldisrc=`pwd`/../../../src
 openfst=`pwd`/../../../tools/openfst/

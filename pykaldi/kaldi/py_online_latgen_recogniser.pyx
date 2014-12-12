@@ -10,6 +10,7 @@ cimport fst._fst
 cimport fst.libfst
 import fst
 from kaldi.utils import lattice_to_nbest
+# TODO refactor PyOnlineLatgenRecogniser and PyNnetOnlineLatgenRecogniser
 
 
 cdef extern from "onl-rec/onl-rec-latgen-recogniser.h" namespace "kaldi":
@@ -21,6 +22,7 @@ cdef extern from "onl-rec/onl-rec-latgen-recogniser.h" namespace "kaldi":
         void FinalizeDecoding() except +
         void Reset(bool reset_pipeline) except +
         int Setup(int argc, char **argv) except +
+
 
 
 cdef class PyOnlineLatgenRecogniser:
@@ -42,7 +44,7 @@ cdef class PyOnlineLatgenRecogniser:
 
     def __init__(self, fs=16000, nchan=1, bits=16):
         """ __init__(self, fs=16000, nchan=1, bits=16)
-        
+
         Initialise recognizer with audio input stream parameters.
         """
         self.fs, self.nchan, self.bits = fs, nchan, bits

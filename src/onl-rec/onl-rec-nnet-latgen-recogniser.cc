@@ -1,5 +1,6 @@
 // -*- coding: utf-8 -*-
-/* Copyright (c) 2014, Ondrej Platek, Ufal MFF UK <oplatek@ufal.mff.cuni.cz>
+/* Copyright (c) 2013, Ondrej Platek, Ufal MFF UK <oplatek@ufal.mff.cuni.cz>
+ *               2012-2013  Vassil Panayotov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +23,11 @@
 #include "feat/online-feature.h"
 #include "util/stl-utils.h"
 #include "decoder/lattice-faster-online-decoder.h"
-#include "online2/online-gmm-decodable.h"
 #include "online2/onlinebin-util.h"
 #include "onl-rec/onl-rec-utils.h"
-#include "onl-rec/onl-rec-latgen-recogniser.h"
+#include "onl-rec/onl-rec-nnet-latgen-recogniser.h"
+#include "online2/online-nnet2-feature-pipeline.h"
+#include "nnet2/online-nnet2-decodable.h"
 
 #ifdef DEBUG
 #include <fstream>
@@ -39,30 +41,52 @@
 
 namespace kaldi {
 
+struct OnlineNnetLatgenRecogniserConfig {
+
+  explicit OnlineNnetLatgenRecogniserConfig():acoustic_scale(0.1), bits_per_sample(16) {}
+
+  void Register(OptionsItf *po) {
+    faster_decoder_opts.Register(po);
+    decodable_opts.Register(po);
+    pipe_config.Register(po);
+    po->Register("bits-per-sample", &bits_per_sample,
+                "Number of bits used for one sample in input waveform e.g. 8, 16.");
+    po->Register("acoustic-scale", &acoustic_scale,
+                "Scaling factor for acoustic likelihoods for forward decoding");
+  }
+  BaseFloat acoustic_scale;
+  int32 bits_per_sample;
+
+  std::string model_rxfilename;
+  std::string fst_rxfilename;
+  std::string silence_phones;
+
+  OnlineNnet2FeaturePipelineConfig pipe_config;
+  nnet2::DecodableNnet2OnlineOptions decodable_opts;
+  LatticeFasterDecoderConfig faster_decoder_opts;
+};
 
 
 
-void OnlineLatgenRecogniser::Deallocate() {
+void OnlineNnetLatgenRecogniser::Deallocate() {
   initialized_ = false;
 
   silence_phones_.clear();
-  delete mfcc_; mfcc_ = NULL;
-  delete splice_; splice_ = NULL;
-  delete transform_; transform_ = NULL;
+  delete pipe_; pipe_ = NULL;
+  delete feature_info_; feature_info_ = NULL;
   delete decodable_; decodable_ = NULL;
   delete trans_model_; trans_model_ = NULL;
   delete am_; am_ = NULL;
   delete decoder_; decoder_ = NULL;
   delete hclg_; hclg_ = NULL;
   delete  config_; config_ = NULL;
-  delete lda_mat_; lda_mat_ = NULL;
 }
 
-OnlineLatgenRecogniser::~OnlineLatgenRecogniser() {
+OnlineNnetLatgenRecogniser::~OnlineNnetLatgenRecogniser() {
   Deallocate();
 }
 
-size_t OnlineLatgenRecogniser::Decode(size_t max_frames) {
+size_t OnlineNnetLatgenRecogniser::Decode(size_t max_frames) {
   if (! initialized_)
     return 0;
   size_t decoded = decoder_->NumFramesDecoded();
@@ -71,7 +95,7 @@ size_t OnlineLatgenRecogniser::Decode(size_t max_frames) {
 }
 
 
-void OnlineLatgenRecogniser::FrameIn(unsigned char *frame, size_t frame_len) {
+void OnlineNnetLatgenRecogniser::FrameIn(unsigned char *frame, size_t frame_len) {
   if (! initialized_)
     return;
   Vector<BaseFloat> waveform(frame_len);
@@ -98,11 +122,20 @@ void OnlineLatgenRecogniser::FrameIn(unsigned char *frame, size_t frame_len) {
           << config_->bits_per_sample;
     }
   }
-  mfcc_->AcceptWaveform(config_->mfcc_opts.frame_opts.samp_freq, waveform);
+  std::string feature_type = feature_info_->feature_type;
+  BaseFloat samp_freq = 0;
+  if (feature_type == "mfcc")
+    samp_freq = feature_info_->mfcc_opts.frame_opts.samp_freq;
+  else if (feature_type == "plp")
+    samp_freq = feature_info_->plp_opts.frame_opts.samp_freq;
+  else if (feature_type == "fbank")
+    samp_freq = feature_info_->fbank_opts.frame_opts.samp_freq;
+
+  pipe_->AcceptWaveform(samp_freq, waveform);
 }
 
 
-bool OnlineLatgenRecogniser::GetBestPath(std::vector<int> *out_ids, BaseFloat *prob) {
+bool OnlineNnetLatgenRecogniser::GetBestPath(std::vector<int> *out_ids, BaseFloat *prob) {
   *prob = -1.0;  // default value for failures
   if (! initialized_)
     return false;
@@ -118,12 +151,12 @@ bool OnlineLatgenRecogniser::GetBestPath(std::vector<int> *out_ids, BaseFloat *p
   return ok;
 }
 
-void OnlineLatgenRecogniser::FinalizeDecoding() {
+void OnlineNnetLatgenRecogniser::FinalizeDecoding() {
   decoder_->FinalizeDecoding();
 }
 
 
-bool OnlineLatgenRecogniser::GetLattice(fst::VectorFst<fst::LogArc> *fst_out, 
+bool OnlineNnetLatgenRecogniser::GetLattice(fst::VectorFst<fst::LogArc> *fst_out, 
                                   double *tot_lik, bool end_of_utterance) {
   if (! initialized_)
     return false;
@@ -147,20 +180,16 @@ bool OnlineLatgenRecogniser::GetLattice(fst::VectorFst<fst::LogArc> *fst_out,
 }
 
 
-void OnlineLatgenRecogniser::ResetPipeline() {
-    delete mfcc_;
-    mfcc_ = new OnlineMfcc(config_->mfcc_opts);
-    delete splice_;
-    splice_ = new OnlineSpliceFrames(config_->splice_opts, mfcc_);
-    delete transform_;
-    transform_ = new OnlineTransform(*lda_mat_, splice_);
+void OnlineNnetLatgenRecogniser::ResetPipeline() {
+    delete pipe_;
+    pipe_ = new OnlineNnet2FeaturePipeline(*feature_info_);
     delete decodable_;
-    decodable_ = new DecodableDiagGmmScaledOnline(*am_,
+    decodable_ = new nnet2::DecodableNnet2Online(*am_,
                                             *trans_model_,
-                                            config_->acoustic_scale, transform_);
+                                            config_->decodable_opts, pipe_);
 }
 
-void OnlineLatgenRecogniser::Reset(bool reset_pipeline) {
+void OnlineNnetLatgenRecogniser::Reset(bool reset_pipeline) {
   if (! initialized_)
     return;
   if(reset_pipeline)
@@ -169,16 +198,35 @@ void OnlineLatgenRecogniser::Reset(bool reset_pipeline) {
 }
 
 
-bool OnlineLatgenRecogniser::Setup(OnlineLatgenRecogniserConfig &config) {
+bool OnlineNnetLatgenRecogniser::Setup(int argc, char **argv) {
+  initialized_ = false;
+
+  const char * usage = "Utterance segmentation is done on-the-fly.\n"
+      "The delta/delta-delta(2-nd order) features are produced.\n\n"
+      "Usage: decoder-binary-name [options] <model-in>"
+      "<fst-in> <silence-phones> \n\n"
+      "Example: decoder-binary-name --max-active=4000 --beam=12.0 "
+      "--acoustic-scale=0.0769 model HCLG.fst words.txt '1:2:3:4:5'";
+
   try {
     if (config_ == NULL)
-      config_ = new OnlineLatgenRecogniserConfig();  
-    *config_ = config;
-    initialized_ = false;
+      config_ = new OnlineNnetLatgenRecogniserConfig();  
+
+    ParseOptions po(usage);
+    config_->Register(&po);
+
+    po.Read(argc, argv);
+    if (po.NumArgs() != 3) {
+      po.PrintUsage();
+      return false;
+    }
+    config_->model_rxfilename = po.GetArg(1);
+    config_->fst_rxfilename = po.GetArg(2);
+    config_->silence_phones = (po.GetArg(3));
 
     // Setting up components
     trans_model_ = new TransitionModel();
-    am_ = new AmDiagGmm();
+    am_ = new nnet2::AmNnet();
     {
       bool binary;
       Input ki(config_->model_rxfilename, &binary);
@@ -196,19 +244,15 @@ bool OnlineLatgenRecogniser::Setup(OnlineLatgenRecogniserConfig &config) {
       return false;
     } else 
       SortAndUniq(&silence_phones_);
-   
-
-    bool binary_in;
-    Input ki(config_->lda_mat_rspecifier, &binary_in);
-    delete lda_mat_;
-    lda_mat_ = new Matrix<BaseFloat>();
-    lda_mat_->Read(ki.Stream(), binary_in);
-    KALDI_VLOG(1) << "LDA will be used for decoding" << std::endl;
-
+    
+    feature_info_ = new OnlineNnet2FeaturePipelineInfo(config_->pipe_config);
     // put the peaces of pipeline setup above together
     ResetPipeline(); 
+    // TODO setup ivectors e.g.  feature_info.ivector_extractor_info
+
     // No beter place to do elsewhere
     decoder_->InitDecoding();
+     
   } catch(const std::exception& e) {
     Deallocate();
     // throw e;
@@ -217,33 +261,6 @@ bool OnlineLatgenRecogniser::Setup(OnlineLatgenRecogniserConfig &config) {
   }
   initialized_ = true;
   return initialized_;
-}
-
-
-bool OnlineLatgenRecogniser::Setup(int argc, char **argv) {
-  OnlineLatgenRecogniserConfig config;  
-
-  // Parsing options
-  ParseOptions po("Utterance segmentation is done on-the-fly.\n"
-    "The delta/delta-delta(2-nd order) features are produced.\n\n"
-    "Usage: decoder-binary-name [options] <model-in>"
-    "<fst-in> <silence-phones> \n\n"
-    "Example: decoder-binary-name --max-active=4000 --beam=12.0 "
-    "--acoustic-scale=0.0769 model HCLG.fst words.txt '1:2:3:4:5'");
-
-  config.Register(&po);
-
-  po.Read(argc, argv);
-  if (po.NumArgs() != 4) {
-    po.PrintUsage();
-    return false;
-  }
-  config.model_rxfilename = po.GetArg(1);
-  config.fst_rxfilename = po.GetArg(2);
-  config.silence_phones = (po.GetArg(3));
-  config.lda_mat_rspecifier = po.GetOptArg(4);
-     
-  return Setup(config);
 }
 
 } // namespace kaldi

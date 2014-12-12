@@ -16,13 +16,15 @@
 from __future__ import unicode_literals
 
 import unittest
-from kaldi.decoders import PyOnlineLatgenRecogniser
+# from kaldi.decoders import PyOnlineLatgenRecogniser
+from kaldi.decoders import PyOnlineNnetLatgenRecogniser
 
 
 class TestPyOnlineLatgenRecogniserNotInit(unittest.TestCase):
 
     def setUp(self):
-        self.d = PyOnlineLatgenRecogniser()
+        self.d = PyOnlineNnetLatgenRecogniser()
+        # self.d = PyOnlineLatgenRecogniser()
 
     def test_setup(self, args=['bad args']):
         self.assertFalse(self.d.setup(args))
