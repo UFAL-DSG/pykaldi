@@ -99,6 +99,10 @@ size_t OnlineLatgenRecogniser::Decode(size_t max_frames) {
 }
 
 
+void OnlineLatgenRecogniser::FrameIn(Vector<BaseFloat> *waveform_in) {
+  mfcc_->AcceptWaveform(config_->mfcc_opts.frame_opts.samp_freq, *waveform_in);
+}
+
 void OnlineLatgenRecogniser::FrameIn(unsigned char *frame, size_t frame_len) {
   if (! initialized_)
     return;
@@ -126,7 +130,7 @@ void OnlineLatgenRecogniser::FrameIn(unsigned char *frame, size_t frame_len) {
           << config_->bits_per_sample;
     }
   }
-  mfcc_->AcceptWaveform(config_->mfcc_opts.frame_opts.samp_freq, waveform);
+  this->FrameIn(&waveform);
 }
 
 
