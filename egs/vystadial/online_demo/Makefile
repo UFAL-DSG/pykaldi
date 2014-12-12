@@ -45,7 +45,10 @@ data/vystadial-sample-$(LANG)/test/input_best.scp: data/vystadial-sample-$(LANG)
 
 build_scp: data/vystadial-sample-$(LANG)/test/input_best.scp data/vystadial-sample-$(LANG)/test/input.scp
 
-download_models: $(SILENCE) $(WST) $(HCLG) $(AM) $(MAT) $(MFCC)
+models:
+	mkdir -p $@
+
+download_models: models $(SILENCE) $(WST) $(HCLG) $(AM) $(MAT) $(MFCC)
 
 pyonline-recogniser: build_scp download_models
 	LANG=$(LANG) bash run_pyonline-latgen-recogniser.sh
