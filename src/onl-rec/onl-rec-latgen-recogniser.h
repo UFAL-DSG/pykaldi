@@ -60,7 +60,7 @@ namespace kaldi{
   class AmDiagGmm;
   class LatticeFasterOnlineDecoder;
   struct OnlineLatgenRecogniserConfig;
-  template<typename > class Vector;
+  template<typename > class VectorBase;
 }
 
 
@@ -80,7 +80,7 @@ class OnlineLatgenRecogniser {
     virtual ~OnlineLatgenRecogniser();
     size_t Decode(size_t max_frames);
     void FrameIn(unsigned char *frame, size_t frame_len);
-    void FrameIn(Vector<BaseFloat> *waveform_in);
+    void FrameIn(VectorBase<BaseFloat> *waveform_in);
     bool GetBestPath(std::vector<int> *v_out, BaseFloat *prob);
     bool GetLattice(fst::VectorFst<fst::LogArc> * out_fst, double *tot_lik, bool end_of_utt=true);
     void FinalizeDecoding();

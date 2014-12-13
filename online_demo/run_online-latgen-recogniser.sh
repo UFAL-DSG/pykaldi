@@ -8,11 +8,22 @@
 
 # cgdb -q -x .gdbinit_latgen --args \
 
-wav_name=./data/vystadial-sample-cs/test/vad-2013-06-08-22-50-01.897179.wav
-onl-rec-latgen-recogniser-test $wav_name \
-    --verbose=0  --max-mem=500000000 --lat-lm-scale=15 --config=$MFCC \
+onl-rec-latgen-recogniser-demo scp:$wav_scp $WST \
+    --verbose=0  --max-mem=500000000 --config=$MFCC \
     --beam=$beam --lattice-beam=$latbeam --max-active=$max_active \
-    $AM $HCLG `cat $SILENCE` $MAT
+    $AM $HCLG `cat $SILENCE` $MAT > $kaldi_latgen_tra 
 
-echo; echo "Converting the lattice to svg picture ${wav_name}.svg" ; echo
-fstdraw --portrait=true --osymbols=$WST ${wav_name}.fst | dot -Tsvg  > ${wav_name}.svg
+# reference is named based on wav_scp
+./build_reference.py $wav_scp $decode_dir
+reference=$decode_dir/`basename $wav_scp`.tra
+
+echo; echo "Reference"; echo
+cat $reference
+echo; echo "Decoded"; echo
+cat $kaldi_latgen_tra
+echo
+
+compute-wer --text --mode=present ark:$reference ark,p:$kaldi_latgen_tra
+
+# echo; echo "Converting the lattice to svg picture ${wav_name}.svg" ; echo
+# fstdraw --portrait=true --osymbols=$WST ${wav_name}.fst | dot -Tsvg  > ${wav_name}.svg

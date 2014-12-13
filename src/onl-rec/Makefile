@@ -11,9 +11,9 @@ ADDLIBS = ../online2/kaldi-online2.a ../decoder/kaldi-decoder.a \
 		../fstext/kaldi-fstext.a ../tree/kaldi-tree.a \
 		../feat/kaldi-feat.a ../matrix/kaldi-matrix.a ../util/kaldi-util.a ../base/kaldi-base.a
 
-BINFILES =
+BINFILES = onl-rec-latgen-recogniser-demo
 
-TESTFILES = onl-rec-latgen-recogniser-test onl-rec-utils-test
+TESTFILES =  onl-rec-utils-test
 
 OBJFILES = onl-rec-latgen-recogniser.o onl-rec-utils.o
 

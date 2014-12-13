@@ -2,3 +2,6 @@
 *.pdf
 *.fst
 *.lprof
+decode
+data
+models

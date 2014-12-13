@@ -15,6 +15,7 @@ wav_scp=$data_dir/input_best.scp
 gmm_latgen_faster_tra=$decode_dir/gmm-latgen-faster.tra
 gmm_latgen_faster_tra_txt=${gmm_latgen_faster_tra}.txt
 
+kaldi_latgen_tra=$decode_dir/kaldi-latgen.tra
 pykaldi_latgen_tra=$decode_dir/pykaldi-latgen.tra
 pykaldi_latgen_tra_txt=${pykaldi_faster_tra}.txt
 lattice=$decode_dir/lat.gz

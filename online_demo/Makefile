@@ -30,10 +30,8 @@ $(MAT):
 $(WST):
 	wget $(MODEL_PREFIX_URL)/`basename $@` -O $@
 
-data:
-	mkdir -p $@
-
-data/vystadial-sample-$(LANG).tar.gz: data
+data/vystadial-sample-$(LANG).tar.gz:
+	mkdir -p $<
 	wget $(DATA_PREFIX_URL)/$@ -O $@
 
 data/vystadial-sample-$(LANG)/README.rst: data/vystadial-sample-$(LANG).tar.gz

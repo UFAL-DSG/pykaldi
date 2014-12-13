@@ -99,7 +99,7 @@ size_t OnlineLatgenRecogniser::Decode(size_t max_frames) {
 }
 
 
-void OnlineLatgenRecogniser::FrameIn(Vector<BaseFloat> *waveform_in) {
+void OnlineLatgenRecogniser::FrameIn(VectorBase<BaseFloat> *waveform_in) {
   mfcc_->AcceptWaveform(config_->mfcc_opts.frame_opts.samp_freq, *waveform_in);
 }
 
