@@ -1,6 +1,5 @@
 // -*- coding: utf-8 -*-
-/* Copyright (c) 2013, Ondrej Platek, Ufal MFF UK <oplatek@ufal.mff.cuni.cz>
- *               2012-2013  Vassil Panayotov
+/* Copyright (c) 2013-14, Ondrej Platek, Ufal MFF UK <oplatek@ufal.mff.cuni.cz>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,46 +26,10 @@
 #include "online2/onlinebin-util.h"
 #include "onl-rec/onl-rec-utils.h"
 #include "onl-rec/onl-rec-latgen-recogniser.h"
-
-#ifdef DEBUG
-#include <fstream>
-#include <iostream>
-#include <ctime>
-#include <sys/time.h>
-#include <time.h>
-#include <stdio.h>
-#endif
+#include "onl-rec/onl-rec-latgen-recogniser-config.h"
 
 
 namespace kaldi {
-
-struct OnlineLatgenRecogniserConfig {
-
-  explicit OnlineLatgenRecogniserConfig():acoustic_scale(0.1), bits_per_sample(16) {}
-
-  void Register(OptionsItf *po) {
-    mfcc_opts.Register(po);
-    splice_opts.Register(po);
-    // delta_feat_opts.Register(po);
-    faster_decoder_opts.Register(po);
-    po->Register("bits-per-sample", &bits_per_sample,
-                "Number of bits used for one sample in input waveform e.g. 8, 16.");
-    po->Register("acoustic-scale", &acoustic_scale,
-                "Scaling factor for acoustic likelihoods for forward decoding");
-  }
-  BaseFloat acoustic_scale;
-  int32 bits_per_sample;
-
-  std::string model_rxfilename;
-  std::string fst_rxfilename;
-  std::string silence_phones;
-  std::string lda_mat_rspecifier;
-
-  MfccOptions mfcc_opts;
-  OnlineSpliceOptions splice_opts;
-  // DeltaFeaturesOptions delta_feat_opts; TODO add support again
-  LatticeFasterDecoderConfig faster_decoder_opts;
-};
 
 
 
