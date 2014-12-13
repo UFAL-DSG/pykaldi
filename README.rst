@@ -14,7 +14,7 @@ Install
 ..  image:: https://travis-ci.org/UFAL-DSG/pykaldi.png
     :target: https://travis-ci.org/UFAL-DSG/pykaldi
 
-* Our priority is to deploy it on Ubuntu 14.04 and also keep Travis running Ubuntu 12.04
+* Our priority is to deploy it on Ubuntu 14.04 and also keep Travis running on Ubuntu 12.04
 * Read `INSTALL.rst <./INSTALL.rst>`_ and `INSTALL <./INSTALL>`_ first!
 * `INSTALL.rst <./INSTALL.rst>`_ contains instructions specific for this fork. 
   `INSTALL <./INSTALL>`_ stores general instructions for Kaldi.
