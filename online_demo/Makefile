@@ -3,7 +3,7 @@ MODEL_PREFIX_URL=http://vystadial.ms.mff.cuni.cz/download/pykaldi/egs/vystadial/
 # MODEL_PREFIX_URL=https://vystadial.ms.mff.cuni.cz/download/cloudasr/cs/
 DATA_PREFIX_URL=http://vystadial.ms.mff.cuni.cz/download/pykaldi/egs/vystadial/online_demo/
 
-# Czech language models 
+# By default English models
 LANG=en
 HCLG=models/HCLG_tri2b_bmmi.fst
 AM=models/tri2b_bmmi.mdl
@@ -31,7 +31,7 @@ $(WST):
 	wget $(MODEL_PREFIX_URL)/`basename $@` -O $@
 
 data/vystadial-sample-$(LANG).tar.gz:
-	mkdir -p $<
+	mkdir -p `dirname $@` 
 	wget $(DATA_PREFIX_URL)/$@ -O $@
 
 data/vystadial-sample-$(LANG)/README.rst: data/vystadial-sample-$(LANG).tar.gz

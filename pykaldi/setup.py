@@ -37,7 +37,7 @@ library_dirs = ['/usr/lib', '../tools/openfst/lib']
 libraries = ['fst', 'lapack_atlas', 'cblas', 'atlas', 'f77blas', 'm', 'pthread', 'dl']
 ext_modules.append(Extension('kaldi.decoders',
                              language='c++',
-                             include_dirs=['../src', 'pyfst', ],
+                             include_dirs=['..', '../src', 'pyfst', ],
                              library_dirs=library_dirs,
                              libraries=libraries,
                              extra_objects=extra_objects,

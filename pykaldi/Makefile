@@ -4,7 +4,7 @@ LINUX=$(shell lsb_release -d | cut -f 2| sed 's:  *:_:g')
 PYKALDI_VERSION=0.1-dev
 PYTHON=python2.7
 
-ADDLIBS = ../src/onl-rec/onl-rec.a ../src/online2/kaldi-online2.a \
+ADDLIBS = ../onl-rec/onl-rec.a ../src/online2/kaldi-online2.a \
 		  ../src/decoder/kaldi-decoder.a ../src/feat/kaldi-feat.a \
 		  ../src/thread/kaldi-thread.a ../src/lat/kaldi-lat.a ../src/hmm/kaldi-hmm.a \
 		  ../src/transform/kaldi-transform.a ../src/gmm/kaldi-gmm.a ../src/fstext/kaldi-fstext.a \
@@ -12,7 +12,7 @@ ADDLIBS = ../src/onl-rec/onl-rec.a ../src/online2/kaldi-online2.a \
 
 all: kaldi/decoders.so
 
-../src/onl-rec/onl-rec.a : ../tools/openfst/lib/libfst.so ../tools/ATLAS/include/clapack.h ../src/kaldi.mk
+../onl-rec/onl-rec.a : ../tools/openfst/lib/libfst.so ../tools/ATLAS/include/clapack.h ../src/kaldi.mk
 	@echo Building src dictionary namely $(ADDLIBS)
 	@cd ../src ; for f in $(ADDLIBS) ; do make `echo $$f | sed 's:../src/\([a-z\-]*\)/.*:\1:'` ; done 
 

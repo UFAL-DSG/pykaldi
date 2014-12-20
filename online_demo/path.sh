@@ -30,11 +30,12 @@ SILENCE=models/silence.csl
 kaldisrc=`pwd`/../src
 openfst=`pwd`/../tools/openfst/
 pykaldi=`pwd`/../pykaldi
+onl-rec=`pwd`/../onl-rec
 
 
-export PATH=$kaldisrc/bin:$kaldisrc/fgmmbin:$kaldisrc/gmmbin:$kaldisrc/nnetbin:$kaldisrc/sgmm2bin:$kaldisrc/tiedbin:$kaldisrc/featbin:$kaldisrc/fstbin:$kaldisrc/latbin:$kaldisrc/onlinebin:$kaldisrc/sgmmbin:$kaldisrc/onl-rec:$openfst/bin:"$PATH"
-export LD_LIBRARY_PATH=$kaldisrc/onl-rec:$openfst/lib:$openfst/lib/fst:$LD_LIBRARY_PATH
-export DYLD_LIBRARY_PATH=$kaldisrc/onl-rec:$openfst/lib:$openfst/lib/fst:$DYLD_LIBRARY_PATH
+export PATH=$kaldisrc/bin:$kaldisrc/fgmmbin:$kaldisrc/gmmbin:$kaldisrc/nnetbin:$kaldisrc/sgmm2bin:$kaldisrc/tiedbin:$kaldisrc/featbin:$kaldisrc/fstbin:$kaldisrc/latbin:$kaldisrc/onlinebin:$kaldisrc/sgmmbin:$onl-rec:$openfst/bin:"$PATH"
+export LD_LIBRARY_PATH=$onl-rec:$openfst/lib:$openfst/lib/fst:$LD_LIBRARY_PATH
+export DYLD_LIBRARY_PATH=$onl-rec:$openfst/lib:$openfst/lib/fst:$DYLD_LIBRARY_PATH
 export PYTHONPATH=$pykaldi:$pykaldi/pyfst:$PYTHONPATH
 
 beam=12.0
