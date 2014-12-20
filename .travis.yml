@@ -44,7 +44,7 @@ install:
     - pushd tools && make -j 4 atlas && popd
     # Configure with ATLAS (default)
     - pushd src && ./configure --shared && popd
-    - pushd src && make -j 4 && make onl-rec && popd
+    - pushd src && make -j 4; make -j 4 && make onl-rec && popd
 
 script:
     - pushd src/onl-rec && make -j 4 test ; RET=$?; popd ; (exit $RET)
