@@ -26,19 +26,30 @@ except:
     print('Specify pykaldi dependant libraries in PYKALDI_ADDLIBS shell variable', file=stderr)
     extra_objects = []
 
-ext_modules = []
-extra_compile_args = ['-std=c++11']
-library_dirs = ['/usr/lib', '../tools/openfst/lib']
-libraries = ['fst', 'lapack_atlas', 'cblas', 'atlas', 'f77blas', 'm', 'pthread', 'dl']
+try:
+    version = environ['PYKALDI_VERSION']
+except:
+    version = 'dev-unknown'
 
+extra_compile_args = ['-std=c++11']
+extra_build_args = []
+
+#TODO compilation flags are prepared only for ubuntu 14.04 and OSX 10.10
 if platform == 'darwin':
     extra_compile_args.append('-stdlib=libstdc++')
-    libraries = ['fst', 'm', 'pthread', 'dl']
-
+    extra_build_args.append('-stdlib=libstdc++')
+    extra_build_args.append('-framework Accelerate')
+    library_dirs = []
+    libraries = ['../tools/openfst/lib/libfst.a', 'dl', 'm', 'pthread', ]
+else:
+    library_dirs = ['/usr/lib', '../tools/openfst/lib']
+    libraries = ['fst', 'lapack_atlas', 'cblas', 'atlas', 'f77blas', 'm', 'pthread', 'dl']
 ext_modules.append(Extension('kaldi.decoders',
                              extra_compile_args=extra_compile_args,
                              language='c++',
-                             include_dirs=['../src', 'pyfst', ],
+                             extra_compile_args=extra_compile_args,
+                             extra_build_args=extra_build_args,
+                             include_dirs=['..', '../src', 'pyfst', ],
                              library_dirs=library_dirs,
                              libraries=libraries,
                              extra_objects=extra_objects,
@@ -48,22 +59,13 @@ ext_modules.append(Extension('kaldi.decoders',
 
 long_description = open(path.join(path.dirname(__file__), 'README.rst')).read()
 
-try:
-    # In order to find out the pykaldi version from installed package at runtime use:
-    # import pgk_resources as pkg; pkg.get_distribution('pykaldi')
-    from subprocess import check_output
-    git_version = check_output(['git', 'rev-parse', 'HEAD'])
-except Exception:
-    git_version = 'Unknown Git version'
-    print(git_version)
-
 setup(
     name='pykaldi',
     packages=['kaldi', ],
     package_data={'kaldi': ['test_shortest.txt', 'decoders.so']},
     include_package_data=True,
     cmdclass={'build_ext': build_ext},
-    version='0.1-' + git_version,
+    version=version,
     install_requires=install_requires,
     setup_requires=['cython>=0.19.1', 'nose>=1.0'],
     ext_modules=ext_modules,

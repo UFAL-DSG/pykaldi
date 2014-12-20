@@ -41,15 +41,6 @@ kaldi_flags = [
     '-I../tools/openfst/include',
     '-I../tools/ATLAS/include',
     '-fPIC',
-    '-rdynamic',
-    '-DHAVE_ATLAS',
-    '-DKALDI_DOUBLEPRECISION=0',
-    '-msse2',
-    '-DHAVE_POSIX_MEMALIGN',
-    '-Wno-sign-compare',
-    '-DHAVE_EXECINFO_H=1',
-    '-DHAVE_CXXABI_H',
-    '-DUSE_KALDI_SVD',
 ]
 
 flags = [

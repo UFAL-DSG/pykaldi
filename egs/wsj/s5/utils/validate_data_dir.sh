@@ -224,7 +224,7 @@ fi
 
 if [ -f $data/spk2gender ]; then
   check_sorted_and_uniq $data/spk2gender
-  ! cat $data/spk2gender | awk '{if (!((NF == 2 && ($2 == "m" || $2 == "f")))) exit 1; }' && \
+  ! cat $data/spk2gender | awk '{if (!((NF == 2 && ($2 == "m" || $2 == "f")))) { print; exit 1; }}' && \
      echo "Mal-formed spk2gender file" && exit 1;
   cat $data/spk2gender | awk '{print $1}' > $tmpdir/speakers.spk2gender
   cat $data/spk2utt | awk '{print $1}' > $tmpdir/speakers
