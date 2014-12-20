@@ -23,7 +23,7 @@ Install
 LICENSE
 --------
 * This Kaldi fork is released under the `Apache license, Version 2.0 <http://www.apache.org/licenses/LICENSE-2.0>`_, which is also used by Kaldi itself. 
-* We also publicly released Czech and English data for ``kaldi/egs/vystadial`` recipe under Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0) license:
+* We also publicly released Czech and English data for ``kaldi/egs/vystadial_{cz,en}`` recipe under Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0) license:
 
   * Czech data https://lindat.mff.cuni.cz/repository/xmlui/handle/11858/00-097C-0000-0023-4670-6
   * English data https://lindat.mff.cuni.cz/repository/xmlui/handle/11858/00-097C-0000-0023-4671-4
@@ -39,8 +39,8 @@ The fork presented three new Kaldi features in thesis of Ondrej Platek (see comm
 The new functionality was separated to different directories:
  * pykaldi/src/onl-rec stores C++ code for ``OnlineLatticeRecogniser``.
  * pykaldi/pykaldi stores Python wrapper ``PyOnlineLatticeRecogniser``.
- * kaldi/egs/vystadial/s5 stores training scripts.
- * kaldi/egs/vystadial/online_demo shows Kaldi standard decoder, ``OnlineLatticeRecogniser`` and ``PyOnlineLatticeRecogniser``, which produce the exact same lattices using the same setup.
+ * kaldi/egs/vystadial_{cz,en}/s5 stores training scripts. [merged to oficial Kaldi repo]
+ * kaldi/online_demo shows Kaldi standard decoder, ``OnlineLatticeRecogniser`` and ``PyOnlineLatticeRecogniser``, which produce the exact same lattices using the same setup.
 
 The ``OnlineLatticeRecogniser`` is used in Alex dialogue system (https://github.com/UFAL-DSG/alex).
 
