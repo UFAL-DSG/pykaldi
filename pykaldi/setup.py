@@ -12,6 +12,7 @@ from distutils.extension import Extension
 from Cython.Distutils import build_ext
 from os import environ
 from sys import stderr
+from sys import platform
 
 install_requires = []
 if python_version < (2, 7):
@@ -31,12 +32,24 @@ try:
     version = environ['PYKALDI_VERSION']
 except:
     version = 'dev-unknown'
-#TODO compilation flags are prepared only for ubuntu 14.04
-library_dirs = ['/usr/lib', '../tools/openfst/lib']
-# libraries = ['fst', 'lapack_atlas', 'cblas', 'atlas', 'f77blas',]
-libraries = ['fst', 'lapack_atlas', 'cblas', 'atlas', 'f77blas', 'm', 'pthread', 'dl']
+
+extra_compile_args = ['-std=c++11']
+extra_build_args = []
+
+#TODO compilation flags are prepared only for ubuntu 14.04 and OSX 10.10
+if platform == 'darwin':
+    extra_compile_args.append('-stdlib=libstdc++')
+    extra_build_args.append('-stdlib=libstdc++')
+    extra_build_args.append('-framework Accelerate')
+    library_dirs = []
+    libraries = ['../tools/openfst/lib/libfst.a', 'dl', 'm', 'pthread', ]
+else:
+    library_dirs = ['/usr/lib', '../tools/openfst/lib']
+    libraries = ['fst', 'lapack_atlas', 'cblas', 'atlas', 'f77blas', 'm', 'pthread', 'dl']
 ext_modules.append(Extension('kaldi.decoders',
                              language='c++',
+                             extra_compile_args=extra_compile_args,
+                             extra_build_args=extra_build_args,
                              include_dirs=['..', '../src', 'pyfst', ],
                              library_dirs=library_dirs,
                              libraries=libraries,
