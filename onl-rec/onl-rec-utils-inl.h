@@ -1,4 +1,5 @@
 // onl-rec/onl-rec-utils-inl.h
+// Ondrej Platek, oplatek@ufal.mff.cuni.cz, 2014
 
 // See ../../COPYING for clarification regarding multiple authors
 //
@@ -17,10 +18,19 @@
 
 #ifndef KALDI_DEC_WRAP_UTILS_INL_H_
 #define KALDI_DEC_WRAP_UTILS_INL_H_
+// Do not include this file directly.
 
 #include "lat/kaldi-lattice.h"
+#include "fst/fstlib.h"
+#include "base/kaldi-common.h"
 #include <vector>
-// Do not include this file directly.  It is included by factor.h.
+
+namespace fst {
+  template<class Float>
+  inline double ConvertToCost(const LogWeightTpl<Float> &w) {  
+    return w.Value();
+  }
+}
 
 namespace kaldi {
 

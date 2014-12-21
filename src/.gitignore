@@ -1,8 +1,0 @@
-*.scp
-*test
-*tmpf
-*tmpfb
-kaldi.mk.bak
-kaldi.mk
-.depend.mk
-lib

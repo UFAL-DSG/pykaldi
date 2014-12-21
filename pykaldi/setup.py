@@ -42,15 +42,15 @@ if platform == 'darwin':
     extra_build_args.append('-stdlib=libstdc++')
     extra_build_args.append('-framework Accelerate')
     library_dirs = []
-    libraries = ['../tools/openfst/lib/libfst.a', 'dl', 'm', 'pthread', ]
+    libraries = ['../kaldi/tools/openfst/lib/libfst.a', 'dl', 'm', 'pthread', ]
 else:
-    library_dirs = ['/usr/lib', '../tools/openfst/lib']
+    library_dirs = ['/usr/lib', '../kaldi/tools/openfst/lib']
     libraries = ['fst', 'lapack_atlas', 'cblas', 'atlas', 'f77blas', 'm', 'pthread', 'dl']
 ext_modules.append(Extension('kaldi.decoders',
                              language='c++',
                              extra_compile_args=extra_compile_args,
                              extra_build_args=extra_build_args,
-                             include_dirs=['..', '../src', 'pyfst', ],
+                             include_dirs=['..', '../kaldi/src', '../pyfst', ],
                              library_dirs=library_dirs,
                              libraries=libraries,
                              extra_objects=extra_objects,

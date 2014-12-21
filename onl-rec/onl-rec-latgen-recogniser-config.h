@@ -24,7 +24,7 @@ struct OnlineLatgenRecogniserConfig {
 
   explicit OnlineLatgenRecogniserConfig():acoustic_scale(0.1), bits_per_sample(16) {}
 
-  void Register(OptionsItf *po) {
+  void Register(ParseOptions *po) {
     mfcc_opts.Register(po);
     splice_opts.Register(po);
     // delta_feat_opts.Register(po);
