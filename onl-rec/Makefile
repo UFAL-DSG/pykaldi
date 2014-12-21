@@ -25,4 +25,4 @@ include ../kaldi/src/makefiles/default_rules.mk
 cleantest:
 	rm -f *.txt *.svg *.fst
 
-cleanall: clean cleantest
+distclean: clean cleantest

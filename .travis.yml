@@ -32,21 +32,16 @@ before_install:
     # ATLAS matrix library
     # - sudo apt-get install -y libatlas3gf-base libblas-dev libatlas-dev libblas-dev libblas3gf
     - sudo apt-get install -y build-essential libatlas-base-dev python-dev python-pip git wget
-    # Openfst: download - old version
-    # - pushd tools && wget https://s3-eu-west-1.amazonaws.com/ufal-dsg/openfst/travis-openfst.tar.gz -O travis-openfst.tar.gz && tar zxvf travis-openfst.tar.gz && ln -s travis-openfst openfst && popd
-    # Openfst: skip building Openfst ~ 30 min
-    - pushd tools && echo DEBUG 1 && make -j 4 openfst && echo DEBUG 2 && popd
-    - pushd tools && make -j 4 atlas && popd
-
-install:
     - pushd pykaldi && pip install -q -r pykaldi-requirements.txt ; popd 
     - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]] ; then pip install unittest2 ordereddict argparse ; fi
-    - pushd src && ./configure --shared && make -j 4; make -j 4 && make onl-rec && popd
+
+install:
+    - make
 
 script:
-    - pushd src/onl-rec && make -j 4 test ; RET=$?; popd ; (exit $RET)
-    - pushd pykaldi && make -j 4 test ; RET=$? ; popd ; (exit $RET)
+    - make test
 
 after_success: # and this only on success
-    - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]] ; then gem install travis-artifacts ; pushd pykaldi; make deploy ; popd ; travis-artifacts upload --path pykaldi/pykaldi*.tar.gz --target-path pykaldi/pykaldi-travis_${TRAVIS_PYTHON_VERSION}.tar.gz ; fi
-    # - travis-artifacts upload --path pykaldi_src_pykaldi.tar.gz --target-path artifacts/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID
+    - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]] ; then gem install travis-artifacts ; \
+      make deploy ; \
+      travis-artifacts upload --path pykaldi/pykaldi*.zip --target-path pykaldi/pykaldi-travis_${TRAVIS_PYTHON_VERSION}.tar.gz ; fi

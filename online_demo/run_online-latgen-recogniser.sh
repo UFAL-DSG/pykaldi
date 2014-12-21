@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # source the settings
 . path.sh
