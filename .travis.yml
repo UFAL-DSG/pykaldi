@@ -36,12 +36,12 @@ before_install:
     - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]] ; then pip install unittest2 ordereddict argparse ; fi
 
 install:
-    - make
+    # - make -j 4
 
 script:
-    - make test
+    - make -j 4 test
 
 after_success: # and this only on success
     - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]] ; then gem install travis-artifacts ; \
-      make deploy ; \
+      make -j 4 deploy ; \
       travis-artifacts upload --path pykaldi/pykaldi*.zip --target-path pykaldi/pykaldi-travis_${TRAVIS_PYTHON_VERSION}.tar.gz ; fi

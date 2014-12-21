@@ -1,7 +1,9 @@
 # TODO: installation of patched shared OpenFST library is stupid
 FSTDIR=kaldi/tools/openfst
+AFSTDIR=$(PWD)/$(FSTDIR)
 PYTHON=python2.7
 LINUX=$(shell lsb_release -sd | sed 's: :_:g')
+# OSX_FLAGS=$(shell if [ `uname` == Darwin ] ; then 
 KALDI_LIBS = ../kaldi/src/online2/kaldi-online2.a \
 		  ../kaldi/src/decoder/kaldi-decoder.a \
 		  ../kaldi/src/feat/kaldi-feat.a \
@@ -51,13 +53,13 @@ $(FSTDIR)/lib/libfst.a: kaldi/.git
 # use setup.py develop --user or setup.py install respectively
 pyfst/fst/_fst.so:  $(FSTDIR)/lib/libfst.a pyfst/.git
 	cd pyfst ; \
-		LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include $(PYTHON) \
+		LIBRARY_PATH=$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(AFSTDIR)/include $(PYTHON) \
 		setup.py build_ext --inplace
 
 pykaldi/kaldi/decoders.so: pyfst/fst/_fst.so onl-rec/libonl-rec.a
 	cd pykaldi && \
-	PYKALDI_ADDLIBS="../onl-rec/libonl-rec.a $(KALDI_LIBS)" \
-	LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include \
+	PYKALDI_ADDLIBS="../onl-rec/onl-rec.a $(KALDI_LIBS)" \
+	LIBRARY_PATH=$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(AFSTDIR)/include \
 	$(PYTHON) setup.py build_ext --inplace
 
 distclean:
@@ -70,17 +72,21 @@ distclean:
 test: pykaldi/kaldi/decoders.so pyfst/fst/_fst.so
 	cd onl-rec && \
 	make test && \
-	cd pykaldi && \
+	cd ../pyfst && \
+	LIBRARY_PATH=$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(AFSTDIR)/include \
+	LD_LIBRARY_PATH=./kaldi:$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst \
+	$(PYTHON) setup.py nosetests && \
+	cd ../pykaldi && \
 	PYKALDI_ADDLIBS="../onl-rec/libonl-rec.a $(KALDI_LIBS)" \
-	LD_LIBRARY_PATH=./kaldi:$(FSTDIR)/lib:$(FSTDIR)/lib/fst \
-	LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include \
+	LD_LIBRARY_PATH=./kaldi:$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst \
+	LIBRARY_PATH=$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(AFSTDIR)/include \
 	PYTHONPATH=$(PWD)/pyfst:$$PYTHONPATH \
 	$(PYTHON) setup.py nosetests
 
 install: pykaldi/kaldi/decoders.so pyfst/fst/_fst.so
-	cd pyfst ; LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include $(PYTHON) setup.py install ; cd .. && \
+	cd pyfst ; LIBRARY_PATH=$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(AFSTDIR)/include $(PYTHON) setup.py install ; cd .. && \
 	cd pykaldi && PYKALDI_ADDLIBS="$(ADDLIBS)" \
-	LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include \
+	LIBRARY_PATH=$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(AFSTDIR)/include \
 	$(PYTHON) setup.py install
 
 
@@ -89,10 +95,10 @@ deploy: pykaldi_$(LINUX).zip
 pykaldi_$(LINUX).zip: pykaldi/kaldi/decoders.so pyfst/fst/_fst.so
 	cd pykaldi && \
 	PYKALDI_ADDLIBS="$(ADDLIBS)" \
-	LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include \
+	LIBRARY_PATH=$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(AFSTDIR)/include \
 	PYKALDI_VERSION=$(PYKALDI_VERSION) $(PYTHON) setup.py bdist_egg
-	cd pyfst && LIBRARY_PATH=$(FSTDIR)/lib:$(FSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(FSTDIR)/include $(PYTHON) setup.py bdist_egg 
+	cd pyfst && LIBRARY_PATH=$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(AFSTDIR)/include $(PYTHON) setup.py bdist_egg 
 	mkdir -p "pykaldi_$(LINUX)"/openfst
 	cp pykaldi/dist/pykaldi*.egg pyfst/dist/pyfst*.egg "pykaldi_$(LINUX)"
-	for d in include lib bin ; do cp -r $d $(FSTDIR)/$$d  "pykaldi_$(LINUX)"/openfst ; done
+	for d in include lib bin ; do cp -r $d $(AFSTDIR)/$$d  "pykaldi_$(LINUX)"/openfst ; done
 	zip -r $@ $(basename $@)
