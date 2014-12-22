@@ -18,13 +18,12 @@ KALDI_LIBS = ../kaldi/src/online2/kaldi-online2.a \
 		  ../kaldi/src/util/kaldi-util.a \
 		  ../kaldi/src/base/kaldi-base.a
 
-all: onl-rec/libonl-rec.a pykaldi/kaldi/decoders.so pyfst/fst/_fst.so
+all: onl-rec/onl-rec.a pykaldi/kaldi/decoders.so pyfst/fst/_fst.so
 
-onl-rec/libonl-rec.a: $(FSTDIR)/lib/libfst.a kaldi/tools/ATLAS/include/clapack.h kaldi/src/kaldi.mk
-	cd kaldi/src && \
-		make
-		# make online2 ivector decoder feat thread lat hmm transform gmm fstext tree matrix util base
-	cd onl-rec && make
+onl-rec/onl-rec.a: $(FSTDIR)/lib/libfst.a kaldi/tools/ATLAS/include/clapack.h kaldi/src/kaldi.mk
+	$(MAKE) -C kaldi/src
+	# $(MAKE) -C kaldi/src online2 ivector decoder feat thread lat hmm transform gmm fstext tree matrix util base
+	$(MAKE) -C onl-rec
 
 kaldi/.git: .gitmodules
 	git submodule init
@@ -36,17 +35,16 @@ pyfst/.git: .gitmodules
 	git submodule sync -- pyfst
 	git submodule update pyfst
 
-kaldi/src/kaldi.mk: kaldi/.git 
+kaldi/src/kaldi.mk: kaldi/.git $(FSTDIR)/lib/libfst.a kaldi/tools/ATLAS/include/clapack.h
 	@echo "kaldi configure"
 	cd kaldi/src && ./configure --shared
 
 
 kaldi/tools/ATLAS/include/clapack.h: kaldi/.git
-	@echo "Installing Atlas headers"
-	cd kaldi/tools && make atlas && echo "Installing atlas finished $?"
+	$(MAKE) -C kaldi/tools  atlas ; echo "Installing atlas finished $?"
 
 $(FSTDIR)/lib/libfst.a: kaldi/.git 
-	cd kaldi/tools && make openfst && echo "Installing OpenFST finished: $?"
+	$(MAKE) -C kaldi/tools openfst ; echo "Installing OpenFST finished: $?"
 
 # If you want to develop or install pyfst
 # use setup.py develop --user or setup.py install respectively
@@ -55,28 +53,27 @@ pyfst/fst/_fst.so:  $(FSTDIR)/lib/libfst.a pyfst/.git
 		LIBRARY_PATH=$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(AFSTDIR)/include $(PYTHON) \
 		setup.py build_ext --inplace
 
-pykaldi/kaldi/decoders.so: pyfst/fst/_fst.so onl-rec/libonl-rec.a
+pykaldi/kaldi/decoders.so: pyfst/fst/_fst.so onl-rec/onl-rec.a
 	cd pykaldi && \
 	PYKALDI_ADDLIBS="../onl-rec/onl-rec.a $(KALDI_LIBS)" \
 	LIBRARY_PATH=$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(AFSTDIR)/include \
 	$(PYTHON) setup.py build_ext --inplace
 
 distclean:
-	-cd kaldi/tools && make distclean 
-	-cd kaldi/src && make clean; 
-	-cd onl-rec && make distclean
-	-cd pykaldi && $(PYTHON) setup.py clean --all && rm -rf pykaldi/{dist,build,*e.egg-info}
-	-cd pyfst && $(PYTHON) setup.py clean --all && rm -rf pyfst/{dist,build,*e.egg-info}
+	$(MAKE) -C kaldi/tools distclean 
+	$(MAKE) -C kaldi/src clean
+	$(MAKE) -C onl-rec distclean
+	cd pykaldi && $(PYTHON) setup.py clean --all && rm -rf pykaldi/{dist,build,*e.egg-info}
+	cd pyfst && $(PYTHON) setup.py clean --all && rm -rf pyfst/{dist,build,*e.egg-info}
 
 test: pykaldi/kaldi/decoders.so pyfst/fst/_fst.so
-	cd onl-rec && \
-	make test && \
+	$(MAKE) -C onl-rec test && \
 	cd ../pyfst && \
 	LIBRARY_PATH=$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(AFSTDIR)/include \
 	LD_LIBRARY_PATH=./kaldi:$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst \
 	$(PYTHON) setup.py nosetests && \
 	cd ../pykaldi && \
-	PYKALDI_ADDLIBS="../onl-rec/libonl-rec.a $(KALDI_LIBS)" \
+	PYKALDI_ADDLIBS="../onl-rec/onl-rec.a $(KALDI_LIBS)" \
 	LD_LIBRARY_PATH=./kaldi:$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst \
 	LIBRARY_PATH=$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(AFSTDIR)/include \
 	PYTHONPATH=$(PWD)/pyfst:$$PYTHONPATH \

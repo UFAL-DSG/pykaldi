@@ -34,13 +34,13 @@ except:
     version = 'dev-unknown'
 
 extra_compile_args = ['-std=c++11']
-extra_build_args = []
+extra_link_args = []
 
 #TODO compilation flags are prepared only for ubuntu 14.04 and OSX 10.10
 if platform == 'darwin':
     extra_compile_args.append('-stdlib=libstdc++')
-    extra_build_args.append('-stdlib=libstdc++')
-    extra_build_args.append('-framework Accelerate')
+    extra_link_args.append('-stdlib=libstdc++')
+    extra_link_args.append('-framework Accelerate')
     library_dirs = []
     libraries = ['../kaldi/tools/openfst/lib/libfst.a', 'dl', 'm', 'pthread', ]
 else:
@@ -49,7 +49,7 @@ else:
 ext_modules.append(Extension('kaldi.decoders',
                              language='c++',
                              extra_compile_args=extra_compile_args,
-                             extra_build_args=extra_build_args,
+                             extra_link_args=extra_link_args,
                              include_dirs=['..', '../kaldi/src', '../pyfst', ],
                              library_dirs=library_dirs,
                              libraries=libraries,
