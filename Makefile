@@ -63,10 +63,12 @@ test: onl-rec/onl-rec.a $(FSTDIR)/lib/libfst.a pyfst/.git
 	cd pyfst && \
 	LIBRARY_PATH=$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(AFSTDIR)/include \
 	LD_LIBRARY_PATH=./kaldi:$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst \
+	DYLD_LIBRARY_PATH=$$LD_LIBRARY_PATH \
 	$(PYTHON) setup.py nosetests && \
 	cd ../pykaldi && \
 	PYKALDI_ADDLIBS="../onl-rec/onl-rec.a $(KALDI_LIBS)" \
 	LD_LIBRARY_PATH=./kaldi:$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst \
+	DYLD_LIBRARY_PATH=$$LD_LIBRARY_PATH \
 	LIBRARY_PATH=$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(AFSTDIR)/include \
 	PYTHONPATH=$(PWD)/pyfst:$$PYTHONPATH \
 	$(PYTHON) setup.py nosetests

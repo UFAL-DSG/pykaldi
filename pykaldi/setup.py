@@ -36,11 +36,11 @@ except:
 extra_compile_args = ['-std=c++11']
 extra_link_args = []
 
-#TODO compilation flags are prepared only for ubuntu 14.04 and OSX 10.10
+#TODO compilation flags are prepared only for ubuntu 14.04 and OSX 10.10 64bit version
 if platform == 'darwin':
     extra_compile_args.append('-stdlib=libstdc++')
+    extra_compile_args.extend(['-arch i386', '-arch x86_64'])
     extra_link_args.append('-stdlib=libstdc++')
-    extra_link_args.append('-framework Accelerate')
     library_dirs = []
     libraries = ['../kaldi/tools/openfst/lib/libfst.a', 'dl', 'm', 'pthread', ]
 else:
