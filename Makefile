@@ -43,11 +43,10 @@ kaldi/src/kaldi.mk: kaldi/.git
 
 kaldi/tools/ATLAS/include/clapack.h: kaldi/.git
 	@echo "Installing Atlas headers"
-	cd kaldi/tools && make atlas
+	cd kaldi/tools && make atlas && echo "Installing atlas finished $?"
 
 $(FSTDIR)/lib/libfst.a: kaldi/.git 
-	@echo "Installing openfst locally"
-	cd kaldi/tools && make openfst
+	cd kaldi/tools && make openfst && echo "Installing OpenFST finished: $?"
 
 # If you want to develop or install pyfst
 # use setup.py develop --user or setup.py install respectively
