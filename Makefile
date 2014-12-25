@@ -3,7 +3,6 @@ FSTDIR=kaldi/tools/openfst
 AFSTDIR=$(PWD)/$(FSTDIR)
 PYTHON=python2.7
 LINUX=$(shell lsb_release -sd | sed 's: :_:g')
-# OSX_FLAGS=$(shell if [ `uname` == Darwin ] ; then 
 KALDI_LIBS = ../kaldi/src/online2/kaldi-online2.a \
 		  ../kaldi/src/decoder/kaldi-decoder.a \
 		  ../kaldi/src/feat/kaldi-feat.a \
