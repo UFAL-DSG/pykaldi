@@ -1,7 +1,7 @@
 # TODO: installation of patched shared OpenFST library is stupid
 FSTDIR=kaldi/tools/openfst
 AFSTDIR=$(PWD)/$(FSTDIR)
-PYTHON=python2.7
+PYTHON=python
 LINUX=$(shell lsb_release -sd | sed 's: :_:g')
 KALDI_LIBS = ../kaldi/src/online2/kaldi-online2.a \
 		../kaldi/src/decoder/kaldi-decoder.a \
