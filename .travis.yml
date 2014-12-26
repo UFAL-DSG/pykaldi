@@ -42,4 +42,5 @@ script:
     - make -j 4 test
 
 after_success: # and this only on success
-    - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]] ; then gem install travis-artifacts ; make -j 4 deploy ; travis-artifacts upload --path pykaldi/pykaldi*.zip --target-path pykaldi/pykaldi-travis_${TRAVIS_PYTHON_VERSION}.tar.gz ; fi
+    # make -j 4 deploy was failing possibly due to not enough memory
+    - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]] ; then gem install travis-artifacts ; make deploy ; travis-artifacts upload --path pykaldi*.zip --target-path pykaldi/pykaldi-travis_${TRAVIS_PYTHON_VERSION}.tar.gz ; fi
