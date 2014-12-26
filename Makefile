@@ -95,5 +95,5 @@ pykaldi_$(LINUX).zip: pykaldi/kaldi/decoders.so pyfst/fst/_fst.so
 	cd pyfst && LIBRARY_PATH=$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(AFSTDIR)/include $(PYTHON) setup.py bdist_egg
 	mkdir -p "pykaldi_$(LINUX)"/openfst
 	cp pykaldi/dist/pykaldi*.egg pyfst/dist/pyfst*.egg "pykaldi_$(LINUX)"
-	for d in include lib bin ; do cp -r $$d $(AFSTDIR)/$$d  "pykaldi_$(LINUX)"/openfst ; done
+	for d in include lib bin ; do cp -r $(AFSTDIR)/$$d  "pykaldi_$(LINUX)"/openfst ; done
 	zip -r $@ $(basename $@)
