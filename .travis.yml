@@ -37,4 +37,4 @@ before_install:
     - gem install travis-artifacts
 
 script:
-    - make -j 4 deploy && if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]] ; travis-artifacts upload --path pykaldi*.zip --target-path pykaldi/pykaldi-travis_${TRAVIS_PYTHON_VERSION}.tar.gz ; fi
+    - make -j 4 deploy && travis-artifacts upload --path pykaldi*.zip --target-path pykaldi/pykaldi-travis_${TRAVIS_PYTHON_VERSION}.tar.gz
