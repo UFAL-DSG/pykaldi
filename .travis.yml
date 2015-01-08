@@ -5,8 +5,8 @@ branches:
     except:
         - svn-mirror 
 
-cache: 
-    - apt
+# cache: 
+#     - apt
 
 # settings according http://blog.travis-ci.com/2012-12-18-travis-artifacts/#How-to-use%3F
 # LZ owns the access keys
