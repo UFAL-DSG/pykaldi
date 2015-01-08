@@ -32,8 +32,8 @@ before_install:
     # ATLAS matrix library
     # - sudo apt-get install -y libatlas3gf-base libblas-dev libatlas-dev libblas-dev libblas3gf
     - sudo apt-get install -y build-essential libatlas-base-dev python-dev python-pip git wget zip
-    - pushd pykaldi && sudo pip install -q -r pykaldi-requirements.txt ; popd 
-    - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]] ; then sudo pip install unittest2 ordereddict argparse ; fi
+    - pushd pykaldi && pip install -q -r pykaldi-requirements.txt ; popd 
+    - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]] ; then pip install unittest2 ordereddict argparse ; fi
 
 install:
     # - make -j 4
