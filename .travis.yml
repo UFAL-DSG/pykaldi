@@ -34,13 +34,7 @@ before_install:
     - sudo apt-get install -y build-essential libatlas-base-dev python-dev python-pip git wget zip
     - pushd pykaldi && pip install -q -r pykaldi-requirements.txt ; popd 
     - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]] ; then pip install unittest2 ordereddict argparse ; fi
-
-install:
-    # - make -j 4
+    - gem install travis-artifacts
 
 script:
-    - make -j 4 test
-
-after_success: # and this only on success
-    # make -j 4 deploy was failing possibly due to not enough memory
-    - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]] ; then gem install travis-artifacts ; make deploy ; travis-artifacts upload --path pykaldi*.zip --target-path pykaldi/pykaldi-travis_${TRAVIS_PYTHON_VERSION}.tar.gz ; fi
+    - make -j 4 deploy && if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]] ; travis-artifacts upload --path pykaldi*.zip --target-path pykaldi/pykaldi-travis_${TRAVIS_PYTHON_VERSION}.tar.gz ; fi
