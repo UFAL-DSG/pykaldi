@@ -5,8 +5,8 @@ branches:
     except:
         - svn-mirror 
 
-cache: 
-    - apt
+# cache: 
+#     - apt
 
 # settings according http://blog.travis-ci.com/2012-12-18-travis-artifacts/#How-to-use%3F
 # LZ owns the access keys
@@ -27,20 +27,14 @@ compiler:
 
 before_install:
     # Update to g++ 4.7
+    - sudo apt-get update && sudo apt-get install -y python-software-properties
     - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y && sudo apt-get update -qq && sudo apt-get install -y g++-4.7 gcc-4.7 && sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.7 50 && sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.7 80 && gcc --version && g++ --version
-    - sudo apt-get install python-dev
     # ATLAS matrix library
     # - sudo apt-get install -y libatlas3gf-base libblas-dev libatlas-dev libblas-dev libblas3gf
-    - sudo apt-get install -y build-essential libatlas-base-dev python-dev python-pip git wget
+    - sudo apt-get install -y build-essential libatlas-base-dev python-dev python-pip git wget zip
     - pushd pykaldi && pip install -q -r pykaldi-requirements.txt ; popd 
     - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]] ; then pip install unittest2 ordereddict argparse ; fi
-
-install:
-    # - make -j 4
+    - gem install travis-artifacts
 
 script:
-    - make -j 4 test
-
-after_success: # and this only on success
-    # make -j 4 deploy was failing possibly due to not enough memory
-    - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]] ; then gem install travis-artifacts ; make deploy ; travis-artifacts upload --path pykaldi*.zip --target-path pykaldi/pykaldi-travis_${TRAVIS_PYTHON_VERSION}.tar.gz ; fi
+    - make -j 4 && make -j 2 deploy && travis-artifacts upload --path pykaldi*.zip --target-path pykaldi/pykaldi-travis_${TRAVIS_PYTHON_VERSION}.tar.gz
