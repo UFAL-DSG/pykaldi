@@ -3,7 +3,8 @@
 FSTDIR=kaldi/tools/openfst
 AFSTDIR=$(PWD)/$(FSTDIR)
 PYTHON=python
-OPENFST_VERSION=1.4.1
+# OPENFST_VERSION=1.4.1 # fails with pyfst
+OPENFST_VERSION=1.3.4
 LINUX=$(shell lsb_release -sd | sed 's: :_:g')
 KALDI_LIBS = ../kaldi/src/online2/kaldi-online2.a \
 		../kaldi/src/decoder/kaldi-decoder.a \
