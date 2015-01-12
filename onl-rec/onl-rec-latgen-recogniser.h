@@ -16,37 +16,30 @@
  * limitations under the License. */
 #ifndef KALDI_DEC_WRAP_LATGEN_WRAPPER_H_
 #define KALDI_DEC_WRAP_LATGEN_WRAPPER_H_
-#include <string>
 #include <vector>
 #include "base/kaldi-types.h"
+#include "fst/fst-decl.h"
 
-namespace fst{
-  // forward declarations - useful for interfacing the class from Python/Java
-  // No need to include the headers
-  template <typename Arc> class Fst;
-  template <typename Weight> class ArcTpl; 
-  template <class W> class TropicalWeightTpl;
-  typedef TropicalWeightTpl<float> TropicalWeight;
-  typedef ArcTpl<TropicalWeight> StdArc;
-  typedef Fst<StdArc> StdFst;
-  template <class W> class LogWeightTpl;
-  typedef LogWeightTpl<float> LogWeight;
-  typedef ArcTpl<LogWeight> LogArc;
-  template<class FloatType> class LatticeWeightTpl;
-  template <class A> class VectorFst;
-  template<class WeightType, class IntType> class CompactLatticeWeightTpl; 
+// namespace fst{
+//   // forward declarations - useful for interfacing the class from Python/Java
+//   // No need to include the headers
+//   template <typename Arc> class Fst;
+//   template <typename Weight> class ArcTpl; 
+//   template <class W> class TropicalWeightTpl;
+//   typedef TropicalWeightTpl<float> TropicalWeight;
+//   typedef ArcTpl<TropicalWeight> StdArc;
+//   typedef Fst<StdArc> StdFst;
+//   template <class W> class LogWeightTpl;
+//   typedef LogWeightTpl<float> LogWeight;
+//   typedef ArcTpl<LogWeight> LogArc;
+//   // template <class A> class VectorFst;  // old in 1.3.4
+//   template <class A, class M = std::allocator<A> > class VectorState; // new in 1.4.1
+//   template <class A, class S = VectorState<A> > class VectorFst; // new in 1.4.1
+// }
 
-}
 namespace kaldi{ 
   // forward declarations - useful for interfacing the class from Python/Java
   // No need to include the headers
-  typedef fst::LatticeWeightTpl<BaseFloat> LatticeWeight;
-  typedef fst::ArcTpl<LatticeWeight> LatticeArc;
-  typedef fst::VectorFst<LatticeArc> Lattice;
-
-  typedef fst::CompactLatticeWeightTpl<LatticeWeight, kaldi::int32> CompactLatticeWeight;
-  typedef fst::ArcTpl<CompactLatticeWeight> CompactLatticeArc;
-  typedef fst::VectorFst<CompactLatticeArc> CompactLattice;
 
   template <typename Feat> class OnlineGenericBaseFeature;
   class Mfcc;
