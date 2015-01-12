@@ -27,8 +27,8 @@ WST=models/words.txt
 MFCC=models/mfcc.conf
 SILENCE=models/silence.csl
 
-kaldisrc=`pwd`/../src
-openfst=`pwd`/../tools/openfst/
+kaldisrc=`pwd`/../kaldi/src
+openfst=`pwd`/../kaldi/tools/openfst/
 pykaldi=`pwd`/../pykaldi
 onl_rec=`pwd`/../onl-rec
 
