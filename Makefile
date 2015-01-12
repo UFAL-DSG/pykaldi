@@ -1,7 +1,9 @@
-# TODO: installation of patched shared OpenFST library is stupid
+# TODO remove python inline compilation
+# TODO cython does not recompile because of the templates and sourcefiles
 FSTDIR=kaldi/tools/openfst
 AFSTDIR=$(PWD)/$(FSTDIR)
 PYTHON=python
+OPENFST_VERSION=1.4.1
 LINUX=$(shell lsb_release -sd | sed 's: :_:g')
 KALDI_LIBS = ../kaldi/src/online2/kaldi-online2.a \
 		../kaldi/src/decoder/kaldi-decoder.a \
@@ -37,7 +39,7 @@ kaldi/tools/ATLAS/include/clapack.h: kaldi/.git
 	$(MAKE) -C kaldi/tools  atlas ; echo "Installing atlas finished $?"
 
 $(FSTDIR)/lib/libfst.a: kaldi/.git
-	$(MAKE) -C kaldi/tools openfst ; echo "Installing OpenFST finished: $?"
+	$(MAKE) -C kaldi/tools openfst OPENFST_VERSION=$(OPENFST_VERSION); echo "Installing OpenFST finished: $?"
 
 # If you want to develop or install pyfst
 # use setup.py develop --user or setup.py install respectively
@@ -61,12 +63,12 @@ test: onl-rec/onl-rec.a $(FSTDIR)/lib/libfst.a pyfst/.git
 	$(MAKE) -C onl-rec test && \
 	cd pyfst && \
 	LIBRARY_PATH=$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(AFSTDIR)/include \
-	LD_LIBRARY_PATH=./kaldi:$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst \
+	LD_LIBRARY_PATH=$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst \
 	DYLD_LIBRARY_PATH=$$LD_LIBRARY_PATH \
 	$(PYTHON) setup.py nosetests && \
 	cd ../pykaldi && \
 	PYKALDI_ADDLIBS="../onl-rec/onl-rec.a $(KALDI_LIBS)" \
-	LD_LIBRARY_PATH=./kaldi:$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst \
+	LD_LIBRARY_PATH=$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst \
 	DYLD_LIBRARY_PATH=$$LD_LIBRARY_PATH \
 	LIBRARY_PATH=$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(AFSTDIR)/include \
 	PYTHONPATH=$(PWD)/pyfst:$$PYTHONPATH \
@@ -76,8 +78,9 @@ distclean:
 	$(MAKE) -C kaldi/tools distclean
 	$(MAKE) -C kaldi/src clean
 	$(MAKE) -C onl-rec distclean
-	cd pykaldi && $(PYTHON) setup.py clean --all && rm -rf pykaldi/{dist,build,*e.egg-info}
-	cd pyfst && $(PYTHON) setup.py clean --all && rm -rf pyfst/{dist,build,*e.egg-info}
+	cd pykaldi && $(PYTHON) setup.py clean --all && rm -rf pykaldi/{dist,build,*e.egg-info} && rm -f kaldi/decoders.{cpp,so}
+	cd pyfst && $(PYTHON) setup.py clean --all && rm -rf pyfst/{dist,build,*e.egg-info} && rm -f fst/_fst.{cpp,so}
+
 
 install: pykaldi/kaldi/decoders.so pyfst/fst/_fst.so
 	cd pyfst ; LIBRARY_PATH=$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(AFSTDIR)/include $(PYTHON) setup.py install ; cd .. && \
