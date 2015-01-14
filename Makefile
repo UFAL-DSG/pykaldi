@@ -3,6 +3,8 @@
 FSTDIR=kaldi/tools/openfst
 AFSTDIR=$(PWD)/$(FSTDIR)
 PYTHON=python
+INSTALL_PREFIX=/usr/local
+INSTALL_PYTHON_PREFIX=/usr/local/
 # OPENFST_VERSION=1.4.1 # fails with pyfst
 OPENFST_VERSION=1.3.4
 LINUX=$(shell lsb_release -sd | sed 's: :_:g')
@@ -101,3 +103,11 @@ pykaldi_$(LINUX).zip: pykaldi/kaldi/decoders.so pyfst/fst/_fst.so
 	cp pykaldi/dist/pykaldi*.egg pyfst/dist/pyfst*.egg $(basename $@)
 	for d in include lib bin ; do cp -r $(AFSTDIR)/$$d  $(basename $@)/openfst ; done
 	zip -r $@ $(basename $@)
+
+install: pykaldi_$(LINUX).zip
+	export dir=`mktemp -d -t pykaldi_install` && echo Installing from $$dir && \
+		mkdir -p $$dir && cp $< $$dir && cd $$dir && unzip -q $< && cd $(basename $<) && \
+		for d in bin include lib ; do  cp -r openfst/$$d/* $(INSTALL_PREFIX)/$$d/ ; done && \
+		easy_install pyfst*.egg && \
+		easy_install pykaldi*.egg && \
+		echo Removing $$dir && rm -rf $$dir
