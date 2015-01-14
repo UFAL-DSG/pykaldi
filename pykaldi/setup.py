@@ -14,7 +14,7 @@ from os import environ
 from sys import stderr
 from sys import platform
 
-install_requires = []
+install_requires = ['cython>=0.21', 'pystache>=0.5', 'pyyaml>=3.11']
 if python_version < (2, 7):
     new_27 = ['ordereddict', 'argparse']
     install_requires.extend(new_27)
