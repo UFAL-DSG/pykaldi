@@ -105,7 +105,7 @@ pykaldi_$(LINUX).zip: pykaldi/kaldi/decoders.so pyfst/fst/_fst.so
 	zip -r $@ $(basename $@)
 
 install: pykaldi_$(LINUX).zip
-	export dir=`mktemp -d -t pykaldi_install` && echo Installing from $$dir && \
+	export dir=`mktemp -d pykaldi_install_XXXXX` && echo Installing from $$dir && \
 		mkdir -p $$dir && cp $< $$dir && cd $$dir && unzip -q $< && cd $(basename $<) && \
 		for d in bin include lib ; do  cp -r openfst/$$d/* $(INSTALL_PREFIX)/$$d/ ; done && \
 		easy_install pyfst*.egg && \
