@@ -18,6 +18,7 @@ python:
     # - "2.6"   # disabled 2.6 because of cython problems
     - "2.7"
 
+# disable clang because of cython problems
 # matrix:
 #     include:
 #         - compiler: gcc
@@ -31,23 +32,20 @@ python:
 #         bucket: 'ufal-dsg'
 
 before_install:
-    # Update to g++ 4.7
+    # Update to g++-GCC e.g. 4.7
     - export GCC=4.7; sudo apt-get update -qq && sudo apt-get install -y python-software-properties && sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y && sudo apt-get update -qq && sudo apt-get install -y g++-$GCC gcc-$GCC && export CXX=g++-$GCC && export CC=gcc-$GCC
-    # - if [ -n "$GCC" ] ; then sudo apt-get update -qq && sudo apt-get install -y python-software-properties && sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y && sudo apt-get update -qq && sudo apt-get install -y g++-$GCC gcc-$GCC && export CXX=g++-$GCC && export CC=gcc-$GCC ; fi
-    # ATLAS matrix library
-    # - sudo apt-get install -y libatlas3gf-base libblas-dev libatlas-dev libblas-dev libblas3gf
     - sudo apt-get install -y build-essential libatlas-base-dev python-dev python-pip git wget zip
     - pip install -r pykaldi/pykaldi-requirements.txt
     - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]] ; then pip install unittest2 ordereddict argparse ; fi
     - sudo curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/master/install | bash
 
 install:
-    - make -j 4 pyfst/fst/_fst.so
-    - make -j 4 onl-rec/onl-rec.a
+    - make -j 4 pyfst/fst/_fst.so; make -j 4 onl-rec/onl-rec.a
 
 script:
-    - make -j 4 test && make -j 2 deploy  # with more paralelization for deploy it fails for lack of memory
+    - make -j 1 test
 
 after_success:
     # LZ owns the access keys
-    - if [[ $TRAVIS_BRANCH == 'alex-pykaldi' && $TRAVIS_PULL_REQUEST == 'false' && $TRAVIS_PYTHON_VERSION == '2.7' ]] ; then  artifacts upload --path pykaldi*.zip --target-path pykaldi/pykaldi-travis_${TRAVIS_PYTHON_VERSION}.zip ; fi
+    # with more paralelization for deploy it fails for lack of memory
+    - if [[ $TRAVIS_BRANCH == 'alex-pykaldi' && $TRAVIS_PULL_REQUEST == 'false' && $TRAVIS_PYTHON_VERSION == '2.7' ]] ; then make -j 1 deploy && echo "Deployed ok" && artifacts upload --path pykaldi*.zip --target-path pykaldi/pykaldi-travis_${TRAVIS_PYTHON_VERSION}.zip && echo "Uploaded ok" ; fi
