@@ -11,7 +11,7 @@ News & info
 Install
 -------
 
-..  image:: https://travis-ci.org/UFAL-DSG/pykaldi.png
+.. image:: https://travis-ci.org/UFAL-DSG/pykaldi.svg?branch=master
     :target: https://travis-ci.org/UFAL-DSG/pykaldi
 
 * Our priority is to deploy it on Ubuntu 14.04 and also keep Travis running on Ubuntu 12.04

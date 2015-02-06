@@ -1,5 +1,3 @@
-// onl-rec/onl-rec-util.h
-
 // Copyright 2012 Cisco Systems (author: Matthias Paulik)
 
 //   Modifications to the original contribution by Cisco Systems made by:

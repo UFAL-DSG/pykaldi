@@ -5,11 +5,6 @@ branches:
     except:
         - svn-mirror
 
-# cache:
-#     - apt
-
-# settings according http://blog.travis-ci.com/2012-12-18-travis-artifacts/#How-to-use%3F
-# LZ owns the access keys
 env:
  global:
    - "ARTIFACTS_AWS_REGION=us-east-1"
@@ -22,27 +17,37 @@ language: python
 python:
     # - "2.6"   # disabled 2.6 because of cython problems
     - "2.7"
-matrix:
-    include:
-        - compiler: gcc
-          env: GCC=4.7
-        - compiler: clang
+
+# matrix:
+#     include:
+#         - compiler: gcc
+#           env: GCC=4.7
+#         - compiler: clang
+
+# addons:
+#     artifacts:
+#         key: "WBfd5tHszuzZxvI0slNPyRObYgMCi6pm07OEecuOfVtgLdMQWRaaRAxChM+m8gMTkV44TuTY4ony1XVIItc+8jcXOL+DhIbj8dt+kpd927QYjiQVQf0vhVBQpIJIyYr40tPeezr7/vBbktl/c4cVF7Vd/k1SVX5/dnLtt4s05JE="   # probably badly encoded for deprecated travis-artifacts
+#         secret: "TC4N7oiqeGmy2f9GfoZoZrTxDGEJLIDH3L4YoZQ7tl7Pu93SRv6Yo0L2j2Jn8aziM4XqOSEJNwP/F1o3/n8n7+LhPsyRd4FjHEIQomGlgR9im/zRJ6BHn6nChYldq/t4x4LcIVwdSRyLRykgXYRTr2xLOELBeVO9HUxChMYTpFo="  # probably badly encoded for deprecated travis-artifacts
+#         bucket: 'ufal-dsg'
 
 before_install:
     # Update to g++ 4.7
-    - if [ -n "$GCC" ] ; then sudo apt-get update -qq && sudo apt-get install -y python-software-properties && sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y && sudo apt-get update -qq && sudo apt-get install -y g++-$GCC gcc-$GCC && export CXX=g++-$GCC && export CC=gcc-$GCC ; fi
+    - export GCC=4.7; sudo apt-get update -qq && sudo apt-get install -y python-software-properties && sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y && sudo apt-get update -qq && sudo apt-get install -y g++-$GCC gcc-$GCC && export CXX=g++-$GCC && export CC=gcc-$GCC
+    # - if [ -n "$GCC" ] ; then sudo apt-get update -qq && sudo apt-get install -y python-software-properties && sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y && sudo apt-get update -qq && sudo apt-get install -y g++-$GCC gcc-$GCC && export CXX=g++-$GCC && export CC=gcc-$GCC ; fi
     # ATLAS matrix library
     # - sudo apt-get install -y libatlas3gf-base libblas-dev libatlas-dev libblas-dev libblas3gf
     - sudo apt-get install -y build-essential libatlas-base-dev python-dev python-pip git wget zip
-    - pushd pykaldi && pip install -q -r pykaldi-requirements.txt ; popd
+    - pip install -r pykaldi/pykaldi-requirements.txt
     - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]] ; then pip install unittest2 ordereddict argparse ; fi
-    - gem install travis-artifacts
+    - sudo curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/master/install | bash
 
 install:
-    - make -j 3  # not using -j 4 in order to prevent get killed by lack of memory
+    - make -j 4 pyfst/fst/_fst.so
+    - make -j 4 onl-rec/onl-rec.a
 
 script:
     - make -j 4 test && make -j 2 deploy  # with more paralelization for deploy it fails for lack of memory
 
 after_success:
-    - [ $TRAVIS_BRANCH == 'alex-pykaldi' ] && [ $TRAVIS_PULL_REQUEST == 'false' ] && [ $TRAVIS_PYTHON_VERSION == '2.7' ] && travis-artifacts upload --path pykaldi*.zip --target-path pykaldi/pykaldi-travis_${TRAVIS_PYTHON_VERSION}.zip
+    # LZ owns the access keys
+    - if [[ $TRAVIS_BRANCH == 'alex-pykaldi' && $TRAVIS_PULL_REQUEST == 'false' && $TRAVIS_PYTHON_VERSION == '2.7' ]] ; then  artifacts upload --path pykaldi*.zip --target-path pykaldi/pykaldi-travis_${TRAVIS_PYTHON_VERSION}.zip ; fi

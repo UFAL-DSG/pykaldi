@@ -1,6 +1,5 @@
-// onl-rec/onl-rec-latgen-recogniser.h
+// -*- coding: utf-8 -*-
 /* Copyright (c) 2013, Ondrej Platek, Ufal MFF UK <oplatek@ufal.mff.cuni.cz>
- *               2012-2013  Vassil Panayotov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,23 +18,6 @@
 #include <vector>
 #include "base/kaldi-types.h"
 #include "fst/fst-decl.h"
-
-// namespace fst{
-//   // forward declarations - useful for interfacing the class from Python/Java
-//   // No need to include the headers
-//   template <typename Arc> class Fst;
-//   template <typename Weight> class ArcTpl; 
-//   template <class W> class TropicalWeightTpl;
-//   typedef TropicalWeightTpl<float> TropicalWeight;
-//   typedef ArcTpl<TropicalWeight> StdArc;
-//   typedef Fst<StdArc> StdFst;
-//   template <class W> class LogWeightTpl;
-//   typedef LogWeightTpl<float> LogWeight;
-//   typedef ArcTpl<LogWeight> LogArc;
-//   // template <class A> class VectorFst;  // old in 1.3.4
-//   template <class A, class M = std::allocator<A> > class VectorState; // new in 1.4.1
-//   template <class A, class S = VectorState<A> > class VectorFst; // new in 1.4.1
-// }
 
 namespace kaldi{ 
   // forward declarations - useful for interfacing the class from Python/Java

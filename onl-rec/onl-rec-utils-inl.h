@@ -1,7 +1,5 @@
-// onl-rec/onl-rec-utils-inl.h
-// Ondrej Platek, oplatek@ufal.mff.cuni.cz, 2014
-
-// See ../../COPYING for clarification regarding multiple authors
+// -*- coding: utf-8 -*-
+/* Copyright (c) 2013-14, Ondrej Platek, Ufal MFF UK <oplatek@ufal.mff.cuni.cz> */
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +12,7 @@
 // WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
 // MERCHANTABLITY OR NON-INFRINGEMENT.
 // See the Apache 2 License for the specific language governing permissions and
-// limitations under the License.
+// limitations under the License. 
 
 #ifndef KALDI_DEC_WRAP_UTILS_INL_H_
 #define KALDI_DEC_WRAP_UTILS_INL_H_
