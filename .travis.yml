@@ -45,7 +45,7 @@ install:
     - make -j 4 pyfst/fst/_fst.so; make -j 4 onl-rec/onl-rec.a
 
 script:
-    - make -j 4 test && make -j 2 deploy  # with more paralelization for deploy it fails for lack of memory
+    - make -j 4 test && make -j 1 deploy  # with more paralelization for deploy it fails for lack of memory
 
 after_success:
     # LZ owns the access keys
