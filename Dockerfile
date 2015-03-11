@@ -5,9 +5,15 @@ MAINTAINER Ondrej Platek <ondrej.platek haha gmail.com>
 ADD . /app/pykaldi
 WORKDIR /app/pykaldi
 RUN locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8
-RUN apt-get update && apt-get install -y build-essential libatlas3-base libatlas-base-dev python-dev python-pip git wget gfortran
+RUN apt-get update && apt-get install -y build-essential libatlas3-base libatlas-base-dev python-dev python-pip git wget gfortran autoconf zip unzip
 RUN pip install -r pykaldi/pykaldi-requirements.txt
 
-WORKDIR  /app/pykaldi/pykaldi
+# testing the installation
+RUN make distclean
 RUN make
 RUN make test
+
+# installing kaldi
+RUN make install
+RUN rm -rf /app/pykaldi
+RUN python -c 'import kaldi.decoders'

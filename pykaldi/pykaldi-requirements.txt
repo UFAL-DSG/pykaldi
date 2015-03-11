@@ -2,3 +2,4 @@ cython
 pystache
 pyyaml
 sphinxcontrib-napoleon
+nose>=1.0

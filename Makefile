@@ -90,23 +90,14 @@ distclean:
 	rm -rf pyfst/{dist,build,*e.egg-info}
 	rm -f fst/_fst.{cpp,so}
 
-
-install: pykaldi/kaldi/decoders.so pyfst/fst/_fst.so
-	cd pyfst && \
-		LIBRARY_PATH=$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(AFSTDIR)/include $(PYTHON) setup.py install
-	cd pykaldi && \
-		PYKALDI_ADDLIBS="$(ADDLIBS)" \
-		LIBRARY_PATH=$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(AFSTDIR)/include \
-		$(PYTHON) setup.py install
-
 deploy: pykaldi_$(LINUX).zip
 
 pykaldi_$(LINUX).zip: pykaldi/kaldi/decoders.so pyfst/fst/_fst.so
-	cd pykaldi && \
-		PYKALDI_ADDLIBS="$(ADDLIBS)" \
-		LIBRARY_PATH=$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(AFSTDIR)/include
-		PYKALDI_VERSION=$(PYKALDI_VERSION) $(PYTHON) setup.py bdist_egg
 	cd pyfst && \
+		LIBRARY_PATH=$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(AFSTDIR)/include \
+		$(PYTHON) setup.py bdist_egg
+	cd pykaldi && \
+		PYKALDI_ADDLIBS="../onl-rec/onl-rec.a $(KALDI_LIBS)" \
 		LIBRARY_PATH=$(AFSTDIR)/lib:$(AFSTDIR)/lib/fst CPLUS_INCLUDE_PATH=$(AFSTDIR)/include \
 		$(PYTHON) setup.py bdist_egg
 	mkdir -p $(basename $@)/openfst
@@ -115,15 +106,16 @@ pykaldi_$(LINUX).zip: pykaldi/kaldi/decoders.so pyfst/fst/_fst.so
 	zip -r $@ $(basename $@)
 
 install: pykaldi_$(LINUX).zip
-	export dir=`mktemp -d pykaldi_install_XXXXX`
-	echo -e "\nInstalling from $$dir\n"
-	mkdir -p $$dir
-	cp $< $$dir
+	# as one command due to setting up dir variable (TODO move it to make variable)
+	export dir=`mktemp -d pykaldi_install_XXXXX`; \
+	echo -e "\nInstalling from $$dir\n"; \
+	mkdir -p $$dir; \
+	cp $< $$dir; \
 	cd $$dir && \
 		unzip -q $<
 		cd $(basename $<) && \
-			for d in bin include lib ; do  cp -r openfst/$$d/* $(INSTALL_PREFIX)/$$d/ ; done
-			easy_install pyfst*.egg
-			easy_install pykaldi*.egg
-	echo -e "\nRemoving $$dir\n"
+			for d in bin include lib ; do  cp -r openfst/$$d/* $(INSTALL_PREFIX)/$$d/ ; done ; \
+			easy_install pyfst*.egg ; \
+			easy_install pykaldi*.egg; \
+	echo -e "\nRemoving $$dir\n" ; \
 	rm -rf $$dir
