@@ -1,0 +1,4 @@
+#!/bin/bash
+
+echo "Running Pykaldi Docker version from head of master branch."
+docker run --rm -i -t ufaldsg/pykaldi /bin/bash
