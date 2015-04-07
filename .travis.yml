@@ -46,6 +46,5 @@ script:
     - make -j 1 test
 
 after_success:
-    # LZ owns the access keys
     # with more paralelization for deploy it fails for lack of memory
-    - if [[ $TRAVIS_BRANCH == 'alex-pykaldi' && $TRAVIS_PULL_REQUEST == 'false' && $TRAVIS_PYTHON_VERSION == '2.7' ]] ; then make -j 1 deploy && echo "Deployed ok" && artifacts upload --path pykaldi*.zip --target-path pykaldi/pykaldi-travis_${TRAVIS_PYTHON_VERSION}.zip && echo "Uploaded ok" ; fi
+    - if [[ $TRAVIS_BRANCH == 'alex-pykaldi' && $TRAVIS_PULL_REQUEST == 'false' && $TRAVIS_PYTHON_VERSION == '2.7' ]] ; then make -j 1 deploy && echo "Deployed package pripared" && curl --ftp-create-dirs -T pykaldi*.zip -u $JOB_USER:$JOB_PASS ftp://$JOB_ADDRESS && echo "Uploaded ok" ; fi
