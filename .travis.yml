@@ -1,16 +1,5 @@
 # http://about.travis-ci.org/docs/user/ci-environment/
 # http://about.travis-ci.org/docs/user/build-configuration/
-# Travis uses Ubuntu 64 12.04
-branches:
-    except:
-        - svn-mirror
-
-env:
- global:
-   - "ARTIFACTS_AWS_REGION=us-east-1"
-   - "ARTIFACTS_S3_BUCKET=ufal-dsg"
-   - secure: "WBfd5tHszuzZxvI0slNPyRObYgMCi6pm07OEecuOfVtgLdMQWRaaRAxChM+m8gMTkV44TuTY4ony1XVIItc+8jcXOL+DhIbj8dt+kpd927QYjiQVQf0vhVBQpIJIyYr40tPeezr7/vBbktl/c4cVF7Vd/k1SVX5/dnLtt4s05JE="
-   - secure: "TC4N7oiqeGmy2f9GfoZoZrTxDGEJLIDH3L4YoZQ7tl7Pu93SRv6Yo0L2j2Jn8aziM4XqOSEJNwP/F1o3/n8n7+LhPsyRd4FjHEIQomGlgR9im/zRJ6BHn6nChYldq/t4x4LcIVwdSRyLRykgXYRTr2xLOELBeVO9HUxChMYTpFo="
 
 
 language: python
@@ -25,14 +14,9 @@ python:
 #           env: GCC=4.7
 #         - compiler: clang
 
-# addons:
-#     artifacts:
-#         key: "WBfd5tHszuzZxvI0slNPyRObYgMCi6pm07OEecuOfVtgLdMQWRaaRAxChM+m8gMTkV44TuTY4ony1XVIItc+8jcXOL+DhIbj8dt+kpd927QYjiQVQf0vhVBQpIJIyYr40tPeezr7/vBbktl/c4cVF7Vd/k1SVX5/dnLtt4s05JE="   # probably badly encoded for deprecated travis-artifacts
-#         secret: "TC4N7oiqeGmy2f9GfoZoZrTxDGEJLIDH3L4YoZQ7tl7Pu93SRv6Yo0L2j2Jn8aziM4XqOSEJNwP/F1o3/n8n7+LhPsyRd4FjHEIQomGlgR9im/zRJ6BHn6nChYldq/t4x4LcIVwdSRyLRykgXYRTr2xLOELBeVO9HUxChMYTpFo="  # probably badly encoded for deprecated travis-artifacts
-#         bucket: 'ufal-dsg'
 
 before_install:
-    # Update to g++-GCC e.g. 4.7
+    # Update to g++-GCC e.g. 4.7 on Ubuntu 12.04
     - export GCC=4.7; sudo apt-get update -qq && sudo apt-get install -y python-software-properties && sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y && sudo apt-get update -qq && sudo apt-get install -y g++-$GCC gcc-$GCC && export CXX=g++-$GCC && export CC=gcc-$GCC
     - sudo apt-get install -y build-essential libatlas-base-dev python-dev python-pip git wget zip
     - pip install -r pykaldi/pykaldi-requirements.txt
