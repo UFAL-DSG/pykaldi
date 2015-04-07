@@ -11,3 +11,4 @@ RUN mkdir -p /app/pykaldi
 WORKDIR /app/pykaldi
 RUN echo 'Pykaldi dependencies installed. Use docker run with -v flag e.g. pykaldi/docker/dev to develop pykaldi'
 
+ENTRYPOINT ["/bin/bash"]

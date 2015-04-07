@@ -20,3 +20,5 @@ RUN ldconfig
 # final testing
 WORKDIR /
 RUN python -c 'import kaldi.decoders'
+
+ENTRYPOINT ["/bin/bash"]
