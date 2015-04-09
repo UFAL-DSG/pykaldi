@@ -1,4 +1,4 @@
-# TODO cython does not recompile because of the templates and sourcefiles
+# TODO Cython does not recompile because of the templates and sourcefiles
 FSTDIR=kaldi/tools/openfst
 AFSTDIR=$(PWD)/$(FSTDIR)
 PYTHON=python
@@ -105,6 +105,10 @@ pykaldi_$(LINUX).zip: pykaldi/kaldi/decoders.so pyfst/fst/_fst.so
 	for d in include lib bin ; do cp -r $(AFSTDIR)/$$d  $(basename $@)/openfst ; done
 	zip -r $@ $(basename $@)
 
+install-kaldi-binaries: kaldi/src/kaldi.mk
+	cp -r kaldi/src/lib/* $(INSTALL_PREFIX)/lib
+	cp `find kaldi/src -executable -type f` $(INSTALL_PREFIX)/bin
+
 install: pykaldi_$(LINUX).zip
 	# as one command due to setting up dir variable (TODO move it to make variable)
 	export dir=`mktemp -d pykaldi_install_XXXXX`; \
@@ -119,3 +123,14 @@ install: pykaldi_$(LINUX).zip
 			easy_install pykaldi*.egg; \
 	echo -e "\nRemoving $$dir\n" ; \
 	rm -rf $$dir
+
+
+irstlm:
+	svn -r 769 co --non-interactive --trust-server-cert https://svn.code.sf.net/p/irstlm/code/trunk irstlm
+
+irstlm/Makefile: irstlm
+	cd irstlm && cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX="$(INSTALL_PREFIX)"
+
+install-irstlm: irstlm/Makefile
+	$(MAKE) -C irstlm
+	$(MAKE) -C irstlm install

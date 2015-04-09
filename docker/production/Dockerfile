@@ -1,6 +1,7 @@
 FROM      ubuntu:14.04
-MAINTAINER Ondrej Platek <ondrej.platek haha gmail.com>
+MAINTAINER Ondrej Platek <ondrej.platek@gmail.com>
 
+ENTRYPOINT ["/bin/bash"]
 
 RUN locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8
 RUN apt-get update && apt-get install -y build-essential libatlas-base-dev python-dev python-pip git wget zip
@@ -10,15 +11,5 @@ WORKDIR /app/pykaldi
 
 RUN pip install -r pykaldi/pykaldi-requirements.txt
 
-# testing the installation
-RUN make
-RUN make test
-
 # Installing kaldi
-RUN make install 
-RUN ldconfig
-# final testing
-WORKDIR /
-RUN python -c 'import kaldi.decoders'
-
-ENTRYPOINT ["/bin/bash"]
+RUN make && make test && make install && ldconfig && cd / && python -c 'import kaldi.decoders' && echo 'Pykaldi library installation succesfull!'

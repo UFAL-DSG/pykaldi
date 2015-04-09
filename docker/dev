@@ -2,4 +2,4 @@
 repo_root="$(git rev-parse --show-toplevel)"
 
 echo "Running Pykaldi Docker version for development."
-docker run --rm -i -t -v ${repo_root}:/app/pykaldi ufaldsg/pykaldi-dev /bin/bash
+docker run --rm -i -t -v ${repo_root}:/app/pykaldi ufaldsg/pykaldi-dev
