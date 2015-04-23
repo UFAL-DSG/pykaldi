@@ -1,8 +1,6 @@
 FROM      ubuntu:14.04
 MAINTAINER Ondrej Platek <ondrej.platek@gmail.com>
 
-ENTRYPOINT ["/bin/bash"]
-
 RUN locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8
 RUN apt-get update && apt-get install -y build-essential libatlas-base-dev python-dev python-pip git wget zip
 
