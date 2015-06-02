@@ -4,6 +4,7 @@ Fork of Kaldi for developing custom recognisers for Alex spoken dialogue system 
 News & info
 -----------
 
+* We use [Docker](https://registry.hub.docker.com/search?q=ufaldsg/pykaldi) so you can try easily the demo.
 * The Python wrapper of C++ ``OnlineLatticeRecogniser`` implements  MFCC, LDA+MLLT, bMMI acoustic models since it was the best speaker independent setup.
 * UPDATE: Since 11/18/2014 the Pykaldi fork uses the Kaldi official code (``src/online2``) which has very similar as our previous implementation (and was finished roughly 8 month after our implementations).
 
