@@ -7,10 +7,10 @@ News & info
 * We use [Docker](https://registry.hub.docker.com/search?q=ufaldsg/pykaldi) so you can try easily the demo:
   - Run the demo using
 
-  ```bash
-  docker pull ufaldsg/pykaldi
-  docker run ufaldsg/pykaldi /bin/bash -c "cd online_demo; make gmm-latgen-faster; make online-recogniser; make pyonline-recogniser
-  ```
+```bash
+docker pull ufaldsg/pykaldi
+docker run ufaldsg/pykaldi /bin/bash -c "cd online_demo; make gmm-latgen-faster; make online-recogniser; make pyonline-recogniser
+```
   
   - Start exploring the demo source codes [online_demo/pykaldi-online-latgen-recogniser.py](https://github.com/UFAL-DSG/pykaldi/blob/master/online_demo/pykaldi-online-latgen-recogniser.py) and [onl-rec/onl-rec-latgen-recogniser-demo.cc](https://github.com/UFAL-DSG/pykaldi/blob/master/onl-rec/onl-rec-latgen-recogniser-demo.cc)
   - Please note, that you need to change the source code of Pykaldi in the docker image to effect the demo behaviour when using docker.
