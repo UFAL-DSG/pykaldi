@@ -1,8 +1,7 @@
 FROM      ufaldsg/pykaldi  
 # ufaldsg/pykaldi is production image
 MAINTAINER Ondrej Platek <ondrej.platek@gmail.com>
-# Pykaldi is installed system wide we just need the dome scripts
-RUN mkdir -p /app && cd /app && git clone https://github.com/UFAL-DSG/pykaldi.git
+# Pykaldi is installed system wide but still need the demo scripts
 WORKDIR /app/pykaldi/online_demo
 RUN echo "First download pretrained models and test data." && echo && make build_scp download_models
 CMD echo "Running the standard Kaldi binaries in batch mode." && make gmm-latgen-faster && \
