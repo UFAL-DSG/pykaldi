@@ -4,13 +4,13 @@ Fork of Kaldi for developing custom recognisers for Alex spoken dialogue system 
 News & info
 -----------
 
-* We use [Docker](https://registry.hub.docker.com/search?q=ufaldsg/pykaldi) so you can try easily the demo:
-  - Run the demo using the two commands
+* We use [Docker](https://registry.hub.docker.com/search?q=ufaldsg/pykaldi) so you can try a decoding demo
+  * Run the demo using the two commands
     1. download image ``docker pull ufaldsg/pykaldi``
     2. run the demo ``docker run ufaldsg/pykaldi /bin/bash -c "cd online_demo; make gmm-latgen-faster; make online-recogniser; make pyonline-recogniser"``
         - Note the demo downloads the pretrained models and test data which you may safe using ``docker commit`` functionality 
-  - Start exploring the demo source codes [online_demo/pykaldi-online-latgen-recogniser.py](https://github.com/UFAL-DSG/pykaldi/blob/master/online_demo/pykaldi-online-latgen-recogniser.py) and [onl-rec/onl-rec-latgen-recogniser-demo.cc](https://github.com/UFAL-DSG/pykaldi/blob/master/onl-rec/onl-rec-latgen-recogniser-demo.cc)
-  - Please note, that you need to change the source code of Pykaldi in the docker image to effect the demo behaviour when using docker.
+  * Start exploring the demo source codes [online_demo/pykaldi-online-latgen-recogniser.py](https://github.com/UFAL-DSG/pykaldi/blob/master/online_demo/pykaldi-online-latgen-recogniser.py) and [onl-rec/onl-rec-latgen-recogniser-demo.cc](https://github.com/UFAL-DSG/pykaldi/blob/master/onl-rec/onl-rec-latgen-recogniser-demo.cc)
+  * Please note, that you need to change the source code of Pykaldi in the docker image to effect the demo behaviour when using docker.
 * The Python wrapper of C++ ``OnlineLatticeRecogniser`` implements  MFCC, LDA+MLLT, bMMI acoustic models since it was the best speaker independent setup.
 * UPDATE: Since 11/18/2014 the Pykaldi fork uses the Kaldi official code (``src/online2``) which has very similar as our previous implementation (and was finished roughly 8 month after our implementations).
 
