@@ -3,18 +3,16 @@ Running the example Pykaldi scripts
 
 Summary
 -------
-The demo presents three new Kaldi features on pretrained Czech AMs:
+The demo presents three new Kaldi features on pretrained English (or Czech change in Makefile) acoustic models:
 * Online Lattice Recogniser. The best results were obtained using MFCC, LDA+MLLT and bMMI.
 * Python wrapper which interfaces the ``OnlineLatticeRecogniser`` to Python.
-* Training scripts which can be used with standard Kaldi tools or with the new ``OnlineLatticeRecogniser``.
+* Training scripts which can be used with standard Kaldi tools or with the new ``OnlineLatticeRecogniser`` (Use **--fake** option for CMVN).
 
 The `<pykaldi-latgen-faster-decoder.py>`_
 demonstrates how to use the class ``PyOnlineLatgenRecogniser``,
 which takes audio on the input and outputs the decoded lattice.
 There are also the ``OnlineLatgenRecogniser`` C++ and Kaldi standard ``gmm-latgen-faster`` demos.
 All three demos produce the same results.
-
-TODO: Publish English AM and add English demo
 
 In March 2014, the PyOnlineLatticeRecogniser recogniser was evaluated on domain of SDS Alex. 
 See graphs evaluating OnlineLatticeRecogniser performance at 
