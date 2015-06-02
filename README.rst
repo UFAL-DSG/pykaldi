@@ -4,7 +4,7 @@ Fork of Kaldi for developing custom recognisers for Alex spoken dialogue system 
 News & info
 -----------
 
-* We use `Docker <https://registry.hub.docker.com/search?q=ufaldsg/pykaldi>`_ so you can try a decoding demo
+* We use `Docker <https://registry.hub.docker.com/search?q=ufaldsg/pykaldi>`_ so you can try easily our decoding demo
 
     * Run the demo using the two commands:
 
