@@ -17,6 +17,7 @@ logname=b${beam}_lb${latbeam}_ma${max_active}_bs${batch_size}
 python \
   pykaldi-online-latgen-recogniser.py $wav_scp $batch_size $pykaldi_latgen_tra $WST \
     --verbose=0  --max-mem=500000000 --config=$MFCC \
+    --left-context=${left_context} --right-context=${right_context} \
     --acoustic-scale=$acs --beam=$beam --lattice-beam=$latbeam --max-active=$max_active \
     $AM $HCLG `cat $SILENCE` $MAT
 

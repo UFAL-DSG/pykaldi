@@ -28,7 +28,7 @@ if [ -z $MAT ] ; then
   feats="ark,s,cs:copy-feats scp:$feat_scp ark:- | add-deltas ark:- ark:- |"
 else
   # LDA matrix specified -> using it
-  feats="ark,s,cs:copy-feats scp:$feat_scp ark:- | splice-feats ark:- ark:- | transform-feats $MAT ark:- ark:- |"
+  feats="ark,s,cs:copy-feats scp:$feat_scp ark:- | splice-feats --left-context=${left_context} --right-context=${right_context} ark:- ark:- | transform-feats $MAT ark:- ark:- |"
 fi
 
 gmm-latgen-faster --verbose=0 --max-mem=500000000 \

@@ -22,7 +22,7 @@ lattice=$decode_dir/lat.gz
 
 HCLG=models/HCLG_tri2b_bmmi.fst
 AM=models/tri2b_bmmi.mdl
-MAT=models/tri2b_bmmi.mat  # matrix trained in tri2b models 
+MAT=models/tri2b_bmmi.mat  # matrix trained in tri2b models
 WST=models/words.txt
 MFCC=models/mfcc.conf
 SILENCE=models/silence.csl
@@ -41,6 +41,8 @@ export PYTHONPATH=$pykaldi:$pykaldi/pyfst:$PYTHONPATH
 beam=12.0
 latbeam=2.0
 max_active=6000
+left_context=3
+right_context=3
 
 # Size of chunks are queued in "online" interface
 batch_size=4560
