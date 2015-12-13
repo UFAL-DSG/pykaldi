@@ -1,8 +1,0 @@
-[submodule "pyfst"]
-	path = pyfst
-	url = https://github.com/UFAL-DSG/pyfst.git
-    ignore = dirty
-[submodule "kaldi"]
-	path = kaldi
-	url = https://github.com/UFAL-DSG/kaldi-git.git
-    ignore = dirty

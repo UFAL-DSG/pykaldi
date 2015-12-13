@@ -23,15 +23,13 @@ KALDI_LIBS = ../kaldi/src/online2/kaldi-online2.a \
 
 all: onl-rec/onl-rec.a pykaldi/kaldi/decoders.so pyfst/fst/_fst.so
 
-kaldi/.git: .gitmodules
-	git submodule init kaldi
-	git submodule sync -- kaldi
-	git submodule update kaldi
+kaldi/.git:
+	git clone https://github.com/kaldi-asr/kaldi.git kaldi 
+	cd kaldi ; git checkout ea37842dc1f4f03819acae27a6363c993ce5d12b; cd -
 
 pyfst/.git: .gitmodules
-	git submodule init pyfst
-	git submodule sync -- pyfst
-	git submodule update pyfst
+	git clone https://github.com/UFAL-DSG/pyfst.git pyfst
+	cd pyfst; git checkout c4672ac229e32aa8cf45c88831aacea305b1765f; cd -
 
 kaldi/src/kaldi.mk: kaldi/.git $(FSTDIR)/lib/libfst.a kaldi/tools/ATLAS/include/clapack.h
 	@echo "kaldi configure"
@@ -78,17 +76,14 @@ test: onl-rec/onl-rec.a $(FSTDIR)/lib/libfst.a pyfst/.git
 		$(PYTHON) setup.py nosetests
 
 distclean:
-	$(MAKE) -C kaldi/tools distclean
-	$(MAKE) -C kaldi/src clean
 	$(MAKE) -C onl-rec distclean
 	cd pykaldi && \
 		$(PYTHON) setup.py clean --all
 	rm -rf pykaldi/{dist,build,*e.egg-info}
 	rm -f kaldi/decoders.{cpp,so}
-	cd pyfst && \
-		$(PYTHON) setup.py clean --all
-	rm -rf pyfst/{dist,build,*e.egg-info}
 	rm -f fst/_fst.{cpp,so}
+	rm -rf pyfst
+	rm -rf kaldi
 
 deploy: pykaldi_$(LINUX).zip
 

@@ -45,7 +45,8 @@ if platform == 'darwin':
     libraries = ['../kaldi/tools/openfst/lib/libfst.a', 'dl', 'm', 'pthread', ]
 else:
     library_dirs = ['/usr/lib', '../kaldi/tools/openfst/lib']
-    libraries = ['fst', 'lapack_atlas', 'cblas', 'atlas', 'f77blas', 'm', 'pthread', 'dl']
+    libraries = ['fst',  
+            'lapack_atlas', 'cblas', 'atlas', 'f77blas', 'm', 'pthread', 'dl']
 ext_modules.append(Extension('kaldi.decoders',
                              language='c++',
                              extra_compile_args=extra_compile_args,
